@@ -110,7 +110,87 @@
     padding: 5px 12px !important; 
     font-size: 14px !important;
 }
-        
+
+    /* ─── SISTEMA IND — Interrupção Narrativa Dinâmica ─── */
+    #modal-ind {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        z-index: 50000; display: flex; justify-content: center; align-items: center;
+        background: rgba(0,0,0,0.0); transition: background 0.7s ease;
+        pointer-events: all;
+    }
+    #modal-ind.ind-visible { background: rgba(0,0,0,0.94); }
+    #modal-ind.ind-fadeout { background: rgba(0,0,0,0.0) !important; pointer-events: none; }
+
+    .ind-box {
+        position: relative;
+        max-width: 620px; width: 90%;
+        background: #070504;
+        border: 2px solid #5c3618;
+        box-shadow: 0 0 50px rgba(140,50,10,0.25), 0 0 120px rgba(60,15,0,0.12),
+                    inset 0 0 40px rgba(0,0,0,0.9);
+        padding: 28px 26px 22px;
+        opacity: 0; transform: scale(0.94);
+        transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+    #modal-ind.ind-visible .ind-box { opacity: 1; transform: scale(1); }
+    #modal-ind.ind-fadeout .ind-box { opacity: 0 !important; transform: scale(1.03) !important; }
+
+    .ind-corner {
+        position: absolute; width: 16px; height: 16px;
+    }
+    .ind-corner-tl { top: 7px; left: 7px; border-top: 2px solid #7a3a10; border-left: 2px solid #7a3a10; }
+    .ind-corner-tr { top: 7px; right: 7px; border-top: 2px solid #7a3a10; border-right: 2px solid #7a3a10; }
+    .ind-corner-bl { bottom: 7px; left: 7px; border-bottom: 2px solid #7a3a10; border-left: 2px solid #7a3a10; }
+    .ind-corner-br { bottom: 7px; right: 7px; border-bottom: 2px solid #7a3a10; border-right: 2px solid #7a3a10; }
+
+    .ind-header {
+        display: flex; justify-content: center; align-items: center; gap: 14px;
+        margin-bottom: 18px; border-bottom: 1px solid #2e1508; padding-bottom: 11px;
+        font-family: 'VT323', monospace; letter-spacing: 4px;
+    }
+    .ind-sigil { color: #a05520; font-size: 13px; }
+    .ind-titulo { color: #8a4a20; font-size: 13px; letter-spacing: 6px; text-transform: uppercase; }
+
+    .ind-texto {
+        color: #c8aa80;
+        font-family: 'Courier New', monospace;
+        font-size: 14px;
+        font-style: italic;
+        line-height: 1.85;
+        min-height: 110px;
+        max-height: 300px;
+        overflow-y: auto;
+        padding: 2px 4px;
+        margin-bottom: 18px;
+        scrollbar-width: thin;
+        scrollbar-color: #2e1508 #070504;
+    }
+    .ind-separador {
+        text-align: center; color: #3a1a06; font-size: 11px;
+        letter-spacing: 8px; margin: 10px 0; font-family: 'VT323', monospace;
+    }
+    .ind-footer {
+        display: flex; justify-content: center;
+        border-top: 1px solid #2e1508; padding-top: 14px;
+    }
+    .ind-btn-continuar {
+        background: #0e0704;
+        color: #a05520;
+        border: 1px solid #4a2810;
+        font-family: 'VT323', monospace;
+        font-size: 19px;
+        letter-spacing: 4px;
+        padding: 7px 36px;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-transform: uppercase;
+    }
+    .ind-btn-continuar:hover {
+        background: #1a0e06;
+        border-color: #a05520;
+        color: #d07030;
+        box-shadow: 0 0 14px rgba(180,70,15,0.22);
+    }
 </style>
 <base target="_blank">
 </head>
@@ -367,6 +447,11 @@ window.dispatchEvent(new Event('firebase-initialized'));
         let dnaGlobal = null;
         let zonaAtual = 1;
         let _expansaoEmAndamento = false;
+
+        // ─── IND: Interrupção Narrativa Dinâmica ───────────────────────
+        let historicoIND = [];           // {salaId, texto, timestamp}[]
+        let salasSorteadasIND = new Set(); // IDs de salas sorteadas como palco IND
+        // ────────────────────────────────────────────────────────────────
         const SALAS_POR_ZONA = 10;
 
         const LIMITE_MENSAGENS = 11;
@@ -994,6 +1079,196 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
 
         // Linha ~988, ANTES de injetarPuzzles:
 
+// ============================================================
+// SISTEMA IND — Interrupção Narrativa Dinâmica
+// ============================================================
+
+/**
+ * Sorteia salas intermediárias de uma zona como palco de IND (80% de chance).
+ * Exclui a primeira e a última sala de cada zona.
+ */
+function sortearSalasINDParaZona(salaInicio, salaFim) {
+    let sorteadas = 0;
+    for (let id = salaInicio + 1; id < salaFim; id++) {
+        const idStr = String(id);
+        if (!salasSorteadasIND.has(idStr) && Math.random() < 0.8) {
+            salasSorteadasIND.add(idStr);
+            sorteadas++;
+        }
+    }
+    console.log(`[IND] Zona [${salaInicio}-${salaFim}]: ${sorteadas} salas sorteadas como palco. Total acumulado: ${salasSorteadasIND.size}`);
+}
+
+/**
+ * Chama o modelo qwen3-32b via Worker para gerar o texto de uma IND.
+ * Inclui contexto da sala, entidades do DNA global, mistério central e INDs anteriores.
+ */
+async function gerarTextoIND(salaAtual, salaId) {
+    const descricaoSala = (salaAtual?.texto_logico || "Um local escuro e opressivo.").substring(0, 500);
+
+    const entidadesCtx = (dnaGlobal?.entidades || [])
+        .map(e => `• ${e.nome}: ${e.natureza}`)
+        .join('\n') || "Nenhuma entidade registrada.";
+
+    const misterioCentral = dnaGlobal?.misterio_central
+        || "O que habita nas sombras entre os mundos?";
+
+    const fragmentoNum = historicoIND.length + 1;
+    const totalEstimado = 30;
+
+    // Três últimas INDs exibidas para manter coerência e progressão
+    const indsAnteriores = historicoIND.slice(-3)
+        .map((h, i) => `[FRAGMENTO ANTERIOR ${fragmentoNum - (Math.min(3, historicoIND.length) - i)}]:\n"${h.texto.substring(0, 280)}..."`)
+        .join('\n\n') || "Nenhum fragmento anterior — este é o início da revelação.";
+
+    // Direção narrativa baseada no estágio da jornada
+    let diretrizProgressao;
+    if (fragmentoNum <= 8) {
+        diretrizProgressao = "FASE SOMBRA (fragmentos 1-8): Apenas rastros e anomalias. Algo existiu antes do mundo atual. Nenhum nome ainda — apenas padrões, ecos, datas gravadas em osso.";
+    } else if (fragmentoNum <= 18) {
+        diretrizProgressao = "FASE CIFRA (fragmentos 9-18): Nomes começam a emergir. Conexões entre eras diferentes se revelam. O leitor percebe que isto já aconteceu antes.";
+    } else {
+        diretrizProgressao = "FASE ABISMO (fragmentos 19+): A estrutura do mistério fica visível. Não há saída — há apenas compreensão cada vez mais profunda do inevitável.";
+    }
+
+    const prompt = `Você é a voz ancestral que narra os fragmentos ocultos de um RPG de horror mitológico e conspirativo.
+Sua missão: escrever um FRAGMENTO DE REVELAÇÃO — uma interrupção cinemática que o jogador experiencia ao cruzar um limiar.
+
+═══════════════════════════════════════
+MISTÉRIO CENTRAL DO MUNDO:
+"${misterioCentral}"
+═══════════════════════════════════════
+
+ENTIDADES E FORÇAS DO MUNDO:
+${entidadesCtx}
+
+PROGRESSÃO NARRATIVA — ONDE ESTAMOS:
+Este é o FRAGMENTO Nº ${fragmentoNum} de ~${totalEstimado} no total.
+${diretrizProgressao}
+
+FRAGMENTOS ANTERIORES (para coerência e continuidade):
+${indsAnteriores}
+
+CENÁRIO IMEDIATO (onde o jogador acabou de entrar):
+"${descricaoSala}"
+
+═══════════════════════════════════════
+DIRETRIZES ABSOLUTAS DE ESCRITA:
+1. Escreva em PORTUGUÊS BRASILEIRO literário e preciso.
+2. Extensão: entre 8 e 12 frases. Parágrafo único contínuo ou dois parágrafos curtos.
+3. NUNCA use segunda pessoa ("você", "seu"). Escreva como voz impessoal ou terceira pessoa.
+4. NUNCA interaja com o jogador, NUNCA faça perguntas retóricas dirigidas a ele.
+5. Pode ser: um diário de alguém que não sobreviveu; uma inscrição arcaica decifrada; uma transmissão de outro plano; um eco de memória coletiva; uma profecia que já se cumpriu; um documento científico perturbador.
+6. Deve revelar algo NOVO — uma pista concreta, uma lei oculta do mundo, um padrão repetido através do tempo, um nome que nunca deveria ser pronunciado.
+7. Use o CENÁRIO IMEDIATO como âncora — o espaço físico deve ecoar no fragmento de alguma forma (não precisa ser óbvio).
+8. Tom: denso, inevitável, como se este conhecimento fosse proibido e o leitor não devesse tê-lo encontrado.
+9. NÃO resolva o mistério. Aprofunde-o. Torne-o mais vasto e perturbador.
+10. PROIBIDO: clichês de horror genérico ("as sombras sussurraram", "um frio percorreu a espinha"), gore explícito sem contexto mítico, monstrinho sem contexto.
+═══════════════════════════════════════
+
+Retorne APENAS o texto do fragmento. Zero títulos, zero marcadores, zero explicações.`;
+
+    const data = await chamarGroq(
+        [{ role: "user", content: prompt }],
+        0.88,
+        null,               // sem response_format JSON — texto livre
+        "qwen/qwen3-32b",   // modelo especificado pelo usuário
+        2                   // 2 tentativas antes de desistir
+    );
+
+    const textoGerado = (data.choices[0].message.content || "").trim()
+        // Remove tags <think>...</think> do qwen3 (chain-of-thought)
+        .replace(/<think>[\s\S]*?<\/think>/gi, '')
+        .trim();
+
+    // Persiste no histórico
+    historicoIND.push({ salaId, texto: textoGerado, fragmento: fragmentoNum, timestamp: Date.now() });
+    salvarEstadoJogador().catch(e => console.error('[IND] Erro ao salvar histórico IND:', e));
+
+    console.log(`[IND] Fragmento #${fragmentoNum} gerado para sala ${salaId} (${textoGerado.length} chars)`);
+    return textoGerado;
+}
+
+/**
+ * Exibe o modal cinematográfico da IND.
+ * @param {string}   texto       - Texto gerado pelo modelo
+ * @param {string}   salaId      - ID da sala (para log)
+ * @param {Function} onContinuar - Callback executado ao fechar o modal
+ */
+function exibirModalIND(texto, salaId, onContinuar) {
+    // Garante que não haja modal duplicado
+    const anterior = document.getElementById('modal-ind');
+    if (anterior) anterior.remove();
+
+    const fragmentoNum = historicoIND.length; // já foi incrementado em gerarTextoIND
+
+    const modal = document.createElement('div');
+    modal.id = 'modal-ind';
+    modal.innerHTML = `
+        <div class="ind-box">
+            <div class="ind-corner ind-corner-tl"></div>
+            <div class="ind-corner ind-corner-tr"></div>
+            <div class="ind-corner ind-corner-bl"></div>
+            <div class="ind-corner ind-corner-br"></div>
+            <div class="ind-header">
+                <span class="ind-sigil">✦</span>
+                <span class="ind-titulo">fragmento &nbsp;${fragmentoNum}</span>
+                <span class="ind-sigil">✦</span>
+            </div>
+            <div class="ind-texto" id="ind-texto-conteudo"></div>
+            <div class="ind-separador">· · · · · · · · · · · · · · · · · · · ·</div>
+            <div class="ind-footer">
+                <button class="ind-btn-continuar" id="ind-btn-continuar">Continuar</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+
+    // Typewriter por frases (revela gradualmente, como um cinematic do RE PS1)
+    const el = document.getElementById('ind-texto-conteudo');
+    const frases = texto.split(/(?<=[.!?…])\s+/).filter(f => f.trim().length > 0);
+    let idx = 0;
+
+    function revelarFrase() {
+        if (idx >= frases.length) return;
+        const em = document.createElement('em');
+        em.textContent = (idx > 0 ? ' ' : '') + frases[idx];
+        el.appendChild(em);
+        el.scrollTop = el.scrollHeight;
+        idx++;
+        // Delay proporcional ao tamanho da frase (leitura natural)
+        const delay = Math.min(1600, 350 + frases[idx - 1].length * 18);
+        setTimeout(revelarFrase, delay);
+    }
+
+    // Pequeno delay antes de iniciar a revelação (suspense)
+    setTimeout(revelarFrase, 600);
+
+    // Botão continuar
+    const btn = document.getElementById('ind-btn-continuar');
+    let jaFechando = false;
+    btn.onclick = () => {
+        if (jaFechando) return;
+        jaFechando = true;
+        modal.classList.add('ind-fadeout');
+        setTimeout(() => {
+            modal.remove();
+            if (typeof onContinuar === 'function') onContinuar();
+        }, 650);
+    };
+
+    // Ativa fade-in no próximo frame
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => modal.classList.add('ind-visible'));
+    });
+}
+
+// ============================================================
+// FIM DO SISTEMA IND
+// ============================================================
+
+
+
 // Histórico das últimas mecânicas usadas (índices), para forçar variância real
 const _historicoMecanicas = [];
 
@@ -1252,6 +1527,9 @@ document.getElementById('magia-span').innerText = `✨ Magia: ${magiaAtual}`;
                     if (data.secaoAtualId) secaoAtualId = data.secaoAtualId;
                     if (data.dnaGlobal) dnaGlobal = data.dnaGlobal;
                     if (data.zonaAtual) zonaAtual = data.zonaAtual;
+                    // ─── IND ───
+                    if (data.historicoIND) historicoIND = data.historicoIND;
+                    if (data.salasSorteadasIND) salasSorteadasIND = new Set(data.salasSorteadasIND);
                     
                 } else {
                     const dadosPadrao = {
@@ -1287,7 +1565,10 @@ document.getElementById('magia-span').innerText = `✨ Magia: ${magiaAtual}`;
                     mapaMundo: mapaMundo,
                     secaoAtualId: secaoAtualId,
                     dnaGlobal: dnaGlobal,
-                    zonaAtual: zonaAtual
+                    zonaAtual: zonaAtual,
+                    // ─── IND ───
+                    historicoIND: historicoIND,
+                    salasSorteadasIND: [...salasSorteadasIND]
                 };
 
                 await updateDoc(doc(db, "players", uidAtual), dadosAtualizados);
@@ -1982,6 +2263,10 @@ for (const [connectorIdStr, { puzzleRoomId, acaoIda }] of Object.entries(zonaDat
                 Object.assign(mapaMundo, zonaData.salas);
                 window.mapaMundo = mapaMundo;
 
+                // ─── IND: sortear salas palco desta zona ───────────────────
+                sortearSalasINDParaZona(salaInicio, salaFim);
+                // ───────────────────────────────────────────────────────────
+
                 zonaAtual = numeroZona;
                 await salvarEstadoJogador();
 
@@ -2646,6 +2931,71 @@ if (parseInt(secaoAtualId) < 10000) {
             verificarEExpandirMundo(); // Mantém a expansão de background rodando pra zona atual
 
             const novaSala = mapaMundo[secaoAtualId];
+
+            // ─── IND: Verificar gatilho de Interrupção Narrativa Dinâmica ────────
+            const _salaIdIND = secaoAtualId;
+            const _indPendente = parseInt(_salaIdIND) < 10000
+                && salasSorteadasIND.has(_salaIdIND)
+                && !historicoIND.some(h => h.salaId === _salaIdIND);
+
+            if (_indPendente) {
+                // Bloqueia toda a UI do jogo durante a cinemática
+                userInput.disabled = true;
+                sendBtn.disabled = true;
+                document.querySelectorAll('.nav-btn, #abrir-inventario-btn').forEach(b => b.disabled = true);
+
+                adicionarMensagem(btn.innerText, 'user');
+
+                const _textoAcaoOpcao  = opcao.texto;
+                const _idOrigemNumerico = parseInt(_salaIdIND);
+                const _idDestinoNumerico = opcao.destino;
+
+                gerarTextoIND(novaSala, _salaIdIND)
+                    .then(textoIND => {
+                        exibirModalIND(textoIND, _salaIdIND, () => {
+                            // Callback pós-modal: exibe a sala e restaura UI
+                            if (novaSala?.texto_logico) {
+                                const textoFinal = prepararTextoChegada(
+                                    novaSala.texto_logico,
+                                    _textoAcaoOpcao,
+                                    _idOrigemNumerico,
+                                    _idDestinoNumerico
+                                );
+                                adicionarMensagem(textoFinal, 'ai');
+                                historicoConversa.push({ role: 'user',      content: _textoAcaoOpcao });
+                                historicoConversa.push({ role: 'assistant', content: novaSala.texto_logico });
+                                if (historicoConversa.length > 10) historicoConversa.splice(0, 2);
+                            }
+                            atualizarBotoesNavegacao();
+                            atualizarLootRoom();
+                            userInput.disabled = false;
+                            sendBtn.disabled = false;
+                            userInput.focus();
+                        });
+                    })
+                    .catch(e => {
+                        console.error('[IND] Falha ao gerar interrupção:', e);
+                        // Fallback: exibe sala normalmente sem IND
+                        if (novaSala?.texto_logico) {
+                            const textoFinal = prepararTextoChegada(
+                                novaSala.texto_logico, _textoAcaoOpcao,
+                                _idOrigemNumerico, _idDestinoNumerico
+                            );
+                            adicionarMensagem(textoFinal, 'ai');
+                            historicoConversa.push({ role: 'user',      content: _textoAcaoOpcao });
+                            historicoConversa.push({ role: 'assistant', content: novaSala.texto_logico });
+                            if (historicoConversa.length > 10) historicoConversa.splice(0, 2);
+                        }
+                        atualizarBotoesNavegacao();
+                        atualizarLootRoom();
+                        userInput.disabled = false;
+                        sendBtn.disabled = false;
+                    });
+
+                return; // O modal callback cuida do resto
+            }
+            // ─────────────────────────────────────────────────────────────────────
+
             if (novaSala?.texto_logico) {
                 adicionarMensagem(btn.innerText, 'user');
                 const textoFinal = prepararTextoChegada(novaSala.texto_logico, opcao.texto, parseInt(secaoAtualId), opcao.destino);
