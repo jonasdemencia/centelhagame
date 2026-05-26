@@ -1229,21 +1229,24 @@ Retorne APENAS este JSON:
 }`;
     }
 
-    const systemPrompt = "Você é um master designer de enigmas. OBRIGATÓRIO: Retorne APENAS um objeto JSON válido, sem formatação markdown. A sua resposta deve começar estritamente com { e terminar com }. Nunca use quebras de linha literais dentro das strings — para separar parágrafos escreva \\n\\n.";
+    // Ajuste Cirúrgico: Reforço de limite no system prompt para evitar loops e textos infinitos
+    const systemPrompt = "Você é um master designer de enigmas. OBRIGATÓRIO: Retorne APENAS um objeto JSON válido, sem formatação markdown. Seja direto, extremamente conciso e não ultrapasse os limites de geração. A sua resposta deve começar estritamente com { e terminar com }. Feche o objeto JSON assim que concluir as chaves solicitadas. Nunca use quebras de linha literais dentro das strings — para separar parágrafos escreva \\n\\n.";
 
     let data;
     const jsonMode = { type: "json_object" };
 
     if (!inovacaoRadical) {
+        // Ajuste Cirúrgico: Temperatura reduzida de 0.8 para 0.7 para evitar perda de foco e loops
         data = await chamarGroq([
             { role: "system", content: systemPrompt },
             { role: "user", content: prompt }
-        ], 0.8, jsonMode, MODELO_PUZZLE, 3);
+        ], 0.7, jsonMode, MODELO_PUZZLE, 3);
     } else {
+        // Ajuste Cirúrgico: Temperatura reduzida de 0.8 para 0.7
         data = await chamarGroq([
             { role: "system", content: systemPrompt },
             { role: "user", content: prompt }
-        ], 0.8, jsonMode, MODELO_PUZZLE, 3);
+        ], 0.7, jsonMode, MODELO_PUZZLE, 3);
     }
     
     let raw = data.choices[0].message.content;
