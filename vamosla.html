@@ -1070,15 +1070,26 @@ REGRAS ESTRITAS:
 5. Use o CENÁRIO IMEDIATO como âncora — o espaço físico deve ecoar no fragmento de alguma forma (não precisa ser óbvio).
 6. Tom: denso, inevitável, como se este conhecimento fosse proibido e o leitor não devesse tê-lo encontrado.
 7. NÃO resolva o mistério. Aprofunde-o. Torne-o mais vasto e perturbador.
-8. NÃO DESCREVA O JOGADOR AGINDO. É um evento passivo que ele apenas assiste/escuta/percebe.
-9. Retorne APENAS o texto da narrativa final pronta para o jogador ler. Sem introduções e sem formatação Markdown.`;
+8. Você DEVE OBRIGATORIAMENTE retornar APENAS um objeto JSON no seguinte formato:
+{
+  "narrativa": "o texto da cinematic aqui"
+}`;
 
             const data = await chamarGroq([
-                { role: "system", content: "Você é um diretor de cinematics de dark fantasy. Retorne apenas prosa crua." },
+                { role: "system", content: "Você é um diretor de cinematics com conhecimento profundo em mitologia, hermeticismo e conspirações reais. Retorne exclusivamente um objeto JSON." },
                 { role: "user", content: prompt }
-            ], 0.7, null, MODELO_IND, 3);
+            ], 0.7, { type: "json_object" }, MODELO_IND, 3);
             
-            return data.choices[0].message.content.trim();
+            try {
+                // Fazemos o parse do JSON retornado e devolvemos apenas o texto limpo para o jogo
+                const raw = data.choices[0].message.content;
+                const parsed = JSON.parse(raw);
+                return parsed.narrativa.trim();
+            } catch (e) {
+                console.error("[IND] Erro no parse do JSON. Tentando recuperar texto bruto:", e);
+                // Fallback de segurança caso a IA mande markdown sujo em volta do JSON
+                return data.choices[0].message.content.replace(/```json|```/g, '').trim();
+            }
         }
 
         function exibirModalIND(texto) {
