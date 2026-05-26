@@ -1067,8 +1067,8 @@ REGRAS ESTRITAS:
 2. O texto deve começar com uma frase que ancora a entrada do cenário atual: "Ao entrar, você percebe...", "na entrada do aposento..." ou etc.
 2. O evento deve ser FÍSICO e PERCEPTÍVEL POR QUALQUER PESSOA na sala, EVITE poesia.
 3. PROIBIÇÃO de: alucinações, vislumbres, memórias abstratas, vozes na cabeça, “você sente como se…”, “você tem a impressão de que…”.
-4. Tenha calma, não revele MULTIPLOS elementos. Deve revelar algo NOVO — uma pista concreta OU uma lei oculta do mundo OU uma entidade OU uma conspiração.
-5. Use o CENÁRIO IMEDIATO como âncora — o espaço físico deve ecoar na cena de alguma forma (não precisa ser óbvio).
+4. A cena DEVE apresentar, de forma CONCRETA e em forma de evento, pelo menos UM dos seguintes elementos: MISTÉRIO CENTRAL: ${dnaGlobal?.misterio_central || "Desconhecido"} | CONSPIRAÇÕES REAIS: ${(dnaGlobal?.conspiracoes_reais || []).join(", ")} | ENTIDADES OCULTAS: ${JSON.stringify(dnaGlobal?.entidades || [])}
+5. Tome o CENÁRIO IMEDIATO como ponto de partida — a conexão com o espaço físico não precisa ser explícita, apenas plausível.
 6. NÃO resolva o mistério. Aprofunde-o.
 7. Você DEVE OBRIGATORIAMENTE retornar APENAS um objeto JSON no seguinte formato:
 {
