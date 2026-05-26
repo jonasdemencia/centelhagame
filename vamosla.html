@@ -1063,14 +1063,13 @@ O jogador acabou de entrar nesta sala. Crie uma "Interrupção Narrativa Dinâmi
 Esta cena DEVE mostrar um evento OBSERVÁVEL que ocorre agora neste mesmo espaço e que revela pedaços do MISTÉRIO CENTRAL e da lore do mundo.
 
 REGRAS ESTRITAS:
-1. Em torno de 10 frases no total. Sem quebras drásticas de parágrafos.
+1. Em torno de 5 a 10 frases no total. Sem quebras drásticas de parágrafos.
 2. O evento deve ser FÍSICO e PERCEPTÍVEL POR QUALQUER PESSOA na sala, EVITE poesia.
 3. PROIBIÇÃO de: alucinações, vislumbres, memórias abstratas, vozes na cabeça, “você sente como se…”, “você tem a impressão de que…”.
-4. Deve revelar algo NOVO — uma pista concreta, uma lei oculta do mundo, uma entidade
-5. Use o CENÁRIO IMEDIATO como âncora — o espaço físico deve ecoar no fragmento de alguma forma (não precisa ser óbvio).
-6. Tom: denso, inevitável, como se este conhecimento fosse proibido e o jogador não devesse tê-lo encontrado. Como uma cutscene imersiva de Resident Evil clássico.
-7. NÃO resolva o mistério. Aprofunde-o. Torne-o mais vasto e perturbador.
-8. Você DEVE OBRIGATORIAMENTE retornar APENAS um objeto JSON no seguinte formato:
+4. Deve revelar algo NOVO — uma pista concreta, uma lei oculta do mundo, uma entidade, uma conspiração.
+5. Use o CENÁRIO IMEDIATO como âncora — o espaço físico deve ecoar na cena de alguma forma (não precisa ser óbvio).
+6. NÃO resolva o mistério. Aprofunde-o.
+7. Você DEVE OBRIGATORIAMENTE retornar APENAS um objeto JSON no seguinte formato:
 {
   "narrativa": "o texto da cinematic aqui"
 }`;
@@ -1078,7 +1077,7 @@ REGRAS ESTRITAS:
             const data = await chamarGroq([
                 { role: "system", content: "Você é um diretor de cinematics com conhecimento profundo em mitologia, hermeticismo e conspirações reais. Retorne exclusivamente um objeto JSON." },
                 { role: "user", content: prompt }
-            ], 0.7, { type: "json_object" }, MODELO_IND, 3);
+            ], 0.75, { type: "json_object" }, MODELO_IND, 3);
             
             try {
                 // Fazemos o parse do JSON retornado e devolvemos apenas o texto limpo para o jogo
