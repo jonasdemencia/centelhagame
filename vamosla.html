@@ -2060,7 +2060,7 @@ for (const [connectorIdStr, { puzzleRoomId, acaoIda }] of Object.entries(zonaDat
 }
                 
                 // --- INÍCIO DO AJUSTE: IND (Interrupção Narrativa Dinâmica) ---
-                if (Math.random() < 0.8) {
+                if (Math.random() < 0.99) {
                     const candidatosIND = Object.keys(mapaFinalMesclado)
                         .map(Number)
                         .filter(id => id > salaInicio && id < salaFim && id < 10000);
