@@ -1050,7 +1050,7 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
 
         async function gerarIND(idSala) {
             const sala = mapaMundo[idSala];
-            const prompt = `Você é o diretor de cenas cinematográficas (cinematics) de um RPG de horror visceral e melancólico.
+            const prompt = `Você é o diretor de cenas cinematográficas (cinematics).
 MISTÉRIO CENTRAL: ${dnaGlobal?.misterio_central || "Desconhecido"}
 LEIS DO LUGAR: ${(dnaGlobal?.leis_do_lugar || []).join(", ")}
 ENTIDADES OCULTAS: ${JSON.stringify(dnaGlobal?.entidades || [])}
@@ -1060,13 +1060,14 @@ ${historicoIND.slice(-3).join("\n---\n")}
 
 OBJETIVO:
 O jogador acabou de entrar nesta sala. Crie uma "Interrupção Narrativa Dinâmica" (IND).
-Esta cena DEVE mostrar um evento OBSERVÁVEL que ocorre agora neste mesmo espaço e que revela pedaços do MISTÉRIO CENTRAL e da lore do mundo.
+Esta cena DEVE mostrar UM evento OBSERVÁVEL que ocorre agora neste mesmo espaço e que revela UM pedaço do MISTÉRIO CENTRAL e da lore do mundo.
 
 REGRAS ESTRITAS:
 1. Em torno de 5 a 8 frases no total. Sem quebras drásticas de parágrafos.
+2. O texto deve começar com uma frase que ancora a entrada do cenário atual: "Ao entrar, você percebe...", "na entrada do aposento..." ou etc.
 2. O evento deve ser FÍSICO e PERCEPTÍVEL POR QUALQUER PESSOA na sala, EVITE poesia.
 3. PROIBIÇÃO de: alucinações, vislumbres, memórias abstratas, vozes na cabeça, “você sente como se…”, “você tem a impressão de que…”.
-4. Deve revelar algo NOVO — uma pista concreta, uma lei oculta do mundo, uma entidade, uma conspiração.
+4. Tenha calma, não revele MULTIPLOS elementos. Deve revelar algo NOVO — uma pista concreta OU uma lei oculta do mundo OU uma entidade OU uma conspiração.
 5. Use o CENÁRIO IMEDIATO como âncora — o espaço físico deve ecoar na cena de alguma forma (não precisa ser óbvio).
 6. NÃO resolva o mistério. Aprofunde-o.
 7. Você DEVE OBRIGATORIAMENTE retornar APENAS um objeto JSON no seguinte formato:
