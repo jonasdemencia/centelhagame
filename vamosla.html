@@ -1052,7 +1052,7 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
             const sala = mapaMundo[idSala];
             const prompt = `Você é o diretor de cenas cinematográficas (cinematics).
 MISTÉRIO CENTRAL: ${dnaGlobal?.misterio_central || "Desconhecido"}
-LEIS DO LUGAR: ${(dnaGlobal?.leis_do_lugar || []).join(", ")}
+CONSPIRAÇÕES REAIS: ${(dnaGlobal?.conspiracoes_reais || []).join(", ")}
 ENTIDADES OCULTAS: ${JSON.stringify(dnaGlobal?.entidades || [])}
 CENÁRIO ATUAL: ${sala.texto_logico}
 REVELAÇÕES ANTERIORES (${historicoIND.length} ocorrências):
@@ -1469,12 +1469,12 @@ Não há vitória. Não há conclusão. Há apenas aprofundamento de um mistéri
 
 Retorne APENAS este JSON:
 {
-  "misterio_central": "a pergunta que o jogador nunca vai responder completamente — deve ser perturbadora, aberta e diretamente relacionada a uma conspiração oculta e real",
-  "leis_do_lugar": [
-    "lei física anômala relacionada ao mistério central e que torna este lugar único",
-    "segunda lei",
-    "terceira lei"
-  ],
+  "misterio_central": "a pergunta que o jogador nunca vai responder completamente — deve ser perturbadora e aberta",
+  "conspiracoes_reais": [
+    "conspiração real ou adaptada, obscura, diretamente ligada ao mistério central.",
+    "segunda conspiração – deve ser verificável na cultura oculta (Vril, Sociedade Thule, Projeto Montauk, etc.) e adaptada DIRETAMENTE para se encaixar no mundo",
+    "terceira conspiração"
+],
   "economia_de_informacao": "que tipo de conhecimento é poder aqui — o que o jogador acumula que muda como ele lê o ambiente",
   "entidades": [
     { "nome": "nome concreto", "natureza": "o que é sem romanticismo", "zona_primeira_pista": 1, "nunca_explicar_completamente": true },
@@ -1489,7 +1489,7 @@ Retorne APENAS este JSON:
     { "nome": "...", "zona_origem": 5, "zonas_relevantes": [10, 12], "o_que_desvela": "..." }
   ],
   "zonas": [
-    { "id": 1, "nome": "nome evocativo da zona", "tom_sensorial": "1 frase crua sobre o que domina os sentidos aqui", "segredo_local": "algo que só esta zona revela sobre o mistério central", "conecta_com": [2, 3] },
+    { "id": 1, "nome": "nome evocativo da zona", "tom_sensorial": "1 frase crua sobre o que domina os sentidos aqui", "segredo_local": "uma frase curta que revela um fragmento DIRETO de uma das CONSPIRAÇÕES REAIS ou do MISTÉRIO CENTRAL.", "conecta_com": [2, 3] },
     { "id": 2, "nome": "...", "tom_sensorial": "...", "segredo_local": "...", "conecta_com": [1, 4, 5] },
     { "id": 3, "nome": "...", "tom_sensorial": "...", "segredo_local": "...", "conecta_com": [1, 6] },
     { "id": 4, "nome": "...", "tom_sensorial": "...", "segredo_local": "...", "conecta_com": [2, 7] },
