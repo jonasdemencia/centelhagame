@@ -1064,11 +1064,11 @@ Esta cena DEVE mostrar um evento OBSERVÁVEL que ocorre agora neste mesmo espaç
 
 REGRAS ESTRITAS:
 1. Em torno de 10 frases no total. Sem quebras drásticas de parágrafos.
-2. O evento deve ser FÍSICO e PERCEPTÍVEL POR QUALQUER PESSOA na sala.
+2. O evento deve ser FÍSICO e PERCEPTÍVEL POR QUALQUER PESSOA na sala, EVITE poesia.
 3. PROIBIÇÃO de: alucinações, vislumbres, memórias abstratas, vozes na cabeça, “você sente como se…”, “você tem a impressão de que…”.
-4. Deve revelar algo NOVO — uma pista concreta, uma lei oculta do mundo, um padrão repetido através do tempo, um nome que nunca deveria ser pronunciado.
+4. Deve revelar algo NOVO — uma pista concreta, uma lei oculta do mundo, uma entidade
 5. Use o CENÁRIO IMEDIATO como âncora — o espaço físico deve ecoar no fragmento de alguma forma (não precisa ser óbvio).
-6. Tom: denso, inevitável, como se este conhecimento fosse proibido e o leitor não devesse tê-lo encontrado. Como uma cutscene imersiva de Resident Evil clássico ou Silent Hill.
+6. Tom: denso, inevitável, como se este conhecimento fosse proibido e o jogador não devesse tê-lo encontrado. Como uma cutscene imersiva de Resident Evil clássico.
 7. NÃO resolva o mistério. Aprofunde-o. Torne-o mais vasto e perturbador.
 8. Você DEVE OBRIGATORIAMENTE retornar APENAS um objeto JSON no seguinte formato:
 {
@@ -1461,7 +1461,7 @@ async function injetarPuzzles(planoZonal, zonaId) {
         async function gerarDNAGlobal(cenarioTema) {
             const semente = Math.random().toString(36).substring(2, 10);
             const prompt = `[SEMENTE: ${semente}]
-Você é o arquiteto de um mundo que nunca termina.
+Você é o arquiteto de um mundo que nunca termina. Possui conhecimento profundo e vasto em mitologia, ocultismo e conspirações reais. 
 Tema: "${cenarioTema}"
 
 Este mundo terá 400+ salas em 16 zonas. Você está definindo o DNA que governa TUDO.
@@ -1469,9 +1469,9 @@ Não há vitória. Não há conclusão. Há apenas aprofundamento de um mistéri
 
 Retorne APENAS este JSON:
 {
-  "misterio_central": "a pergunta que o jogador nunca vai responder completamente — deve ser perturbadora e aberta",
+  "misterio_central": "a pergunta que o jogador nunca vai responder completamente — deve ser perturbadora, aberta e diretamente relacionada a uma conspiração oculta e real",
   "leis_do_lugar": [
-    "lei física ou temporal anômala que torna este lugar único",
+    "lei física anômala relacionada ao mistério central e que torna este lugar único",
     "segunda lei",
     "terceira lei"
   ],
