@@ -1051,52 +1051,51 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
         async function gerarIND(idSala) {
     const sala = mapaMundo[idSala];
     
-    const prompt = `Você é um diretor de cinematics encarregado de criar interrupções narrativas dinâmicas.
+    const prompt = `Você é um roteirista de jogos de horror de sobrevivência (estilo anos 90). Sua tarefa é escrever uma cena cinematográfica de transição que ocorre agora no espaço onde o jogador está.
 
-CONTEXTO SECRETO (Inspiração invisível):
-- MISTÉRIO CENTRAL: ${dnaGlobal?.misterio_central || "Desconhecido"}
-- CONSPIRAÇÕES: ${(dnaGlobal?.conspiracoes_reais || []).join(", ")}
-- ENTIDADES: ${JSON.stringify(dnaGlobal?.entidades || [])}
+MISTÉRIO CENTRAL (Para inspirar o tom, NÃO NOMEIE): ${dnaGlobal?.misterio_central || "Desconhecido"}
+CONSPIRAÇÕES REAIS (Para inspirar formas e ações, NÃO NOMEIE): ${(dnaGlobal?.conspiracoes_reais || []).join(", ")}
+ENTIDADES OCULTAS (Para inspirar o evento, NÃO NOMEIE): ${JSON.stringify(dnaGlobal?.entidades || [])}
 
-CENÁRIO ATUAL (Palco da cena):
+CENÁRIO ATUAL:
 ${sala.texto_logico}
 
 REVELAÇÕES ANTERIORES:
 ${historicoIND.slice(-3).join("\n---\n")}
 
-TAREFA:
-Escreva a próxima cena, ocorrendo agora mesmo no CENÁRIO ATUAL. 
+DIREÇÃO DE ARTE E ROTEIRO:
+- Escreva de 5 a 8 frases contínuas. Sem quebras de parágrafo.
+- A narrativa deve ter FLUXO e PESO. Descreva uma ação contínua acontecendo no cenário com calma e foco.
+- Apenas UMA coisa bizarra/impossível acontece. Um objeto se move, uma superfície muda, uma luz reage. Início, meio e fim dessa mesma ação.
+- A última frase descreve como a imagem física terminou, estática, em silêncio.
 
-ESTRUTURA OBRIGATÓRIA:
-1. Tamanho: Exatamente entre 5 e 8 frases.
-2. Formato: Um único bloco de texto contínuo, sem quebras de parágrafo.
-3. Foco: Apenas UM evento físico, isolado e linear. Começo, meio e fim da mesma ação.
-4. Finalização: A última frase descreve exclusivamente o estado estático final do objeto/cenário afetado.
+PROIBIÇÕES ABSOLUTAS (Violações destroem o código do jogo):
+1. NUNCA cite nomes de conspirações, ordens, selos ou entidades (Ex: Proibido usar "Thule", "Templário", etc). 
+2. NUNCA use as palavras "câmera", "ângulo", "zoom" ou mencione o jogador.
+3. NUNCA use abstrações poéticas ou subjetivas (Ex: Proibido "linguagem desaprendida", "sugerindo que", "revelando", "como se").
+4. NUNCA use "parece", "parecia", "dava a impressão". O impossível é um fato físico concreto que está acontecendo.
+5. SEM CASCATA: Não acumule eventos. Se um livro cai, a sombra não deve se mover depois. Apenas um evento.
 
-PROIBIÇÕES ABSOLUTAS (A violação quebra o jogo):
-- SEM SUBJETIVIDADE: É proibido usar "como se", "parecia", "dava a impressão". O evento é um fato concreto.
-- SEM EXPLICAÇÃO: É proibido escrever "sugerindo que", "revelando", "o que indica". O narrador é um espectador cego ao significado.
-- SEM NOMEAR: Nunca escreva o nome de conspirações, entidades ou sociedades no texto.
-- SEM ANACRONISMOS: Não utilize jargão técnico, sci-fi ou dimensional ("frequências", "energia", "tecnologia", "calibração").
-- SEM TÉCNICA: Nunca mencione câmeras, luz de estúdio, o jogador ou "ângulo".
-- SEM OUTROS SENTIDOS: Descreva apenas a luz refletida pelos objetos. Sem texturas táteis, aromas ou temperaturas não visíveis.
+EXEMPLOS DO TOM EXATO ESPERADO (Siga esta cadência e objetividade):
 
-TOM DO TEXTO:
-Frio, impessoal e calmo. Descreva o absurdo ou o sobrenatural como se estivesse redigindo um laudo pericial de um acidente de trânsito.
+Exemplo 1 (Foco em objeto):
+"O pêndulo do relógio de ponto no fim do corredor cessa sua oscilação no ar, travando no ápice do movimento à direita. O tique-taque desaparece do ambiente. A poeira suspensa sob a luz fraca também estaciona, flutuando inerte ao redor da madeira entalhada. A pesada porta de vidro do relógio abre-se sozinha para fora, raspando lentamente as dobradiças enferrujadas. Uma única gota de um líquido negro e espesso escorre do mostrador de porcelana."
 
-Retorne exclusivamente um JSON válido no formato:
-{"narrativa": "texto da cena aqui"}`;
+Exemplo 2 (Foco em superfície/sombra):
+"A fresta de luz que entra pela janela quebrada ilumina o tapete persa desbotado no centro da sala. A sombra projetada pela poltrona vazia começa a se alongar pelo chão de tábuas corridas, distanciando-se do móvel que a originou. O contorno escuro desliza pelas paredes de gesso, assumindo os traços irregulares de uma silhueta alongada e sem braços. A mancha de escuridão para abruptamente ao alcançar o arco do corredor. A sombra adere à pintura da parede, escurecendo permanentemente a estampa do papel de parede ao redor."
+
+Retorne EXCLUSIVAMENTE um objeto JSON válido no formato: {"narrativa": "texto da cena aqui"}`;
 
     const data = await chamarGroq([
         { 
             role: "system", 
-            content: "Você processa cenários e retorna exclusivamente um objeto JSON puro. Não utilize formatação markdown ao redor do JSON." 
+            content: "Você é um formatador estrito. Seu único papel é ler as instruções, gerar o texto da cena seguindo rigorosamente os exemplos fornecidos, e retornar o resultado dentro de um JSON puro e válido, sem nenhuma formatação markdown." 
         },
         { 
             role: "user", 
             content: prompt 
         }
-    ], 0.75, { type: "json_object" }, MODELO_IND, 3); // Reduzi levemente a temperatura para 0.75 visando maior obediência às restrições
+    ], 0.75, { type: "json_object" }, MODELO_IND, 3);
     
     try {
         const raw = data.choices[0].message.content;
@@ -1104,16 +1103,13 @@ Retorne exclusivamente um JSON válido no formato:
         return parsed.narrativa.trim();
     } catch (e) {
         console.error("[IND] Erro no parse do JSON. Tentando recuperação de emergência:", e);
-        // Expressão regular robusta para extrair o objeto JSON mesmo se a IA embrulhar com markdown de código
         const match = data.choices[0].message.content.match(/\{[\s\S]*\}/);
         if (match) {
-            try {
-                return JSON.parse(match[0]).narrativa.trim();
-            } catch (err) {
-                console.error("[IND] Falha na recuperação regex:", err);
-            }
+            try { return JSON.parse(match[0]).narrativa.trim(); } 
+            catch (err) { console.error("[IND] Falha na recuperação regex:", err); }
         }
-        return data.choices[0].message.content.replace(/```json|```/g, '').trim();
+        return data.choices[0].message.content.replace(/```json|
+```/g, '').trim();
     }
 }
 
