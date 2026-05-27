@@ -1051,7 +1051,7 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
         async function gerarIND(idSala) {
     const sala = mapaMundo[idSala];
     
-    const prompt = `Você é o Diretor de Cinematics de um jogo de horror e mistério. Sua função é criar a cena mais esperada pelo jogador: a "Interrupção Narrativa Dinâmica". 
+    const prompt = `Você é o Diretor de Cinematics de um jogo de mistério. Sua função é criar a cena mais esperada pelo jogador: a "Interrupção Narrativa Dinâmica". 
 
 O ENREDO QUE DEVE SER REVELADO NESTA CENA (Obrigatório focar nisso):
 - MISTÉRIO CENTRAL: ${dnaGlobal?.misterio_central || "Desconhecido"}
@@ -1065,11 +1065,11 @@ REVELAÇÕES ANTERIORES:
 ${historicoIND.slice(-3).join("\n---\n")}
 
 DIRETRIZ DE DIREÇÃO DE ARTE:
-A cena não é um "evento assustador aleatório". A cena é o MISTÉRIO CENTRAL, uma ENTIDADE ou CONSPIRAÇÂO se manifestando fisicamente no cenário. O jogador está finalmente vendo a verdade do mundo, mas nua e crua, sem narração.
+A cena não é um "evento assustador aleatório". A cena é o MISTÉRIO CENTRAL, uma ENTIDADE ou CONSPIRAÇÂO transcorrendo em forma de evento no cenário. O jogador está finalmente vendo a verdade do mundo, mas nua e crua, sem narração.
 
 REGRAS DE ESCRITA:
 1. Tamanho: 5 a 8 frases contínuas. Sem parágrafos.
-2. Revelação Visual: Pegue um elemento do Enredo e transforme-o em uma ação física e visível que ocorre agora no cenário. 
+2. Revelação Visual: Pegue UM ÚNICO elemento do Enredo e transforme-o em uma ação física e visível que ocorre agora no cenário. 
 3. Proibido Medições ou Robótica: Nunca use centímetros, metros, segundos, graus. O texto deve ter peso cinematográfico.
 4. Proibido Metáforas e Símiles: NUNCA use "como se", "parecia", "dava a impressão". O impossível é descrito no indicativo, como um fato absoluto.
 5. Proibido Didatismo: O narrador é mudo para a lore. Nunca use os nomes das entidades, conspirações ou explique o significado ("revelando que", "mostrando a verdade"). Descreva APENAS a forma, a cor, a matéria, o sangue, o movimento.
