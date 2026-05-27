@@ -1064,21 +1064,21 @@ Esta cena DEVE mostrar UM evento OBSERVÁVEL que ocorre agora neste mesmo espaç
 
 REGRAS ESTRITAS:
 1. Em torno de 5 a 8 frases no total. Sem quebras drásticas de parágrafos.
-2. O texto deve começar com uma frase que ancora a entrada do cenário atual: "Ao entrar, você percebe...", "na entrada do aposento..." ou etc.
-2. O evento deve ser FÍSICO e PERCEPTÍVEL POR QUALQUER PESSOA na sala, EVITE poesia.
-3. PROIBIÇÃO de: alucinações, vislumbres, memórias abstratas, vozes na cabeça, “você sente como se…”, “você tem a impressão de que…”.
-4. A cena DEVE apresentar, de forma CONCRETA e em forma de evento, pelo menos UM dos seguintes elementos: MISTÉRIO CENTRAL: ${dnaGlobal?.misterio_central || "Desconhecido"} | CONSPIRAÇÕES REAIS: ${(dnaGlobal?.conspiracoes_reais || []).join(", ")} | ENTIDADES OCULTAS: ${JSON.stringify(dnaGlobal?.entidades || [])}
-5. Tome o CENÁRIO IMEDIATO como ponto de partida — a conexão com o espaço físico não precisa ser explícita, apenas plausível.
-6. NÃO resolva o mistério. Aprofunde-o.
-7. Você DEVE OBRIGATORIAMENTE retornar APENAS um objeto JSON no seguinte formato:
+2. A cena não começa no jogador. Pode começar com um som no fundo do aposento, um movimento que ninguém causou, uma mudança súbita na luz — qualquer coisa que acontece independentemente de quem está presente.
+3. O evento deve ser FÍSICO e CONCRETO. A linguagem pode ser precisa e evocativa — o que deve ser evitado são estados internos, sensações ou percepções do personagem do jogador.
+4. A cena deve ter uma progressão visual implícita: algo ocorre no espaço (som, movimento, mudança) → a câmera se detém em um detalhe específico → esse detalhe levanta uma questão sem respondê-la. Não enuncie a revelação — mostre o que a implica.
+5. A cena DEVE apresentar, de forma CONCRETA e em forma de evento, pelo menos UM dos seguintes elementos: MISTÉRIO CENTRAL: ${dnaGlobal?.misterio_central || "Desconhecido"} | CONSPIRAÇÕES REAIS: ${(dnaGlobal?.conspiracoes_reais || []).join(", ")} | ENTIDADES OCULTAS: ${JSON.stringify(dnaGlobal?.entidades || [])}
+6. Tome o CENÁRIO IMEDIATO como ponto de partida — a conexão com o espaço físico não precisa ser explícita, apenas plausível.
+7. NÃO resolva o mistério. Aprofunde-o.
+8. Você DEVE OBRIGATORIAMENTE retornar APENAS um objeto JSON no seguinte formato:
 {
   "narrativa": "o texto da cinematic aqui"
 }`;
 
             const data = await chamarGroq([
-                { role: "system", content: "Você é um diretor de cinematics com conhecimento profundo em mitologia, hermeticismo e conspirações reais. Retorne exclusivamente um objeto JSON." },
+                { role: "system", content: "Você é um diretor de cinema com conhecimento profundo em mitologia, hermeticismo e conspirações reais. Sua câmera se move pelo espaço independentemente do jogador — o personagem pode estar presente, mas nunca é o sujeito da cena. Você escreve o que acontece no mundo, não o que o personagem experimenta. Retorne exclusivamente um objeto JSON."" },
                 { role: "user", content: prompt }
-            ], 0.75, { type: "json_object" }, MODELO_IND, 3);
+            ], 0.88, { type: "json_object" }, MODELO_IND, 3);
             
             try {
                 // Fazemos o parse do JSON retornado e devolvemos apenas o texto limpo para o jogo
