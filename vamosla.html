@@ -1108,8 +1108,7 @@ Retorne EXCLUSIVAMENTE um objeto JSON válido no formato: {"narrativa": "texto d
             try { return JSON.parse(match[0]).narrativa.trim(); } 
             catch (err) { console.error("[IND] Falha na recuperação regex:", err); }
         }
-        return data.choices[0].message.content.replace(/```json|
-```/g, '').trim();
+        return data.choices[0].message.content.replace(/```json|```/g, '').trim();
     }
 }
 
