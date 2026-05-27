@@ -1049,52 +1049,73 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
         }
 
         async function gerarIND(idSala) {
-            const sala = mapaMundo[idSala];
-            const prompt = `Você é o diretor de cenas cinematográficas (cinematics). Escreva em português brasileiro corrente.
-MISTÉRIO CENTRAL: ${dnaGlobal?.misterio_central || "Desconhecido"}
-CONSPIRAÇÕES REAIS: ${(dnaGlobal?.conspiracoes_reais || []).join(", ")}
-ENTIDADES OCULTAS: ${JSON.stringify(dnaGlobal?.entidades || [])}
-CENÁRIO ATUAL: ${sala.texto_logico}
-REVELAÇÕES ANTERIORES (${historicoIND.length} ocorrências):
+    const sala = mapaMundo[idSala];
+    
+    const prompt = `Você é um diretor de cinematics encarregado de criar interrupções narrativas dinâmicas.
+
+CONTEXTO SECRETO (Inspiração invisível):
+- MISTÉRIO CENTRAL: ${dnaGlobal?.misterio_central || "Desconhecido"}
+- CONSPIRAÇÕES: ${(dnaGlobal?.conspiracoes_reais || []).join(", ")}
+- ENTIDADES: ${JSON.stringify(dnaGlobal?.entidades || [])}
+
+CENÁRIO ATUAL (Palco da cena):
+${sala.texto_logico}
+
+REVELAÇÕES ANTERIORES:
 ${historicoIND.slice(-3).join("\n---\n")}
 
 TAREFA:
-Escreva uma cena de 4 a 8 frases que ocorre agora neste espaço. Uma coisa — objeto, superfície, luz, sombra — muda ou se move sozinha. O jogador existe mas não é mencionado. Ele assiste.
+Escreva a próxima cena, ocorrendo agora mesmo no CENÁRIO ATUAL. 
 
-A CENA DEVE:
-- Conter exatamente UM evento físico transcorrendo. Apenas um.
-- Evocar (sem nomear) um aspecto do CONTEXTO SECRETO DO MUNDO.
-- Terminar com uma imagem física aberta — algo visível que não se explica e não se resolve.
+ESTRUTURA OBRIGATÓRIA:
+1. Tamanho: Exatamente entre 5 e 8 frases.
+2. Formato: Um único bloco de texto contínuo, sem quebras de parágrafo.
+3. Foco: Apenas UM evento físico, isolado e linear. Começo, meio e fim da mesma ação.
+4. Finalização: A última frase descreve exclusivamente o estado estático final do objeto/cenário afetado.
 
-PROIBIÇÕES ABSOLUTAS — qualquer violação invalida a cena:
-- Nunca nomeie conspirações, organizações ou entidades no texto. ("Sociedade Thule", "Templários" e similares são proibidos.)
-- Nunca explique o que a cena significa. Proibido na última frase: "sugerindo que", "revelando que", "como se o lugar fosse", "o que indica".
-- Nunca use qualificadores de dúvida: "como se", "parece", "como se fosse", "como se tivesse".
-- Nunca acumule mais de um evento.
-- Nunca mencione câmera, ângulo ou recurso técnico.
-- Nunca use vocabulário científico ou anacrônico: "frequências", "dispositivo", "calibração", "ultrassônico".
-- Apenas o que se vê. Cheiro, tato e paladar são proibidos.
+PROIBIÇÕES ABSOLUTAS (A violação quebra o jogo):
+- SEM SUBJETIVIDADE: É proibido usar "como se", "parecia", "dava a impressão". O evento é um fato concreto.
+- SEM EXPLICAÇÃO: É proibido escrever "sugerindo que", "revelando", "o que indica". O narrador é um espectador cego ao significado.
+- SEM NOMEAR: Nunca escreva o nome de conspirações, entidades ou sociedades no texto.
+- SEM ANACRONISMOS: Não utilize jargão técnico, sci-fi ou dimensional ("frequências", "energia", "tecnologia", "calibração").
+- SEM TÉCNICA: Nunca mencione câmeras, luz de estúdio, o jogador ou "ângulo".
+- SEM OUTROS SENTIDOS: Descreva apenas a luz refletida pelos objetos. Sem texturas táteis, aromas ou temperaturas não visíveis.
 
-TOM: Frio. Preciso e calmo. O impossível é descrito como fato, sem espanto e sem explicação.
+TOM DO TEXTO:
+Frio, impessoal e calmo. Descreva o absurdo ou o sobrenatural como se estivesse redigindo um laudo pericial de um acidente de trânsito.
 
-Retorne exclusivamente: {"narrativa": "texto aqui"}`;
+Retorne exclusivamente um JSON válido no formato:
+{"narrativa": "texto da cena aqui"}`;
 
-            const data = await chamarGroq([
-                { role: "system", content: "Você é um diretor de cinema com conhecimento profundo em mitologia, hermeticismo e conspirações reais. Você descreve visualmente o que acontece no mundo — o jogador nunca é o sujeito da cena. Retorne exclusivamente um objeto JSON." },
-                { role: "user", content: prompt }
-            ], 0.8, { type: "json_object" }, MODELO_IND, 3);
-            
+    const data = await chamarGroq([
+        { 
+            role: "system", 
+            content: "Você processa cenários e retorna exclusivamente um objeto JSON puro. Não utilize formatação markdown ao redor do JSON." 
+        },
+        { 
+            role: "user", 
+            content: prompt 
+        }
+    ], 0.75, { type: "json_object" }, MODELO_IND, 3); // Reduzi levemente a temperatura para 0.75 visando maior obediência às restrições
+    
+    try {
+        const raw = data.choices[0].message.content;
+        const parsed = JSON.parse(raw);
+        return parsed.narrativa.trim();
+    } catch (e) {
+        console.error("[IND] Erro no parse do JSON. Tentando recuperação de emergência:", e);
+        // Expressão regular robusta para extrair o objeto JSON mesmo se a IA embrulhar com markdown de código
+        const match = data.choices[0].message.content.match(/\{[\s\S]*\}/);
+        if (match) {
             try {
-                // Fazemos o parse do JSON retornado e devolvemos apenas o texto limpo para o jogo
-                const raw = data.choices[0].message.content;
-                const parsed = JSON.parse(raw);
-                return parsed.narrativa.trim();
-            } catch (e) {
-                console.error("[IND] Erro no parse do JSON. Tentando recuperar texto bruto:", e);
-                // Fallback de segurança caso a IA mande markdown sujo em volta do JSON
-                return data.choices[0].message.content.replace(/```json|```/g, '').trim();
+                return JSON.parse(match[0]).narrativa.trim();
+            } catch (err) {
+                console.error("[IND] Falha na recuperação regex:", err);
             }
         }
+        return data.choices[0].message.content.replace(/```json|```/g, '').trim();
+    }
+}
 
         function exibirModalIND(texto) {
             return new Promise(resolve => {
