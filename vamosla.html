@@ -1058,25 +1058,31 @@ CENÁRIO ATUAL: ${sala.texto_logico}
 REVELAÇÕES ANTERIORES (${historicoIND.length} ocorrências):
 ${historicoIND.slice(-3).join("\n---\n")}
 
-OBJETIVO:
-O jogador entrou na sala. Crie uma "Interrupção Narrativa Dinâmica" (IND): um evento OBSERVÁVEL que ocorre agora neste espaço, revelando UM fragmento do mistério ou da lore.
+TAREFA:
+Escreva uma cena de 4 a 8 frases que ocorre agora neste espaço. Uma coisa — objeto, superfície, luz, sombra — muda ou se move sozinha. O jogador existe mas não é mencionado. Ele assiste.
 
-REGRAS ESTRITAS:
-1. 5 a 8 frases. Sem quebras de parágrafo.
-2. A cena não começa no jogador: um movimento, uma mudança, algo que acontece sozinho.
-3. Estritamente VISUAL. Eventos sobrenaturais são descritos com calma e diretamente — não "como se movido por uma força" mas "o livro vira suas próprias páginas". Proibido: "como se", "parece", "como se fosse", "como se tivesse".
-4. Progressão: algo ocorre → a atenção se fecha em um detalhe → esse detalhe levanta uma questão sem respondê-la. Não enuncie a revelação — mostre o que a implica. Nunca mencione câmera ou recurso técnico.
-5. UM ÚNICO evento sobrenatural ligado a UM ÚNICO elemento do mistério. Não acumule revelações. Contenção é força.
-6. Parta do CENÁRIO IMEDIATO. Não resolva o mistério — aprofunde-o.
-7. Você DEVE OBRIGATORIAMENTE retornar APENAS um objeto JSON no seguinte formato:
-{
-  "narrativa": "o texto da cinematic aqui"
-}`;
+A CENA DEVE:
+- Conter exatamente UM evento físico transcorrendo. Apenas um.
+- Evocar (sem nomear) um aspecto do CONTEXTO SECRETO DO MUNDO.
+- Terminar com uma imagem física aberta — algo visível que não se explica e não se resolve.
+
+PROIBIÇÕES ABSOLUTAS — qualquer violação invalida a cena:
+- Nunca nomeie conspirações, organizações ou entidades no texto. ("Sociedade Thule", "Templários" e similares são proibidos.)
+- Nunca explique o que a cena significa. Proibido na última frase: "sugerindo que", "revelando que", "como se o lugar fosse", "o que indica".
+- Nunca use qualificadores de dúvida: "como se", "parece", "como se fosse", "como se tivesse".
+- Nunca acumule mais de um evento.
+- Nunca mencione câmera, ângulo ou recurso técnico.
+- Nunca use vocabulário científico ou anacrônico: "frequências", "dispositivo", "calibração", "ultrassônico".
+- Apenas o que se vê. Cheiro, tato e paladar são proibidos.
+
+TOM: Frio. Preciso e calmo. O impossível é descrito como fato, sem espanto e sem explicação.
+
+Retorne exclusivamente: {"narrativa": "texto aqui"}`;
 
             const data = await chamarGroq([
                 { role: "system", content: "Você é um diretor de cinema com conhecimento profundo em mitologia, hermeticismo e conspirações reais. Você descreve visualmente o que acontece no mundo — o jogador nunca é o sujeito da cena. Retorne exclusivamente um objeto JSON." },
                 { role: "user", content: prompt }
-            ], 0.88, { type: "json_object" }, MODELO_IND, 3);
+            ], 0.8, { type: "json_object" }, MODELO_IND, 3);
             
             try {
                 // Fazemos o parse do JSON retornado e devolvemos apenas o texto limpo para o jogo
