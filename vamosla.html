@@ -1065,9 +1065,9 @@ Esta cena DEVE mostrar UM evento OBSERVÁVEL que ocorre agora neste mesmo espaç
 REGRAS ESTRITAS:
 1. Em torno de 5 a 8 frases no total. Sem quebras drásticas de parágrafos.
 2. A cena não começa no jogador. Pode começar com um som no fundo do aposento, um movimento que ninguém causou, uma mudança súbita na luz — qualquer coisa que acontece independentemente de quem está presente.
-3. O evento deve ser FÍSICO e CONCRETO. A linguagem pode ser precisa e evocativa — o que deve ser evitado são estados internos, sensações ou percepções do personagem do jogador.
-4. A cena deve ter uma progressão visual implícita: algo ocorre no espaço (som, movimento, mudança) → a câmera se detém em um detalhe específico → esse detalhe levanta uma questão sem respondê-la. Não enuncie a revelação — mostre o que a implica.
-5. A cena DEVE apresentar, de forma CONCRETA e em forma de evento, pelo menos UM dos seguintes elementos: MISTÉRIO CENTRAL: ${dnaGlobal?.misterio_central || "Desconhecido"} | CONSPIRAÇÕES REAIS: ${(dnaGlobal?.conspiracoes_reais || []).join(", ")} | ENTIDADES OCULTAS: ${JSON.stringify(dnaGlobal?.entidades || [])}
+3. O evento deve ser FÍSICO e CONCRETO. A linguagem deve ser sensorial: descreva apenas o que pode ser visto, ouvido ou tocado. Evite metáforas que invoquem conceitos não-físicos. Estados internos e percepções do personagem do jogador são igualmente proibidos.
+4. A cena deve ter uma progressão implícita: algo ocorre no espaço (som, movimento, mudança) → a atenção se fecha em um detalhe físico específico → esse detalhe levanta uma questão sem respondê-la. Não enuncie a revelação — mostre o que a implica. NUNCA mencione câmera, ângulo ou recurso técnico de filmagem no texto final.
+5. A cena contém UM ÚNICO fragmento de revelação (Mistério central; Conspirações reais; Entidades). Não acumule elementos de origens diferentes na mesma cena. Escolha um. Quanto mais contida a revelação, maior seu peso.
 6. Tome o CENÁRIO IMEDIATO como ponto de partida — a conexão com o espaço físico não precisa ser explícita, apenas plausível.
 7. NÃO resolva o mistério. Aprofunde-o.
 8. Você DEVE OBRIGATORIAMENTE retornar APENAS um objeto JSON no seguinte formato:
