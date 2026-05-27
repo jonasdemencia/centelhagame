@@ -1050,7 +1050,7 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
 
         async function gerarIND(idSala) {
             const sala = mapaMundo[idSala];
-            const prompt = `Você é o diretor de cenas cinematográficas (cinematics).
+            const prompt = `Você é o diretor de cenas cinematográficas (cinematics). Escreva em português brasileiro direto.
 MISTÉRIO CENTRAL: ${dnaGlobal?.misterio_central || "Desconhecido"}
 CONSPIRAÇÕES REAIS: ${(dnaGlobal?.conspiracoes_reais || []).join(", ")}
 ENTIDADES OCULTAS: ${JSON.stringify(dnaGlobal?.entidades || [])}
@@ -1061,11 +1061,12 @@ ${historicoIND.slice(-3).join("\n---\n")}
 OBJETIVO:
 O jogador acabou de entrar nesta sala. Crie uma "Interrupção Narrativa Dinâmica" (IND).
 Esta cena DEVE mostrar UM evento OBSERVÁVEL que ocorre agora neste mesmo espaço e que revela UM pedaço do MISTÉRIO CENTRAL e da lore do mundo.
+Eventos sobrenaturais devem ser descritos de forma direta e calma, sem qualificadores de dúvida. 
 
 REGRAS ESTRITAS:
 1. Em torno de 5 a 8 frases no total. Sem quebras drásticas de parágrafos.
-2. A cena não começa no jogador. Pode começar com um som no fundo do aposento, um movimento que ninguém causou, uma mudança súbita na luz — qualquer coisa que acontece independentemente de quem está presente.
-3. O evento deve ser FÍSICO e CONCRETO. A linguagem deve ser sensorial: descreva apenas o que pode ser visto, ouvido ou tocado. Evite metáforas que invoquem conceitos não-físicos. Estados internos e percepções do personagem do jogador são igualmente proibidos.
+2. A cena não começa no jogador. Pode começar com um som no fundo do aposento, um movimento que ninguém causou - qualquer coisa que acontece independentemente de quem está presente.
+3. O evento deve ser FÍSICO e CONCRETO. A linguagem deve ser estritamente VISUAL: descreva apenas o que pode ser visto. Evite metáforas que invoquem conceitos não-físicos. Estados internos e percepções do personagem do jogador são igualmente proibidos.
 4. A cena deve ter uma progressão implícita: algo ocorre no espaço (som, movimento, mudança) → a atenção se fecha em um detalhe físico específico → esse detalhe levanta uma questão sem respondê-la. Não enuncie a revelação — mostre o que a implica. NUNCA mencione câmera, ângulo ou recurso técnico de filmagem no texto final.
 5. A cena contém UM ÚNICO fragmento de revelação (Mistério central; Conspirações reais; Entidades). Não acumule elementos de origens diferentes na mesma cena. Escolha um. Quanto mais contida a revelação, maior seu peso.
 6. Tome o CENÁRIO IMEDIATO como ponto de partida — a conexão com o espaço físico não precisa ser explícita, apenas plausível.
