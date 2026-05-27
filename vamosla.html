@@ -1074,7 +1074,7 @@ REGRAS ESTRITAS:
 }`;
 
             const data = await chamarGroq([
-                { role: "system", content: "Você é um diretor de cinema com conhecimento profundo em mitologia, hermeticismo e conspirações reais. Você descreve visualmente o que acontece no mundo — o jogador nunca é o sujeito da cena. Retorne exclusivamente um objeto JSON." }
+                { role: "system", content: "Você é um diretor de cinema com conhecimento profundo em mitologia, hermeticismo e conspirações reais. Você descreve visualmente o que acontece no mundo — o jogador nunca é o sujeito da cena. Retorne exclusivamente um objeto JSON." },
                 { role: "user", content: prompt }
             ], 0.88, { type: "json_object" }, MODELO_IND, 3);
             
