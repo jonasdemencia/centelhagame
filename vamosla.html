@@ -1053,10 +1053,20 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
     
     const prompt = `Você é o Diretor de Cinematics de um jogo de "Survival Horror" adulto, cru e realista (estilo Resident Evil clássico). Sua função é criar a "Interrupção Narrativa Dinâmica", uma cena curta onde o cenário reage fisicamente à história.
 
-O ENREDO (Inspiração oculta - NÃO NOMEIE ESTES TERMOS NA CENA):
-- MISTÉRIO CENTRAL: ${dnaGlobal?.misterio_central || "Desconhecido"}
-- CONSPIRAÇÕES: ${(dnaGlobal?.conspiracoes_reais || []).join(", ")}
-- ENTIDADES: ${JSON.stringify(dnaGlobal?.entidades || [])}
+A FÍSICA DESTE MUNDO (leis invioláveis — a cena deve ser coerente com elas, sem nomeá-las):
+- ${axiomasTexto}
+
+A TESE (o horror de fundo — nunca nomeie, apenas deixe que a cena a prove):
+${dnaGlobal?.tese_fundacional || ""}
+
+EVIDÊNCIAS QUE HABITAM ESTE MUNDO (materialize uma delas como rastro físico na cena):
+- ${camadasTexto}
+
+CONSPIRAÇÕES ATIVAS (o que age nos bastidores):
+- ${conspiracoesTexto}
+
+ENTIDADES (nunca nomeie — apenas deixe seu rastro físico):
+${JSON.stringify(dnaGlobal?.entidades || [])}
 
 CENÁRIO ATUAL (Onde a cena acontece):
 ${sala.texto_logico}
@@ -1068,7 +1078,8 @@ DIRETRIZ DE DIREÇÃO DE ARTE (A ÂNCORA DE REALIDADE):
 O horror no seu mundo NÃO é mágico, iluminado ou fantasioso. O horror é PESADO e CLÍNICO. O sobrenatural opera através da física crua: concreto, carne, poeira, madeira quebrando, sangue e gravidade. Tudo que se move tem atrito e peso.
 
 REGRAS DE ESCRITA:
-1. Formato: 5 a 8 frases contínuas. Um único parágrafo. Foco em UM único objeto/evento (Não liste múltiplos acontecimentos na sala).
+0. Escolha UM elemento do DNA. Ignore todos os outros. Profundidade de um, silêncio dos demais.
+1. Formato: 5 a 8 frases contínuas. Um único parágrafo. Foco em UM único evento (Não liste múltiplos acontecimentos na sala).
 2. Materialidade Absoluta (PROIBIÇÃO DE FANTASIA): É expressamente PROIBIDO o uso de "símbolos brilhantes", "cristais", "objetos flutuando", "almas", "luzes mágicas", "equações no ar" ou "mudanças de dimensão". Nada levita. A gravidade existe.
 3. Proibido Metáforas: NUNCA use "como se", "parecia", "dava a impressão". O evento é narrado no indicativo direto, como um relatório pericial.
 4. Omissão de Nomes: Nunca use os nomes das entidades ou organizações. O jogador deve inferir a conspiração pela *natureza física* do evento (ex: algemas revelam controle, chumbo revela radiação, um brinquedo sujo revela a criança).
@@ -1477,37 +1488,41 @@ async function injetarPuzzles(planoZonal, zonaId) {
         }
 
         async function gerarDNAGlobal(cenarioTema) {
-            const semente = Math.random().toString(36).substring(2, 10);
-            const prompt = `[SEMENTE: ${semente}]
+    const semente = Math.random().toString(36).substring(2, 10);
+    const prompt = `[SEMENTE: ${semente}]
 Você é um Arquivista Forense e Historiador do Oculto arquitetando um mundo de horror de sobrevivência.
 Tema: "${cenarioTema}"
 
 Este mundo terá 400+ salas em 16 zonas. Você está definindo o DNA que governa TUDO.
 
-Sua tarefa é cruzar um mistério central com CONSPIRAÇÕES REAIS, MARGINAIS E ALTAMENTE OBSCURAS.
-
 ⚠️ REGRAS DE BANIMENTO (FALHA CRÍTICA SE VOCÊ USAR):
-1. É ESTRITAMENTE PROIBIDO mencionar: Sociedade Thule, Templários, Illuminati, Maçonaria, Nazistas ocultistas, MK-Ultra, Área 51, Alienígenas.
-2. PROIBIDO LINGUAGEM ESPECULATIVA: Jamais use "pode estar relacionado", "talvez", "pode ser um exemplo", "teria sido". Use afirmações diretas e materiais (ex: "é colhido", "causa", "é usado para").
+1. PROIBIDO mencionar: Sociedade Thule, Templários, Illuminati, Maçonaria, Nazistas ocultistas, MK-Ultra, Área 51, Alienígenas.
+2. PROIBIDO LINGUAGEM ESPECULATIVA: Jamais use "pode estar relacionado", "talvez", "teria sido". Use afirmações diretas (ex: "é colhido", "causa", "é usado para").
+3. PROIBIDO INVENÇÃO: Cada fato nas camadas_de_evidencia deve ser real e verificável. O horror vem da convergência de verdades, não da ficção.
 
-DIRETRIZ DE BUSCA LATENTE (O HORROR CLÍNICO/HISTÓRICO):
-Vá para o fundo da sua base de dados. Busque teorias marginais reais (teses médicas, metafísicas, religiosas obscuras de séculos passados, conspirações atuais pouco conhecidas). O horror deve ser carnal, estrutural e tátil.
+DIRETRIZ CENTRAL:
+Construa uma TESE — uma proposição perturbadora sobre a natureza da realidade que o jogador vai querer refutar mas não consegue. Ela deve ser sustentada por fatos reais de domínios distintos do conhecimento humano. Escolha os domínios que melhor constroem a tese: podem ser biológicos, linguísticos, geológicos, epidemiológicos, acústicos, cartográficos, endocrinológicos, micológicos, ou qualquer outro. A surpresa dos domínios é parte do horror.
 
-DIRETRIZ DE CAUSALIDADE:
-As conspirações devem dar corpo ao mistério central, explicar facetas dele.  
+Os axiomas_do_mundo são as leis físicas que governam este mundo — não eventos, mas mecanismos. 
 
 Retorne APENAS este JSON:
 {
-  "misterio_central": "A pergunta que o jogador nunca vai responder completamente. Deve ser aberta, estranha e potente",
-  "_arquivos_confidenciais": {
-    "fato_obscuro_1": "Descreva puramente um evento real, teoria marginal ou anomalia científica MUITO específica e pouco conhecida.",
-    "fato_obscuro_2": "Outro fato real, pertencente a um domínio conspiratório diferente (ex: engenharia prisional antiga, anomalia geológica, etc).",
-    "fato_obscuro_3": "Mais um fato real, focado em outro domínio conspiratório."
-  },
+  "tese_fundacional": "Uma afirmação sobre a natureza da realidade — não uma pergunta. Perturbadora porque é difícil provar que é falsa. Sustentada pelas camadas abaixo.",
+  "axiomas_do_mundo": [
+  "Axioma 1: uma lei física inviolável deste mundo — não um evento, mas um mecanismo. Escolha o domínio que melhor serve a tese.",
+  "Axioma 2: outra lei física, de domínio diferente do primeiro.",
+  "Axioma 3: outra lei física, de domínio diferente dos anteriores."
+],
+  "camadas_de_evidencia": [
+    { "dominio": "nome do domínio escolhido pelo modelo", "fato": "fato real e verificável neste domínio", "implicacao": "o que este fato implica sobre a natureza humana se levado a sério" },
+    { "dominio": "...", "fato": "...", "implicacao": "..." },
+    { "dominio": "...", "fato": "...", "implicacao": "..." },
+    { "dominio": "...", "fato": "...", "implicacao": "..." }
+  ],
   "conspiracoes_reais": [
-    "[Fato Obscuro 1] + [Elo causal físico e tangível com o Mistério Central].",
-    "[Fato Obscuro 2] + [Elo causal físico e tangível com o Mistério Central].",
-    "[Fato Obscuro 3] + [Elo causal físico e tangível com o Mistério Central]."
+    "Fato de uma camada + elo causal físico e tangível com a tese_fundacional.",
+    "Fato de outra camada + elo causal físico e tangível com a tese_fundacional.",
+    "Fato de outra camada + elo causal físico e tangível com a tese_fundacional."
   ],
   "entidades": [
     { "nome": "nome concreto", "natureza": "o que é sem romanticismo", "zona_primeira_pista": 1, "nunca_explicar_completamente": true },
@@ -1522,7 +1537,7 @@ Retorne APENAS este JSON:
     { "nome": "...", "zona_origem": 5, "zonas_relevantes": [10, 12], "o_que_desvela": "..." }
   ],
   "zonas": [
-    { "id": 1, "nome": "nome evocativo da zona", "tom_sensorial": "1 frase crua sobre o que domina os sentidos aqui", "segredo_local": "uma frase curta que revela uma evidência física de uma das CONSPIRAÇÕES REAIS ou do MISTÉRIO CENTRAL.", "conecta_com": [2, 3] },
+    { "id": 1, "nome": "nome evocativo da zona", "tom_sensorial": "1 frase crua sobre o que domina os sentidos aqui", "segredo_local": "uma evidência física que revela uma das camadas de evidencia ou da tese.", "conecta_com": [2, 3] },
     { "id": 2, "nome": "...", "tom_sensorial": "...", "segredo_local": "...", "conecta_com": [1, 4, 5] },
     { "id": 3, "nome": "...", "tom_sensorial": "...", "segredo_local": "...", "conecta_com": [1, 6] },
     { "id": 4, "nome": "...", "tom_sensorial": "...", "segredo_local": "...", "conecta_com": [2, 7] },
@@ -1541,12 +1556,12 @@ Retorne APENAS este JSON:
   ]
 }`;
 
-            const idMsg = adicionarMensagem("⚙️ Forjando o DNA do mundo...", "system", true);
-            const data = await chamarGroq([{ role: "user", content: prompt }], 0.65, { type: "json_object" });
-            dnaGlobal = JSON.parse(data.choices[0].message.content);
-            document.getElementById(idMsg)?.remove();
-            console.log('[DNA Global]', dnaGlobal);
-        }
+    const idMsg = adicionarMensagem("⚙️ Forjando o DNA do mundo...", "system", true);
+    const data = await chamarGroq([{ role: "user", content: prompt }], 0.82, { type: "json_object" });
+    dnaGlobal = JSON.parse(data.choices[0].message.content);
+    document.getElementById(idMsg)?.remove();
+    console.log('[DNA Global]', dnaGlobal);
+}
 
         function validarPlanoTopologia(plano, salaInicio, salaFim) {
             const erros = [];
