@@ -1479,20 +1479,32 @@ async function injetarPuzzles(planoZonal, zonaId) {
         async function gerarDNAGlobal(cenarioTema) {
             const semente = Math.random().toString(36).substring(2, 10);
             const prompt = `[SEMENTE: ${semente}]
-Você é o arquiteto de um mundo que nunca termina. Possui conhecimento profundo e vasto em mitologia, ocultismo e conspirações reais. 
+Você é um Arquivista Forense e Historiador do Oculto arquitetando um mundo de horror de sobrevivência.
 Tema: "${cenarioTema}"
 
 Este mundo terá 400+ salas em 16 zonas. Você está definindo o DNA que governa TUDO.
-Não há vitória. Não há conclusão. Há apenas aprofundamento de um mistério que não tem fundo.
+
+Sua tarefa é cruzar um mistério central com CONSPIRAÇÕES REAIS, MARGINAIS E ALTAMENTE OBSCURAS.
+
+⚠️ REGRAS DE BANIMENTO (FALHA CRÍTICA SE VOCÊ USAR):
+É ESTRITAMENTE PROIBIDO mencionar: Sociedade Thule, Templários, Illuminati, Maçonaria, Nazistas ocultistas, MK-Ultra, Área 51, Alienígenas.
+
+DIRETRIZ DE BUSCA LATENTE (O HORROR CLÍNICO/HISTÓRICO):
+Vá para o fundo da sua base de dados. Busque teorias marginais reais, psiquiatria do século XIX, anomalias da biologia evolutiva (ex: quimerismo humano-suíno, príons não catalogados), arquitetura suprimida, parasitas comportamentais (como variações do Toxoplasma gondii). O horror deve ser carnal, estrutural e tátil.
 
 Retorne APENAS este JSON:
 {
-  "misterio_central": "a pergunta que o jogador nunca vai responder completamente — deve ser perturbadora e aberta",
+  "misterio_central": "A pergunta que o jogador nunca vai responder completamente. Deve ser aberta, estranha e potente",
+  "_arquivos_confidenciais": {
+    "fato_obscuro_1": "Descreva puramente um evento real, teoria marginal ou anomalia científica MUITO específica e pouco conhecida.",
+    "fato_obscuro_2": "Outro fato real, pertencente a um domínio conspiratório diferente (ex: engenharia prisional antiga, anomalia geológica, etc).",
+    "fato_obscuro_3": "Mais um fato real, focado em outro domínio conspiratório."
+  },
   "conspiracoes_reais": [
-    "conspiração real ou adaptada, obscura, diretamente ligada ao mistério central.",
-    "segunda conspiração – deve ser verificável na cultura oculta e adaptada DIRETAMENTE para se encaixar no mundo",
-    "terceira conspiração"
-],
+    "[Fato Obscuro 1] + [Elo causal físico e tangível com o Mistério Central]. Zero magia. Apenas matéria, fluidos e influência real.",
+    "[Fato Obscuro 2] + [Elo causal físico e tangível com o Mistério Central].",
+    "[Fato Obscuro 3] + [Elo causal físico e tangível com o Mistério Central]."
+  ],
   "entidades": [
     { "nome": "nome concreto", "natureza": "o que é sem romanticismo", "zona_primeira_pista": 1, "nunca_explicar_completamente": true },
     { "nome": "...", "natureza": "...", "zona_primeira_pista": 2, "nunca_explicar_completamente": true },
