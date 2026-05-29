@@ -1487,7 +1487,8 @@ async function injetarPuzzles(planoZonal, zonaId) {
             await gerarZona(1);
         }
 
-        async function gerarDNAGlobal(cenarioTema) {
+        ```javascript
+async function gerarDNAGlobal(cenarioTema) {
     const semente = Math.random().toString(36).substring(2, 10);
     const prompt = `[SEMENTE: ${semente}]
 Você é um Arquivista Forense e Historiador do Oculto arquitetando um mundo de horror de sobrevivência.
@@ -1495,34 +1496,38 @@ Tema: "${cenarioTema}"
 
 Este mundo terá 400+ salas em 16 zonas. Você está definindo o DNA que governa TUDO.
 
-⚠️ REGRAS DE BANIMENTO (FALHA CRÍTICA SE VOCÊ USAR):
-1. PROIBIDO mencionar: Sociedade Thule, Templários, Illuminati, Maçonaria, Nazistas ocultistas, MK-Ultra, Área 51, Alienígenas.
-2. PROIBIDO LINGUAGEM ESPECULATIVA: Jamais use "pode estar relacionado", "talvez", "teria sido". Use afirmações diretas (ex: "é colhido", "causa", "é usado para").
-3. PROIBIDO INVENÇÃO: Cada fato nas camadas_de_evidencia deve ser real e verificável. O horror vem da convergência de verdades, não da ficção.
+⚠️ BANIMENTO ABSOLUTO:
+1. PROIBIDO: Thule, Templários, Illuminati, Maçonaria, MK-Ultra, Área 51, Alienígenas.
+2. PROIBIDO linguagem especulativa: "talvez", "pode ser", "teria sido". Use afirmações diretas.
+3. PROIBIDO genericidade: fatos sem nome próprio, data, lugar ou medida são inválidos. Teses que servem para qualquer jogo de horror são inválidas. Segredos de zona sem objeto físico concreto são inválidos.
 
 DIRETRIZ CENTRAL:
-Construa uma TESE — uma proposição perturbadora sobre a natureza da realidade que o jogador vai querer refutar mas não consegue. Ela deve ser sustentada por fatos reais de domínios distintos do conhecimento humano. Escolha os domínios que melhor constroem a tese: podem ser biológicos, linguísticos, geológicos, epidemiológicos, acústicos, cartográficos, endocrinológicos, micológicos, ou qualquer outro. A surpresa dos domínios é parte do horror.
+Construa uma TESE — uma afirmação perturbadora sobre a natureza da realidade, difícil de refutar, sustentada por fatos reais de domínios distintos. O horror vem da convergência de verdades, não da invenção.
 
-Os axiomas_do_mundo são as leis físicas que governam este mundo — não eventos, mas mecanismos. 
+EXEMPLO DE FALHA:
+tese: "A fome transcende a biologia humana." → inválida. Não afirma nada verificável.
+camada: "A fome é um mecanismo fisiológico essencial." → inválida. É definição de dicionário.
+
+EXEMPLO DE SUCESSO:
+tese: "O sistema nervoso entérico — 500 milhões de neurônios no intestino — toma decisões independentes do cérebro. O nervo vago transmite 80% dos sinais do intestino para o cérebro, não o contrário. O que chamamos de vontade é o cérebro sendo informado de decisões já tomadas."
+camada: { "dominio": "Neurociência entérica", "fato": "O intestino produz 95% da serotonina do corpo humano e possui memória funcional independente do cérebro.", "implicacao": "O desejo não vem da razão. Vem de um órgão que existe há 500 milhões de anos a mais." }
 
 Retorne APENAS este JSON:
 {
-  "tese_fundacional": "Uma afirmação sobre a natureza da realidade — não uma pergunta. Perturbadora porque é difícil provar que é falsa. Sustentada pelas camadas abaixo.",
+  "_rascunho": "Liste 4 fatos brutos, reais e verificáveis sobre o tema — cada um com nome próprio, data, lugar ou medida. Estes fatos constroem a tese.",
+  "tese_fundacional": "Afirmação sobre a natureza da realidade. Perturbadora porque é difícil provar que é falsa.",
   "axiomas_do_mundo": [
-  "Axioma 1: uma lei física inviolável deste mundo — não um evento, mas um mecanismo. Escolha o domínio que melhor serve a tese.",
-  "Axioma 2: outra lei física, de domínio diferente do primeiro.",
-  "Axioma 3: outra lei física, de domínio diferente dos anteriores."
-],
+    "Lei física inviolável — não evento, mas mecanismo. Domínio livre.",
+    "Outra lei física, domínio diferente.",
+    "Outra lei física, domínio diferente."
+  ],
   "camadas_de_evidencia": [
-    { "dominio": "nome do domínio escolhido pelo modelo", "fato": "fato real e verificável neste domínio", "implicacao": "o que este fato implica sobre a natureza humana se levado a sério" },
-    { "dominio": "...", "fato": "...", "implicacao": "..." },
-    { "dominio": "...", "fato": "...", "implicacao": "..." },
-    { "dominio": "...", "fato": "...", "implicacao": "..." }
+    { "dominio": "nome do domínio", "fato": "fato real e verificável", "implicacao": "o que implica sobre a natureza humana" }
   ],
   "conspiracoes_reais": [
-    "Fato de uma camada + elo causal físico e tangível com a tese_fundacional.",
-    "Fato de outra camada + elo causal físico e tangível com a tese_fundacional.",
-    "Fato de outra camada + elo causal físico e tangível com a tese_fundacional."
+    "Fato de uma camada + elo causal físico com a tese_fundacional.",
+    "Fato de outra camada + elo causal físico com a tese_fundacional.",
+    "Fato de outra camada + elo causal físico com a tese_fundacional."
   ],
   "entidades": [
     { "nome": "nome concreto", "natureza": "o que é sem romanticismo", "zona_primeira_pista": 1, "nunca_explicar_completamente": true },
@@ -1537,7 +1542,7 @@ Retorne APENAS este JSON:
     { "nome": "...", "zona_origem": 5, "zonas_relevantes": [10, 12], "o_que_desvela": "..." }
   ],
   "zonas": [
-    { "id": 1, "nome": "nome evocativo da zona", "tom_sensorial": "1 frase crua sobre o que domina os sentidos aqui", "segredo_local": "uma evidência física que revela uma das camadas de evidencia ou da tese.", "conecta_com": [2, 3] },
+    { "id": 1, "nome": "nome evocativo", "tom_sensorial": "1 frase crua e sensorial", "segredo_local": "objeto físico concreto que é fragmento direto de uma camada ou da tese", "conecta_com": [2, 3] },
     { "id": 2, "nome": "...", "tom_sensorial": "...", "segredo_local": "...", "conecta_com": [1, 4, 5] },
     { "id": 3, "nome": "...", "tom_sensorial": "...", "segredo_local": "...", "conecta_com": [1, 6] },
     { "id": 4, "nome": "...", "tom_sensorial": "...", "segredo_local": "...", "conecta_com": [2, 7] },
@@ -1562,6 +1567,7 @@ Retorne APENAS este JSON:
     document.getElementById(idMsg)?.remove();
     console.log('[DNA Global]', dnaGlobal);
 }
+```
 
         function validarPlanoTopologia(plano, salaInicio, salaFim) {
             const erros = [];
