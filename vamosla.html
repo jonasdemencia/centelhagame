@@ -1487,8 +1487,7 @@ async function injetarPuzzles(planoZonal, zonaId) {
             await gerarZona(1);
         }
 
-        ```javascript
-async function gerarDNAGlobal(cenarioTema) {
+       async function gerarDNAGlobal(cenarioTema) {
     const semente = Math.random().toString(36).substring(2, 10);
     const prompt = `[SEMENTE: ${semente}]
 Você é um Arquivista Forense e Historiador do Oculto arquitetando um mundo de horror de sobrevivência.
@@ -1567,7 +1566,6 @@ Retorne APENAS este JSON:
     document.getElementById(idMsg)?.remove();
     console.log('[DNA Global]', dnaGlobal);
 }
-```
 
         function validarPlanoTopologia(plano, salaInicio, salaFim) {
             const erros = [];
