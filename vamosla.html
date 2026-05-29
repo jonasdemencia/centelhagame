@@ -1487,43 +1487,39 @@ async function injetarPuzzles(planoZonal, zonaId) {
             await gerarZona(1);
         }
 
-       async function gerarDNAGlobal(cenarioTema) {
+      async function gerarDNAGlobal(cenarioTema) {
     const semente = Math.random().toString(36).substring(2, 10);
     const prompt = `[SEMENTE: ${semente}]
-Você é um Arquivista Forense e Historiador do Oculto arquitetando um mundo de horror de sobrevivência.
+Você é um Arquivista Historiador do Oculto (conspirações, religião, mito, ciência) arquitetando um mundo de horror de sobrevivência.
 Tema: "${cenarioTema}"
-TUDO que você gerar — tese, camadas, entidades, zonas — deve ser ancorado neste tema. 
+TUDO que você gerar deve ser ancorado neste tema. Se o tema não for reconhecível no output, o output está errado.
 
 Este mundo terá 400+ salas em 16 zonas. Você está definindo o DNA que governa TUDO.
 
 ⚠️ BANIMENTO ABSOLUTO:
 1. PROIBIDO: Thule, Templários, Illuminati, Maçonaria, MK-Ultra, Área 51, Alienígenas.
 2. PROIBIDO linguagem especulativa: "talvez", "pode ser", "teria sido". Use afirmações diretas.
-3. PROIBIDO genericidade: fatos sem nome próprio, data, lugar ou medida são inválidos. Teses que servem para qualquer jogo de horror são inválidas. Segredos de zona sem objeto físico concreto são inválidos.
+3. PROIBIDO genericidade: fatos sem nome próprio, data, lugar ou medida são inválidos. Segredos de zona sem objeto físico concreto e único são inválidos. Zonas não podem compartilhar objetos entre si.
 
-DIRETRIZ CENTRAL:
-Construa uma TESE — uma afirmação perturbadora sobre a natureza da realidade, sustentada por fatos reais de domínios distintos. O horror vem da convergência de verdades, não da invenção.
+DIRETRIZ:
+Construa uma TESE — uma frase de peso máximo, difícil de refutar, que muda retroativamente o significado de algo banal. Sustente-a com fatos reais de domínios distintos do conhecimento humano. O horror vem da convergência de verdades, não da invenção.
+
+EXEMPLO DE FALHA:
+tese: "A fome transcende a biologia humana." → sem peso, sem afirmação verificável.
+camada: "A fome é um mecanismo fisiológico essencial." → definição de dicionário, inválida.
 
 EXEMPLO DE SUCESSO:
 tese: "Você nunca foi o sujeito de nenhuma decisão que tomou."
-camada: { "dominio": "Neurociência entérica", "fato": "O intestino produz 95% da serotonina do corpo humano e possui memória funcional independente do cérebro.", "implicacao": "O desejo não vem da razão. Vem de um órgão que existe há 500 milhões de anos a mais." }
+camada: { "dominio": "Neurociência entérica", "fato": "O intestino produz 95% da serotonina do corpo humano e possui memória funcional independente do cérebro.", "implicacao": "O desejo não vem da razão. Vem de um órgão que existe há 500 milhões de anos a mais.", "elo_com_tese": "A decisão já foi tomada pelo intestino antes de o cérebro formular a intenção." }
 
 Retorne APENAS este JSON:
 {
-  "_rascunho": "Liste 4 fatos reais sobre '${cenarioTema}' — cada um com nome próprio, data, lugar ou medida. Estes fatos constroem a tese.",
-  "tese_fundacional": "Uma frase. Peso máximo. Muda retroativamente o significado de algo que o jogador sempre achou banal.",
-  "axiomas_do_mundo": [
-    "Lei física inviolável — não evento, mas mecanismo. Domínio livre.",
-    "Outra lei física, domínio diferente.",
-    "Outra lei física, domínio diferente."
-  ],
+  "tese_fundacional": "Uma frase. Peso máximo. Difícil de refutar. Muda retroativamente o significado de algo que o jogador sempre achou banal.",
   "camadas_de_evidencia": [
-    { "dominio": "nome do domínio", "fato": "fato real e verificável", "implicacao": "o que implica sobre a natureza humana" }
-  ],
-  "conspiracoes_reais": [
-    "Fato de uma camada + elo causal físico com a tese_fundacional.",
-    "Fato de outra camada + elo causal físico com a tese_fundacional.",
-    "Fato de outra camada + elo causal físico com a tese_fundacional."
+    { "dominio": "nome do domínio", "fato": "fato real com nome próprio, data, lugar ou medida", "implicacao": "o que implica sobre a natureza humana", "elo_com_tese": "como sustenta fisicamente a tese_fundacional" },
+    { "dominio": "...", "fato": "...", "implicacao": "...", "elo_com_tese": "..." },
+    { "dominio": "...", "fato": "...", "implicacao": "...", "elo_com_tese": "..." },
+    { "dominio": "...", "fato": "...", "implicacao": "...", "elo_com_tese": "..." }
   ],
   "entidades": [
     { "nome": "nome concreto", "natureza": "o que é sem romanticismo", "zona_primeira_pista": 1, "nunca_explicar_completamente": true },
@@ -1538,7 +1534,7 @@ Retorne APENAS este JSON:
     { "nome": "...", "zona_origem": 5, "zonas_relevantes": [10, 12], "o_que_desvela": "..." }
   ],
   "zonas": [
-    { "id": 1, "nome": "nome evocativo", "tom_sensorial": "1 frase crua e sensorial", "segredo_local": "objeto físico concreto que é fragmento direto de uma camada ou da tese", "conecta_com": [2, 3] },
+    { "id": 1, "nome": "nome evocativo", "tom_sensorial": "1 frase crua e sensorial", "segredo_local": "objeto físico concreto e único que é fragmento direto de uma camada ou da tese", "conecta_com": [2, 3] },
     { "id": 2, "nome": "...", "tom_sensorial": "...", "segredo_local": "...", "conecta_com": [1, 4, 5] },
     { "id": 3, "nome": "...", "tom_sensorial": "...", "segredo_local": "...", "conecta_com": [1, 6] },
     { "id": 4, "nome": "...", "tom_sensorial": "...", "segredo_local": "...", "conecta_com": [2, 7] },
@@ -1563,7 +1559,7 @@ Retorne APENAS este JSON:
     document.getElementById(idMsg)?.remove();
     console.log('[DNA Global]', dnaGlobal);
 }
-
+        
         function validarPlanoTopologia(plano, salaInicio, salaFim) {
             const erros = [];
             const ids = Object.keys(plano).map(Number);
