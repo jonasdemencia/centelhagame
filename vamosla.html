@@ -1492,6 +1492,7 @@ async function injetarPuzzles(planoZonal, zonaId) {
     const prompt = `[SEMENTE: ${semente}]
 Você é um Arquivista Forense e Historiador do Oculto arquitetando um mundo de horror de sobrevivência.
 Tema: "${cenarioTema}"
+TUDO que você gerar — tese, camadas, entidades, zonas — deve ser ancorado neste tema. 
 
 Este mundo terá 400+ salas em 16 zonas. Você está definindo o DNA que governa TUDO.
 
@@ -1501,20 +1502,16 @@ Este mundo terá 400+ salas em 16 zonas. Você está definindo o DNA que governa
 3. PROIBIDO genericidade: fatos sem nome próprio, data, lugar ou medida são inválidos. Teses que servem para qualquer jogo de horror são inválidas. Segredos de zona sem objeto físico concreto são inválidos.
 
 DIRETRIZ CENTRAL:
-Construa uma TESE — uma afirmação perturbadora sobre a natureza da realidade, difícil de refutar, sustentada por fatos reais de domínios distintos. O horror vem da convergência de verdades, não da invenção.
-
-EXEMPLO DE FALHA:
-tese: "A fome transcende a biologia humana." → inválida. Não afirma nada verificável.
-camada: "A fome é um mecanismo fisiológico essencial." → inválida. É definição de dicionário.
+Construa uma TESE — uma afirmação perturbadora sobre a natureza da realidade, sustentada por fatos reais de domínios distintos. O horror vem da convergência de verdades, não da invenção.
 
 EXEMPLO DE SUCESSO:
-tese: "O sistema nervoso entérico — 500 milhões de neurônios no intestino — toma decisões independentes do cérebro. O nervo vago transmite 80% dos sinais do intestino para o cérebro, não o contrário. O que chamamos de vontade é o cérebro sendo informado de decisões já tomadas."
+tese: "Você nunca foi o sujeito de nenhuma decisão que tomou."
 camada: { "dominio": "Neurociência entérica", "fato": "O intestino produz 95% da serotonina do corpo humano e possui memória funcional independente do cérebro.", "implicacao": "O desejo não vem da razão. Vem de um órgão que existe há 500 milhões de anos a mais." }
 
 Retorne APENAS este JSON:
 {
-  "_rascunho": "Liste 4 fatos brutos, reais e verificáveis sobre o tema — cada um com nome próprio, data, lugar ou medida. Estes fatos constroem a tese.",
-  "tese_fundacional": "Afirmação sobre a natureza da realidade. Perturbadora porque é difícil provar que é falsa.",
+  "_rascunho": "Liste 4 fatos reais sobre '${cenarioTema}' — cada um com nome próprio, data, lugar ou medida. Estes fatos constroem a tese.",
+  "tese_fundacional": "Uma frase. Peso máximo. Muda retroativamente o significado de algo que o jogador sempre achou banal.",
   "axiomas_do_mundo": [
     "Lei física inviolável — não evento, mas mecanismo. Domínio livre.",
     "Outra lei física, domínio diferente.",
