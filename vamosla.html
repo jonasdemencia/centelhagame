@@ -1709,14 +1709,14 @@ ESTRUTURA DE DADOS ESPERADA (GERAR APENAS ISSO):
 {
   "plano": {
     "${salaInicio}": {
-      "local_fisico": "Nome curto do espaço + 1 detalhe físico marcante que o singulariza (Ex: 'Pátio com pilhas de caixotes apodrecendo junto à parede norte', 'Câmara circular com um poço seco no centro', 'Corredor com manchas escuras no teto')",
+      "local_fisico": "Nome do espaço em 2 a 4 palavras, SEM detalhar mobília ou objetos (Ex: 'Pátio das Caixas', 'Câmara do Poço', 'Corredor Norte', 'Ala dos Espelhos')",
       "saidas": [
         {"destino": ${salaInicio + 1}, "acao": "Caminhar pela calçada estreita"}
       ]
     },
     "...": { ... },
     "${salaFim}": {
-  "local_fisico": "Nome curto da fronteira + 1 detalhe físico...",
+  "local_fisico": "Nome da fronteira em 2 a 4 palavras, SEM detalhar objetos (Ex: 'Portal da Ala Sul', 'Altar do templo')",
   "saidas": [
     {"destino": ${salaFim + 1}, "acao": "Avançar pela escuridão para a próxima zona"}
   ]
