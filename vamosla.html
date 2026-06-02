@@ -2087,7 +2087,7 @@ for (const [connectorIdStr, { puzzleRoomId, acaoIda }] of Object.entries(zonaDat
 
     // DEPOIS
 mapaFinalMesclado[puzzleIdStr] = {
-    nome: planoData.plano[puzzleIdStr]?.local_fisico,
+    nome: planoData.plano[puzzleIdStr]?.local_fisico || "Câmara do Enigma",
     texto_logico: puzzleSala.texto_logico,
     opcoes: [{ texto: puzzleSala._acaoVolta || "Recuar pelo corredor sombrio", destino: parseInt(connectorIdStr) }],
     itens:  [],
