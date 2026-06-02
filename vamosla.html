@@ -2064,6 +2064,7 @@ const historicoItensZona = [];
                     const puzzleStatus = zonaData.salas[idSala]?.puzzle_status;
 const bloqueioSala = zonaData.salas[idSala]?.bloqueio;
 mapaFinalMesclado[idSala] = {
+    nome: dadosEstruturais.local_fisico,
     texto_logico: prosa,
     opcoes: opcoesGeradas,
     itens: itensNaSala,
@@ -2084,12 +2085,14 @@ for (const [connectorIdStr, { puzzleRoomId, acaoIda }] of Object.entries(zonaDat
         });
     }
 
-    mapaFinalMesclado[puzzleIdStr] = {
-        texto_logico: puzzleSala.texto_logico,
-        opcoes: [{ texto: puzzleSala._acaoVolta || "Recuar pelo corredor sombrio", destino: parseInt(connectorIdStr) }],
-        itens:  [],
-        puzzle_status: puzzleSala.puzzle_status
-    };
+    // DEPOIS
+mapaFinalMesclado[puzzleIdStr] = {
+    nome: planoData.plano[puzzleIdStr]?.local_fisico,
+    texto_logico: puzzleSala.texto_logico,
+    opcoes: [{ texto: puzzleSala._acaoVolta || "Recuar pelo corredor sombrio", destino: parseInt(connectorIdStr) }],
+    itens:  [],
+    puzzle_status: puzzleSala.puzzle_status
+};
 }
                 
                 // --- INÍCIO DO AJUSTE: IND (Interrupção Narrativa Dinâmica) ---
