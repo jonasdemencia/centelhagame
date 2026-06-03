@@ -81,7 +81,7 @@
         flex-direction: column;
         flex-grow: 1;
         overflow-y: auto;
-        padding: 5px 15px 15px 5px;
+        padding: 5px 15px 0 5px;
         margin-bottom: 10px;
         background-color: #0c0c0c;
         border: 1px solid #222;
@@ -119,6 +119,11 @@
         padding-top: 10px;
     }
 
+        #chat-box:empty,
+#loot-area:empty {
+    display: none;
+}
+
     /* =========================================
        BOTÕES DE NAVEGAÇÃO / AÇÃO
        ========================================= */
@@ -154,6 +159,7 @@
         padding-top: 10px;
         flex-shrink: 0;
         background-color: #080808;
+        margin-top: 0;
     }
     .input-prompt { color: #555; margin-right: 8px; font-weight: bold; }
     input { flex: 1; padding: 10px; background: transparent; border: none; color: #fff; font-family: inherit; font-size: 16px; outline: none; }
