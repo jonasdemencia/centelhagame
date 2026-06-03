@@ -2797,9 +2797,18 @@ Retorne EXATAMENTE o JSON abaixo. Nenhuma palavra extra.`
 
 function atualizarBotoesNavegacao() {
     const container = document.getElementById('map-controls');
+    const salaDesc = document.getElementById('sala-desc');
     container.innerHTML = '';
+    
     const sala = mapaMundo?.[secaoAtualId];
-    if (!sala || !sala.opcoes) return;
+    if (!sala) return;
+
+    // Garante que o texto da sala atual seja exibido (útil para o load inicial da página)
+    if (salaDesc.innerHTML === '') {
+        salaDesc.innerHTML = sala.texto_logico || "A escuridão domina este lugar...";
+    }
+
+    if (!sala.opcoes) return;
 
     sala.opcoes.forEach(opcao => {
         const destinoSala = mapaMundo?.[String(opcao.destino)];
@@ -2807,15 +2816,15 @@ function atualizarBotoesNavegacao() {
             const btnBloqueado = document.createElement('button');
             btnBloqueado.className = 'nav-btn';
             btnBloqueado.disabled = false;
-            btnBloqueado.style.opacity = "1";
+            btnBloqueado.style.opacity = "0.7";
             btnBloqueado.style.cursor = "pointer";
-            btnBloqueado.innerText = `🧭 ${opcao.texto}`;
+            btnBloqueado.innerText = `[TRANCADO] ${opcao.texto}`;
             btnBloqueado.title = destinoSala.bloqueio.descricao;
 
             btnBloqueado.onclick = () => {
-                if (window._transicaoEmAndamento) return; // Previne cliques durante transições globais
-                adicionarMensagem(`🚫 ${destinoSala.bloqueio.descricao}`, 'system');
-                adicionarMensagem("Talvez haja uma forma de dissipar isso em outra área...", 'system');
+                if (window._transicaoEmAndamento) return;
+                // Mensagens de sistema podem ir para o chat-box livremente
+                adicionarMensagem(`🔒 A porta não cede: ${destinoSala.bloqueio.descricao}`, 'system');
             };
             container.appendChild(btnBloqueado);
             return;
@@ -2825,7 +2834,7 @@ function atualizarBotoesNavegacao() {
         btn.className = 'nav-btn';
         
         const saltoLongo = Math.abs(opcao.destino - parseInt(secaoAtualId)) > SALAS_POR_ZONA;
-        btn.innerText = saltoLongo ? `🌀 ${opcao.texto}` : `🧭 ${opcao.texto}`;
+        btn.innerText = saltoLongo ? `>> ${opcao.texto}` : `> ${opcao.texto}`;
         
         if (saltoLongo) {
             btn.style.color = "#a13d3d";
@@ -2833,15 +2842,13 @@ function atualizarBotoesNavegacao() {
         }
 
         btn.onclick = async () => {
-            // 1. Verificação da flag global para impedir múltiplos cliques
             if (window._transicaoEmAndamento) return;
             window._transicaoEmAndamento = true;
 
-            // Desabilita interações físicas na interface durante o fade
             document.getElementById('controls').style.pointerEvents = 'none';
             container.style.pointerEvents = 'none';
 
-            // 2. FADE OUT E SOM (Mecânica espelhada do narrativas.js)
+            // FADE OUT E SOM
             const overlay = document.createElement('div');
             overlay.className = 'fade-overlay';
             document.body.appendChild(overlay);
@@ -2857,14 +2864,13 @@ function atualizarBotoesNavegacao() {
                 console.log('Erro ao tocar som:', error);
             }
 
-            // Oculta os botões visuais antes da lógica de carregamento
             container.innerHTML = '';
             const destinoStr = opcao.destino.toString();
 
-            // Lógica original de expansão do mundo
+            // EXPANSÃO
             if (!mapaMundo[destinoStr]) {
                 const zonaAlvo = Math.ceil(opcao.destino / SALAS_POR_ZONA);
-                const idLoading = adicionarMensagem(`⚙️ A fenda pulsa violentamente... construindo os horrores da Zona ${zonaAlvo}...`, "system", true);
+                const idLoading = adicionarMensagem(`[SISTEMA] Processando dados da Zona ${zonaAlvo}...`, "system", true);
                 
                 window._expansaoEmAndamento = true;
                 await gerarZona(zonaAlvo, null);
@@ -2881,14 +2887,12 @@ function atualizarBotoesNavegacao() {
 
             const novaSala = mapaMundo[secaoAtualId];
 
-            // ============================================================
-            // DISPARO DO IND (INTERRUPÇÃO NARRATIVA DINÂMICA)
-            // ============================================================
+            // IND TRIGGER
             if (novaSala && novaSala.ind_disponivel) {
                 novaSala.ind_disponivel = false; 
                 await salvarEstadoJogador();
                 
-                const idLoadingIND = adicionarMensagem(`🎥 A realidade estremece... puxando sua mente para um vislumbre...`, "system", true);
+                const idLoadingIND = adicionarMensagem(`[SISTEMA] Anomalia detectada...`, "system", true);
 
                 try {
                     const textoIND = await gerarIND(secaoAtualId);
@@ -2900,34 +2904,38 @@ function atualizarBotoesNavegacao() {
                     await exibirModalIND(textoIND);
                     
                 } catch (error) {
-                    console.error("[IND] Erro ao gerar cinematic:", error);
+                    console.error("[IND] Erro:", error);
                     document.getElementById(idLoadingIND)?.remove();
                 } 
             }
-            // ============================================================
 
             verificarEExpandirMundo(); 
 
-            // Atualização do chat
+            // ======================================================
+            // ATUALIZAÇÃO DA VIEW DA SALA (Sem misturar no chat)
+            // ======================================================
             if (novaSala?.texto_logico) {
-                adicionarMensagem(btn.innerText, 'user');
+                // 1. Gera o texto refinado baseado de onde o jogador veio
                 const textoFinal = prepararTextoChegada(novaSala.texto_logico, opcao.texto, parseInt(secaoAtualId), opcao.destino);
-                adicionarMensagem(textoFinal, 'ai');
-                historicoConversa.push({ role: 'user', content: opcao.texto });
+                
+                // 2. Substitui o conteúdo da área visual da sala! (Sem sujar o chat)
+                salaDesc.innerHTML = textoFinal;
+
+                // 3. Atualiza a memória da IA silenciosamente
+                historicoConversa.push({ role: 'user', content: `[Navegou para: ${opcao.texto}]` });
                 historicoConversa.push({ role: 'assistant', content: novaSala.texto_logico });
                 if (historicoConversa.length > 10) historicoConversa.splice(0, 2);
             }
 
             atualizarBotoesNavegacao();
-            atualizarLootRoom();
+            if (typeof atualizarLootRoom === "function") atualizarLootRoom();
 
-            // 3. FADE IN (Remove a tela preta e libera os controles)
+            // FADE IN
             overlay.classList.remove('active');
             setTimeout(() => {
                 overlay.remove();
                 window._transicaoEmAndamento = false;
                 
-                // Restaura as interações da interface
                 document.getElementById('controls').style.pointerEvents = 'auto';
                 const novoContainer = document.getElementById('map-controls');
                 if (novoContainer) novoContainer.style.pointerEvents = 'auto';
