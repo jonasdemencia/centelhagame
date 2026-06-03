@@ -1088,8 +1088,8 @@ Retorne EXCLUSIVAMENTE um objeto JSON válido no formato: {"narrativa": "texto d
     const data = await chamarGroq([
         { 
             role: "system", 
-            content: "Você é um formatador estrito. Seu único papel é ler as instruções, gerar o texto da cena seguindo rigorosamente os exemplos fornecidos, e retornar o resultado dentro de um JSON puro e válido, sem nenhuma formatação markdown." 
-        },
+    content: "/no_think\nVocê é um formatador estrito. Seu único papel é ler as instruções, gerar o texto da cena seguindo rigorosamente os exemplos fornecidos, e retornar o resultado dentro de um JSON puro e válido, sem nenhuma formatação markdown." 
+},
         { 
             role: "user", 
             content: prompt 
