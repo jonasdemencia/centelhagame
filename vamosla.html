@@ -2990,21 +2990,39 @@ if (saltoLongo && !ehPuzzle) {   // ← só aplica vermelho se NÃO for puzzle
             let pergunta;
             
             if (isInitial) {
-                if (mapaMundo && mapaMundo["1"]?.texto_logico) {
-                    adicionarMensagem(mapaMundo["1"].texto_logico, 'ai');
-                    historicoConversa.push({ role: 'assistant', content: mapaMundo["1"].texto_logico });
-                    userInput.disabled = false;
-                    sendBtn.disabled = false;
-                    userInput.focus();
-                    atualizarBotoesNavegacao();
-                    atualizarLootRoom();
-                    return; 
-                } else if (!resumoAtual) {
-                    pergunta = PROMPT_INTRO;
-                } else {
-                    pergunta = 'O jogo foi recarregado. Com base no resumo da história, narre rapidamente a cena atual (usando a regra padrão de frases curtas) e pergunte o que eu faço agora.';
-                }
-            } else {
+    // Aguarda o mapa ser carregado (caso ainda não esteja)
+    if (!mapaMundo || !mapaMundo[secaoAtualId]) {
+        setTimeout(() => window.enviar(), 500);
+        return;
+    }
+
+    const salaAtual = mapaMundo[secaoAtualId];
+    if (salaAtual?.texto_logico) {
+        // 1. Atualiza o painel principal de descrição da sala
+        document.getElementById('sala-desc').innerHTML = salaAtual.texto_logico;
+        
+        // 2. Limpa o chat e adiciona uma mensagem discreta
+        document.getElementById('chat-box').innerHTML = '';
+        adicionarMensagem('⚔️ A escuridão recorda sua presença...', 'system');
+        
+        // 3. Atualiza os botões e itens do chão
+        atualizarBotoesNavegacao();
+        atualizarLootRoom();
+        
+        // 4. Habilita os controles
+        userInput.disabled = false;
+        sendBtn.disabled = false;
+        userInput.focus();
+        return;
+    } else {
+        // Fallback: gera introdução normal (caso não haja texto na sala atual)
+        if (!resumoAtual) {
+            pergunta = PROMPT_INTRO;
+        } else {
+            pergunta = 'O jogo foi recarregado. Com base no resumo da história, narre rapidamente a cena atual (usando a regra padrão de frases curtas) e pergunte o que eu faço agora.';
+        }
+    }
+} else {
                 pergunta = mensagemUsuario;
             }
 
