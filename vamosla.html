@@ -2863,12 +2863,14 @@ function atualizarBotoesNavegacao() {
         btn.className = 'nav-btn';
         
         const saltoLongo = Math.abs(opcao.destino - parseInt(secaoAtualId)) > SALAS_POR_ZONA;
-        btn.innerText = saltoLongo ? `>> ${opcao.texto}` : `> ${opcao.texto}`;
-        
-        if (saltoLongo) {
-            btn.style.color = "#a13d3d";
-            btn.style.borderColor = "#a13d3d";
-        }
+const ehPuzzle = opcao.destino >= 10000;   // ← detecta sala de puzzle
+
+btn.innerText = saltoLongo ? `>> ${opcao.texto}` : `> ${opcao.texto}`;
+
+if (saltoLongo && !ehPuzzle) {   // ← só aplica vermelho se NÃO for puzzle
+    btn.style.color = "#a13d3d";
+    btn.style.borderColor = "#a13d3d";
+}
 
         btn.onclick = async () => {
             if (window._transicaoEmAndamento) return;
