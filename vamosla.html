@@ -874,38 +874,39 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
             return false;
         }
 
-        window.abrirInventarioSemItem = function() {
-            if(window.narrativeActionInProgress) return;
-            window.narrativeActionInProgress = true;
+       window.abrirInventarioSemItem = function() {
+    if(window.narrativeActionInProgress) return;
+    window.narrativeActionInProgress = true;
 
-            const overlay = document.createElement('div');
-            overlay.className = 'fade-overlay';
-            document.body.appendChild(overlay);
+    const overlay = document.createElement('div');
+    overlay.className = 'fade-overlay';
+    document.body.appendChild(overlay);
 
-            setTimeout(() => overlay.classList.add('active'), 10);
+    setTimeout(() => overlay.classList.add('active'), 10);
 
-            setTimeout(() => {
-                document.getElementById('game-container').style.display = 'none';
-                document.getElementById('inventario-narrativa').classList.add('ativo');
+    setTimeout(() => {
+        // MUDE ESTA LINHA: de 'game-container' para 're-game-container'
+        document.getElementById('re-game-container').style.display = 'none';
+        document.getElementById('inventario-narrativa').classList.add('ativo');
 
-                const expandBtn = document.querySelector('#inventario-narrativa #expand-btn');
-                const container = document.querySelector('#inventario-narrativa .container');
-                if (expandBtn && container) {
-                    expandBtn.onclick = () => container.classList.toggle('expanded');
-                }
+        const expandBtn = document.querySelector('#inventario-narrativa #expand-btn');
+        const container = document.querySelector('#inventario-narrativa .container');
+        if (expandBtn && container) {
+            expandBtn.onclick = () => container.classList.toggle('expanded');
+        }
 
-                document.getElementById('preview-image').style.display = 'none';
-                document.getElementById('preview-name').textContent = '';
-                document.getElementById('preview-description').textContent = '';
-                const imageContainer = document.querySelector('#inventario-narrativa .preview-image-container');
-                if (imageContainer) {
-                    imageContainer.style.display = 'none';
-                }
+        document.getElementById('preview-image').style.display = 'none';
+        document.getElementById('preview-name').textContent = '';
+        document.getElementById('preview-description').textContent = '';
+        const imageContainer = document.querySelector('#inventario-narrativa .preview-image-container');
+        if (imageContainer) {
+            imageContainer.style.display = 'none';
+        }
 
-                overlay.classList.remove('active');
-                setTimeout(() => overlay.remove(), 200);
-            }, 1200);
-        };
+        overlay.classList.remove('active');
+        setTimeout(() => overlay.remove(), 200);
+    }, 1200);
+};
 
         window.abrirInventarioComItem = async function(itemId, spanElement, idSala) {
             if(window.narrativeActionInProgress) return;
@@ -936,7 +937,7 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
             setTimeout(() => overlay.classList.add('active'), 10);
 
             setTimeout(() => {
-                document.getElementById('game-container').style.display = 'none';
+                document.getElementById('re-game-container').style.display = 'none';
                 document.getElementById('inventario-narrativa').classList.add('ativo');
 
                 const expandBtn = document.querySelector('#inventario-narrativa #expand-btn');
@@ -1038,7 +1039,7 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
 
         window.fecharInventario = function() {
             document.getElementById('inventario-narrativa').classList.remove('ativo');
-            document.getElementById('game-container').style.display = 'block';
+            document.getElementById('re-game-container').style.display = 'flex';
             
             document.getElementById('preview-image').style.display = 'none';
             document.getElementById('preview-image').src = '';
