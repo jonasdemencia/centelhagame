@@ -2976,8 +2976,8 @@ function atualizarBotoesNavegacao() {
 
     sala.opcoes.forEach(opcao => {
 
-        // ── ARQUITETO: opção sem destino (nova_opcao) ──────────────────────────
-        // Disparada uma vez, depois some da lista. Não faz fade — só mostra no chat.
+                // ── ARQUITETO: opção sem destino (nova_opcao) ──────────────────────────
+        // Agora com fade, som e escurecimento da tela, igual à navegação.
         if (opcao.arquiteto === true && !opcao.destino) {
             if (opcao.disparado) return; // já consumida
             const btnArq = document.createElement('button');
@@ -2985,22 +2985,57 @@ function atualizarBotoesNavegacao() {
             btnArq.innerText = `> ${opcao.texto}`;
             btnArq.onclick = async () => {
                 if (window._transicaoEmAndamento) return;
+                window._transicaoEmAndamento = true;
+
+                // Bloqueia controles durante a transição
+                document.getElementById('controls').style.pointerEvents = 'none';
+                container.style.pointerEvents = 'none';
+
+                // Cria overlay de fade (escurecimento)
+                const overlay = document.createElement('div');
+                overlay.className = 'fade-overlay';
+                document.body.appendChild(overlay);
+                setTimeout(() => overlay.classList.add('active'), 10);
+                await new Promise(resolve => setTimeout(resolve, 500)); // aguarda fade in
+
+                // Toca o som de passos
+                try {
+                    const audio = new Audio('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/passos.mp3');
+                    await audio.play();
+                    await new Promise(resolve => setTimeout(resolve, 1500));
+                } catch (error) {
+                    console.log('Erro ao tocar som:', error);
+                }
+
+                // Marca como disparado e executa a narrativa do perigo
                 opcao.disparado = true;
                 adicionarMensagem(`> ${opcao.texto}`, 'user');
                 adicionarMensagem(opcao.resultado_texto, 'ai');
+
+                // Aplica dano, se houver
                 if (opcao.dano > 0) {
                     energia = Math.max(0, energia - opcao.dano);
                     document.getElementById('energia-span').innerText = `🩸 ${energia}/10`;
                     await salvarEstadoJogador();
                 }
+
+                // Atualiza os botões e itens da sala (o botão atual sumirá)
                 atualizarBotoesNavegacao();
                 atualizarLootRoom();
+
+                // Remove o overlay (fade out)
+                overlay.classList.remove('active');
+                setTimeout(() => {
+                    overlay.remove();
+                    window._transicaoEmAndamento = false;
+                    document.getElementById('controls').style.pointerEvents = 'auto';
+                    container.style.pointerEvents = 'auto';
+                }, 1200);
             };
             container.appendChild(btnArq);
             return; // não cai no código de navegação abaixo
         }
         // ── FIM ARQUITETO nova_opcao ────────────────────────────────────────────
-
         const destinoSala = mapaMundo?.[String(opcao.destino)];
         if (destinoSala?.bloqueio?.ativo) {
             const btnBloqueado = document.createElement('button');
