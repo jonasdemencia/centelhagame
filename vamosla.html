@@ -3142,24 +3142,47 @@ chatBox.scrollTop = chatBox.scrollHeight;
             document.getElementById('controls').style.pointerEvents = 'none';
             container.style.pointerEvents = 'none';
 
-            // ── ARQUITETO: interceptor dispara ANTES do fade ────────────────────
-            const interceptor = opcao.interceptor_arquiteto;
-            if (interceptor && !interceptor.disparado) {
-                interceptor.disparado = true;
-                adicionarMensagem(`> ${opcao.texto}`, 'user');
-                const resultDiv = document.createElement('div');
-resultDiv.className = 'result-message';
-resultDiv.innerText = interceptor.resultado_texto;
-chatBox.appendChild(resultDiv);
-chatBox.scrollTop = chatBox.scrollHeight;
-                if (interceptor.dano > 0) {
-                    energia = Math.max(0, energia - interceptor.dano);
-                    document.getElementById('energia-span').innerText = `🩸 ${energia}/10`;
-                }
-                // pausa dramática para o jogador ler antes do fade
-                await new Promise(r => setTimeout(r, 13000));
-            }
-            // ── FIM interceptor ─────────────────────────────────────────────────
+           // ── ARQUITETO: interceptor dispara ANTES do fade ────────────────────
+const interceptor = opcao.interceptor_arquiteto;
+if (interceptor && !interceptor.disparado) {
+    interceptor.disparado = true;
+    adicionarMensagem(`> ${opcao.texto}`, 'user');
+    const resultDiv = document.createElement('div');
+    resultDiv.className = 'result-message';
+    resultDiv.innerText = interceptor.resultado_texto;
+    chatBox.appendChild(resultDiv);
+    chatBox.scrollTop = chatBox.scrollHeight;
+    if (interceptor.dano > 0) {
+        energia = Math.max(0, energia - interceptor.dano);
+        document.getElementById('energia-span').innerText = `🩸 ${energia}/10`;
+    }
+
+    // --- NOVO BOTÃO "CONTINUAR" ---
+    // Desabilita todos os botões de navegação existentes
+    const botoesNavegacao = document.querySelectorAll('#map-controls .nav-btn');
+    botoesNavegacao.forEach(btn => { btn.disabled = true; });
+
+    // Cria o botão "CONTINUAR"
+    const btnContinuar = document.createElement('button');
+    btnContinuar.className = 'nav-btn';
+    btnContinuar.innerText = '> CONTINUAR';
+    btnContinuar.style.background = '#1a2a1a';
+    btnContinuar.style.borderColor = '#4caf50';
+    btnContinuar.style.color = '#4caf50';
+    const containerMapa = document.getElementById('map-controls');
+    containerMapa.appendChild(btnContinuar);
+
+    // Aguarda o clique no botão "CONTINUAR"
+    await new Promise(resolve => {
+        btnContinuar.onclick = () => {
+            btnContinuar.remove();
+            // Reabilita os botões de navegação (opcional, pois logo será feita a transição)
+            botoesNavegacao.forEach(btn => { btn.disabled = false; });
+            resolve();
+        };
+    });
+    // --- FIM DO BOTÃO CONTINUAR ---
+}
 
             // FADE OUT E SOM
             const overlay = document.createElement('div');
