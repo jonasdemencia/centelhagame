@@ -3107,19 +3107,20 @@ chatBox.scrollTop = chatBox.scrollHeight;
         // ── FIM ARQUITETO nova_opcao ────────────────────────────────────────────
         const destinoSala = mapaMundo?.[String(opcao.destino)];
         if (destinoSala?.bloqueio?.ativo) {
-            const btnBloqueado = document.createElement('button');
-            btnBloqueado.className = 'nav-btn';
-            btnBloqueado.disabled = false;
-            btnBloqueado.style.opacity = "0.7";
-            btnBloqueado.style.cursor = "pointer";
-            btnBloqueado.title = destinoSala.bloqueio.descricao;
-            btnBloqueado.onclick = () => {
-                if (window._transicaoEmAndamento) return;
-                adicionarMensagem(`A porta não cede: ${destinoSala.bloqueio.descricao}`, 'system');
-            };
-            container.appendChild(btnBloqueado);
-            return;
-        }
+    const btnBloqueado = document.createElement('button');
+    btnBloqueado.className = 'nav-btn';
+    btnBloqueado.disabled = false;
+    btnBloqueado.style.opacity = "0.7";
+    btnBloqueado.style.cursor = "pointer";
+    btnBloqueado.innerText = `> ${opcao.texto}`;
+    btnBloqueado.title = destinoSala.bloqueio.descricao;
+    btnBloqueado.onclick = () => {
+        if (window._transicaoEmAndamento) return;
+        adicionarMensagem(`🔒 A porta não cede: ${destinoSala.bloqueio.descricao}`, 'system');
+    };
+    container.appendChild(btnBloqueado);
+    return;
+}
         
         const btn = document.createElement('button');
         btn.className = 'nav-btn';
