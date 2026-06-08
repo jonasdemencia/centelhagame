@@ -2,58 +2,193 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Centelha • Jogo Medieval Brutal (com testes visíveis)</title>
+    <title>Centelha • Vamos Lá 19.1 (Arquiteto de Perigos)</title>
     
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
     
     <link rel="stylesheet" href="inventario.css">
     
     <style>
+    /* =========================================
+       ESTILO BASE E CONTAINER PRINCIPAL
+       ========================================= */
     body { 
-        background: #1a1a14; 
-        color: #b5a68b; 
-        font-family: 'VT323', monospace; 
+        background: #050505; 
+        color: #e0e0e0; 
+        font-family: 'Courier Prime', monospace; 
         display: flex; 
         justify-content: center; 
         align-items: center; 
         height: 100vh; 
         margin: 0; 
     }
-    #game-container { 
-        width: 90%; 
-        max-width: 650px; 
-        background: #141311; 
-        padding: 20px; 
-        border: 4px solid #3a3228; 
-        box-shadow: 6px 6px 0px #000; 
-        position: relative; 
+
+    #re-game-container {
+        display: flex;
+        flex-direction: column;
+        gap: 10px; /* Reduzi um pouco o espaçamento geral */
+        background-color: #080808; 
+        width: 95%;
+        max-width: 750px;
+        /* Removido: height: 95vh; <-- Isso forçava a altura total da tela */
+        padding: 15px;
+        position: relative;
+        box-sizing: border-box;
+        border: 2px solid #222;
+        box-shadow: 0 0 20px rgba(0,0,0,0.8);
         z-index: 1;
-        font-family: 'Courier New', monospace;
+        /* Adicionado para centralizar a caixa na tela verticalmente sem esticá-la */
+        margin-top: auto; 
+        margin-bottom: auto;
     }
-    #local-atual { color: #ffaa00; margin-bottom: 8px; font-size: 14px; border-bottom: 1px solid #3a3228; padding-bottom: 4px; }
-    #chat-box { height: 300px; overflow-y: auto; border: 2px inset #2a251e; padding: 15px; background: #0d0c0a; margin-bottom: 15px; display: flex; flex-direction: column; gap: 8px; }
-    .user-message { color: #7a8c66; align-self: flex-end; background: #1e2a1a; padding: 6px 12px; border-radius: 12px 0 12px 12px; max-width: 80%; word-wrap: break-word; }
-    .ai-message { color: #a13d3d; align-self: flex-start; background: #2a1a1a; padding: 6px 12px; border-radius: 0 12px 12px 12px; max-width: 80%; word-wrap: break-word; font-family: 'Courier New', 'Noto Sans Syriac', monospace; }
-    .system-message { color: #6b6b4a; text-align: center; font-style: italic; font-size: 0.9em; margin: 5px 0; }
-    #controls { display: flex; gap: 10px; }
-    input { flex: 1; padding: 12px; background: #1a1815; border: 1px solid #3a3228; color: #d1c5b4; font-family: inherit; font-size: 16px; }
-    button { padding: 12px 20px; cursor: pointer; background: #3a3228; color: #fff; border: none; font-family: inherit; font-size: 16px; transition: 0.2s; }
-    button:hover:not(:disabled) { background: #5a4a38; }
-    button:disabled { opacity: 0.3; cursor: not-allowed; }
+
+    /* Efeito de scanlines de TV CRT (clima PS1) */
+    .crt-scanlines {
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+        background-size: 100% 3px, 3px 100%;
+        pointer-events: none;
+        z-index: 999;
+    }
+
+    /* =========================================
+       CABEÇALHO FIXO (ANTIGO DENTRO DE sala-view)
+       ========================================= */
+    .re-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #444;
+        padding-bottom: 8px;
+        margin-bottom: 15px;
+        font-family: 'Playfair Display', serif;
+        letter-spacing: 1px;
+        flex-shrink: 0;
+    }
+
+    .status-group {
+        display: flex;
+        gap: 15px;
+        align-items: center;
+        font-family: 'VT323', monospace;
+        font-size: 18px;
+    }
+
+    /* =========================================
+       ÁREA ÚNICA COM SCROLL (SUBSTITUI sala-view + chat-wrapper)
+       ========================================= */
+    #main-scroll-area {
+        display: flex;
+        flex-direction: column;
+        flex-grow: 0; /* <-- Faz a área ocupar apenas o espaço necessário */
+        overflow-y: auto;
+        padding: 5px 15px 15px 5px;
+        margin-bottom: 10px;
+        background-color: #0c0c0c;
+        border: 1px solid #222;
+        box-shadow: inset 0 0 15px #000;
+        /* Opcional: define uma altura máxima para o texto antes de aparecer o scroll, para que a caixa não fique grande demais se houver muito texto. */
+        max-height: 60vh; 
+    }
+
+    #sala-desc {
+        font-size: 1.05em;
+        line-height: 1.5;
+        color: #cccccc;
+        margin-bottom: 10px;
+        padding-bottom: 10px;
+        border-bottom: 1px dashed #333;
+    }
+
+    #chat-box {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 5px;
+    }
+
+    #loot-area {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 5px;
+    }
+
+    #map-controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        border-top: 1px dashed #222;
+        padding-top: 6px;
+    }
+
+        /* Oculta completamente a área do chat quando não há mensagens */
+#chat-box:empty {
+    display: none;
+}
+
+/* Oculta a área de loot quando não há itens */
+#loot-area:empty {
+    display: none;
+}
+
+    /* =========================================
+       BOTÕES DE NAVEGAÇÃO / AÇÃO
+       ========================================= */
+    .nav-btn { 
+        background: #111; color: #aaa; border: 1px solid #444; 
+        padding: 8px 12px; font-size: 14px; font-family: 'Courier Prime', monospace; 
+        cursor: pointer; transition: 0.2s; text-transform: uppercase;
+    }
+    .nav-btn:hover:not(:disabled) { background: #ccc; color: #000; border-color: #fff; }
+
+    /* =========================================
+       ESTILOS DO CHAT (mensagens)
+       ========================================= */
+    .user-message { color: #88aa88; align-self: flex-end; background: #111a11; padding: 6px 12px; border: 1px solid #1a2a1a; max-width: 80%; word-wrap: break-word; }
+    .ai-message { color: #aa5555; align-self: flex-start; background: #1a0f0f; padding: 6px 12px; border: 1px solid #2a1a1a; max-width: 80%; word-wrap: break-word; }
+    .system-message { color: #666; text-align: center; font-style: italic; font-size: 0.9em; margin: 5px 0; }
+    
     .teste-reveal { color: #4caf50; font-style: italic; font-weight: bold; text-align: center; letter-spacing: 2px; margin: 10px 0; }
-    .resultado-dado { color: #b5a68b; text-align: center; font-style: italic; margin: 4px 0; font-size: 0.9em; }
+    .resultado-dado { color: #aaa; text-align: center; font-style: italic; margin: 4px 0; font-size: 0.9em; }
     .resultado-sucesso { color: #4caf50; font-weight: bold; text-align: center; letter-spacing: 3px; margin: 4px 0; }
     .resultado-falha { color: #e53935; font-weight: bold; text-align: center; letter-spacing: 3px; margin: 4px 0; }
-    #rolar-btn { display: block; margin: 10px auto; padding: 10px 28px; background: #1a2e12; color: #4caf50; border: 1px solid #4caf50; font-family: inherit; font-size: 15px; font-style: italic; letter-spacing: 1px; cursor: pointer; transition: 0.2s; }
-    #rolar-btn:hover { background: #253d19; }
-    #map-controls { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
-    .nav-btn { background: #2a251e; color: #b5a68b; border: 1px solid #5a4a38; padding: 8px 12px; font-size: 14px; font-style: italic; border-radius: 4px; cursor: pointer;}
-    .nav-btn:hover { background: #3a3228; color: #ffaa00; border-color: #ffaa00; }
     
-    .item-coletavel { background: #1a1a14; padding: 4px 8px; border: 1px solid #3a3228; border-radius: 3px; font-size: 13px; color: #4caf50 !important; cursor: pointer; text-decoration: none !important; font-weight: bold; transition: 0.2s; }
-    .item-coletavel:hover { background: #253d19; border-color: #4caf50; color: #fff !important; }
-    
-    /* ─── CSS INTEGRADO DAS NARRATIVAS PARA O INVENTÁRIO ─── */
+    #rolar-btn { display: block; margin: 10px auto; padding: 10px 28px; background: #112211; color: #4caf50; border: 1px solid #4caf50; font-family: inherit; font-size: 15px; cursor: pointer; transition: 0.2s; }
+    #rolar-btn:hover { background: #224422; color: #fff; }
+
+    /* =========================================
+       INPUT FIXO (RODAPÉ)
+       ========================================= */
+    #controls {
+        display: flex;
+        align-items: center;
+        border-top: 1px solid #222;
+        padding-top: 10px;
+        flex-shrink: 0;
+        background-color: #080808;
+    }
+    .input-prompt { color: #555; margin-right: 8px; font-weight: bold; }
+    input { flex: 1; padding: 10px; background: transparent; border: none; color: #fff; font-family: inherit; font-size: 16px; outline: none; }
+    #send-btn { padding: 10px 15px; cursor: pointer; background: transparent; color: #666; border: none; font-family: inherit; font-size: 16px; font-weight: bold; transition: 0.2s; }
+    #send-btn:hover:not(:disabled) { color: #fff; }
+    #send-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+    /* Ítens coletáveis */
+    .item-coletavel { background: #111; padding: 4px 8px; border: 1px solid #333; font-size: 13px; color: #4caf50 !important; cursor: pointer; text-decoration: none !important; font-weight: bold; transition: 0.2s; font-family: 'VT323', monospace; }
+    .item-coletavel:hover { background: #223322; border-color: #4caf50; color: #fff !important; }
+
+    /* Custom Scrollbar RE Style */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #050505; border-left: 1px solid #111; }
+    ::-webkit-scrollbar-thumb { background: #333; }
+    ::-webkit-scrollbar-thumb:hover { background: #555; }
+
+    /* =========================================
+       ESTILOS DE NARRATIVA, IND E INVENTÁRIO (preservados)
+       ========================================= */
     .fade-overlay {
         position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
         background: black; opacity: 0; pointer-events: none; 
@@ -61,24 +196,15 @@
     }
     .fade-overlay.active { opacity: 1; pointer-events: all;}
 
-    /* ✅ CORREÇÃO 2 e 3: #inventario-narrativa agora replica o contexto exato
-       do body original do inventario.html — cor, padding, text-align e fundo */
     #inventario-narrativa {
         display: none; 
         position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-        background: #000;           /* igual ao body do inventario original */
-        z-index: 5000; 
-        overflow-y: auto;
-        /* contexto tipográfico e de layout do body original do inventário */
-        font-family: 'VT323', monospace;
-        color: white;
-        text-align: center;
-        padding: 5px;
-        box-sizing: border-box;
+        background: #000; z-index: 5000; overflow-y: auto;
+        font-family: 'VT323', monospace; color: white;
+        text-align: center; padding: 5px; box-sizing: border-box;
     }
     #inventario-narrativa.ativo { display: block; }
 
-    /* Botões de confirmação da coleta – são específicos da ponte, mantidos */
     #fechar-inventario-btn {
         position: absolute; top: 20px; right: 20px; z-index: 6000;
         background: #444; color: #e0e0e0; border: 2px solid #666; padding: 10px 20px; 
@@ -88,293 +214,276 @@
     
     #btn-sim-inv, #btn-nao-inv {
         background: #444; color: #e0e0e0; border: 2px solid #666; padding: 5px 15px;
-        font-family: 'VT323', monospace; font-size: 16px; cursor: margin: 5px;
+        font-family: 'VT323', monospace; font-size: 16px; cursor: pointer; margin: 5px;
     }
     #btn-sim-inv:hover, #btn-nao-inv:hover { background: #555; }
-/* 1. Desloca o container para cima */
-#inventario-narrativa .container {
-    position: relative;
-    top: -10px; /* Ajuste este valor para subir mais ou menos */
-}
 
-/* 2. Mantém o botão no lugar original e diminui seu tamanho */
-#carregar-municao-btn {
-    position: relative;
-    top: 10px; /* Deve ser o valor oposto do 'top' do container para neutralizar o movimento */
-    
-    /* Diminui o tamanho do botão */
-    transform: scale(0.8); /* Reduz em 20% o tamanho visual */
-    transform-origin: center; /* Garante que ele diminua a partir do centro */
-    
-    /* Ajuste fino de preenchimento e fonte */
-    padding: 5px 12px !important; 
-    font-size: 14px !important;
-}
+    #inventario-narrativa .container { position: relative; top: -10px; }
+    #carregar-municao-btn {
+        position: relative; top: 10px; 
+        transform: scale(0.8); transform-origin: center; 
+        padding: 5px 12px !important; font-size: 14px !important;
+    }
 
-    /* ─── MODAL IND (CINEMATICS) ─── */
     #modal-ind {
-        display: none;
-        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-        background: rgba(0, 0, 0, 0.96);
-        z-index: 100000;
-        justify-content: center; align-items: center;
-        flex-direction: column;
-        padding: 20px;
-        box-sizing: border-box;
+        display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+        background: rgba(0, 0, 0, 0.96); z-index: 100000;
+        justify-content: center; align-items: center; flex-direction: column;
+        padding: 20px; box-sizing: border-box;
     }
     #ind-content-box {
-        background: #080806;
-        border: 2px solid #3a3228;
-        border-top: 4px solid #a13d3d;
-        border-bottom: 4px solid #a13d3d;
+        background: #080806; border: 2px solid #3a3228; border-top: 4px solid #a13d3d; border-bottom: 4px solid #a13d3d;
         box-shadow: 0 0 40px rgba(161, 61, 61, 0.15), inset 0 0 20px rgba(0,0,0,1);
-        padding: 30px 40px;
-        max-width: 750px;
-        width: 100%;
-        text-align: justify;
-        position: relative;
+        padding: 30px 40px; max-width: 750px; width: 100%; text-align: justify; position: relative;
     }
     #ind-text {
-        color: #d1c5b4;
-        font-family: 'Courier New', monospace;
-        font-size: 18px;
-        font-style: italic;
-        line-height: 1.7;
-        margin-bottom: 30px;
-        text-shadow: 1px 1px 2px #000;
+        color: #d1c5b4; font-family: 'Courier New', monospace; font-size: 18px;
+        font-style: italic; line-height: 1.7; margin-bottom: 30px; text-shadow: 1px 1px 2px #000;
     }
     #btn-continuar-ind {
-        background: #1a1815; color: #a13d3d;
-        border: 1px solid #3a3228;
-        padding: 10px 25px;
-        font-family: 'VT323', monospace; font-size: 22px;
-        cursor: pointer; transition: 0.3s;
-        display: block; margin: 0 auto;
-        letter-spacing: 2px;
+        background: #1a1815; color: #a13d3d; border: 1px solid #3a3228; padding: 10px 25px;
+        font-family: 'VT323', monospace; font-size: 22px; cursor: pointer; transition: 0.3s;
+        display: block; margin: 0 auto; letter-spacing: 2px;
     }
     #btn-continuar-ind:hover { background: #2a1a1a; color: #e53935; border-color: #a13d3d; }
     .cinematic-bars { width: 100%; height: 12vh; background: black; position: absolute; left: 0; z-index: -1;}
     .bar-top { top: 0; border-bottom: 1px solid #1a1a14; }
     .bar-bottom { bottom: 0; border-top: 1px solid #1a1a14; }
-        
-</style>
-<base target="_blank">
+    </style>
+    <base target="_blank">
 </head>
 <body>
-    <div id="game-container">
-       <div id="local-atual" style="display: flex; justify-content: space-between;">
-            <span>⚔️ Reinos Desolados • <span id="modelo-span">Motor Duplo (7B + 1.5B)</span></span>
-            <span id="energia-span" style="color: #a13d3d; font-weight: bold;">🩸 Energia: 10/10</span>
-           <span id="magia-span" style="color: #5b8dd9; font-weight: bold;">✨ Magia: 0</span>
 
-       </div>
+<div id="re-game-container">
+    <div class="crt-scanlines"></div>
 
+    <!-- CABEÇALHO (antes dentro de #sala-view) -->
+    <div class="re-header">
+        <span style="color: #888;">⚔️ <span id="modelo-span" style="font-family: 'Courier Prime', monospace; font-size: 0.8em;">(7B + 1.5B)</span></span>
+        
+        <div class="status-group">
+            <span id="energia-span" style="color: #aa5555;">🩸 10/10</span>
+            <span id="magia-span" style="color: #5b8dd9;">✨ 0</span>
+            <button onclick="abrirMapaVisual()" class="nav-btn" style="padding: 4px 8px; font-size: 16px; font-family: 'VT323', monospace;">👁️ MAPA</button>
+            <button id="abrir-inventario-btn" class="nav-btn" style="padding: 4px 8px; font-size: 16px; font-family: 'VT323', monospace;" onclick="abrirInventarioSemItem()">🎒 INV</button>
+        </div>
+    </div>
+
+    <!-- ÁREA ÚNICA COM SCROLL (substitui sala-view + chat-wrapper) -->
+    <div id="main-scroll-area">
+        <!-- 1. Descrição da sala atual -->
+        <div id="sala-desc">A escuridão domina este lugar...</div>
+
+        <!-- 2. Histórico de ações/mensagens (antigo #chat-box) -->
         <div id="chat-box">
             <div class="system-message">⚔️ O narrador está preparando o cenário...</div>
         </div>
 
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-            <div id="loot-area" style="display: flex; flex-wrap: wrap; gap: 8px; min-height: 20px; padding: 5px; border: 1px dashed #2a251e; flex-grow: 1;"></div>
-            <button onclick="abrirMapaVisual()" style="background: #141311; color: #b5a68b; border: 4px solid #3a3228; box-shadow: 4px 4px 0px #000; font-family: 'VT323', monospace; font-size: 20px; padding: 6px 16px; cursor: pointer;">👁️ MAPA</button>
-            <button id="abrir-inventario-btn" class="nav-btn" style="margin-left: 10px; height: fit-content;" onclick="abrirInventarioSemItem()">🎒 Inventário</button>
-        </div>
-        
+        <!-- 3. Botões gerados dinamicamente (itens, navegação) -->
+        <div id="loot-area"></div>
         <div id="map-controls"></div>
-
-        <div id="controls">
-            <input type="text" id="user-input" placeholder="Sua ação..." disabled>
-            <button id="send-btn" onclick="enviar(document.getElementById('user-input').value.trim())" disabled>Agir</button>
-        </div>
     </div>
 
-    <div id="modal-ind">
-        <div class="cinematic-bars bar-top"></div>
-        <div id="ind-content-box">
-            <div style="color: #4a3a2a; font-family: 'VT323', monospace; font-size: 22px; text-align: center; margin-bottom: 25px; letter-spacing: 5px; border-bottom: 1px solid #2a251e; padding-bottom: 10px;">◈ FRAGMENTO DE REVELAÇÃO ◈</div>
-            <div id="ind-text"></div>
-            <button id="btn-continuar-ind">CONTINUAR</button>
-        </div>
-        <div class="cinematic-bars bar-bottom"></div>
+    <!-- CAMPO DE AÇÃO (fixo no rodapé) -->
+    <div id="controls">
+        <span class="input-prompt">&gt;</span>
+        <input type="text" id="user-input" placeholder="Sua ação..." disabled autocomplete="off">
+        <button id="send-btn" onclick="enviar(document.getElementById('user-input').value.trim())" disabled>[ EXECUTAR ]</button>
     </div>
+</div>
 
-    <div id="inventario-narrativa">
-        <button id="fechar-inventario-btn" onclick="fecharInventario()">Fechar Inventário</button>
+<!-- ================================================================= -->
+<!-- MODAIS / INVENTÁRIO (NÃO ALTERADOS) -->
+<!-- ================================================================= -->
+<div id="modal-ind">
+    <div class="cinematic-bars bar-top"></div>
+    <div id="ind-content-box">
+        <div style="color: #4a3a2a; font-family: 'VT323', monospace; font-size: 22px; text-align: center; margin-bottom: 25px; letter-spacing: 5px; border-bottom: 1px solid #2a251e; padding-bottom: 10px;">◈ FRAGMENTO DE REVELAÇÃO ◈</div>
+        <div id="ind-text"></div>
+        <button id="btn-continuar-ind">CONTINUAR</button>
+    </div>
+    <div class="cinematic-bars bar-bottom"></div>
+</div>
+
+<div id="inventario-narrativa">
+    <button id="fechar-inventario-btn" onclick="fecharInventario()">Fechar Inventário</button>
+    
+    <div class="container">
+        <button id="carregar-municao-btn" style="display:none;">Carregar Munição</button>
+        <button onclick="resetInventory()" style="background: red; color: white; padding: 10px; display:none;">RESETAR INVENTÁRIO (TEMPORÁRIO)</button>
         
-        <div class="container">
-            <button id="carregar-municao-btn" style="display:none;">Carregar Munição</button>
-            <button onclick="resetInventory()" style="background: red; color: white; padding: 10px; display:none;">RESETAR INVENTÁRIO (TEMPORÁRIO)</button>
-            
-            <button id="expand-btn" class="expand-button">⚔️</button>
-            
-            <div class="bottom-section" id="bottom-section">
-                <div class="carousel-wrapper">
-                    <div class="carousel-container">
-                        <div class="carousel-slide active" id="inventory-window">
-                            <div class="chest-area">
-                                <div class="left-panel">
-                                    <div class="name-panel">
-                                        <span id="char-name-display">Nome do Personagem</span>
-                                    </div>
-                                    
-                                    <div class="profile-info-container">
-                                        <img id="portrait-image" src="" alt="Retrato do Personagem" style="display: none;">
-                                        <div class="info-panel">
-                                            <iframe src="ecg.html" style="position: absolute; top: -38px; left: -35px; width: 300px; height: 80px; border: none; transform: scale(0.2); z-index: 5; overflow: hidden;" scrolling="no"></iframe>
-                                            <div><span id="char-class-info" class="green-text">-</span>&nbsp;&nbsp;<span id="char-race-info" class="green-text">-</span>&nbsp;&nbsp;<span id="char-alignment-info" class="green-text">-</span></div>
-                                            <div><span id="char-age-info" class="green-text">-</span> ANOS&nbsp;&nbsp;&nbsp;<span id="char-hand-info" class="green-text">-</span>&nbsp;&nbsp;&nbsp;HEM: <span id="char-hemisphere-info" class="green-text">-</span></div>
-                                            <div>HA: <span id="char-skill-info" class="green-text">-</span>&nbsp;&nbsp;CA: <span id="char-charisma-info" class="green-text">-</span>&nbsp;&nbsp;MA: <span id="char-magic-info" class="green-text">-</span>&nbsp;&nbsp;SO: <span id="char-luck-info" class="green-text">-</span></div>
-                                            <div>COURAÇA: <span id="char-couraca-info" class="green-text">0</span>&nbsp;&nbsp;DANO: <span id="char-dano-info" class="green-text">1</span>&nbsp;&nbsp;DIA: <span id="char-day-info" class="green-text">1</span></div>
-                                            <div>P.OURO: <span id="char-po-info" class="green-text">0</span>&nbsp;&nbsp;NÍVEL: <span id="char-level-info" class="green-text">1</span></div>
-                                        </div>
-                                    </div>
-
-                                    <div class="item-preview">
-                                        <div class="preview-image-window">
-                                            <div class="preview-image-container">
-                                                <img id="preview-image" src="" alt="Item Preview" style="display: none;">
-                                            </div>
-                                        </div>
-                                        <div class="preview-info-window">
-                                            <div class="preview-info">
-                                                <h3 id="preview-name"></h3>
-                                                <p id="preview-description"></p>
-                                            </div>
-                                        </div>
-                                        <div class="item-actions-window" id="item-actions-window" style="display: none;">
-                                            <div class="action-buttons">
-                                                <button class="action-btn" id="action-usar">Usar</button>
-                                                <button class="action-btn" id="action-combinar">Combinar</button>
-                                                <button class="action-btn" id="action-checar">Checar</button>
-                                                <button class="action-btn" id="action-descartar">Descartar</button>
-                                            </div>
-                                        </div>
+        <button id="expand-btn" class="expand-button">⚔️</button>
+        
+        <div class="bottom-section" id="bottom-section">
+            <div class="carousel-wrapper">
+                <div class="carousel-container">
+                    <div class="carousel-slide active" id="inventory-window">
+                        <div class="chest-area">
+                            <div class="left-panel">
+                                <div class="name-panel">
+                                    <span id="char-name-display">Nome do Personagem</span>
+                                </div>
+                                
+                                <div class="profile-info-container">
+                                    <img id="portrait-image" src="" alt="Retrato do Personagem" style="display: none;">
+                                    <div class="info-panel">
+                                        <iframe src="ecg.html" style="position: absolute; top: -38px; left: -35px; width: 300px; height: 80px; border: none; transform: scale(0.2); z-index: 5; overflow: hidden;" scrolling="no"></iframe>
+                                        <div><span id="char-class-info" class="green-text">-</span>&nbsp;&nbsp;<span id="char-race-info" class="green-text">-</span>&nbsp;&nbsp;<span id="char-alignment-info" class="green-text">-</span></div>
+                                        <div><span id="char-age-info" class="green-text">-</span> ANOS&nbsp;&nbsp;&nbsp;<span id="char-hand-info" class="green-text">-</span>&nbsp;&nbsp;&nbsp;HEM: <span id="char-hemisphere-info" class="green-text">-</span></div>
+                                        <div>HA: <span id="char-skill-info" class="green-text">-</span>&nbsp;&nbsp;CA: <span id="char-charisma-info" class="green-text">-</span>&nbsp;&nbsp;MA: <span id="char-magic-info" class="green-text">-</span>&nbsp;&nbsp;SO: <span id="char-luck-info" class="green-text">-</span></div>
+                                        <div>COURAÇA: <span id="char-couraca-info" class="green-text">0</span>&nbsp;&nbsp;DANO: <span id="char-dano-info" class="green-text">1</span>&nbsp;&nbsp;DIA: <span id="char-day-info" class="green-text">1</span></div>
+                                        <div>P.OURO: <span id="char-po-info" class="green-text">0</span>&nbsp;&nbsp;NÍVEL: <span id="char-level-info" class="green-text">1</span></div>
                                     </div>
                                 </div>
-                                <div class="right-panel">
-                                    <div class="chest">
-                                        <div class="items">
-                                            <div class="item">
-                                                Item de Exemplo
-                                                <span class="item-expand-toggle">+</span>
-                                                <div class="item-description" style="display: none;">
-                                                    Descrição deste item de exemplo.
-                                                </div>
-                                            </div>
+
+                                <div class="item-preview">
+                                    <div class="preview-image-window">
+                                        <div class="preview-image-container">
+                                            <img id="preview-image" src="" alt="Item Preview" style="display: none;">
+                                        </div>
+                                    </div>
+                                    <div class="preview-info-window">
+                                        <div class="preview-info">
+                                            <h3 id="preview-name"></h3>
+                                            <p id="preview-description"></p>
+                                        </div>
+                                    </div>
+                                    <div class="item-actions-window" id="item-actions-window" style="display: none;">
+                                        <div class="action-buttons">
+                                            <button class="action-btn" id="action-usar">Usar</button>
+                                            <button class="action-btn" id="action-combinar">Combinar</button>
+                                            <button class="action-btn" id="action-checar">Checar</button>
+                                            <button class="action-btn" id="action-descartar">Descartar</button>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-
-                        <div class="carousel-slide" id="character-sheet">
-                            <div class="sheet-grid-container">
-                                <div class="sheet-header">
-                                    <p><strong>Nome:</strong> <span id="char-name">-</span></p>
-                                    <p><strong>Classe:</strong> <span id="char-class">-</span></p>
-                                    <p><strong>Raça:</strong> <span id="char-race">-</span></p>
-                                </div>
-                                <div class="sheet-main-status">
-                                    <div class="attribute">
-                                        <span class="label">Energia</span>
-                                        <span id="char-energy">0/0</span>
-                                        <div class="barra-hp-container">
-                                            <div id="barra-hp-inventario" class="barra-hp"></div>
-                                        </div>
-                                    </div>
-                                    <div class="attribute xp-attribute">
-                                        <span class="label">Nível</span>
-                                        <span id="char-level">1</span>
-                                        <div class="xp-container">
-                                            <span id="char-xp">0/100</span>
-                                            <div class="barra-xp-container">
-                                                <div id="barra-xp-inventario" class="barra-xp"></div>
+                            <div class="right-panel">
+                                <div class="chest">
+                                    <div class="items">
+                                        <div class="item">
+                                            Item de Exemplo
+                                            <span class="item-expand-toggle">+</span>
+                                            <div class="item-description" style="display: none;">
+                                                Descrição deste item de exemplo.
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                                <div class="sheet-stats-grid">
-                                    <div class="stat-box"><span class="label">Habilidade</span><span id="char-skill">0</span></div>
-                                    <div class="stat-box"><span class="label">Couraça</span><span id="char-couraca">0</span></div>
-                                    <div class="stat-box"><span class="label">Carisma</span><span id="char-charisma">0</span></div>
-                                    <div class="stat-box"><span class="label">Dano</span><span id="char-dano">0</span></div>
-                                    <div class="stat-box"><span class="label">Magia</span><span id="char-magic">0</span></div>
-                                    <div class="stat-box"><span class="label">Sorte</span><span id="char-luck">0</span></div>
-                                </div>
-                                <div class="sheet-footer">
-                                    <span><strong>Alinhamento:</strong> <span id="char-alignment">-</span></span>
-                                    <span><strong>Mão:</strong> <span id="char-hand">-</span></span>
-                                    <span><strong>Hemisfério:</strong> <span id="char-hemisphere">-</span></span>
-                                    <span><strong>Dia:</strong> <span id="char-day">1</span></span>
-                                    <span><strong>Idade:</strong> <span id="char-idade">-</span></span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="carousel-slide" id="dice-window">
-                            <div class="dice-slots-container">
-                                <h3>Dados Equipados</h3>
-                                <div class="dice-slots-grid">
-                                    <div class="dice-slot-row">
-                                        <div class="dice-slot" data-dice="D3">D3</div>
-                                        <div class="dice-slot" data-dice="D4">D4</div>
-                                        <div class="dice-slot" data-dice="D6">D6</div>
-                                    </div>
-                                    <div class="dice-slot-row">
-                                        <div class="dice-slot" data-dice="D8">D8</div>
-                                        <div class="dice-slot" data-dice="D10">D10</div>
-                                        <div class="dice-slot" data-dice="D12">D12</div>
-                                    </div>
-                                    <div class="dice-slot-row">
-                                        <div class="dice-slot" data-dice="D20">D20</div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="chest dice-chest">
-                                <h2>Coleção de Dados</h2>
-                                <div class="dice-items">
                                 </div>
                             </div>
                         </div>
                     </div>
-                    
-                    <div class="carousel-nav">
-                        <div class="carousel-buttons">
-                            <button id="prevBtn">◀</button>
-                            <button id="nextBtn">▶</button>
+
+                    <div class="carousel-slide" id="character-sheet">
+                        <div class="sheet-grid-container">
+                            <div class="sheet-header">
+                                <p><strong>Nome:</strong> <span id="char-name">-</span></p>
+                                <p><strong>Classe:</strong> <span id="char-class">-</span></p>
+                                <p><strong>Raça:</strong> <span id="char-race">-</span></p>
+                            </div>
+                            <div class="sheet-main-status">
+                                <div class="attribute">
+                                    <span class="label">Energia</span>
+                                    <span id="char-energy">0/0</span>
+                                    <div class="barra-hp-container">
+                                        <div id="barra-hp-inventario" class="barra-hp"></div>
+                                    </div>
+                                </div>
+                                <div class="attribute xp-attribute">
+                                    <span class="label">Nível</span>
+                                    <span id="char-level">1</span>
+                                    <div class="xp-container">
+                                        <span id="char-xp">0/100</span>
+                                        <div class="barra-xp-container">
+                                            <div id="barra-xp-inventario" class="barra-xp"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="sheet-stats-grid">
+                                <div class="stat-box"><span class="label">Habilidade</span><span id="char-skill">0</span></div>
+                                <div class="stat-box"><span class="label">Couraça</span><span id="char-couraca">0</span></div>
+                                <div class="stat-box"><span class="label">Carisma</span><span id="char-charisma">0</span></div>
+                                <div class="stat-box"><span class="label">Dano</span><span id="char-dano">0</span></div>
+                                <div class="stat-box"><span class="label">Magia</span><span id="char-magic">0</span></div>
+                                <div class="stat-box"><span class="label">Sorte</span><span id="char-luck">0</span></div>
+                            </div>
+                            <div class="sheet-footer">
+                                <span><strong>Alinhamento:</strong> <span id="char-alignment">-</span></span>
+                                <span><strong>Mão:</strong> <span id="char-hand">-</span></span>
+                                <span><strong>Hemisfério:</strong> <span id="char-hemisphere">-</span></span>
+                                <span><strong>Dia:</strong> <span id="char-day">1</span></span>
+                                <span><strong>Idade:</strong> <span id="char-idade">-</span></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="carousel-slide" id="dice-window">
+                        <div class="dice-slots-container">
+                            <h3>Dados Equipados</h3>
+                            <div class="dice-slots-grid">
+                                <div class="dice-slot-row">
+                                    <div class="dice-slot" data-dice="D3">D3</div>
+                                    <div class="dice-slot" data-dice="D4">D4</div>
+                                    <div class="dice-slot" data-dice="D6">D6</div>
+                                </div>
+                                <div class="dice-slot-row">
+                                    <div class="dice-slot" data-dice="D8">D8</div>
+                                    <div class="dice-slot" data-dice="D10">D10</div>
+                                    <div class="dice-slot" data-dice="D12">D12</div>
+                                </div>
+                                <div class="dice-slot-row">
+                                    <div class="dice-slot" data-dice="D20">D20</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="chest dice-chest">
+                            <h2>Coleção de Dados</h2>
+                            <div class="dice-items">
+                            </div>
                         </div>
                     </div>
                 </div>
+                
+                <div class="carousel-nav">
+                    <div class="carousel-buttons">
+                        <button id="prevBtn">◀</button>
+                        <button id="nextBtn">▶</button>
+                    </div>
+                </div>
             </div>
-            
-            <div class="top-section" id="top-section">
-                <div class="character">
-                    <div class="equipment">
-                        <div class="slot-row helmet-row">
-                            <div class="slot" id="helmet" data-slot="helmet">Cabeça</div>
-                        </div>
-                        <div class="slot-row weapon-shield-row">
-                            <div class="slot" id="weapon" data-slot="weapon">Mão Esquerda</div>
-                            <div class="slot" id="shield" data-slot="shield">Mão Direita</div>
-                        </div>
-                        <div class="slot-row gloves-amulet-row">
-                            <div class="slot" id="gloves" data-slot="gloves">Luvas</div>
-                            <div class="slot" id="amulet" data-slot="amulet">Amuleto</div>
-                        </div>
-                        <div class="slot-row armor-row">
-                            <div class="slot" id="armor" data-slot="armor">Peitoral</div>
-                        </div>
-                        <div class="slot-row rings-row">
-                            <div class="slot" id="ring" data-slot="ring">Anel</div>
-                            <div class="slot" id="ring2" data-slot="ring">Anel</div>
-                        </div>
+        </div>
+        
+        <div class="top-section" id="top-section">
+            <div class="character">
+                <div class="equipment">
+                    <div class="slot-row helmet-row">
+                        <div class="slot" id="helmet" data-slot="helmet">Cabeça</div>
+                    </div>
+                    <div class="slot-row weapon-shield-row">
+                        <div class="slot" id="weapon" data-slot="weapon">Mão Esquerda</div>
+                        <div class="slot" id="shield" data-slot="shield">Mão Direita</div>
+                    </div>
+                    <div class="slot-row gloves-amulet-row">
+                        <div class="slot" id="gloves" data-slot="gloves">Luvas</div>
+                        <div class="slot" id="amulet" data-slot="amulet">Amuleto</div>
+                    </div>
+                    <div class="slot-row armor-row">
+                        <div class="slot" id="armor" data-slot="armor">Peitoral</div>
+                    </div>
+                    <div class="slot-row rings-row">
+                        <div class="slot" id="ring" data-slot="ring">Anel</div>
+                        <div class="slot" id="ring2" data-slot="ring">Anel</div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    <script type="module">
+<script type="module">
+    
         // ============================================================
         // Importações Firebase (versão compatível com o inventário)
         // ============================================================
@@ -418,7 +527,7 @@ window.dispatchEvent(new Event('firebase-initialized'));
         const MODELO_GROQ = "llama-3.3-70b-versatile";
         const MODELO_PUZZLE = "openai/gpt-oss-120b";
         const MODELO_IND = "qwen/qwen3-32b"; // Modelo responsável pelas cinematics
-        const MODELO_ARQUITETO = "llama-3.3-70b-versatile"; // Arquiteto de Perigos — custo-benefício ótimo (já provado em geração zonal)
+        const MODELO_ARQUITETO = "llama-3.3-70b-versatile"; // Arquiteto de Perigos
 
         let mapaMundo = null;
         let secaoAtualId = "1";
@@ -794,38 +903,39 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
             return false;
         }
 
-        window.abrirInventarioSemItem = function() {
-            if(window.narrativeActionInProgress) return;
-            window.narrativeActionInProgress = true;
+       window.abrirInventarioSemItem = function() {
+    if(window.narrativeActionInProgress) return;
+    window.narrativeActionInProgress = true;
 
-            const overlay = document.createElement('div');
-            overlay.className = 'fade-overlay';
-            document.body.appendChild(overlay);
+    const overlay = document.createElement('div');
+    overlay.className = 'fade-overlay';
+    document.body.appendChild(overlay);
 
-            setTimeout(() => overlay.classList.add('active'), 10);
+    setTimeout(() => overlay.classList.add('active'), 10);
 
-            setTimeout(() => {
-                document.getElementById('game-container').style.display = 'none';
-                document.getElementById('inventario-narrativa').classList.add('ativo');
+    setTimeout(() => {
+        // MUDE ESTA LINHA: de 'game-container' para 're-game-container'
+        document.getElementById('re-game-container').style.display = 'none';
+        document.getElementById('inventario-narrativa').classList.add('ativo');
 
-                const expandBtn = document.querySelector('#inventario-narrativa #expand-btn');
-                const container = document.querySelector('#inventario-narrativa .container');
-                if (expandBtn && container) {
-                    expandBtn.onclick = () => container.classList.toggle('expanded');
-                }
+        const expandBtn = document.querySelector('#inventario-narrativa #expand-btn');
+        const container = document.querySelector('#inventario-narrativa .container');
+        if (expandBtn && container) {
+            expandBtn.onclick = () => container.classList.toggle('expanded');
+        }
 
-                document.getElementById('preview-image').style.display = 'none';
-                document.getElementById('preview-name').textContent = '';
-                document.getElementById('preview-description').textContent = '';
-                const imageContainer = document.querySelector('#inventario-narrativa .preview-image-container');
-                if (imageContainer) {
-                    imageContainer.style.display = 'none';
-                }
+        document.getElementById('preview-image').style.display = 'none';
+        document.getElementById('preview-name').textContent = '';
+        document.getElementById('preview-description').textContent = '';
+        const imageContainer = document.querySelector('#inventario-narrativa .preview-image-container');
+        if (imageContainer) {
+            imageContainer.style.display = 'none';
+        }
 
-                overlay.classList.remove('active');
-                setTimeout(() => overlay.remove(), 200);
-            }, 1200);
-        };
+        overlay.classList.remove('active');
+        setTimeout(() => overlay.remove(), 200);
+    }, 1200);
+};
 
         window.abrirInventarioComItem = async function(itemId, spanElement, idSala) {
             if(window.narrativeActionInProgress) return;
@@ -856,7 +966,7 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
             setTimeout(() => overlay.classList.add('active'), 10);
 
             setTimeout(() => {
-                document.getElementById('game-container').style.display = 'none';
+                document.getElementById('re-game-container').style.display = 'none';
                 document.getElementById('inventario-narrativa').classList.add('ativo');
 
                 const expandBtn = document.querySelector('#inventario-narrativa #expand-btn');
@@ -958,7 +1068,7 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
 
         window.fecharInventario = function() {
             document.getElementById('inventario-narrativa').classList.remove('ativo');
-            document.getElementById('game-container').style.display = 'block';
+            document.getElementById('re-game-container').style.display = 'flex';
             
             document.getElementById('preview-image').style.display = 'none';
             document.getElementById('preview-image').src = '';
@@ -1088,8 +1198,8 @@ Retorne EXCLUSIVAMENTE um objeto JSON válido no formato: {"narrativa": "texto d
     const data = await chamarGroq([
         { 
             role: "system", 
-    content: "/no_think\nVocê é um formatador estrito. Seu único papel é ler as instruções, gerar o texto da cena seguindo rigorosamente os exemplos fornecidos, e retornar o resultado dentro de um JSON puro e válido, sem nenhuma formatação markdown." 
-},
+            content: "Você é um formatador estrito. Seu único papel é ler as instruções, gerar o texto da cena seguindo rigorosamente os exemplos fornecidos, e retornar o resultado dentro de um JSON puro e válido, sem nenhuma formatação markdown." 
+        },
         { 
             role: "user", 
             content: prompt 
@@ -1127,7 +1237,6 @@ Retorne EXCLUSIVAMENTE um objeto JSON válido no formato: {"narrativa": "texto d
             });
         }
 
-
         // ============================================================
         // ARQUITETO DE PERIGOS
         // ============================================================
@@ -1145,10 +1254,10 @@ Retorne EXCLUSIVAMENTE um objeto JSON válido no formato: {"narrativa": "texto d
             const contextSalas = idsRegulares.map(id => {
                 const sala = mapaFinalMesclado[String(id)];
                 const opcoesInterceptaveis = (sala.opcoes || [])
-    .filter(o => o.destino && !o.arquiteto && !/(^voltar|de volta|retornar)\b/i.test(o.texto.trim()))
-    .filter(o => !mapaFinalMesclado[String(o.destino)]?.ind_disponivel) // ← ignora destinos IND
-    .map(o => `"${o.texto}"`)
-    .join(", ");
+                    .filter(o => o.destino && !o.arquiteto && !/(^voltar|de volta|retornar)\b/i.test(o.texto.trim()))
+                    .filter(o => !mapaFinalMesclado[String(o.destino)]?.ind_disponivel) // ignora destinos IND
+                    .map(o => `"${o.texto}"`)
+                    .join(", ");
                 const descTruncada = (sala.texto_logico || "").replace(/\n/g, " ").substring(0, 220);
                 return `SALA_ID:${id} — "${sala.nome}"\nDescrição: ${descTruncada}...\nOpções de movimento disponíveis: ${opcoesInterceptaveis || "nenhuma interceptável"}`;
             }).join("\n\n");
@@ -1221,9 +1330,9 @@ Retorne EXCLUSIVAMENTE um objeto JSON válido no formato: {"narrativa": "texto d
 
                 } else if (perigo.tipo === "interceptor") {
                     const opcaoAlvo = (sala.opcoes || []).find(o =>
-    o.texto === perigo.opcao_texto && o.destino && !o.arquiteto &&
-    !mapaFinalMesclado[String(o.destino)]?.ind_disponivel // ← recusa interceptar destinos IND
-);
+                        o.texto === perigo.opcao_texto && o.destino && !o.arquiteto &&
+                        !mapaFinalMesclado[String(o.destino)]?.ind_disponivel
+                    );
 
                     if (opcaoAlvo) {
                         opcaoAlvo.interceptor_arquiteto = {
@@ -2847,29 +2956,41 @@ Retorne EXATAMENTE o JSON abaixo. Nenhuma palavra extra.`
             return `Ao retornar, você se encontra novamente aqui. ${semAncora}`;
         }
         
-       function atualizarBotoesNavegacao() {
+
+
+
+function atualizarBotoesNavegacao() {
     const container = document.getElementById('map-controls');
+    const salaDesc = document.getElementById('sala-desc');
     container.innerHTML = '';
+    
     const sala = mapaMundo?.[secaoAtualId];
-    if (!sala || !sala.opcoes) return;
+    if (!sala) return;
+
+    // Garante que o texto da sala atual seja exibido (útil para o load inicial da página)
+    if (salaDesc.innerHTML === '') {
+        salaDesc.innerHTML = sala.texto_logico || "A escuridão domina este lugar...";
+    }
+
+    if (!sala.opcoes) return;
 
     sala.opcoes.forEach(opcao => {
 
-        // ── ARQUITETO: opção sem destino (nova_opcao) ──────────────────────
-        // Disparada uma vez, depois some da lista
+        // ── ARQUITETO: opção sem destino (nova_opcao) ──────────────────────────
+        // Disparada uma vez, depois some da lista. Não faz fade — só mostra no chat.
         if (opcao.arquiteto === true && !opcao.destino) {
             if (opcao.disparado) return; // já consumida
             const btnArq = document.createElement('button');
             btnArq.className = 'nav-btn';
-            btnArq.innerText = `🧭 ${opcao.texto}`;
+            btnArq.innerText = `> ${opcao.texto}`;
             btnArq.onclick = async () => {
+                if (window._transicaoEmAndamento) return;
                 opcao.disparado = true;
-                container.innerHTML = '';
-                adicionarMensagem(`🧭 ${opcao.texto}`, 'user');
+                adicionarMensagem(`> ${opcao.texto}`, 'user');
                 adicionarMensagem(opcao.resultado_texto, 'ai');
                 if (opcao.dano > 0) {
                     energia = Math.max(0, energia - opcao.dano);
-                    document.getElementById('energia-span').innerText = `🩸 Energia: ${energia}/10`;
+                    document.getElementById('energia-span').innerText = `🩸 ${energia}/10`;
                     await salvarEstadoJogador();
                 }
                 atualizarBotoesNavegacao();
@@ -2878,61 +2999,85 @@ Retorne EXATAMENTE o JSON abaixo. Nenhuma palavra extra.`
             container.appendChild(btnArq);
             return; // não cai no código de navegação abaixo
         }
-        // ── FIM ARQUITETO nova_opcao ───────────────────────────────────────
+        // ── FIM ARQUITETO nova_opcao ────────────────────────────────────────────
 
-                const destinoSala = mapaMundo?.[String(opcao.destino)];
+        const destinoSala = mapaMundo?.[String(opcao.destino)];
         if (destinoSala?.bloqueio?.ativo) {
-    const btnBloqueado = document.createElement('button');
-    btnBloqueado.className = 'nav-btn';
-    btnBloqueado.disabled = false;
-    btnBloqueado.style.opacity = "1";
-    btnBloqueado.style.cursor = "pointer";
-    btnBloqueado.innerText = `🧭 ${opcao.texto}`;
-    btnBloqueado.title = destinoSala.bloqueio.descricao;
+            const btnBloqueado = document.createElement('button');
+            btnBloqueado.className = 'nav-btn';
+            btnBloqueado.disabled = false;
+            btnBloqueado.style.opacity = "0.7";
+            btnBloqueado.style.cursor = "pointer";
+            btnBloqueado.innerText = `[TRANCADO] ${opcao.texto}`;
+            btnBloqueado.title = destinoSala.bloqueio.descricao;
 
-    btnBloqueado.onclick = () => {
-        adicionarMensagem(`🚫 ${destinoSala.bloqueio.descricao}`, 'system');
-        adicionarMensagem("Talvez haja uma forma de dissipar isso em outra área...", 'system');
-    };
-    container.appendChild(btnBloqueado);
-    return;
-}
+            btnBloqueado.onclick = () => {
+                if (window._transicaoEmAndamento) return;
+                adicionarMensagem(`🔒 A porta não cede: ${destinoSala.bloqueio.descricao}`, 'system');
+            };
+            container.appendChild(btnBloqueado);
+            return;
+        }
+        
         const btn = document.createElement('button');
         btn.className = 'nav-btn';
         
         const saltoLongo = Math.abs(opcao.destino - parseInt(secaoAtualId)) > SALAS_POR_ZONA;
-        btn.innerText = saltoLongo ? `🌀 ${opcao.texto}` : `🧭 ${opcao.texto}`;
-        
-        if (saltoLongo) {
+        const ehPuzzle = opcao.destino >= 10000;
+
+        btn.innerText = saltoLongo ? `>> ${opcao.texto}` : `> ${opcao.texto}`;
+
+        if (saltoLongo && !ehPuzzle) {
             btn.style.color = "#a13d3d";
             btn.style.borderColor = "#a13d3d";
         }
 
         btn.onclick = async () => {
-            container.innerHTML = '';
-            const destinoStr = opcao.destino.toString();
+            if (window._transicaoEmAndamento) return;
+            window._transicaoEmAndamento = true;
 
-            // ── ARQUITETO: interceptor no trajeto ──────────────────────────
-            // Dispara uma vez antes da navegação normal; depois não bloqueia mais
-            let interceptorJaExibido = false;
+            document.getElementById('controls').style.pointerEvents = 'none';
+            container.style.pointerEvents = 'none';
+
+            // ── ARQUITETO: interceptor dispara ANTES do fade ────────────────────
             const interceptor = opcao.interceptor_arquiteto;
             if (interceptor && !interceptor.disparado) {
                 interceptor.disparado = true;
-                interceptorJaExibido = true;
-                adicionarMensagem(btn.innerText, 'user');          // ação do jogador
-                adicionarMensagem(interceptor.resultado_texto, 'ai'); // texto do perigo
+                adicionarMensagem(`> ${opcao.texto}`, 'user');
+                adicionarMensagem(interceptor.resultado_texto, 'ai');
                 if (interceptor.dano > 0) {
                     energia = Math.max(0, energia - interceptor.dano);
-                    document.getElementById('energia-span').innerText = `🩸 Energia: ${energia}/10`;
+                    document.getElementById('energia-span').innerText = `🩸 ${energia}/10`;
                 }
-                // pausa dramática antes de carregar o destino
-                await new Promise(r => setTimeout(r, 750));
+                // pausa dramática para o jogador ler antes do fade
+                await new Promise(r => setTimeout(r, 900));
             }
-            // ── FIM interceptor ────────────────────────────────────────────
+            // ── FIM interceptor ─────────────────────────────────────────────────
 
+            // FADE OUT E SOM
+            const overlay = document.createElement('div');
+            overlay.className = 'fade-overlay';
+            document.body.appendChild(overlay);
+
+            setTimeout(() => overlay.classList.add('active'), 10);
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            try {
+                const audio = new Audio(opcao.som || 'https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/passos.mp3');
+                await audio.play();
+                await new Promise(resolve => setTimeout(resolve, 1500));
+            } catch (error) {
+                console.log('Erro ao tocar som:', error);
+            }
+
+            container.innerHTML = '';
+            document.getElementById('chat-box').innerHTML = '';
+            const destinoStr = opcao.destino.toString();
+
+            // EXPANSÃO
             if (!mapaMundo[destinoStr]) {
                 const zonaAlvo = Math.ceil(opcao.destino / SALAS_POR_ZONA);
-                const idLoading = adicionarMensagem(`⚙️ A fenda pulsa violentamente... construindo os horrores da Zona ${zonaAlvo}...`, "system", true);
+                const idLoading = adicionarMensagem(`[SISTEMA] Processando dados da Zona ${zonaAlvo}...`, "system", true);
                 
                 window._expansaoEmAndamento = true;
                 await gerarZona(zonaAlvo, null);
@@ -2945,22 +3090,17 @@ Retorne EXATAMENTE o JSON abaixo. Nenhuma palavra extra.`
             if (parseInt(secaoAtualId) < 10000) {
                 zonaAtual = Math.ceil(parseInt(secaoAtualId) / SALAS_POR_ZONA);
             }
-            await salvarEstadoJogador(); // persiste energia do interceptor + posição
+            // persiste energia do interceptor + posição
+            await salvarEstadoJogador();
 
             const novaSala = mapaMundo[secaoAtualId];
 
-            // ============================================================
-            // DISPARO DO IND (INTERRUPÇÃO NARRATIVA DINÂMICA)
-            // ============================================================
+            // IND TRIGGER
             if (novaSala && novaSala.ind_disponivel) {
-                novaSala.ind_disponivel = false; // Consome o evento para não repetir
+                novaSala.ind_disponivel = false; 
                 await salvarEstadoJogador();
                 
-                const idLoadingIND = adicionarMensagem(`🎥 A realidade estremece... puxando sua mente para um vislumbre...`, "system", true);
-                
-                // Desabilita as interações e navegação enquanto processa e exibe
-                document.getElementById('controls').style.pointerEvents = 'none';
-                document.getElementById('map-controls').style.pointerEvents = 'none';
+                const idLoadingIND = adicionarMensagem(`[SISTEMA] Anomalia detectada...`, "system", true);
 
                 try {
                     const textoIND = await gerarIND(secaoAtualId);
@@ -2969,40 +3109,52 @@ Retorne EXATAMENTE o JSON abaixo. Nenhuma palavra extra.`
                     historicoIND.push(textoIND);
                     await salvarEstadoJogador();
                     
-                    // Exibe modal e aguarda clique em "Continuar"
                     await exibirModalIND(textoIND);
                     
                 } catch (error) {
-                    console.error("[IND] Erro ao gerar cinematic:", error);
+                    console.error("[IND] Erro:", error);
                     document.getElementById(idLoadingIND)?.remove();
-                } finally {
-                    // Restaura interações
-                    document.getElementById('controls').style.pointerEvents = 'auto';
-                    document.getElementById('map-controls').style.pointerEvents = 'auto';
-                }
+                } 
             }
-            // ============================================================
 
             verificarEExpandirMundo(); 
 
+            // ======================================================
+            // ATUALIZAÇÃO DA VIEW DA SALA (Sem misturar no chat)
+            // ======================================================
             if (novaSala?.texto_logico) {
-                // Se houve interceptor, a msg do usuário já foi adicionada antes da pausa
-                if (!interceptorJaExibido) {
-                    adicionarMensagem(btn.innerText, 'user');
-                }
+                // 1. Gera o texto refinado baseado de onde o jogador veio
                 const textoFinal = prepararTextoChegada(novaSala.texto_logico, opcao.texto, parseInt(secaoAtualId), opcao.destino);
-                adicionarMensagem(textoFinal, 'ai');
-                historicoConversa.push({ role: 'user', content: opcao.texto });
+                
+                // 2. Substitui o conteúdo da área visual da sala (Sem sujar o chat)
+                salaDesc.innerHTML = textoFinal;
+
+                // 3. Atualiza a memória da IA silenciosamente
+                historicoConversa.push({ role: 'user', content: `[Navegou para: ${opcao.texto}]` });
                 historicoConversa.push({ role: 'assistant', content: novaSala.texto_logico });
                 if (historicoConversa.length > 10) historicoConversa.splice(0, 2);
             }
 
             atualizarBotoesNavegacao();
-            atualizarLootRoom();
+            if (typeof atualizarLootRoom === "function") atualizarLootRoom();
+
+            // FADE IN
+            overlay.classList.remove('active');
+            setTimeout(() => {
+                overlay.remove();
+                window._transicaoEmAndamento = false;
+                
+                document.getElementById('controls').style.pointerEvents = 'auto';
+                const novoContainer = document.getElementById('map-controls');
+                if (novoContainer) novoContainer.style.pointerEvents = 'auto';
+            }, 1200);
         };
+        
         container.appendChild(btn);
     });
 }
+
+        
         
         window.enviar = async function(mensagemUsuario = null) {
             const isInitial = mensagemUsuario === null;
@@ -3014,21 +3166,39 @@ Retorne EXATAMENTE o JSON abaixo. Nenhuma palavra extra.`
             let pergunta;
             
             if (isInitial) {
-                if (mapaMundo && mapaMundo["1"]?.texto_logico) {
-                    adicionarMensagem(mapaMundo["1"].texto_logico, 'ai');
-                    historicoConversa.push({ role: 'assistant', content: mapaMundo["1"].texto_logico });
-                    userInput.disabled = false;
-                    sendBtn.disabled = false;
-                    userInput.focus();
-                    atualizarBotoesNavegacao();
-                    atualizarLootRoom();
-                    return; 
-                } else if (!resumoAtual) {
-                    pergunta = PROMPT_INTRO;
-                } else {
-                    pergunta = 'O jogo foi recarregado. Com base no resumo da história, narre rapidamente a cena atual (usando a regra padrão de frases curtas) e pergunte o que eu faço agora.';
-                }
-            } else {
+    // Aguarda o mapa ser carregado (caso ainda não esteja)
+    if (!mapaMundo || !mapaMundo[secaoAtualId]) {
+        setTimeout(() => window.enviar(), 500);
+        return;
+    }
+
+    const salaAtual = mapaMundo[secaoAtualId];
+    if (salaAtual?.texto_logico) {
+        // 1. Atualiza o painel principal de descrição da sala
+        document.getElementById('sala-desc').innerHTML = salaAtual.texto_logico;
+        
+        // 2. Limpa o chat e adiciona uma mensagem discreta
+        document.getElementById('chat-box').innerHTML = '';
+        adicionarMensagem('⚔️ A escuridão recorda sua presença...', 'system');
+        
+        // 3. Atualiza os botões e itens do chão
+        atualizarBotoesNavegacao();
+        atualizarLootRoom();
+        
+        // 4. Habilita os controles
+        userInput.disabled = false;
+        sendBtn.disabled = false;
+        userInput.focus();
+        return;
+    } else {
+        // Fallback: gera introdução normal (caso não haja texto na sala atual)
+        if (!resumoAtual) {
+            pergunta = PROMPT_INTRO;
+        } else {
+            pergunta = 'O jogo foi recarregado. Com base no resumo da história, narre rapidamente a cena atual (usando a regra padrão de frases curtas) e pergunte o que eu faço agora.';
+        }
+    }
+} else {
                 pergunta = mensagemUsuario;
             }
 
