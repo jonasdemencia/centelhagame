@@ -3146,42 +3146,45 @@ chatBox.scrollTop = chatBox.scrollHeight;
 const interceptor = opcao.interceptor_arquiteto;
 if (interceptor && !interceptor.disparado) {
     interceptor.disparado = true;
+
+    // 1. Mostra a ação do jogador e a narrativa do perigo
     adicionarMensagem(`> ${opcao.texto}`, 'user');
     const resultDiv = document.createElement('div');
     resultDiv.className = 'result-message';
     resultDiv.innerText = interceptor.resultado_texto;
     chatBox.appendChild(resultDiv);
     chatBox.scrollTop = chatBox.scrollHeight;
+
+    // 2. Aplica dano, se houver
     if (interceptor.dano > 0) {
         energia = Math.max(0, energia - interceptor.dano);
         document.getElementById('energia-span').innerText = `🩸 ${energia}/10`;
+        await salvarEstadoJogador();
     }
 
-    // --- NOVO BOTÃO "CONTINUAR" ---
-    // Desabilita todos os botões de navegação existentes
-    const botoesNavegacao = document.querySelectorAll('#map-controls .nav-btn');
-    botoesNavegacao.forEach(btn => { btn.disabled = true; });
+    // 3. Desabilita todos os botões de navegação normais
+    const botoesAtuais = document.querySelectorAll('#map-controls .nav-btn');
+    botoesAtuais.forEach(btn => { btn.disabled = true; });
 
-    // Cria o botão "CONTINUAR"
+    // 4. Cria o botão "CONTINUAR"
     const btnContinuar = document.createElement('button');
     btnContinuar.className = 'nav-btn';
     btnContinuar.innerText = '> CONTINUAR';
     btnContinuar.style.background = '#1a2a1a';
     btnContinuar.style.borderColor = '#4caf50';
     btnContinuar.style.color = '#4caf50';
-    const containerMapa = document.getElementById('map-controls');
-    containerMapa.appendChild(btnContinuar);
+    const mapControls = document.getElementById('map-controls');
+    mapControls.appendChild(btnContinuar);
 
-    // Aguarda o clique no botão "CONTINUAR"
+    // 5. Aguarda o clique no botão "CONTINUAR" antes de prosseguir com a transição
     await new Promise(resolve => {
         btnContinuar.onclick = () => {
             btnContinuar.remove();
-            // Reabilita os botões de navegação (opcional, pois logo será feita a transição)
-            botoesNavegacao.forEach(btn => { btn.disabled = false; });
+            // Reabilita os botões normais (opcional, pois logo a tela vai escurecer)
+            botoesAtuais.forEach(btn => { btn.disabled = false; });
             resolve();
         };
     });
-    // --- FIM DO BOTÃO CONTINUAR ---
 }
 
             // FADE OUT E SOM
