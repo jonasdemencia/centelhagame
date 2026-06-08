@@ -3115,7 +3115,7 @@ chatBox.scrollTop = chatBox.scrollHeight;
     btnBloqueado.title = destinoSala.bloqueio.descricao;
     btnBloqueado.onclick = () => {
         if (window._transicaoEmAndamento) return;
-        adicionarMensagem(`🔒 A porta não cede: ${destinoSala.bloqueio.descricao}`, 'system');
+        adicionarMensagem(`A porta não cede: ${destinoSala.bloqueio.descricao}`, 'system');
     };
     container.appendChild(btnBloqueado);
     return;
