@@ -148,6 +148,15 @@
        ESTILOS DO CHAT (mensagens)
        ========================================= */
     .user-message { color: #88aa88; align-self: flex-end; background: #111a11; padding: 6px 12px; border: 1px solid #1a2a1a; max-width: 80%; word-wrap: break-word; }
+
+        .result-message {
+    color: #cccccc;          /* mesma cor do texto da sala */
+    background: transparent; /* sem fundo colorido */
+    margin: 8px 0;
+    padding: 4px 0;
+    border-bottom: 1px dashed #333; /* linha sutil para separar, opcional */
+    font-style: normal;
+}
     .ai-message { color: #aa5555; align-self: flex-start; background: #1a0f0f; padding: 6px 12px; border: 1px solid #2a1a1a; max-width: 80%; word-wrap: break-word; }
     .system-message { color: #666; text-align: center; font-style: italic; font-size: 0.9em; margin: 5px 0; }
     
@@ -3010,7 +3019,11 @@ function atualizarBotoesNavegacao() {
                 // Marca como disparado e executa a narrativa do perigo
                 opcao.disparado = true;
                 adicionarMensagem(`> ${opcao.texto}`, 'user');
-                adicionarMensagem(opcao.resultado_texto, 'ai');
+                const resultDiv = document.createElement('div');
+resultDiv.className = 'result-message';
+resultDiv.innerText = opcao.resultado_texto;
+chatBox.appendChild(resultDiv);
+chatBox.scrollTop = chatBox.scrollHeight;
 
                 // Aplica dano, se houver
                 if (opcao.dano > 0) {
@@ -3079,7 +3092,11 @@ function atualizarBotoesNavegacao() {
             if (interceptor && !interceptor.disparado) {
                 interceptor.disparado = true;
                 adicionarMensagem(`> ${opcao.texto}`, 'user');
-                adicionarMensagem(interceptor.resultado_texto, 'ai');
+                const resultDiv = document.createElement('div');
+resultDiv.className = 'result-message';
+resultDiv.innerText = interceptor.resultado_texto;
+chatBox.appendChild(resultDiv);
+chatBox.scrollTop = chatBox.scrollHeight;
                 if (interceptor.dano > 0) {
                     energia = Math.max(0, energia - interceptor.dano);
                     document.getElementById('energia-span').innerText = `🩸 ${energia}/10`;
