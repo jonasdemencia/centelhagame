@@ -1276,7 +1276,62 @@ Retorne EXCLUSIVAMENTE um objeto JSON válido no formato: {"narrativa": "texto d
             const semente = Math.random().toString(36).substring(2, 8);
             const conspiracao = (dnaGlobal?.conspiracoes_reais || []).slice(0, 2).join(" | ");
 
-            const prompt = `[SEMENTE:${semente}]\nVocê é o Arquiteto de Perigos de um RPG de survival horror textual.\n\nZONA: "${infoZona.nome}"\nTOM SENSORIAL: "${infoZona.tom_sensorial || "opressivo e perturbador"}"\nMISTÉRIO CENTRAL: "${dnaGlobal?.misterio_central || ""}"\nSEGREDO LOCAL: "${infoZona.segredo_local || ""}"\nCONSPIRAÇÕES: "${conspiracao}"\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nCONTEXTO — 5 SALAS DESTE TRECHO:\n${contextSalas}\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nMISSÃO: Crie exatamente 5 perigos narrativos para este trecho do mapa.\n\nTIPOS OBRIGATÓRIOS:\n• "interceptor" (3 a 4 perigos — 70%): Evento que ocorre ANTES do jogador chegar no destino de uma opção JÁ EXISTENTE. O campo "opcao_texto" deve ser IDÊNTICO ao texto de uma das opções listadas acima. NUNCA use opções que contenham "Voltar" ou "retornar".\n• "nova_opcao" (1 a 2 perigos — 30%): Nova opção de exploração que SURGE na sala. Quando clicada, o evento acontece e a sala permanece. Não navega a lugar nenhum.\n\nDISTRIBUIÇÃO DE DANO OBRIGATÓRIA:\n• 3 perigos com "dano": 0 — revelação de lore, fragmento de diário, inscrição, evento neutro.\n• 2 perigos com "dano": 1 a 4 — causa perda de energia de forma física e concreta.\n\nREGRAS NARRATIVAS OBRIGATÓRIAS:\n1. MASCARAMENTO TOTAL: opções que PARECEM perigosas mas têm dano 0. Opções que PARECEM inofensivas mas causam dano (ex: "Sentar na cadeira" → dano 1).\n2. Revelações (dano 0): fragmentos de conspirações, diários rasgados, marcas na parede, segredos do mundo. Puramente narrativo.\n3. Interceptors: descreva o que acontece NO TRAJETO, fisicamente, antes de chegar ao destino. Para dano, a ÚLTIMA frase deve ser "Você perde N de energia."\n4. PROIBIDO: itens, cura, recompensas mecânicas. Apenas narrativa pura.\n\nRetorne APENAS o JSON:\n{\n  "perigos": [\n    {\n      "tipo": "interceptor",\n      "sala_id": "ID numérico da sala como string",\n      "opcao_texto": "Texto EXATO de uma opção existente na sala_id acima",\n      "resultado_texto": "Texto narrativo (2-4 frases). Se houver dano, a ÚLTIMA frase deve ser: Você perde N de energia.",\n      "dano": 0,\n      "tipo_resultado": "revelacao"\n    }\n  ]\n}\n\nValores válidos para tipo_resultado: revelacao, neutro, perigo\nValores válidos para dano: 0, 1, 2, 3 ou 4`;
+// ============================================================
+// GERAÇÃO DA MATRIZ DE DANO IMPREVISÍVEL
+// ============================================================
+// Ajuste o "0.6" para alterar a dificuldade geral. 
+// 0.6 = 60% de chance de ser 0 (Lore/Susto), 40% de chance de Dano Físico (1 a 4)
+const matrizDeDano = Array.from({length: 5}, () => {
+    const isDano = Math.random() > 0.6; 
+    return isDano ? Math.floor(Math.random() * 4) + 1 : 0;
+}).sort(() => Math.random() - 0.5); // Embaralha os valores
+
+const prompt = `[SEMENTE:${semente}]
+Você é o Arquiteto de Perigos de um RPG de survival horror textual altamente imersivo.
+
+ZONA: "${infoZona.nome}"
+TOM SENSORIAL: "${infoZona.tom_sensorial || "opressivo e perturbador"}"
+MISTÉRIO CENTRAL: "${dnaGlobal?.misterio_central || ""}"
+SEGREDO LOCAL: "${infoZona.segredo_local || ""}"
+CONSPIRAÇÕES: "${conspiracao}"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CONTEXTO — 5 SALAS DESTE TRECHO:
+${contextSalas}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+MISSÃO: Crie exatamente 5 perigos narrativos para este trecho do mapa.
+
+TIPOS OBRIGATÓRIOS:
+• "interceptor" (1 a 2 perigos): Evento que ocorre NO TRAJETO de uma opção JÁ EXISTENTE. O campo "opcao_texto" deve ser IDÊNTICO à opção listada. NUNCA use opções de "Voltar" ou "retornar".
+• "nova_opcao" (3 a 4 perigos): Nova opção de exploração FÍSICA que SURGE na sala. Não navega a lugar nenhum, a sala permanece após a ação.
+
+🩸 MATRIZ DE DANO SORTEADA PARA ESTA SESSÃO: [${matrizDeDano.join(", ")}]
+Você DEVE aplicar exatamente esses 5 valores numéricos de dano aos seus 5 perigos gerados. Não mude os números. Adapte a brutalidade da sua narrativa ao valor:
+• Dano 0: Revelação de lore, susto psicológico, descoberta macabra, evento inofensivo fisicamente.
+• Dano 1 a 2: Escoriações, tropeços, inalação rápida de fumaça, cortes farpados.
+• Dano 3 a 4: Fraturas, ferimentos profundos, choques severos, perda de sangue.
+
+🔥 REGRAS DE ESCRITA DE HORROR (ESTRITAMENTE OBRIGATÓRIAS):
+1. MOSTRE, NÃO CONTE: PROIBIDO usar palavras vazias (sinistro, misterioso, assustador, conspiração). Se houver um segredo, ESCREVA o segredo na íntegra. (Ex: Em vez de "um diário sobre o médico", use "O papel rasgado diz: 'O Dr. Silva não usa anestesia'").
+2. LIGAÇÃO DIRETA: O conteúdo dos eventos de Dano 0 DEVE referenciar diretamente os nomes/fatos do MISTÉRIO CENTRAL ou das CONSPIRAÇÕES.
+3. MASCARAMENTO: Esconda o perigo. Opções que parecem inofensivas ("Puxar o lençol") podem carregar os danos altos da Matriz.
+4. APLICAÇÃO DO DANO: Se o valor aplicado da Matriz for maior que 0, a ÚLTIMA frase do resultado_texto deve ser EXATAMENTE: "Você perde N de energia." (Onde N é o número da Matriz).
+
+Retorne APENAS o JSON:
+{
+  "perigos": [
+    {
+      "tipo": "interceptor",
+      "sala_id": "ID numérico como string",
+      "opcao_texto": "Texto EXATO de uma opção",
+      "resultado_texto": "Texto narrativo, cru, direto e sensorial (2-4 frases). Encerre com a frase de energia caso o dano > 0.",
+      "dano": 0,
+      "tipo_resultado": "revelacao"
+    }
+  ]
+}
+Valores válidos para tipo_resultado: revelacao, neutro, perigo`;
 
             const systemPrompt = "Você é um arquiteto de horror. Retorne APENAS um JSON válido, começando com { e terminando com }. Zero markdown. Zero texto fora do JSON.";
 
