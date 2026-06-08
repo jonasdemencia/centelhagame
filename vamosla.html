@@ -1278,14 +1278,12 @@ Retorne EXCLUSIVAMENTE um objeto JSON válido no formato: {"narrativa": "texto d
             const conspiracao = (dnaGlobal?.conspiracoes_reais || []).slice(0, 2).join(" | ");
 
 // ============================================================
-// GERAÇÃO DA MATRIZ DE DANO IMPREVISÍVEL
+// GERAÇÃO DO MODO DE HORROR (substitui matrizDeDano)
 // ============================================================
-// Ajuste o "0.6" para alterar a dificuldade geral. 
-// 0.6 = 60% de chance de ser 0 (Lore/Susto), 40% de chance de Dano Físico (1 a 4)
-const matrizDeDano = Array.from({length: 5}, () => {
-    const isDano = Math.random() > 0.6; 
-    return isDano ? Math.floor(Math.random() * 4) + 1 : 0;
-}).sort(() => Math.random() - 0.5); // Embaralha os valores
+// 2x PSICOLOGICO (dano 0), 2x FISICO_LEVE (dano 1-2), 1x FISICO_GRAVE (dano 3-4)
+// Embaralhado a cada zona para ordem imprevisível
+const POOL_MODOS = ["PSICOLOGICO", "PSICOLOGICO", "FISICO_LEVE", "FISICO_LEVE", "FISICO_GRAVE"];
+const modoHorror = [...POOL_MODOS].sort(() => Math.random() - 0.5);
 
 const prompt = `[SEMENTE:${semente}]
 Você é o Arquiteto de Perigos de um RPG de survival horror textual altamente imersivo.
@@ -1306,17 +1304,17 @@ TIPOS OBRIGATÓRIOS:
 • "interceptor" (1 a 2 perigos): Evento que ocorre NO TRAJETO de uma opção JÁ EXISTENTE. O campo "opcao_texto" deve ser IDÊNTICO à opção listada. NUNCA use opções de "Voltar" ou "retornar".
 • "nova_opcao" (3 a 4 perigos): Nova opção de exploração FÍSICA que SURGE na sala. Não navega a lugar nenhum, a sala permanece após a ação.
 
-🩸 MATRIZ DE DANO SORTEADA PARA ESTA SESSÃO: [${matrizDeDano.join(", ")}]
-Você DEVE aplicar exatamente esses 5 valores numéricos de dano aos seus 5 perigos gerados. Não mude os números. Adapte a brutalidade da sua narrativa ao valor:
-• Dano 0: Revelação de lore, susto psicológico, descoberta macabra, evento inofensivo fisicamente.
-• Dano 1 a 2: Escoriações, tropeços, inalação rápida de fumaça, cortes farpados.
-• Dano 3 a 4: Fraturas, ferimentos profundos, choques severos, perda de sangue.
+🩸 MODO DE HORROR PARA CADA PERIGO (nesta ordem, do 1º ao 5º): [${modoHorror.join(", ")}]
+Cada modo define O TIPO DE EVENTO — escreva a narrativa a partir dele, sem mencionar o modo:
+• PSICOLOGICO: Revelação macabra, descoberta visual perturbadora, susto sem contato físico. O corpo não é tocado.
+• FISICO_LEVE: Tropeço, escoriação, torção, inalação, batida. O corpo resiste e continua.
+• FISICO_GRAVE: Fratura, corte profundo, queda de impacto real, choque severo. Dano visível e duradouro.
 
 🔥 REGRAS DE ESCRITA DE HORROR (ESTRITAMENTE OBRIGATÓRIAS):
 1. MOSTRE, NÃO CONTE: PROIBIDO usar palavras vazias (sinistro, misterioso, assustador, conspiração). Se houver um segredo, ESCREVA o segredo na íntegra. (Ex: Em vez de "um diário sobre o médico", use "O papel rasgado diz: 'O Dr. Silva não usa anestesia'").
-2. LIGAÇÃO DIRETA: O conteúdo dos eventos de Dano 0 DEVE referenciar diretamente os nomes/fatos do MISTÉRIO CENTRAL ou das CONSPIRAÇÕES.
-3. MASCARAMENTO: Esconda o perigo. Opções que parecem inofensivas ("Puxar o lençol") podem carregar os danos altos da Matriz.
-4. APLICAÇÃO DO DANO: Se o valor aplicado da Matriz for maior que 0, a ÚLTIMA frase do resultado_texto deve ser EXATAMENTE: "Você perde N de energia." (Onde N é o número da Matriz).
+2. LIGAÇÃO DIRETA: Eventos PSICOLOGICO DEVEM referenciar diretamente os nomes/fatos do MISTÉRIO CENTRAL ou das CONSPIRAÇÕES.
+3. MASCARAMENTO: Esconda o perigo. Opções que parecem inofensivas ("Puxar o lençol") podem ser FISICO_GRAVE.
+4. NÃO inclua "Você perde N de energia" no resultado_texto. O sistema calcula o dano automaticamente.
 
 Retorne APENAS o JSON:
 {
@@ -1325,8 +1323,7 @@ Retorne APENAS o JSON:
       "tipo": "interceptor",
       "sala_id": "ID numérico como string",
       "opcao_texto": "Texto EXATO de uma opção",
-      "resultado_texto": "Texto narrativo, cru, direto e sensorial (2-4 frases). Encerre com a frase de energia caso o dano > 0.",
-      "dano": 0,
+      "resultado_texto": "Texto narrativo, cru, direto e sensorial (2-4 frases).",
       "tipo_resultado": "revelacao"
     }
   ]
@@ -1358,29 +1355,74 @@ Valores válidos para tipo_resultado: revelacao, neutro, perigo`;
 
             const perigos = parsed.perigos || [];
             console.log(`[Arquiteto] ✅ ${perigos.length} perigos gerados para zona "${infoZona.nome}".`, perigos);
-            aplicarArquitetoDePerigos(perigos, mapaFinalMesclado, idsRegulares);
+            aplicarArquitetoDePerigos(perigos, mapaFinalMesclado, idsRegulares, modoHorror);
         }
 
-        function aplicarArquitetoDePerigos(perigos, mapaFinalMesclado, idsValidos) {
+        // ============================================================
+        // EXTRATOR DE DANO DETERMINÍSTICO (pós-geração, zero tokens)
+        // Lê a narrativa gerada pelo modelo e deriva o dano mecânico.
+        // O modo serve como fallback mínimo garantido por categoria.
+        // ============================================================
+        function extrairDanoDeNarrativa(texto, modo) {
+            const t = (texto || "").toLowerCase();
+
+            // Modo psicológico nunca causa dano, independente do texto
+            if (modo === "PSICOLOGICO") return 0;
+
+            // Indicadores de trauma grave → dano 3 ou 4
+            const GRAVE = [
+                "fratura", "osso partido", "osso quebrado", "desmaio", "inconsciente",
+                "sangue escorre", "sangramento", "sangra copiosamente", "perfura", "dilacera",
+                "corte profundo", "ferida aberta", "perde sentido", "queda violenta",
+                "choque elétrico", "queimadura grave", "esmagado"
+            ];
+            if (GRAVE.some(w => t.includes(w))) return Math.random() < 0.5 ? 3 : 4;
+
+            // Indicadores de lesão leve → dano 1 ou 2
+            const LEVE = [
+                "tropeça", "tropeça e cai", "escoriação", "arranha", "torce",
+                "batida", "bateu", "corta", "se corta", "inalação", "fumaça",
+                "arde", "machuca", "machucado", "rasga a pele", "contusão",
+                "desequilibra", "raspão", "impacto", "choque leve", "queimadura leve"
+            ];
+            if (LEVE.some(w => t.includes(w))) return Math.random() < 0.5 ? 1 : 2;
+
+            // Fallback por modo: se o texto não revelou indicadores mas o modo é físico,
+            // aplica dano mínimo garantido para manter a promessa semântica do modo
+            if (modo === "FISICO_GRAVE") return 3;
+            if (modo === "FISICO_LEVE") return 1;
+
+            return 0;
+        }
+
+        function aplicarArquitetoDePerigos(perigos, mapaFinalMesclado, idsValidos, modoHorror) {
             const idsValidosSet = new Set(idsValidos.map(String));
 
-            for (const perigo of perigos) {
+            perigos.forEach((perigo, index) => {
                 const salaId = String(perigo.sala_id);
                 const sala = mapaFinalMesclado[salaId];
 
                 if (!sala || !idsValidosSet.has(salaId)) {
                     console.warn(`[Arquiteto] Sala ${salaId} fora do escopo. Ignorando.`);
-                    continue;
+                    return;
                 }
 
-                const dano = Math.min(4, Math.max(0, parseInt(perigo.dano) || 0));
-                const resultadoTexto = (perigo.resultado_texto || "").trim();
-                const tipoResultado = perigo.tipo_resultado || "neutro";
-
-                if (!resultadoTexto) {
+                const narrativaBruta = (perigo.resultado_texto || "").trim();
+                if (!narrativaBruta) {
                     console.warn(`[Arquiteto] Perigo sem resultado_texto na sala ${salaId}. Ignorando.`);
-                    continue;
+                    return;
                 }
+
+                // Dano calculado pelo JS a partir da narrativa + modo semântico
+                const modo = modoHorror?.[index] ?? "PSICOLOGICO";
+                const dano = extrairDanoDeNarrativa(narrativaBruta, modo);
+
+                // Injeta a frase de energia via JS, nunca pelo modelo
+                const resultadoTexto = dano > 0
+                    ? `${narrativaBruta.replace(/[.\s]+$/, '')}. Você perde ${dano} de energia.`
+                    : narrativaBruta;
+
+                const tipoResultado = perigo.tipo_resultado || "neutro";
 
                 if (perigo.tipo === "nova_opcao") {
                     if (!sala.opcoes) sala.opcoes = [];
@@ -1392,7 +1434,7 @@ Valores válidos para tipo_resultado: revelacao, neutro, perigo`;
                         tipo_resultado: tipoResultado,
                         disparado: false
                     });
-                    console.log(`[Arquiteto] ✅ Nova opção "${perigo.opcao_texto}" adicionada à sala ${salaId} (dano:${dano})`);
+                    console.log(`[Arquiteto] ✅ Nova opção "${perigo.opcao_texto}" → sala ${salaId} [modo:${modo}] (dano:${dano})`);
 
                 } else if (perigo.tipo === "interceptor") {
                     const opcaoAlvo = (sala.opcoes || []).find(o =>
@@ -1407,7 +1449,7 @@ Valores válidos para tipo_resultado: revelacao, neutro, perigo`;
                             tipo_resultado: tipoResultado,
                             disparado: false
                         };
-                        console.log(`[Arquiteto] ✅ Interceptor em "${perigo.opcao_texto}" → sala ${salaId} (dano:${dano})`);
+                        console.log(`[Arquiteto] ✅ Interceptor em "${perigo.opcao_texto}" → sala ${salaId} [modo:${modo}] (dano:${dano})`);
                     } else {
                         // Fallback: opção não encontrada exatamente → nova_opcao
                         console.warn(`[Arquiteto] Opção "${perigo.opcao_texto}" não encontrada na sala ${salaId}. Convertendo para nova_opcao.`);
@@ -1422,7 +1464,7 @@ Valores válidos para tipo_resultado: revelacao, neutro, perigo`;
                         });
                     }
                 }
-            }
+            });
         }
 
         // ============================================================
