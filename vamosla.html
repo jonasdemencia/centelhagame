@@ -544,6 +544,7 @@ window.dispatchEvent(new Event('firebase-initialized'));
         let secaoAtualId = "1";
         let dnaGlobal = null;
         let zonaAtual = 1;
+    let salasVisitadas = new Set(["1"]);
         let _expansaoEmAndamento = false;
         const SALAS_POR_ZONA = 10;
 
@@ -1681,6 +1682,7 @@ async function injetarPuzzles(planoZonal, zonaId) {
                     window.mapaMundo = mapaMundo;
                     if (data.arcanumIudicium?.magiasMemorizadas) magiasMemorizadas = data.arcanumIudicium.magiasMemorizadas;
                     if (data.secaoAtualId) secaoAtualId = data.secaoAtualId;
+                    if (data.salasVisitadas) salasVisitadas = new Set(data.salasVisitadas);
                     if (data.dnaGlobal) dnaGlobal = data.dnaGlobal;
                     if (data.zonaAtual) zonaAtual = data.zonaAtual;
                     
@@ -1699,7 +1701,8 @@ async function injetarPuzzles(planoZonal, zonaId) {
                         memoriaLonga: "",
                         mapaMundo: null,
                         secaoAtualId: "1",
-                        historicoIND: []
+                        historicoIND: [],
+                        salasVisitadas: ["1"],
                     };
                     await setDoc(doc(db, "players", uid), dadosPadrao, { merge: true });
                     await carregarDadosJogador(uid);
@@ -1723,7 +1726,8 @@ async function injetarPuzzles(planoZonal, zonaId) {
                     secaoAtualId: secaoAtualId,
                     dnaGlobal: dnaGlobal,
                     zonaAtual: zonaAtual,
-                    historicoIND: historicoIND
+                    historicoIND: historicoIND,
+                    salasVisitadas: [...salasVisitadas],
                 };
 
                 await updateDoc(doc(db, "players", uidAtual), dadosAtualizados);
@@ -3222,6 +3226,7 @@ if (interceptor && !interceptor.disparado) {
             }
 
             secaoAtualId = destinoStr;
+            salasVisitadas.add(destinoStr);
             if (parseInt(secaoAtualId) < 10000) {
                 zonaAtual = Math.ceil(parseInt(secaoAtualId) / SALAS_POR_ZONA);
             }
@@ -3940,6 +3945,20 @@ async function abrirMapaVisual() {
 
     if (!window.mapCoords || Object.keys(window.mapCoords).length === 0) return;
 
+    // ========== AJUSTE 6a: Calcular salas visíveis (adjacentes a visitadas) ==========
+    const salasVisiveis = new Set();
+    for (let vid of salasVisitadas) {
+        let s = mapaMundoLocal[vid];
+        if (s && s.opcoes) {
+            for (let o of s.opcoes) {
+                if (o.destino && !salasVisitadas.has(String(o.destino))) {
+                    salasVisiveis.add(String(o.destino));
+                }
+            }
+        }
+    }
+    // ================================================================================
+
     let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
     for (let id in window.mapCoords) {
         let r = window.mapCoords[id];
@@ -3965,11 +3984,23 @@ async function abrirMapaVisual() {
         let rh = r.h * escala;
         let ehAtual = (String(id) === String(idAtualGlobal));
 
+        const foiVisitada = salasVisitadas.has(String(id));
+        const estaVisivel = salasVisiveis.has(String(id));
+        if (!foiVisitada && !estaVisivel) continue; // névoa total
+
         let wallInset   = Math.max(2, Math.min(rw * 0.14, rh * 0.14, 7));
         let wallColor   = ehAtual ? "#1c0a00" : "#081520";
         let floorColor  = ehAtual ? "#301600" : "#0e2440";
         let strokeColor = ehAtual ? "#c07820" : "#1e4f70";
         let strokeW     = ehAtual ? 1.5 : 1;
+
+        if (!foiVisitada) {
+            wallColor   = "#060e18";
+            floorColor  = "#060e18";
+            strokeColor = "#0d2030";
+            strokeW     = 0.5;
+            ctx.shadowBlur = 0;
+        }
 
         if (ehAtual) { ctx.shadowColor = "#c07820"; ctx.shadowBlur = 18; }
         else { ctx.shadowBlur = 0; }
@@ -4040,7 +4071,9 @@ async function abrirMapaVisual() {
             let limitChars = Math.floor(r.w / 7);
             textoId = sala.nome.length > limitChars ? sala.nome.substring(0, limitChars - 1) + "…" : sala.nome;
         }
-        ctx.fillText(textoId, rx + rw / 2, ry + rh / 2);
+        if (foiVisitada) {
+            ctx.fillText(textoId, rx + rw / 2, ry + rh / 2);
+        }
     }
 
     let paresDesenhados = new Set();
@@ -4054,6 +4087,8 @@ async function abrirMapaVisual() {
             let idB = String(opt.destino);
             let rB = window.mapCoords[idB];
             if (!rB) continue;
+
+            if (!salasVisitadas.has(idA) && !salasVisitadas.has(idB)) continue;
 
             let parKey = [idA, idB].sort().join('-');
             if (paresDesenhados.has(parKey)) continue;
