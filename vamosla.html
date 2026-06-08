@@ -2448,7 +2448,9 @@ mapaFinalMesclado[puzzleIdStr] = {
             if (salaAtualNum >= 10000) return; 
             const limiteZonaAtual = zonaAtual * SALAS_POR_ZONA;
 
-            if (salaAtualNum >= limiteZonaAtual - 8) {
+            // ANTIGO: if (salaAtualNum >= limiteZonaAtual - 8)  // gerava a partir da sala 2
+    // NOVO: gerar APENAS na última sala da zona (ex: sala 10, 20, 30...)
+    if (salaAtualNum === limiteZonaAtual) {
                 const proximaZona = zonaAtual + 1;
                 const primeiraSalaProxima = proximaZona * SALAS_POR_ZONA - SALAS_POR_ZONA + 1;
 
