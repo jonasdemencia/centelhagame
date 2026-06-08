@@ -3175,6 +3175,7 @@ if (interceptor && !interceptor.disparado) {
     btnContinuar.style.color = '#4caf50';
     const mapControls = document.getElementById('map-controls');
     mapControls.appendChild(btnContinuar);
+    container.style.pointerEvents = 'auto'; // permite clicar no CONTINUAR
 
     // 5. Aguarda o clique no botão "CONTINUAR" antes de prosseguir com a transição
     await new Promise(resolve => {
@@ -3182,6 +3183,7 @@ if (interceptor && !interceptor.disparado) {
             btnContinuar.remove();
             // Reabilita os botões normais (opcional, pois logo a tela vai escurecer)
             botoesAtuais.forEach(btn => { btn.disabled = false; });
+            container.style.pointerEvents = 'none'; // bloqueia de volta para a transição
             resolve();
         };
     });
