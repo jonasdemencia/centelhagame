@@ -1254,43 +1254,38 @@ Retorne EXCLUSIVAMENTE um objeto JSON válido no formato: {"narrativa": "texto d
         // ============================================================
 
         async function gerarArquitetoDePerigos(mapaFinalMesclado, infoZona) {
-            // Seleciona até 5 salas regulares (não puzzle, ID < 10000, com opções)
-            const idsRegulares = Object.keys(mapaFinalMesclado)
-                .map(Number)
-                .filter(id => id < 10000 && Array.isArray(mapaFinalMesclado[String(id)]?.opcoes) && mapaFinalMesclado[String(id)].opcoes.length > 0)
-                .sort(() => Math.random() - 0.5)
-                .slice(0, 5);
+    // Seleciona até 5 salas regulares (não puzzle, ID < 10000, com opções)
+    const idsRegulares = Object.keys(mapaFinalMesclado)
+        .map(Number)
+        .filter(id => id < 10000 && Array.isArray(mapaFinalMesclado[String(id)]?.opcoes) && mapaFinalMesclado[String(id)].opcoes.length > 0)
+        .sort(() => Math.random() - 0.5)
+        .slice(0, 5);
 
-            if (idsRegulares.length === 0) return;
+    if (idsRegulares.length === 0) return;
 
-            const contextSalas = idsRegulares.map(id => {
-                const sala = mapaFinalMesclado[String(id)];
-                const opcoesInterceptaveis = (sala.opcoes || [])
-                    .filter(o => o.destino && !o.arquiteto && !/(^voltar|de volta|retornar)\b/i.test(o.texto.trim()))
-                    .filter(o => !mapaFinalMesclado[String(o.destino)]?.ind_disponivel) // ignora destinos IND
-                    .map(o => `"${o.texto}"`)
-                    .join(", ");
-                const descTruncada = (sala.texto_logico || "").replace(/\n/g, " ").substring(0, 220);
-                return `SALA_ID:${id} — "${sala.nome}"\nDescrição: ${descTruncada}...\nOpções de movimento disponíveis: ${opcoesInterceptaveis || "nenhuma interceptável"}`;
-            }).join("\n\n");
+    const contextSalas = idsRegulares.map(id => {
+        const sala = mapaFinalMesclado[String(id)];
+        const opcoesInterceptaveis = (sala.opcoes || [])
+            .filter(o => o.destino && !o.arquiteto && !/(^voltar|de volta|retornar)\b/i.test(o.texto.trim()))
+            .filter(o => !mapaFinalMesclado[String(o.destino)]?.ind_disponivel) // ignora destinos IND
+            .map(o => `"${o.texto}"`)
+            .join(", ");
+        const descTruncada = (sala.texto_logico || "").replace(/\n/g, " ").substring(0, 220);
+        return `SALA_ID:${id} — "${sala.nome}"\nDescrição: ${descTruncada}...\nOpções de movimento disponíveis: ${opcoesInterceptaveis || "nenhuma interceptável"}`;
+    }).join("\n\n");
 
-            const semente = Math.random().toString(36).substring(2, 8);
-            const conspiracao = (dnaGlobal?.conspiracoes_reais || []).slice(0, 2).join(" | ");
+    const semente = Math.random().toString(36).substring(2, 8);
+    const conspiracao = (dnaGlobal?.conspiracoes_reais || []).slice(0, 2).join(" | ");
 
-// ============================================================
-// GERAÇÃO DO MODO DE HORROR (substitui matrizDeDano)
-// ============================================================
-// 2x PSICOLOGICO (dano 0), 2x FISICO_LEVE (dano 1-2), 1x FISICO_GRAVE (dano 3-4)
-// Embaralhado a cada zona para ordem imprevisível
-const POOL_MODOS = ["PSICOLOGICO", "PSICOLOGICO", "FISICO_LEVE", "FISICO_LEVE", "FISICO_GRAVE"];
-const modoHorror = [...POOL_MODOS].sort(() => Math.random() - 0.5);
+    // Modos de Horror revisados para escalar brutalidade
+    const POOL_MODOS = ["PSICOLOGICO", "FISICO_LEVE", "FISICO_GRAVE", "FISICO_CATASTROFICO", "REVELACAO_CARNAL"];
+    const modoHorror = [...POOL_MODOS].sort(() => Math.random() - 0.5);
 
-const prompt = `[SEMENTE:${semente}]
-Você é o Arquiteto de Perigos de um RPG de survival horror textual altamente imersivo.
+    const prompt = `[SEMENTE:${semente}]
+Você é o Arquiteto de Perigos de um RPG de survival horror textual brutal e realista.
 
 ZONA: "${infoZona.nome}"
 MISTÉRIO CENTRAL: "${dnaGlobal?.misterio_central || ""}"
-SEGREDO LOCAL: "${infoZona.segredo_local || ""}"
 CONSPIRAÇÕES: "${conspiracao}"
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -1301,174 +1296,133 @@ ${contextSalas}
 MISSÃO: Crie exatamente 5 perigos narrativos para este trecho do mapa.
 
 TIPOS OBRIGATÓRIOS:
-• "interceptor" (1 a 2 perigos): Evento que ocorre NO TRAJETO de uma opção JÁ EXISTENTE. O campo "opcao_texto" deve ser IDÊNTICO à opção listada. NUNCA use opções de "Voltar" ou "retornar".
-• "nova_opcao" (3 a 4 perigos): Nova opção de exploração FÍSICA que SURGE na sala. Não navega a lugar nenhum, a sala permanece após a ação.
+• "interceptor": Evento que ocorre NO TRAJETO de uma opção JÁ EXISTENTE. O campo "opcao_texto" deve ser IDÊNTICO à opção listada. NUNCA use "Voltar".
+• "nova_opcao": Nova opção de exploração FÍSICA que SURGE na sala (não navega para outra sala).
 
-🩸 MODO DE HORROR PARA CADA PERIGO (nesta ordem, do 1º ao 5º): [${modoHorror.join(", ")}]
-Cada modo define O TIPO DE EVENTO — escreva a narrativa a partir dele, sem mencionar o modo:
-• PSICOLOGICO: Revelação que CITA UM FATO ESPECÍFICO das CONSPIRAÇÕES ou do MISTÉRIO CENTRAL pelo nome. Susto sem contato físico. O corpo não é tocado. PROIBIDO usar "eles", "algo" ou vagueza — nomeie o fenômeno.
-• FISICO_LEVE: O dano NASCE da ação em si, não de um tropeço posterior não relacionado. Ex: levantar tábua → lasca na mão; abrir caixa → vapor quente no rosto. Sequência obrigatória: ação → consequência física direta.
-• FISICO_GRAVE: Trauma físico severo e imediato — o corpo sangra, quebra ou falha na hora. PROIBIDO: armadilhas situacionais sem contato corporal (porta trancada, queda de objeto ao redor, aprisionamento). OBRIGATÓRIO: o resultado deixa marca visível no corpo do personagem.
+🩸 MODO DE HORROR E DANO (Siga a ordem designada: [${modoHorror.join(", ")}]):
+O sistema suporta dano de 0 até 50. Você DEVE definir o número inteiro no campo "dano" do JSON.
+• PSICOLOGICO (Dano 0): Susto sem contato físico. Revela a conspiração. 
+• FISICO_LEVE (Dano 1 a 4): Escoriações, queimaduras leves, cortes rasos.
+• FISICO_GRAVE (Dano 5 a 15): Trauma severo. Ossos partindo, hemorragia, membros perfurados. A narrativa DEVE ser brutal para justificar o dano.
+• FISICO_CATASTROFICO (Dano 16 a 50): Mutilação quase letal. Esmagamento de órgãos, amputação parcial, radiação extrema. Descreva a destruição anatômica sem piedade.
+• REVELACAO_CARNAL (Dano 0 a 2): Uma revelação do DNA do jogo feita de forma puramente fisiológica ou arquitetônica (Ex: encontrar o sistema nervoso de um paciente ligado aos cabos de energia da corporação).
 
-🔥 REGRAS DE ESCRITA DE HORROR (ESTRITAMENTE OBRIGATÓRIAS):
-1. MOSTRE, NÃO CONTE: PROIBIDO usar palavras vazias (sinistro, misterioso, assustador, conspiração). Se houver um segredo, ESCREVA o segredo na íntegra. (Ex: Em vez de "um diário sobre o médico", use "O papel rasgado diz: 'O Dr. Silva não usa anestesia'").
-2. LIGAÇÃO DIRETA: Eventos PSICOLOGICO DEVEM referenciar diretamente os nomes/fatos do MISTÉRIO CENTRAL ou das CONSPIRAÇÕES.
-3. MASCARAMENTO: Esconda o perigo. Opções que parecem inofensivas ("Puxar o lençol") podem ser FISICO_GRAVE.
-4. NÃO inclua "Você perde N de energia" no resultado_texto. O sistema calcula o dano automaticamente.
+🔥 REGRAS DE ESCRITA (FALHA CRÍTICA SE VIOLADAS):
+1. PROIBIDO CLICHÊS DE LORE: NUNCA use bilhetes, diários, cartas, sussurros nas paredes ou sombras falantes. A lore deve ser revelada por evidências FÍSICAS, MÉDICAS ou ARQUITETÔNICAS (ferrugem, fluidos, maquinário bizarro, anatomia corrompida).
+2. MOSTRE, NÃO CONTE: Não diga que é "assustador". Descreva o cheiro de ozônio e medula óssea queimada.
+3. Não inclua texto sobre "Você perde N energia" na narrativa. Apenas preencha o campo numérico "dano" no JSON.
 
-Retorne APENAS o JSON:
+Retorne APENAS o JSON rigorosamente neste formato:
 {
   "perigos": [
     {
-      "tipo": "interceptor",
-      "sala_id": "ID numérico como string",
-      "opcao_texto": "Texto EXATO de uma opção",
-      "resultado_texto": "Texto narrativo, cru, direto e sensorial (2-4 frases).",
-      "tipo_resultado": "revelacao"
+      "tipo": "interceptor ou nova_opcao",
+      "sala_id": "ID numérico",
+      "opcao_texto": "Texto EXATO",
+      "resultado_texto": "Sua narrativa visceral de 2-4 frases aqui.",
+      "dano": Inteiro (ex: 12),
+      "tipo_resultado": "revelacao ou perigo"
     }
   ]
+}`;
+
+    const systemPrompt = "Você é um arquiteto de horror brutal. Retorne APENAS um JSON válido. Zero markdown. O dano deve ser um valor numérico (integer) coerente com a gravidade da descrição.";
+
+    let data;
+    try {
+        data = await chamarGroq([
+            { role: "system", content: systemPrompt },
+            { role: "user", content: prompt }
+        ], 0.8, { type: "json_object" }, MODELO_ARQUITETO, 3);
+    } catch(e) {
+        console.error("[Arquiteto] Falha na chamada Groq:", e);
+        return;
+    }
+
+    let parsed;
+    try {
+        const raw = data.choices[0].message.content;
+        const match = raw.match(/{[\s\S]*}/);
+        parsed = JSON.parse(match ? match[0] : raw);
+    } catch(e) {
+        console.error("[Arquiteto] Falha no parse JSON:", e);
+        return;
+    }
+
+    const perigos = parsed.perigos || [];
+    console.log(`[Arquiteto] ✅ ${perigos.length} perigos gerados para zona "${infoZona.nome}".`, perigos);
+    aplicarArquitetoDePerigos(perigos, mapaFinalMesclado, idsRegulares, modoHorror);
 }
-Valores válidos para tipo_resultado: revelacao, neutro, perigo`;
 
-            const systemPrompt = "Você é um arquiteto de horror. Retorne APENAS um JSON válido, começando com { e terminando com }. Zero markdown. Zero texto fora do JSON.";
-
-            let data;
-            try {
-                data = await chamarGroq([
-                    { role: "system", content: systemPrompt },
-                    { role: "user", content: prompt }
-                ], 0.8, { type: "json_object" }, MODELO_ARQUITETO, 3);
-            } catch(e) {
-                console.error("[Arquiteto] Falha na chamada Groq:", e);
-                return;
-            }
-
-            let parsed;
-            try {
-                const raw = data.choices[0].message.content;
-                const match = raw.match(/{[\s\S]*}/);
-                parsed = JSON.parse(match ? match[0] : raw);
-            } catch(e) {
-                console.error("[Arquiteto] Falha no parse JSON:", e);
-                return;
-            }
-
-            const perigos = parsed.perigos || [];
-            console.log(`[Arquiteto] ✅ ${perigos.length} perigos gerados para zona "${infoZona.nome}".`, perigos);
-            aplicarArquitetoDePerigos(perigos, mapaFinalMesclado, idsRegulares, modoHorror);
-        }
-
-        // ============================================================
-        // EXTRATOR DE DANO DETERMINÍSTICO (pós-geração, zero tokens)
-        // Lê a narrativa gerada pelo modelo e deriva o dano mecânico.
-        // O modo serve como fallback mínimo garantido por categoria.
-        // ============================================================
-        function extrairDanoDeNarrativa(texto, modo) {
-            const t = (texto || "").toLowerCase();
-
-            // Modo psicológico nunca causa dano, independente do texto
-            if (modo === "PSICOLOGICO") return 0;
-
-            // Indicadores de trauma grave → dano 3 ou 4
-            const GRAVE = [
-                "fratura", "osso partido", "osso quebrado", "desmaio", "inconsciente",
-                "sangue escorre", "sangramento", "sangra copiosamente", "perfura", "dilacera",
-                "corte profundo", "ferida aberta", "perde sentido", "queda violenta",
-                "choque elétrico", "queimadura grave", "esmagado"
-            ];
-            if (GRAVE.some(w => t.includes(w))) return Math.random() < 0.5 ? 3 : 4;
-
-            // Indicadores de lesão leve → dano 1 ou 2
-            const LEVE = [
-                "tropeça", "tropeça e cai", "escoriação", "arranha", "torce",
-                "batida", "bateu", "corta", "se corta", "inalação", "fumaça",
-                "arde", "machuca", "machucado", "rasga a pele", "contusão",
-                "desequilibra", "raspão", "impacto", "choque leve", "queimadura leve"
-            ];
-            if (LEVE.some(w => t.includes(w))) return Math.random() < 0.5 ? 1 : 2;
-
-            // Sem indicador físico claro: o modelo pode ter desobedecido o modo.
-            // Verifica presença física latente antes de atribuir dano.
-            // Se nada físico for detectado, dano = 0 — narrativa manda, modo não força.
-            const LATENTE = ["dor ", "sangue", "ferimento", "lesão", "ferida", "corpo", "pele ", "osso", "músculo", "articulação", "queima", "arde ", "torce"];
-            const temFisico = LATENTE.some(w => t.includes(w));
-            if (modo === "FISICO_GRAVE") return temFisico ? 2 : 0;
-            if (modo === "FISICO_LEVE")  return temFisico ? 1 : 0;
-
-            return 0;
-        }
+        
 
         function aplicarArquitetoDePerigos(perigos, mapaFinalMesclado, idsValidos, modoHorror) {
-            const idsValidosSet = new Set(idsValidos.map(String));
+    const idsValidosSet = new Set(idsValidos.map(String));
 
-            perigos.forEach((perigo, index) => {
-                const salaId = String(perigo.sala_id);
-                const sala = mapaFinalMesclado[salaId];
+    perigos.forEach((perigo, index) => {
+        const salaId = String(perigo.sala_id);
+        const sala = mapaFinalMesclado[salaId];
 
-                if (!sala || !idsValidosSet.has(salaId)) {
-                    console.warn(`[Arquiteto] Sala ${salaId} fora do escopo. Ignorando.`);
-                    return;
-                }
-
-                const narrativaBruta = (perigo.resultado_texto || "").trim();
-                if (!narrativaBruta) {
-                    console.warn(`[Arquiteto] Perigo sem resultado_texto na sala ${salaId}. Ignorando.`);
-                    return;
-                }
-
-                // Dano calculado pelo JS a partir da narrativa + modo semântico
-                const modo = modoHorror?.[index] ?? "PSICOLOGICO";
-                const dano = extrairDanoDeNarrativa(narrativaBruta, modo);
-
-                // Injeta a frase de energia via JS, nunca pelo modelo
-                const resultadoTexto = dano > 0
-                    ? `${narrativaBruta.replace(/[.\s]+$/, '')}. Você perde ${dano} de energia.`
-                    : narrativaBruta;
-
-                const tipoResultado = perigo.tipo_resultado || "neutro";
-
-                if (perigo.tipo === "nova_opcao") {
-                    if (!sala.opcoes) sala.opcoes = [];
-                    sala.opcoes.push({
-                        texto: perigo.opcao_texto || "Examinar o ambiente",
-                        arquiteto: true,
-                        resultado_texto: resultadoTexto,
-                        dano,
-                        tipo_resultado: tipoResultado,
-                        disparado: false
-                    });
-                    console.log(`[Arquiteto] ✅ Nova opção "${perigo.opcao_texto}" → sala ${salaId} [modo:${modo}] (dano:${dano})`);
-
-                } else if (perigo.tipo === "interceptor") {
-                    const opcaoAlvo = (sala.opcoes || []).find(o =>
-                        o.texto === perigo.opcao_texto && o.destino && !o.arquiteto &&
-                        !mapaFinalMesclado[String(o.destino)]?.ind_disponivel
-                    );
-
-                    if (opcaoAlvo) {
-                        opcaoAlvo.interceptor_arquiteto = {
-                            resultado_texto: resultadoTexto,
-                            dano,
-                            tipo_resultado: tipoResultado,
-                            disparado: false
-                        };
-                        console.log(`[Arquiteto] ✅ Interceptor em "${perigo.opcao_texto}" → sala ${salaId} [modo:${modo}] (dano:${dano})`);
-                    } else {
-                        // Fallback: opção não encontrada exatamente → nova_opcao
-                        console.warn(`[Arquiteto] Opção "${perigo.opcao_texto}" não encontrada na sala ${salaId}. Convertendo para nova_opcao.`);
-                        if (!sala.opcoes) sala.opcoes = [];
-                        sala.opcoes.push({
-                            texto: perigo.opcao_texto || "Examinar o ambiente",
-                            arquiteto: true,
-                            resultado_texto: resultadoTexto,
-                            dano,
-                            tipo_resultado: tipoResultado,
-                            disparado: false
-                        });
-                    }
-                }
-            });
+        if (!sala || !idsValidosSet.has(salaId)) {
+            console.warn(`[Arquiteto] Sala ${salaId} fora do escopo. Ignorando.`);
+            return;
         }
+
+        const narrativaBruta = (perigo.resultado_texto || "").trim();
+        if (!narrativaBruta) return;
+
+        // Puxa o dano diretamente do JSON gerado pelo LLM. Fallback para 0.
+        const dano = typeof perigo.dano === 'number' ? perigo.dano : 0;
+        const modo = modoHorror?.[index] ?? "INDEFINIDO";
+
+        // Injeta a frase mecânica de energia no final, caso haja dano
+        const resultadoTexto = dano > 0
+            ? `${narrativaBruta.replace(/[.\s]+$/, '')}. Você perde ${dano} de energia.`
+            : narrativaBruta;
+
+        const tipoResultado = perigo.tipo_resultado || "neutro";
+
+        if (perigo.tipo === "nova_opcao") {
+            if (!sala.opcoes) sala.opcoes = [];
+            sala.opcoes.push({
+                texto: perigo.opcao_texto || "Examinar anomalia",
+                arquiteto: true,
+                resultado_texto: resultadoTexto,
+                dano: dano,
+                tipo_resultado: tipoResultado,
+                disparado: false
+            });
+            console.log(`[Arquiteto] ✅ Nova Opção: "${perigo.opcao_texto}" [Modo: ${modo}] (Dano: ${dano}) -> Sala ${salaId}`);
+
+        } else if (perigo.tipo === "interceptor") {
+            const opcaoAlvo = (sala.opcoes || []).find(o =>
+                o.texto === perigo.opcao_texto && o.destino && !o.arquiteto &&
+                !mapaFinalMesclado[String(o.destino)]?.ind_disponivel
+            );
+
+            if (opcaoAlvo) {
+                opcaoAlvo.interceptor_arquiteto = {
+                    resultado_texto: resultadoTexto,
+                    dano: dano,
+                    tipo_resultado: tipoResultado,
+                    disparado: false
+                };
+                console.log(`[Arquiteto] ✅ Interceptor: "${perigo.opcao_texto}" [Modo: ${modo}] (Dano: ${dano}) -> Sala ${salaId}`);
+            } else {
+                // Fallback caso o LLM erre o nome da opção
+                if (!sala.opcoes) sala.opcoes = [];
+                sala.opcoes.push({
+                    texto: perigo.opcao_texto || "Investigar caminho obstruído",
+                    arquiteto: true,
+                    resultado_texto: resultadoTexto,
+                    dano: dano,
+                    tipo_resultado: tipoResultado,
+                    disparado: false
+                });
+            }
+        }
+    });
+}
 
         // ============================================================
         // PUZZLES & GERAÇÃO PROCEDURAL
