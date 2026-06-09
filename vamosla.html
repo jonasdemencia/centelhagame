@@ -2826,6 +2826,33 @@ ATRIBUTO (apenas se ARRISCADA):
             chatBox.scrollTop = chatBox.scrollHeight;
         }
 
+        // ── TESTE DE PERIGO (Arquiteto de Perigos) ──────────────────────────────
+        // Reutiliza o sistema de testes de atributos das ações livres.
+        // Acionado quando dano > 10. Retorna 'SUCESSO' ou 'FALHA'.
+        async function realizarTestePerigo() {
+            const atributo = Math.random() < 0.5 ? 'SORTE' : 'HABILIDADE';
+            await animarTextoTeste(`TESTE DE ${atributo}`);
+            await criarBotaoRolar();
+            const semente = Math.floor(Math.random() * 20) + 1;
+            const valorAtributo = jogadorStats[atributo] ?? 0;
+            const resultado = semente <= valorAtributo ? 'SUCESSO' : 'FALHA';
+            mostrarResultadoDado(semente, atributo, valorAtributo, resultado);
+            await new Promise(r => setTimeout(r, 300));
+
+            if (resultado === 'SUCESSO') {
+                const divEvasao = document.createElement('div');
+                divEvasao.className = 'result-message';
+                divEvasao.innerText = atributo === 'HABILIDADE'
+                    ? 'Seus reflexos disparam antes do impacto. O perigo raspa o ar ao seu lado e se dissipa.'
+                    : 'O acaso dobra inexplicavelmente em seu favor. O perigo recua sem deixar rastro.';
+                chatBox.appendChild(divEvasao);
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }
+
+            return resultado;
+        }
+        // ── FIM TESTE DE PERIGO ─────────────────────────────────────────────────
+
         function resolverEstadoRelacionalNPC(entidade) {
             if (!entidade) return 'desconhecido';
             const estado = entidade.estado || '';
@@ -3077,20 +3104,34 @@ function atualizarBotoesNavegacao() {
                     console.log('Erro ao tocar som:', error);
                 }
 
-                // Marca como disparado e executa a narrativa do perigo
+                // Marca como disparado e exibe a ação do jogador
                 opcao.disparado = true;
                 adicionarMensagem(`> ${opcao.texto}`, 'user');
-                const resultDiv = document.createElement('div');
-resultDiv.className = 'result-message';
-resultDiv.innerText = opcao.resultado_texto;
-chatBox.appendChild(resultDiv);
-chatBox.scrollTop = chatBox.scrollHeight;
 
-                // Aplica dano, se houver
-                if (opcao.dano > 0) {
-                    energia = Math.max(0, energia - opcao.dano);
-                    document.getElementById('energia-span').innerText = `🩸 ${energia}/10`;
-                    await salvarEstadoJogador();
+                // ── TESTE DE PERIGO: aciona se dano > 10 ────────────────────────
+                let perigoBloqueado = false;
+                if (opcao.dano > 10) {
+                    const resultadoTeste = await realizarTestePerigo();
+                    if (resultadoTeste === 'SUCESSO') {
+                        perigoBloqueado = true;
+                    }
+                }
+                // ── FIM TESTE ───────────────────────────────────────────────────
+
+                if (!perigoBloqueado) {
+                    // Exibe a narrativa do perigo
+                    const resultDiv = document.createElement('div');
+                    resultDiv.className = 'result-message';
+                    resultDiv.innerText = opcao.resultado_texto;
+                    chatBox.appendChild(resultDiv);
+                    chatBox.scrollTop = chatBox.scrollHeight;
+
+                    // Aplica dano, se houver
+                    if (opcao.dano > 0) {
+                        energia = Math.max(0, energia - opcao.dano);
+                        document.getElementById('energia-span').innerText = `🩸 ${energia}/10`;
+                        await salvarEstadoJogador();
+                    }
                 }
 
                 // Atualiza os botões e itens da sala (o botão atual sumirá)
@@ -3150,19 +3191,33 @@ const interceptor = opcao.interceptor_arquiteto;
 if (interceptor && !interceptor.disparado) {
     interceptor.disparado = true;
 
-    // 1. Mostra a ação do jogador e a narrativa do perigo
+    // 1. Exibe a ação do jogador
     adicionarMensagem(`> ${opcao.texto}`, 'user');
-    const resultDiv = document.createElement('div');
-    resultDiv.className = 'result-message';
-    resultDiv.innerText = interceptor.resultado_texto;
-    chatBox.appendChild(resultDiv);
-    chatBox.scrollTop = chatBox.scrollHeight;
 
-    // 2. Aplica dano, se houver
-    if (interceptor.dano > 0) {
-        energia = Math.max(0, energia - interceptor.dano);
-        document.getElementById('energia-span').innerText = `🩸 ${energia}/10`;
-        await salvarEstadoJogador();
+    // ── TESTE DE PERIGO: aciona se dano > 10 ────────────────────────────
+    let perigoBloqueadoInterceptor = false;
+    if (interceptor.dano > 10) {
+        const resultadoTeste = await realizarTestePerigo();
+        if (resultadoTeste === 'SUCESSO') {
+            perigoBloqueadoInterceptor = true;
+        }
+    }
+    // ── FIM TESTE ────────────────────────────────────────────────────────
+
+    if (!perigoBloqueadoInterceptor) {
+        // 2a. Exibe a narrativa do perigo
+        const resultDiv = document.createElement('div');
+        resultDiv.className = 'result-message';
+        resultDiv.innerText = interceptor.resultado_texto;
+        chatBox.appendChild(resultDiv);
+        chatBox.scrollTop = chatBox.scrollHeight;
+
+        // 2b. Aplica dano, se houver
+        if (interceptor.dano > 0) {
+            energia = Math.max(0, energia - interceptor.dano);
+            document.getElementById('energia-span').innerText = `🩸 ${energia}/10`;
+            await salvarEstadoJogador();
+        }
     }
 
     // 3. Desabilita todos os botões de navegação normais
