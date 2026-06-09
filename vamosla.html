@@ -1308,7 +1308,7 @@ TIPOS OBRIGATÓRIOS:
 Cada modo define O TIPO DE EVENTO — escreva a narrativa a partir dele, sem mencionar o modo:
 • PSICOLOGICO: Revelação que CITA UM FATO ESPECÍFICO das CONSPIRAÇÕES ou do MISTÉRIO CENTRAL pelo nome. Susto sem contato físico. O corpo não é tocado. PROIBIDO usar "eles", "algo" ou vagueza — nomeie o fenômeno.
 • FISICO_LEVE: O dano NASCE da ação em si, não de um tropeço posterior não relacionado. Ex: levantar tábua → lasca na mão; abrir caixa → vapor quente no rosto. Sequência obrigatória: ação → consequência física direta.
-• FISICO_GRAVE: Fratura, corte profundo, queda de impacto real, choque severo. Dano visível e duradouro.
+• FISICO_GRAVE: Trauma físico severo e imediato — o corpo sangra, quebra ou falha na hora. PROIBIDO: armadilhas situacionais sem contato corporal (porta trancada, queda de objeto ao redor, aprisionamento). OBRIGATÓRIO: o resultado deixa marca visível no corpo do personagem.
 
 🔥 REGRAS DE ESCRITA DE HORROR (ESTRITAMENTE OBRIGATÓRIAS):
 1. MOSTRE, NÃO CONTE: PROIBIDO usar palavras vazias (sinistro, misterioso, assustador, conspiração). Se houver um segredo, ESCREVA o segredo na íntegra. (Ex: Em vez de "um diário sobre o médico", use "O papel rasgado diz: 'O Dr. Silva não usa anestesia'").
@@ -1387,10 +1387,13 @@ Valores válidos para tipo_resultado: revelacao, neutro, perigo`;
             ];
             if (LEVE.some(w => t.includes(w))) return Math.random() < 0.5 ? 1 : 2;
 
-            // Fallback por modo: se o texto não revelou indicadores mas o modo é físico,
-            // aplica dano mínimo garantido para manter a promessa semântica do modo
-            if (modo === "FISICO_GRAVE") return 3;
-            if (modo === "FISICO_LEVE") return 1;
+            // Sem indicador físico claro: o modelo pode ter desobedecido o modo.
+            // Verifica presença física latente antes de atribuir dano.
+            // Se nada físico for detectado, dano = 0 — narrativa manda, modo não força.
+            const LATENTE = ["dor ", "sangue", "ferimento", "lesão", "ferida", "corpo", "pele ", "osso", "músculo", "articulação", "queima", "arde ", "torce"];
+            const temFisico = LATENTE.some(w => t.includes(w));
+            if (modo === "FISICO_GRAVE") return temFisico ? 2 : 0;
+            if (modo === "FISICO_LEVE")  return temFisico ? 1 : 0;
 
             return 0;
         }
