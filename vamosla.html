@@ -2517,7 +2517,7 @@ mapaFinalMesclado[puzzleIdStr] = {
                 // --- FIM DO AJUSTE: ARQUITETO DE PERIGOS ---
 
                 // --- INÍCIO DO AJUSTE: INJEÇÃO DE RAMO NARRATIVO ---
-if (Math.random() < 0.15) {
+if (Math.random() < 1.0) {  // 100% para testes, antes era 15%
     const salasCandidatas = Object.keys(mapaFinalMesclado)
         .filter(id => {
             const numId = Number(id);
