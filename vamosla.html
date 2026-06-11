@@ -1998,7 +1998,7 @@ async function injetarPuzzles(planoZonal, zonaId) {
             if (!dnaGlobal) {
                 await gerarDNAGlobal(cenarioTema);
             }
-            await gerarZona(1);
+            window._ganchosZonaAnterior = await gerarZona(1);
         }
 
         async function gerarDNAGlobal(cenarioTema) {
@@ -2351,6 +2351,12 @@ ${resumoPlano}
 ${infoZona.segredo_local || "Há algo oculto que destoa do ambiente."}
 IMPORTANTE: Esta zona tem 10 salas. Você DEVE incluir uma referência VISÍVEL ao segredo local em pelo menos 2 dessas salas.
 
+[GANCHOS PARA A PRÓXIMA ZONA]
+Ao concluir os textos, preencha "ganchos_para_proxima_zona" com base no que você escreveu:
+- "salas_fronteira": IDs (números) das salas desta zona que estão na borda — aquelas que olham para o desconhecido, sem saída para dentro da zona (ex: [8, 10])
+- "objetos_nao_usados": 1 a 3 nomes de objetos físicos que aparecem nos textos mas ficam sem resolução — coisas que o jogador viu e não entendeu (ex: ["faca enferrujada no canto", "carta rasgada no chão"])
+- "informacao_pendente": uma frase com o que o jogador carrega mentalmente sem compreender (ex: "o símbolo gravado na porta enferrujada do corredor norte")
+
 [ESTRUTURA DO JSON]
 Retorne APENAS o JSON abaixo. NÃO gere arrays de opções ou destinos, apenas o texto bruto.
 {
@@ -2362,9 +2368,9 @@ Retorne APENAS o JSON abaixo. NÃO gere arrays de opções ou destinos, apenas o
     "3": { ... }
   },
   "ganchos_para_proxima_zona": {
-    "salas_fronteira": [],
-    "objetos_nao_usados": [],
-    "informacao_pendente": ""
+    "salas_fronteira": [10],
+    "objetos_nao_usados": ["exemplo de objeto visto mas não resolvido"],
+    "informacao_pendente": "exemplo do que o jogador carrega sem entender"
   }
 }`;
             };
@@ -2697,14 +2703,17 @@ mapaFinalMesclado[puzzleIdStr] = {
                     _expansaoEmAndamento = true;
                     console.log(`[Expansão] Jogador em sala ${salaAtualNum}. Gerando Zona ${proximaZona} em background...`);
 
-                    const ganchosSalvos = null;
+                    const ganchosSalvos = window._ganchosZonaAnterior || null;
 
-                    gerarZona(proximaZona, ganchosSalvos)
-                        .then(() => { _expansaoEmAndamento = false; })
-                        .catch(e => {
-                            console.error('[Expansão] Falhou:', e);
-                            _expansaoEmAndamento = false;
-                        });
+gerarZona(proximaZona, ganchosSalvos)
+    .then(novosGanchos => {
+        window._ganchosZonaAnterior = novosGanchos;
+        _expansaoEmAndamento = false;
+    })
+    .catch(e => {
+        console.error('[Expansão] Falhou:', e);
+        _expansaoEmAndamento = false;
+    });
                 }
             }
         }
