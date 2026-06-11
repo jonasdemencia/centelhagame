@@ -1450,18 +1450,30 @@ Retorne APENAS o JSON rigorosamente neste formato:
 
             const prompt = `Você é um dramaturgo de horror visceral.
 
+const prompt = `Você é um dramaturgo de horror visceral.
+
 MISTÉRIO CENTRAL: "${dnaGlobal?.misterio_central || ""}"
 CONSPIRAÇÕES: "${conspiracao}"
 ENTIDADES: "${entidades}"
-ZONA: "${infoZona.nome}" — ${infoZona.tom_sensorial}
 
 SALA ATUAL:
 "${sala.nome || "Câmara desconhecida"}"
 ${descTruncada}...
 
-MISSÃO: Escreva o texto de UMA ÚNICA opção de ação E um fragmento de prosa que a ancora fisicamente na sala.\r\n\r\n1. OPÇÃO (texto_opcao): Soe como uma decisão humana real e irreversível (ex: \"Soltar o prisioneiro\", \"Beber o vinho negro\", \"Aceitar a marca no pulso\"). Peso moral ou narrativo concreto — NÃO pode ser movimento geográfico. Concisa (máximo 6 palavras).\r\n\r\n2. ÂNCORA VISUAL (ancora_visual): 2-3 frases de prosa sensorial densa que descrevem o ELEMENTO FÍSICO existente na sala que torna a opção logicamente possível. A âncora deve surgir como parte orgânica do ambiente — nunca mencione a opção diretamente. Escreva em segunda pessoa, tempo passado de chegada (ex: \"No canto, uma jaula enferrujada...\").\r\n\r\nRetorne APENAS este JSON:\r\n{ \"sala_id\": ${salaEscolhida}, \"texto_opcao\": \"Texto da opção aqui\", \"ancora_visual\": \"Prosa de âncora aqui.\" }`;
+MISSÃO: Escreva o texto de UMA ÚNICA opção de ação E um fragmento de prosa que a ancora fisicamente na sala. Se o ambiente for mundano (ex: área de serviço, prateleiras), sua função é CORROMPER esse cenário com elementos de horror físico ou psicológico ligados ao DNA do mundo.
 
+1. OPÇÃO (texto_opcao): 
+- PROIBIDO: NUNCA use verbos de exploração passiva ou de jogos genéricos (NÃO use "Investigar", "Examinar", "Inspecionar", "Olhar", "Procurar", "Checar").
+- OBRIGATÓRIO: A escolha deve ser uma transgressão ativa, irreversível e de peso moral/carnal. Use verbos viscerais (ex: "Beber a água escura do balde", "Mergulhar os braços no ácido", "Inalar a fuligem da prateleira", "Ofertar sangue à estatua").
+- NÃO pode ser movimento geográfico. Concisa (máximo 6 palavras).
 
+2. ÂNCORA VISUAL (ancora_visual): 
+- 2-3 frases de prosa sensorial densa que descrevem a anomalia no ELEMENTO FÍSICO da sala que justifica a ação acima. 
+- A âncora deve surgir como parte orgânica e macabra do ambiente. Nunca mencione a opção diretamente. 
+- Escreva em segunda pessoa, tempo passado de chegada (ex: "No fundo do balde, um líquido negro pulsava em ritmo cardíaco...").
+
+Retorne APENAS este JSON:
+{ "sala_id": ${salaEscolhida}, "texto_opcao": "Texto da opção aqui", "ancora_visual": "Prosa de âncora aqui." }`;
             const systemPrompt = "Você é um dramaturgo de horror. Retorne APENAS um JSON válido. Zero markdown.";
 
             const data = await chamarGroq([
