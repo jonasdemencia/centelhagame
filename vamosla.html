@@ -1562,6 +1562,9 @@ REGRAS ESTRUTURAIS (FALHA CRÍTICA SE VIOLADAS):
 5. ÂNCORA DE CHEGADA: O texto_logico da sala ${idInicio} deve começar OBRIGATORIAMENTE com "Depois de ${textoEscolha.toLowerCase()}, você...".
 6. SALA FRONTEIRA: A sala ${idFim} deve ter "sala_fronteira": true e uma opção com "destino": "FRONTEIRA" (string literal — o sistema substituirá pelo ID correto).
 7. ESCALADA NARRATIVA OBRIGATÓRIA: Salas ${idInicio}–${idInicio+2} = descoberta e desorientação. Salas ${idInicio+3}–${idInicio+6} = revelação crescente, DNA materializado. Salas ${idInicio+7}–${idFim} = dread máximo, a verdade tomando forma física.
+8. SEPARAÇÃO ESTRITA DE VERBOS (CRÍTICO): 
+   - Opções de navegação (com "destino") DEVEM usar verbos de locomoção pura (Avançar, Recuar, Subir, Descer, Seguir, Passar). É ESTRITAMENTE PROIBIDO usar "Investigar", "Examinar" ou "Olhar" em opções que mudam de sala.
+   - Opções investigativas DEVEM ser do tipo exploração local ("arquiteto": true, com "resultado_texto"), NUNCA com campo "destino".
 
 REGRAS DE ESCRITA:
 • Prosa sensorial densa — apenas visão, som, cheiro. PROIBIDO metalinguagem ("você pode", "você tem a opção").
@@ -1582,7 +1585,7 @@ Retorne APENAS este JSON:
         { "texto": "Examinar [elemento físico visível]", "arquiteto": true, "resultado_texto": "Revelação via evidência física...", "dano": 0, "disparado": false }
       ]
     },
-    "${idInicio+1}": { "nome": "...", "texto_logico": "...", "opcoes": [ { "texto": "Recuar", "destino": ${idInicio} }, { "texto": "...", "destino": ${idInicio+2} }, { "texto": "Examinar...", "arquiteto": true, "resultado_texto": "...", "dano": 3, "disparado": false } ] },
+    "${idInicio+1}": { "nome": "...", "texto_logico": "...", "opcoes": [ { "texto": "Recuar", "destino": ${idInicio} }, { "texto": "Avançar...", "destino": ${idInicio+2} }, { "texto": "Examinar...", "arquiteto": true, "resultado_texto": "...", "dano": 3, "disparado": false } ] },
     "...salas ${idInicio+2} a ${idFim-1} com mesma estrutura...",
     "${idFim}": {
       "nome": "Nome da Fronteira",
@@ -1617,15 +1620,45 @@ Retorne APENAS este JSON:
                     console.warn(`[Ramos] Sala com ID inválido ignorada: ${idStr}`);
                     continue;
                 }
-                // Substitui sentinela "FRONTEIRA" pelo ID real da primeira sala da nova zona
+
                 if (Array.isArray(sala.opcoes)) {
-                    sala.opcoes = sala.opcoes.map(opcao => {
+                    const novasOpcoes = [];
+                    sala.opcoes.forEach(opcao => {
+                        // Substitui sentinela "FRONTEIRA" pelo ID real da primeira sala da nova zona
                         if (opcao.destino === "FRONTEIRA") {
-                            return { ...opcao, destino: primeiraSalaNovaZona };
+                            opcao.destino = primeiraSalaNovaZona;
                         }
-                        return opcao;
+
+                        const textoLower = (opcao.texto || "").toLowerCase();
+                        const ehInvestigativa = /^(examinar|investigar|olhar|checar|inspecionar|ler|tocar)\b/.test(textoLower);
+
+                        // CORREÇÃO DE COERÊNCIA NARRATIVA: 
+                        // Se o LLM atrelou uma ação investigativa à navegação
+                        if (ehInvestigativa && opcao.destino !== undefined) {
+                            console.log(`[Ramos] 🔧 Corrigindo coerência: Divindo ação "${opcao.texto}"...`);
+                            
+                            // 1. Transforma a ação investigativa em um evento Arquitetural local (promessa cumprida)
+                            novasOpcoes.push({
+                                texto: opcao.texto,
+                                arquiteto: true,
+                                resultado_texto: opcao.resultado_texto || `Você foca sua atenção nos detalhes: ${opcao.texto.replace(/^(examinar|investigar|olhar|checar|inspecionar|ler|tocar)\s/i, '')}. As formas revelam uma natureza macabra sob o ambiente escuro.`,
+                                dano: opcao.dano || 0,
+                                tipo_resultado: opcao.tipo_resultado || "revelacao",
+                                disparado: false
+                            });
+
+                            // 2. Garante a continuidade topológica com uma ação de locomoção pura
+                            novasOpcoes.push({
+                                texto: "Avançar para a próxima câmara",
+                                destino: opcao.destino
+                            });
+                        } else {
+                            novasOpcoes.push(opcao); // Opção válida, mantém como está
+                        }
                     });
+                    sala.opcoes = novasOpcoes;
                 }
+                
                 sala.tipo  = "ramo";
                 sala.ramo_id = ramoN;
                 salasInjetadas[idStr] = sala;
