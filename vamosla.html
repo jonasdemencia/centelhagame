@@ -1459,11 +1459,7 @@ SALA ATUAL:
 "${sala.nome || "Câmara desconhecida"}"
 ${descTruncada}...
 
-MISSÃO: Escreva o texto de UMA ÚNICA opção de ação que:
-1. Soe como uma decisão humana real e irreversível (ex: "Soltar o prisioneiro", "Beber o vinho negro", "Aceitar a marca no pulso").
-2. Tenha peso moral ou narrativo concreto — NÃO pode ser movimento geográfico.
-3. Esteja em sintonia com o mistério central e o ambiente da sala.
-4. Seja concisa (máximo 6 palavras).
+MISSÃO: Escreva o texto de UMA ÚNICA opção de ação E um fragmento de prosa que a ancora fisicamente na sala.\r\n\r\n1. OPÇÃO (texto_opcao): Soe como uma decisão humana real e irreversível (ex: \"Soltar o prisioneiro\", \"Beber o vinho negro\", \"Aceitar a marca no pulso\"). Peso moral ou narrativo concreto — NÃO pode ser movimento geográfico. Concisa (máximo 6 palavras).\r\n\r\n2. ÂNCORA VISUAL (ancora_visual): 2-3 frases de prosa sensorial densa que descrevem o ELEMENTO FÍSICO existente na sala que torna a opção logicamente possível. A âncora deve surgir como parte orgânica do ambiente — nunca mencione a opção diretamente. Escreva em segunda pessoa, tempo passado de chegada (ex: \"No canto, uma jaula enferrujada...\").\r\n\r\nRetorne APENAS este JSON:\r\n{ \"sala_id\": ${salaEscolhida}, \"texto_opcao\": \"Texto da opção aqui\", \"ancora_visual\": \"Prosa de âncora aqui.\" }`;
 
 Retorne APENAS este JSON:
 { "sala_id": ${salaEscolhida}, "texto_opcao": "Texto da opção aqui" }`;
@@ -1487,7 +1483,12 @@ Retorne APENAS este JSON:
                 gera_ramo: true,
                 disparado: false
             });
-            console.log(`[Ramos] ✅ Gatilho injetado: "${parsed.texto_opcao}" → Sala ${parsed.sala_id}`);
+            if (parsed.ancora_visual) {
+                mapaFinalMesclado[String(parsed.sala_id)].texto_logico =
+                    (mapaFinalMesclado[String(parsed.sala_id)].texto_logico || '') +
+                    '\n\n' + parsed.ancora_visual;
+            }
+            console.log(`[Ramos] ✅ Gatilho injetado: \"${parsed.texto_opcao}\" → Sala ${parsed.sala_id}`);
         }
 
         async function gerarArquitetoDeRamos(salaOrigemId, textoEscolha) {
