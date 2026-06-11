@@ -539,6 +539,7 @@ window.dispatchEvent(new Event('firebase-initialized'));
         const MODELO_PUZZLE = "openai/gpt-oss-120b";
         const MODELO_IND = "qwen/qwen3-32b"; // Modelo responsável pelas cinematics
         const MODELO_ARQUITETO = "llama-3.3-70b-versatile"; // Arquiteto de Perigos
+        const MODELO_RAMOS = "llama-3.3-70b-versatile";     // Arquiteto de Ramos
 
         let mapaMundo = null;
         let secaoAtualId = "1";
@@ -555,7 +556,6 @@ window.dispatchEvent(new Event('firebase-initialized'));
         window.narrativeActionInProgress = false; // Flag para evitar conflitos de clique
 
         let turnosJogados = 0;
-    let ramosGerados = 0; // Controle de offset para o Arquiteto de Consequências
         let energia = 0; 
         let magiaAtual = 0;
         let magiasMemorizadas = [];
@@ -563,6 +563,7 @@ window.dispatchEvent(new Event('firebase-initialized'));
         let _ultimoTipoAcao = 'TRIVIAL';   
         let _ultimoAtributo  = 'NENHUM';   
         let historicoIND = []; // Armazena as revelações já ocorridas
+        let contadorRamos = 0; // Contador de ramos narrativos gerados
 
         let memoriaLonga = "";
 
@@ -1355,97 +1356,6 @@ Retorne APENAS o JSON rigorosamente neste formato:
     aplicarArquitetoDePerigos(perigos, mapaFinalMesclado, idsRegulares, modoHorror);
 }
 
-    async function gerarRamoNarrativo(textoGatilho, idSalaOrigem) {
-    const idLoadingRamo = adicionarMensagem(`[SISTEMA] Uma anomalia estrutural se ramifica a partir da sua ação...`, "system", true);
-    
-    try {
-        const sala = mapaMundo[idSalaOrigem];
-        const conspiracaoSorteada = dnaGlobal?.conspiracoes_reais?.[Math.floor(Math.random() * (dnaGlobal.conspiracoes_reais.length))] || "Corrupção endêmica oculta";
-        const entidadeSorteada = dnaGlobal?.entidades?.[Math.floor(Math.random() * (dnaGlobal.entidades.length))]?.nome || "O Arquétipo Silencioso";
-        const faseAtual = obterDiretrizDeFase();
-
-        const prompt = `[SEMENTE: ${Math.random().toString(36).substring(2, 8)}]
-Você é o Arquiteto de Consequências de um RPG textual de horror visceral. Sua missão é criar um mini-arco narrativo autônomo (um Ramo).
-
-GATILHO DO JOGADOR: "${textoGatilho}"
-CENÁRIO ANTERIOR: "${sala.texto_logico}"
-CONSPIRAÇÃO A REVELAR: "${conspiracaoSorteada}"
-ENTIDADE ENVOLVIDA: "${entidadeSorteada}"
-FASE DA JORNADA: "${faseAtual}"
-
-REGRAS ARQUITETÔNICAS E DE TENSÃO:
-1. Crie um ramo estrito de 8 a 10 salas (sequenciais com pequenas bifurcações internas).
-2. Anatomia obrigatória: Queda (consequência bruta da ação) -> Revelação (a arquitetura explica fisicamente a conspiração) -> Limiar de Saída.
-3. INTERAÇÃO E DANO IMPREVISÍVEL: Nas opções criadas dentro deste arco, exija verbos físicos (arrancar, quebrar, forçar). Para opções que oferecem perigo, crie e injete valores de "dano_potencial" inteiramente erráticos, irracionais e brutalmente imprevisíveis (ex: 3, 11, 27). Varie drasticamente o peso das punições.
-4. A sala final do arco OBRIGATORIAMENTE deve ter a flag "sala_final": true e sua ÚNICA opção deve ter o destino exato escrito como "NOVA_ZONA".
-
-Retorne APENAS um JSON:
-{
-  "salas_ramo": [
-    {
-      "id_interno": "R1",
-      "texto_logico": "Prosa sombria descrevendo o ambiente imediato após a ação...",
-      "opcoes": [ { "texto": "Ação física exigida", "destino": "R2", "dano_potencial": 14 } ]
-    },
-    ...
-    {
-      "id_interno": "R10",
-      "texto_logico": "A borda do colapso...",
-      "sala_final": true,
-      "opcoes": [ { "texto": "Atravessar o limiar apodrecido sem olhar para trás", "destino": "NOVA_ZONA" } ]
-    }
-  ]
-}`;
-
-        const data = await chamarGroq([
-            { role: "system", content: "Você é um formatador estrito. Retorne APENAS JSON válido, zero markdown." },
-            { role: "user", content: prompt }
-        ], 0.75, { type: "json_object" }, MODELO_ARQUITETO, 3);
-
-        const raw = data.choices[0].message.content;
-        const match = raw.match(/\{[\s\S]*\}/);
-        const parsed = JSON.parse(match ? match[0] : raw);
-
-        const offsetID = 50000 + (ramosGerados * 100);
-        const mapaRamo = {};
-        const dictIds = {};
-
-        // Mapeia R1, R2 para 50101, 50102...
-        parsed.salas_ramo.forEach((s, i) => {
-            dictIds[s.id_interno] = offsetID + i + 1;
-        });
-
-        parsed.salas_ramo.forEach((s) => {
-            const realId = dictIds[s.id_interno];
-            const novasOpcoes = (s.opcoes || []).map(op => ({
-                texto: op.texto,
-                destino: op.destino === "NOVA_ZONA" ? "NOVA_ZONA" : dictIds[op.destino],
-                // Herda o dano errático mapeado se existir, convertendo para a chave nativa da engine
-                dano: op.dano_potencial || 0 
-            }));
-
-            mapaRamo[String(realId)] = {
-                nome: "Anomalia Consequencial",
-                texto_logico: s.texto_logico,
-                opcoes: novasOpcoes,
-                sala_final: s.sala_final || false
-            };
-        });
-
-        Object.assign(mapaMundo, mapaRamo);
-        ramosGerados++;
-        await salvarEstadoJogador();
-
-        document.getElementById(idLoadingRamo)?.remove();
-        return String(dictIds["R1"]);
-
-    } catch (e) {
-        console.error("[Arquiteto de Consequências] Falha estrutural:", e);
-        document.getElementById(idLoadingRamo)?.remove();
-        adicionarMensagem(`[FALHA] O tecido narrativo resistiu à distorção. A porta permanece imóvel.`, "system");
-        return null;
-    }
-}
         
 
         function aplicarArquitetoDePerigos(perigos, mapaFinalMesclado, idsValidos, modoHorror) {
@@ -1515,6 +1425,216 @@ Retorne APENAS um JSON:
         }
     });
 }
+
+        // ============================================================
+        // ARQUITETO DE RAMOS — GATILHOS E GERAÇÃO
+        // ============================================================
+
+        async function gerarGatilhosDeRamo(mapaFinalMesclado, infoZona) {
+            // Seleciona salas candidatas: regulares, com opcoes, não a primeira nem a última
+            const idsRegulares = Object.keys(mapaFinalMesclado)
+                .map(Number)
+                .filter(id => id < 10000 && Array.isArray(mapaFinalMesclado[String(id)]?.opcoes) && mapaFinalMesclado[String(id)].opcoes.length > 0)
+                .sort((a, b) => a - b);
+
+            if (idsRegulares.length < 3) return;
+
+            // Escolhe uma sala do meio (evita primeira e última da zona)
+            const candidatos = idsRegulares.slice(1, -1);
+            const salaEscolhida = candidatos[Math.floor(Math.random() * candidatos.length)];
+            const sala = mapaFinalMesclado[String(salaEscolhida)];
+
+            const descTruncada = (sala.texto_logico || "").replace(/\n/g, " ").substring(0, 300);
+            const conspiracao = (dnaGlobal?.conspiracoes_reais || []).slice(0, 2).join(" | ");
+            const entidades = (dnaGlobal?.entidades || []).slice(0, 2).map(e => `${e.nome}: ${e.natureza}`).join(" | ");
+
+            const prompt = `Você é um dramaturgo de horror visceral.
+
+MISTÉRIO CENTRAL: "${dnaGlobal?.misterio_central || ""}"
+CONSPIRAÇÕES: "${conspiracao}"
+ENTIDADES: "${entidades}"
+ZONA: "${infoZona.nome}" — ${infoZona.tom_sensorial}
+
+SALA ATUAL:
+"${sala.nome || "Câmara desconhecida"}"
+${descTruncada}...
+
+MISSÃO: Escreva o texto de UMA ÚNICA opção de ação que:
+1. Soe como uma decisão humana real e irreversível (ex: "Soltar o prisioneiro", "Beber o vinho negro", "Aceitar a marca no pulso").
+2. Tenha peso moral ou narrativo concreto — NÃO pode ser movimento geográfico.
+3. Esteja em sintonia com o mistério central e o ambiente da sala.
+4. Seja concisa (máximo 6 palavras).
+
+Retorne APENAS este JSON:
+{ "sala_id": ${salaEscolhida}, "texto_opcao": "Texto da opção aqui" }`;
+
+            const systemPrompt = "Você é um dramaturgo de horror. Retorne APENAS um JSON válido. Zero markdown.";
+
+            const data = await chamarGroq([
+                { role: "system", content: systemPrompt },
+                { role: "user", content: prompt }
+            ], 0.75, { type: "json_object" }, MODELO_RAMOS, 2);
+
+            const raw = data.choices[0].message.content;
+            const match = raw.match(/{[\s\S]*}/);
+            const parsed = JSON.parse(match ? match[0] : raw);
+
+            if (!parsed.sala_id || !parsed.texto_opcao) return;
+            if (!mapaFinalMesclado[String(parsed.sala_id)]) return;
+
+            mapaFinalMesclado[String(parsed.sala_id)].opcoes.push({
+                texto: parsed.texto_opcao,
+                gera_ramo: true,
+                disparado: false
+            });
+            console.log(`[Ramos] ✅ Gatilho injetado: "${parsed.texto_opcao}" → Sala ${parsed.sala_id}`);
+        }
+
+        async function gerarArquitetoDeRamos(salaOrigemId, textoEscolha) {
+            const ramoN = ++contadorRamos;
+            const idInicio = 50001 + (ramoN - 1) * 15;
+            const idFim    = idInicio + 9; // 10 salas
+
+            // Determina o número da nova zona que será gerada ao cruzar a fronteira
+            const idsNoMapa = Object.keys(mapaMundo || {}).map(Number).filter(n => n > 0 && n < 10000);
+            const zonaMaxima = idsNoMapa.length > 0
+                ? Math.max(...idsNoMapa.map(n => Math.ceil(n / SALAS_POR_ZONA)), zonaAtual)
+                : zonaAtual;
+            const novaZonaNum      = zonaMaxima + 1;
+            const primeiraSalaNovaZona = (novaZonaNum - 1) * SALAS_POR_ZONA + 1;
+
+            const salaOrigem    = mapaMundo[salaOrigemId] || {};
+            const infoZonaAtual = dnaGlobal?.zonas?.find(z => z.id === zonaAtual) || {
+                nome: `Zona ${zonaAtual}`, tom_sensorial: "", segredo_local: ""
+            };
+
+            const conspiracao = (dnaGlobal?.conspiracoes_reais || []).slice(0, 2).join(" | ");
+            const entidades   = (dnaGlobal?.entidades || [])
+                .filter(e => e.zona_primeira_pista <= zonaAtual + 1)
+                .slice(0, 2)
+                .map(e => `${e.nome}: ${e.natureza}`).join(" | ");
+            const objetos     = (dnaGlobal?.objetos_transzonais || [])
+                .filter(o => o.zona_origem <= zonaAtual || (o.zonas_relevantes || []).includes(zonaAtual))
+                .slice(0, 2)
+                .map(o => `${o.nome}: ${o.o_que_desvela}`).join(" | ");
+
+            const semente = Math.random().toString(36).substring(2, 10);
+
+            const prompt = `[SEMENTE: ${semente}]
+Você é o Arquiteto de Ramos de um RPG de horror visceral.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SALA DE ORIGEM (onde o jogador estava):
+Nome: "${salaOrigem.nome || "Câmara desconhecida"}"
+Descrição: ${(salaOrigem.texto_logico || "").substring(0, 250)}...
+
+ESCOLHA QUE DISPAROU ESTE RAMO:
+"${textoEscolha}"
+— Esta decisão é o ponto de não retorno. O ramo existe por causa dela.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DNA DO MUNDO:
+Mistério Central: "${dnaGlobal?.misterio_central || ""}"
+Conspirações: "${conspiracao}"
+Entidades relevantes: "${entidades}"
+Objetos transzonais: "${objetos}"
+
+ZONA ATUAL: "${infoZonaAtual.nome}"
+Tom sensorial: ${infoZonaAtual.tom_sensorial}
+Segredo local: ${infoZonaAtual.segredo_local}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+MISSÃO: Gere um ramo narrativo de 10 salas (IDs ${idInicio} a ${idFim}).
+
+REGRAS ESTRUTURAIS (FALHA CRÍTICA SE VIOLADAS):
+1. IDs: Use EXATAMENTE os IDs de ${idInicio} a ${idFim}. NUNCA invente IDs fora deste intervalo.
+2. BACKBONE LINEAR: ${idInicio}→${idInicio+1}→...→${idFim}. Adicione 1-2 bifurcações internas com reconvergência.
+3. NAVEGAÇÃO OBRIGATÓRIA: Toda sala exceto a primeira deve ter ao menos uma opção "Voltar" para a sala imediatamente anterior.
+4. EVENTO NARRATIVO OBRIGATÓRIO: Toda sala deve ter exatamente 1 opção com "arquiteto": true e "resultado_texto" que revele elemento direto do DNA via evidência FÍSICA (ferrugem, fluidos, maquinário, anatomia). NUNCA bilhetes, diários ou sussurros.
+5. ÂNCORA DE CHEGADA: O texto_logico da sala ${idInicio} deve começar OBRIGATORIAMENTE com "Depois de ${textoEscolha.toLowerCase()}, você...".
+6. SALA FRONTEIRA: A sala ${idFim} deve ter "sala_fronteira": true e uma opção com "destino": "FRONTEIRA" (string literal — o sistema substituirá pelo ID correto).
+7. ESCALADA NARRATIVA OBRIGATÓRIA: Salas ${idInicio}–${idInicio+2} = descoberta e desorientação. Salas ${idInicio+3}–${idInicio+6} = revelação crescente, DNA materializado. Salas ${idInicio+7}–${idFim} = dread máximo, a verdade tomando forma física.
+
+REGRAS DE ESCRITA:
+• Prosa sensorial densa — apenas visão, som, cheiro. PROIBIDO metalinguagem ("você pode", "você tem a opção").
+• O campo "dano" dos eventos: 0 para revelações puras, 1-8 traumas leves, 9-20 traumas graves. Sempre inteiro.
+• O campo "arquiteto" é sempre boolean true.
+• Toda sala tem nome de 2-4 palavras e texto_logico de 3-4 frases.
+
+Retorne APENAS este JSON:
+{
+  "_rascunho_narrativo": "3 frases descrevendo o arco: o que o jogador descobre, o que escala, o que se materializa no final",
+  "nome_ramo": "Nome evocativo do percurso em 3-5 palavras",
+  "salas": {
+    "${idInicio}": {
+      "nome": "Nome em 2-4 palavras",
+      "texto_logico": "Depois de ${textoEscolha.toLowerCase()}, você... [prosa sensorial densa]",
+      "opcoes": [
+        { "texto": "Avançar pela passagem estreita", "destino": ${idInicio+1} },
+        { "texto": "Examinar [elemento físico visível]", "arquiteto": true, "resultado_texto": "Revelação via evidência física...", "dano": 0, "disparado": false }
+      ]
+    },
+    "${idInicio+1}": { "nome": "...", "texto_logico": "...", "opcoes": [ { "texto": "Recuar", "destino": ${idInicio} }, { "texto": "...", "destino": ${idInicio+2} }, { "texto": "Examinar...", "arquiteto": true, "resultado_texto": "...", "dano": 3, "disparado": false } ] },
+    "...salas ${idInicio+2} a ${idFim-1} com mesma estrutura...",
+    "${idFim}": {
+      "nome": "Nome da Fronteira",
+      "texto_logico": "Prosa de dread máximo...",
+      "sala_fronteira": true,
+      "opcoes": [
+        { "texto": "Recuar pela câmara escura", "destino": ${idFim-1} },
+        { "texto": "Atravessar o limiar sem retorno", "destino": "FRONTEIRA" }
+      ]
+    }
+  }
+}`;
+
+            const systemPrompt = `Você é o Arquiteto de Ramos de um RPG de horror visceral. Retorne APENAS JSON válido. Zero markdown. O campo "dano" deve ser sempre um inteiro. O campo "arquiteto" deve ser sempre boolean true. O campo "destino" é sempre um inteiro EXCETO na opção de fronteira onde deve ser a string literal "FRONTEIRA".`;
+
+            const data = await chamarGroq([
+                { role: "system", content: systemPrompt },
+                { role: "user", content: prompt }
+            ], 0.88, { type: "json_object" }, MODELO_RAMOS, 3);
+
+            const raw = data.choices[0].message.content;
+            const match = raw.match(/{[\s\S]*}/);
+            const parsed = JSON.parse(match ? match[0] : raw);
+
+            if (!parsed.salas) throw new Error("[Ramos] JSON sem campo 'salas'.");
+
+            // Validar e injetar salas no mapaMundo
+            const salasInjetadas = {};
+            for (const [idStr, sala] of Object.entries(parsed.salas)) {
+                const idNum = parseInt(idStr);
+                if (isNaN(idNum) || idNum < idInicio || idNum > idFim) {
+                    console.warn(`[Ramos] Sala com ID inválido ignorada: ${idStr}`);
+                    continue;
+                }
+                // Substitui sentinela "FRONTEIRA" pelo ID real da primeira sala da nova zona
+                if (Array.isArray(sala.opcoes)) {
+                    sala.opcoes = sala.opcoes.map(opcao => {
+                        if (opcao.destino === "FRONTEIRA") {
+                            return { ...opcao, destino: primeiraSalaNovaZona };
+                        }
+                        return opcao;
+                    });
+                }
+                sala.tipo  = "ramo";
+                sala.ramo_id = ramoN;
+                salasInjetadas[idStr] = sala;
+            }
+
+            if (Object.keys(salasInjetadas).length === 0) {
+                throw new Error("[Ramos] Nenhuma sala válida no JSON gerado.");
+            }
+
+            if (!mapaMundo) mapaMundo = {};
+            Object.assign(mapaMundo, salasInjetadas);
+            window.mapaMundo = mapaMundo;
+
+            console.log(`[Ramos] ✅ Ramo ${ramoN} gerado: "${parsed.nome_ramo}" — ${Object.keys(salasInjetadas).length} salas (${idInicio}–${idFim}). Fronteira → Zona ${novaZonaNum} (sala ${primeiraSalaNovaZona}).`);
+
+            return idInicio;
+        }
 
         // ============================================================
         // PUZZLES & GERAÇÃO PROCEDURAL
@@ -1779,7 +1899,8 @@ async function injetarPuzzles(planoZonal, zonaId) {
                     
                     // CARREGA HISTÓRICO DE INDS
                     if (data.historicoIND) historicoIND = data.historicoIND;
-                    if (data.ramosGerados !== undefined) ramosGerados = data.ramosGerados;
+                    // CARREGA CONTADOR DE RAMOS
+                    if (data.contadorRamos !== undefined) contadorRamos = data.contadorRamos;
                     
                 } else {
                     const dadosPadrao = {
@@ -1820,7 +1941,7 @@ async function injetarPuzzles(planoZonal, zonaId) {
                     zonaAtual: zonaAtual,
                     historicoIND: historicoIND,
                     salasVisitadas: [...salasVisitadas],
-                    ramosGerados: ramosGerados,   // <--- adicione esta linha
+                    contadorRamos: contadorRamos,
                 };
 
                 await updateDoc(doc(db, "players", uidAtual), dadosAtualizados);
@@ -2516,28 +2637,17 @@ mapaFinalMesclado[puzzleIdStr] = {
                 }
                 // --- FIM DO AJUSTE: ARQUITETO DE PERIGOS ---
 
-                // --- INÍCIO DO AJUSTE: INJEÇÃO DE RAMO NARRATIVO ---
-if (Math.random() < 1.0) {  // 100% para testes, antes era 15%
-    const salasCandidatas = Object.keys(mapaFinalMesclado)
-        .filter(id => {
-            const numId = Number(id);
-            return numId > salaInicio && numId < salaFim && numId < 10000;
-        });
-    if (salasCandidatas.length > 0) {
-        const idSorteado = salasCandidatas[Math.floor(Math.random() * salasCandidatas.length)];
-        const salaSorteada = mapaFinalMesclado[idSorteado];
-        const opcoesValidas = (salaSorteada.opcoes || []).filter(o => 
-            o.destino > Number(idSorteado) && !o.arquiteto
-        );
-        if (opcoesValidas.length > 0) {
-            const opcaoEscolhida = opcoesValidas[Math.floor(Math.random() * opcoesValidas.length)];
-            delete opcaoEscolhida.destino; 
-            opcaoEscolhida.ramificacao_narrativa = true;
-            console.log(`[Ramo] Semente plantada na Sala ${idSorteado} -> Opção: "${opcaoEscolhida.texto}"`);
-        }
-    }
-}
-// --- FIM DO AJUSTE: INJEÇÃO DE RAMO NARRATIVO ---
+                // --- INÍCIO DO AJUSTE: ARQUITETO DE RAMOS (Gatilhos) ---
+                if (Math.random() < 0.70) {
+                    const idMsgRamo = adicionarMensagem("🌿 O Arquiteto de Ramos está semeando escolhas...", "system", true);
+                    try {
+                        await gerarGatilhosDeRamo(mapaFinalMesclado, infoZona);
+                    } catch(e) {
+                        console.error("[Ramos] Gatilho falhou silenciosamente:", e);
+                    }
+                    document.getElementById(idMsgRamo)?.remove();
+                }
+                // --- FIM DO AJUSTE: ARQUITETO DE RAMOS ---
 
                 zonaData.salas = mapaFinalMesclado;
 
@@ -3162,7 +3272,8 @@ Retorne EXATAMENTE o JSON abaixo. Nenhuma palavra extra.`
 
         function prepararTextoChegada(textoLogico, acaoUsada, idOrigem, idDestino) {
             if (!acaoUsada) return textoLogico;
-
+            // Travessia ramo → nova zona nunca é retorno (IDs numericamente menores mas semanticamente à frente)
+            if (idOrigem >= 50000 && idDestino < 10000) return textoLogico;
             const isRetorno = /(voltar|de volta)\b/i.test(acaoUsada.trim()) || (idDestino < idOrigem);
             if (!isRetorno) return textoLogico; 
 
@@ -3189,6 +3300,84 @@ function atualizarBotoesNavegacao() {
     if (!sala.opcoes) return;
 
     sala.opcoes.forEach(opcao => {
+
+        // ── RAMO: gatilho de geração narrativa ─────────────────────────────────
+        if (opcao.gera_ramo === true) {
+            if (opcao.disparado) return;
+            const btnRamo = document.createElement('button');
+            btnRamo.className = 'nav-btn';
+            btnRamo.style.borderColor = '#6a3d8a';
+            btnRamo.style.color = '#c084fc';
+            btnRamo.innerText = `> ${opcao.texto}`;
+            btnRamo.onclick = async () => {
+                if (window._transicaoEmAndamento) return;
+                window._transicaoEmAndamento = true;
+                opcao.disparado = true;
+
+                document.getElementById('controls').style.pointerEvents = 'none';
+                container.style.pointerEvents = 'none';
+
+                const overlay = document.createElement('div');
+                overlay.className = 'fade-overlay';
+                document.body.appendChild(overlay);
+                setTimeout(() => overlay.classList.add('active'), 10);
+                await new Promise(resolve => setTimeout(resolve, 500));
+
+                try {
+                    const audio = new Audio('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/passos.mp3');
+                    await audio.play();
+                    await new Promise(resolve => setTimeout(resolve, 1500));
+                } catch (err) { console.log('[Ramo] Som:', err); }
+
+                container.innerHTML = '';
+                document.getElementById('chat-box').innerHTML = '';
+
+                const idLoad = adicionarMensagem("🌿 O tecido do mundo se desdobra...", "system", true);
+                let idInicioBranch = null;
+                try {
+                    idInicioBranch = await gerarArquitetoDeRamos(secaoAtualId, opcao.texto);
+                } catch (e) {
+                    console.error("[Ramo] Geração falhou:", e);
+                    opcao.disparado = false;
+                    document.getElementById(idLoad)?.remove();
+                    overlay.classList.remove('active');
+                    setTimeout(() => {
+                        overlay.remove();
+                        window._transicaoEmAndamento = false;
+                        document.getElementById('controls').style.pointerEvents = 'auto';
+                        container.style.pointerEvents = 'auto';
+                    }, 600);
+                    return;
+                }
+                document.getElementById(idLoad)?.remove();
+
+                secaoAtualId = String(idInicioBranch);
+                salasVisitadas.add(secaoAtualId);
+                await salvarEstadoJogador();
+
+                const novaSalaRamo = mapaMundo[secaoAtualId];
+                if (novaSalaRamo?.texto_logico) {
+                    document.getElementById('sala-desc').innerHTML = novaSalaRamo.texto_logico;
+                    historicoConversa.push({ role: 'user', content: `[Navegou para: ${opcao.texto}]` });
+                    historicoConversa.push({ role: 'assistant', content: novaSalaRamo.texto_logico });
+                    if (historicoConversa.length > 10) historicoConversa.splice(0, 2);
+                }
+
+                atualizarBotoesNavegacao();
+                if (typeof atualizarLootRoom === "function") atualizarLootRoom();
+
+                overlay.classList.remove('active');
+                setTimeout(() => {
+                    overlay.remove();
+                    window._transicaoEmAndamento = false;
+                    document.getElementById('controls').style.pointerEvents = 'auto';
+                    container.style.pointerEvents = 'auto';
+                }, 1200);
+            };
+            container.appendChild(btnRamo);
+            return;
+        }
+        // ── FIM RAMO ────────────────────────────────────────────────────────────
 
                 // ── ARQUITETO: opção sem destino (nova_opcao) ──────────────────────────
         // Agora com fade, som e escurecimento da tela, igual à navegação.
@@ -3286,10 +3475,8 @@ function atualizarBotoesNavegacao() {
         const btn = document.createElement('button');
         btn.className = 'nav-btn';
         
-        const ehRamoNarrativo = opcao.ramificacao_narrativa === true || opcao.destino >= 50000;
-const ehPuzzle = opcao.destino >= 10000 && opcao.destino < 50000;
-const saltoLongo = !ehRamoNarrativo && typeof opcao.destino === 'number' && 
-                   Math.abs(opcao.destino - parseInt(secaoAtualId)) > SALAS_POR_ZONA;
+        const saltoLongo = Math.abs(opcao.destino - parseInt(secaoAtualId)) > SALAS_POR_ZONA;
+        const ehPuzzle = opcao.destino >= 10000;
 
         btn.innerText = saltoLongo ? `>> ${opcao.texto}` : `> ${opcao.texto}`;
 
@@ -3366,35 +3553,6 @@ if (interceptor && !interceptor.disparado) {
     });
 }
 
-            // === GATILHO DA RAMIFICAÇÃO ===
-if (opcao.ramificacao_narrativa) {
-    const novoDestinoId = await gerarRamoNarrativo(opcao.texto, secaoAtualId);
-    if (novoDestinoId) {
-        opcao.destino = novoDestinoId;
-        delete opcao.ramificacao_narrativa;
-    } else {
-        window._transicaoEmAndamento = false;
-        document.getElementById('controls').style.pointerEvents = 'auto';
-        container.style.pointerEvents = 'auto';
-        return;
-    }
-}
-
-// === PONTE DE VOLTA (SAÍDA DO RAMO PARA O MUNDO REAL) ===
-if (opcao.destino === "NOVA_ZONA") {
-    const proximaZona = zonaAtual + 1;
-    const idPrimeiraSalaNovaZona = (proximaZona - 1) * SALAS_POR_ZONA + 1;
-    if (!mapaMundo[String(idPrimeiraSalaNovaZona)]) {
-        const idLoading = adicionarMensagem(`[SISTEMA] Costurando o abismo... gerando Zona ${proximaZona}...`, "system", true);
-        window._expansaoEmAndamento = true;
-        await gerarZona(proximaZona, null);
-        window._expansaoEmAndamento = false;
-        document.getElementById(idLoading)?.remove();
-    }
-    opcao.destino = idPrimeiraSalaNovaZona;
-}
-
-            
             // FADE OUT E SOM
             const overlay = document.createElement('div');
             overlay.className = 'fade-overlay';
@@ -4052,8 +4210,8 @@ async function recalcularCoordenadasPenochao(mapaMundo) {
         if (!salaAtual || !salaAtual.opcoes) continue;
 
         let filhosParaProcessar = salaAtual.opcoes
-    .filter(o => o.destino && o.destino !== "NOVA_ZONA" && !visitados.has(String(o.destino)))
-    .filter(o => o.texto !== "Atalho");
+            .filter(o => o.destino && !visitados.has(String(o.destino)))
+            .filter(o => o.texto !== "Atalho");
 
         let direcaoVerticalToggle = (parseInt(idAtual) % 2 === 0);
 
