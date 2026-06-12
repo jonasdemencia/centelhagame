@@ -539,7 +539,6 @@ window.dispatchEvent(new Event('firebase-initialized'));
         const MODELO_PUZZLE = "openai/gpt-oss-120b";
         const MODELO_IND = "qwen/qwen3-32b"; // Modelo responsável pelas cinematics
         const MODELO_ARQUITETO = "llama-3.3-70b-versatile"; // Arquiteto de Perigos
-        const MODELO_RAMOS = "llama-3.3-70b-versatile";     // Arquiteto de Ramos
 
         let mapaMundo = null;
         let secaoAtualId = "1";
@@ -563,7 +562,6 @@ window.dispatchEvent(new Event('firebase-initialized'));
         let _ultimoTipoAcao = 'TRIVIAL';   
         let _ultimoAtributo  = 'NENHUM';   
         let historicoIND = []; // Armazena as revelações já ocorridas
-        let contadorRamos = 0; // Contador de ramos narrativos gerados
 
         let memoriaLonga = "";
 
@@ -1427,333 +1425,6 @@ Retorne APENAS o JSON rigorosamente neste formato:
 }
 
         // ============================================================
-        // ARQUITETO DE RAMOS — GATILHOS E GERAÇÃO
-        // ============================================================
-
-        async function gerarGatilhosDeRamo(mapaFinalMesclado, infoZona) {
-            // Seleciona salas candidatas: regulares, com opcoes, não a primeira nem a última
-            const idsRegulares = Object.keys(mapaFinalMesclado)
-                .map(Number)
-                .filter(id => id < 10000 && Array.isArray(mapaFinalMesclado[String(id)]?.opcoes) && mapaFinalMesclado[String(id)].opcoes.length > 0)
-                .sort((a, b) => a - b);
-
-            if (idsRegulares.length < 3) return;
-
-            // Escolhe uma sala do meio (evita primeira e última da zona)
-            const candidatos = idsRegulares.slice(1, -1);
-            const salaEscolhida = candidatos[Math.floor(Math.random() * candidatos.length)];
-            const sala = mapaFinalMesclado[String(salaEscolhida)];
-
-            const descTruncada = (sala.texto_logico || "").replace(/\n/g, " ").substring(0, 300);
-            const conspiracao = (dnaGlobal?.conspiracoes_reais || []).slice(0, 2).join(" | ");
-            const entidades = (dnaGlobal?.entidades || []).slice(0, 2).map(e => `${e.nome}: ${e.natureza}`).join(" | ");
-
-            const prompt = `Você é um dramaturgo de horror visceral.
-
-MISTÉRIO CENTRAL: "${dnaGlobal?.misterio_central || ""}"
-CONSPIRAÇÕES: "${conspiracao}"
-ENTIDADES: "${entidades}"
-
-SALA ATUAL:
-"${sala.nome || "Câmara desconhecida"}"
-${descTruncada}...
-
-MISSÃO: Escreva o texto de UMA ÚNICA opção de ação E um fragmento de prosa que a ancora fisicamente na sala. Se o ambiente for mundano (ex: área de serviço, prateleiras), sua função é CORROMPER esse cenário com elementos de horror físico ou psicológico ligados ao DNA do mundo.
-
-1. OPÇÃO (texto_opcao): 
-- PROIBIDO: NUNCA use verbos de exploração passiva ou de jogos genéricos (NÃO use "Investigar", "Examinar", "Inspecionar", "Olhar", "Procurar", "Checar").
-- OBRIGATÓRIO: A escolha deve ser uma transgressão ativa, irreversível e de peso moral/carnal. Use verbos viscerais (ex: "Beber a água escura do balde", "Mergulhar os braços no ácido", "Inalar a fuligem da prateleira", "Ofertar sangue à estatua").
-- NÃO pode ser movimento geográfico. Concisa (máximo 6 palavras).
-
-2. ÂNCORA VISUAL (ancora_visual): 
-- 2-3 frases de prosa sensorial densa que descrevem a anomalia no ELEMENTO FÍSICO da sala que justifica a ação acima. 
-- A âncora deve surgir como parte orgânica e macabra do ambiente. Nunca mencione a opção diretamente. 
-- Escreva em segunda pessoa, presente descritivo, como continuação orgânica da cena já estabelecida (ex: "No fundo do balde, um líquido negro pulsa em ritmo cardíaco...").
-
-Retorne APENAS este JSON:
-{ "sala_id": ${salaEscolhida}, "texto_opcao": "Texto da opção aqui", "ancora_visual": "Prosa de âncora aqui." }`;
-            const systemPrompt = "Você é um dramaturgo de horror. Retorne APENAS um JSON válido. Zero markdown.";
-
-            const data = await chamarGroq([
-                { role: "system", content: systemPrompt },
-                { role: "user", content: prompt }
-            ], 0.75, { type: "json_object" }, MODELO_RAMOS, 2);
-
-            const raw = data.choices[0].message.content;
-            const match = raw.match(/{[\s\S]*}/);
-            const parsed = JSON.parse(match ? match[0] : raw);
-
-            if (!parsed.sala_id || !parsed.texto_opcao) return;
-            if (!mapaFinalMesclado[String(parsed.sala_id)]) return;
-
-            mapaFinalMesclado[String(parsed.sala_id)].opcoes.push({
-                texto: parsed.texto_opcao,
-                gera_ramo: true,
-                disparado: false
-            });
-            if (parsed.ancora_visual) {
-                mapaFinalMesclado[String(parsed.sala_id)].texto_logico =
-                    (mapaFinalMesclado[String(parsed.sala_id)].texto_logico || '') +
-                    '\n\n' + parsed.ancora_visual;
-            }
-            console.log(`[Ramos] ✅ Gatilho injetado: \"${parsed.texto_opcao}\" → Sala ${parsed.sala_id}`);
-        }
-
-        async function gerarArquitetoDeRamos(salaOrigemId, textoEscolha) {
-            const ramoN = ++contadorRamos;
-            const idInicio = 50001 + (ramoN - 1) * 15;
-            const idFim    = idInicio + 9; // 10 salas garantidas
-
-            // Determina o número da nova zona que será gerada ao cruzar a fronteira
-            const idsNoMapa = Object.keys(mapaMundo || {}).map(Number).filter(n => n > 0 && n < 10000);
-            const zonaMaxima = idsNoMapa.length > 0
-                ? Math.max(...idsNoMapa.map(n => Math.ceil(n / SALAS_POR_ZONA)), zonaAtual)
-                : zonaAtual;
-            const novaZonaNum      = zonaMaxima + 1;
-            const primeiraSalaNovaZona = (novaZonaNum - 1) * SALAS_POR_ZONA + 1;
-
-            // --- EXTRAÇÃO DO DNA LOCAL (A ÂNCORA DE REALIDADE) ---
-            const salaOrigem    = mapaMundo[salaOrigemId] || {};
-            const nomeOrigem    = salaOrigem.nome || "Câmara desconhecida";
-            const descOrigem    = (salaOrigem.texto_logico || "").replace(/\n/g, " ").substring(0, 300);
-            
-            const infoZonaAtual = dnaGlobal?.zonas?.find(z => z.id === zonaAtual) || { nome: `Zona ${zonaAtual}`, tom_sensorial: "Sombrio e decadente" };
-            const conspiracao = (dnaGlobal?.conspiracoes_reais || []).slice(0, 2).join(" | ");
-            const semente = Math.random().toString(36).substring(2, 10);
-
-            // ============================================================
-            // FASE 1: O PLANO TOPOLÓGICO DO RAMO (Mergulhado no Contexto)
-            // ============================================================
-            const promptPlanoRamo = `[SEMENTE: ${semente}] [RAMO NARRATIVO] [SALAS ${idInicio} a ${idFim}]
-Você é um arquiteto de topologia de um RPG de horror visceral.
-
-TEMA DA ZONA ATUAL: "${infoZonaAtual.nome}"
-TEXTURA SENSORIAL DA ZONA: "${infoZonaAtual.tom_sensorial}"
-SALA DE ORIGEM: "${nomeOrigem}"
-DESCRIÇÃO VISUAL DA ORIGEM: "${descOrigem}..."
-
-AÇÃO DE ENTRADA NO RAMO: "${textoEscolha}" (Esta ação tira o jogador da Origem e o joga na sala ${idInicio})
-
-REGRAS TOPOLÓGICAS E TEMÁTICAS (FALHA CRÍTICA SE VIOLAR):
-1. CONTINUIDADE ARQUITETÔNICA ABSOLUTA: Os nomes dos locais físicos ("local_fisico") DEVEM ser uma extensão lógica e material da DESCRIÇÃO VISUAL DA ORIGEM e do TEMA DA ZONA. Se a origem é um subsolo industrial de azulejos brancos, o ramo DEVE conter alas de serviço ocultas, poços de ventilação, necrotérios. É ESTRITAMENTE PROIBIDO usar clichês fantasiosos como "Caverna Escura" ou "Abismo" se não houver coerência geológica com a origem.
-2. BIFURCAÇÃO OBRIGATÓRIA: Crie pelo menos uma divisão estrutural (ex: sala ${idInicio+1} possui saídas para ${idInicio+2} e ${idInicio+3}, que depois reconvergem).
-3. APENAS IDA: Escreva conexões estritamente para a frente (de um ID menor para um ID maior). NUNCA escreva ações de retorno. O motor fará a reversão física simétrica.
-4. CONECTIVIDADE TOTAL: Todas as salas de ${idInicio} a ${idFim} devem estar conectadas na malha, desaguando na sala final.
-5. VERBOS DE LOCOMOÇÃO PURA: A ação de transição DEVE ser uma locomoção física que referencie a arquitetura ("Rastejar pelo fosso", "Subir os degraus", "Deslizar pela tubulação"). PROIBIDO verbos passivos.
-6. FRONTEIRA ÚNICA: A sala ${idFim} é o limite final. Sua única saída para frente deve ter "destino": "FRONTEIRA".
-
-Retorne EXCLUSIVAMENTE um objeto JSON:
-{
-  "nome_ramo": "Nome evocativo e coerente em 2-4 palavras",
-  "plano": {
-    "${idInicio}": {
-      "local_fisico": "Nome do espaço em 2 a 4 palavras (Ex: Corredor de Desinfecção)",
-      "saidas": [ {"destino": ${idInicio+1}, "acao": "Avançar pelo duto úmido"} ]
-    },
-    "... salas intermediárias ...": { "local_fisico": "...", "saidas": [...] },
-    "${idFim}": {
-      "local_fisico": "A Fronteira do Ramo",
-      "saidas": [ {"destino": "FRONTEIRA", "acao": "Atravessar o limiar metálico"} ]
-    }
-  }
-}`;
-
-            const idMsgPlano = adicionarMensagem(`🌿 [Ramo ${ramoN}] Extraindo DNA arquitetônico...`, "system", true);
-            let planoData = null;
-            let nomeRamo = "Ramo Obscuro";
-
-            // Tentativa de geração do plano
-            const dataPlano = await chamarGroq([{ role: "system", content: "Retorne APENAS um JSON válido. Zero markdown." }, { role: "user", content: promptPlanoRamo }], 0.65, { type: "json_object" }, MODELO_RAMOS, 3);
-            const rawPlano = JSON.parse(dataPlano.choices[0].message.content);
-            nomeRamo = rawPlano.nome_ramo || nomeRamo;
-            planoData = rawPlano.plano;
-
-            // --- ESTABILIZAÇÃO TOPOLÓGICA ---
-            const mapeamentoPais = {};
-            for (let id = idInicio; id <= idFim; id++) {
-                const sala = planoData[String(id)];
-                if (!sala || !sala.saidas) continue;
-                sala.saidas = sala.saidas.filter(saida => {
-                    const dest = (saida.destino === "FRONTEIRA") ? "FRONTEIRA" : Number(saida.destino);
-                    if (dest !== "FRONTEIRA" && dest > id && dest <= idFim) {
-                        if (!mapeamentoPais[dest]) {
-                            mapeamentoPais[dest] = id;
-                            return true;
-                        }
-                        return false; 
-                    }
-                    return true;
-                });
-            }
-
-            // Fallback nós órfãos
-            for (let id = idInicio + 1; id <= idFim; id++) {
-                if (!mapeamentoPais[id]) {
-                    const paiPadrao = id - 1;
-                    mapeamentoPais[id] = paiPadrao;
-                    if (!planoData[String(paiPadrao)]) planoData[String(paiPadrao)] = { local_fisico: "Corredor intermédio", saidas: [] };
-                    if (!planoData[String(paiPadrao)].saidas) planoData[String(paiPadrao)].saidas = [];
-                    planoData[String(paiPadrao)].saidas.push({ destino: id, acao: "Avançar até a próxima seção" });
-                }
-            }
-
-            // Espelhamento: injeta a rota simétrica de volta
-            for (let id = idInicio; id <= idFim; id++) {
-                const sala = planoData[String(id)];
-                if (!sala || !sala.saidas) continue;
-                for (const saida of [...sala.saidas]) {
-                    const dest = saida.destino;
-                    if (dest !== "FRONTEIRA" && dest > id && dest <= idFim) {
-                        if (!planoData[String(dest)]) planoData[String(dest)] = { local_fisico: "Câmara adjacente", saidas: [] };
-                        if (!planoData[String(dest)].saidas) planoData[String(dest)].saidas = [];
-                        
-                        if (!planoData[String(dest)].saidas.some(s => s.destino === id)) {
-                            const acaoVolta = saida.acao.replace(/^(caminhar|atravessar|rastejar|subir|descer|avançar|entrar|sair|passar|seguir|cruzar|escalar|saltar|deslizar|correr|andar)\b/i, "Voltar");
-                            planoData[String(dest)].saidas.push({ destino: id, acao: acaoVolta });
-                        }
-                    }
-                }
-            }
-            document.getElementById(idMsgPlano)?.remove();
-
-            // ============================================================
-            // FASE 2: A PROSA SENSORIAL DO RAMO (Contaminação Direta)
-            // ============================================================
-            function extrairElementoFisico(acao) {
-                return acao.replace(/^(caminhar|atravessar|rastejar|subir|descer|avançar|entrar|sair|passar|seguir|cruzar|escalar|saltar|deslizar|correr|andar|voltar)\s+(pela?s?|pelos?|por\s+(?:uma?|o|a)|ao?\s+(?:longo|lado)\s+d[ao]s?|num?a?|(?:de\s+)?volta?\s+(?:pela?|pelo?|por)|até\s+(?:a|o)|em\s+(?:direção\s+a(?:o)?)?|ao?s?\s+|uma?\s+|o\s+|a\s+)/i, '').trim();
-            }
-
-            const acoesChegada = {}; 
-            for (const [idStr, sala] of Object.entries(planoData)) {
-                const idAtual = parseInt(idStr);
-                for (const saida of (sala.saidas || [])) {
-                    if (saida.destino !== "FRONTEIRA" && saida.destino > idAtual) {
-                        const destKey = String(saida.destino);
-                        if (!acoesChegada[destKey]) acoesChegada[destKey] = [];
-                        if (!acoesChegada[destKey].includes(saida.acao)) acoesChegada[destKey].push(saida.acao);
-                    }
-                }
-            }
-
-            const resumoPlanoRamo = Object.entries(planoData).map(([id, sala]) => {
-                const idAtual = parseInt(id);
-                const saidasForward = sala.saidas.filter(s => s.destino === "FRONTEIRA" || s.destino > idAtual);
-                const elementosObrigatorios = saidasForward
-                    .map(s => `    • "${extrairElementoFisico(s.acao)}" — descreva isso materialmente na sala.`)
-                    .join("\n");
-                
-                let chegada = "";
-                if (idAtual === idInicio) {
-                    chegada = `[ÂNCORA OBRIGATÓRIA: Inicie a primeira frase OBRIGATORIAMENTE com: "Depois de ${textoEscolha.toLowerCase()}, você...".]`;
-                } else {
-                    const acoesIn = acoesChegada[id] || [];
-                    if (acoesIn.length > 1) {
-                        chegada = `[ÂNCORA NEUTRA: Comece com "Ao avançar para este local, você...".]`;
-                    } else if (acoesIn.length === 1) {
-                        chegada = `[ÂNCORA OBRIGATÓRIA: Comece com "Depois de ${acoesIn[0].toLowerCase()}, você...".]`;
-                    }
-                }
-
-                return `SALA ${id} (${sala.local_fisico}):\n${chegada}\n${elementosObrigatorios ? `ELEMENTOS FÍSICOS OBRIGATÓRIOS QUE DEVEM SER VISTOS:\n${elementosObrigatorios}` : 'Foco na descrição limpa.'}`;
-            }).join("\n\n");
-
-            const promptSalasRamo = `[SEMENTE: ${semente}]
-MISTÉRIO CENTRAL: "${dnaGlobal?.misterio_central}"
-CONSPIRAÇÃO LOCAL: "${conspiracao}"
-
-Você é o Diretor de Cenários do jogo.
-O jogador rompeu a normalidade do cenário e adentrou este ramo a partir de um local específico.
-
-[O PONTO DE PARTIDA]
-Local Original: "${nomeOrigem}"
-Aparência do Local Original: "${descOrigem}..."
-Ação de Ruptura: "${textoEscolha}" (Transição para a Sala ${idInicio})
-
-[O PLANO ESTRUTURAL]
-${resumoPlanoRamo}
-
-REGRAS CRÍTICAS DE PROSA:
-1. CONTINUIDADE VISUAL E GEOLÓGICA (FALHA CRÍTICA SE VIOLAR): A Sala ${idInicio} não flutua no vácuo. Seus materiais, iluminação e atmosfera devem ser uma corrupção contínua da "Aparência do Local Original". Mantenha a sanidade arquitetônica da transição.
-2. Respeite as ÂNCORAS de chegada exatas listadas no plano estrutural.
-3. Descreva visualmente OS ELEMENTOS FÍSICOS OBRIGATÓRIOS exigidos. Se o caminho for um duto enferrujado, escreva sobre o duto enferrujado no cenário para dar peso à opção.
-4. INVESTIGAÇÃO DO ARQUITETO: Para CADA sala, gere uma interação ("investigacao"). O "resultado_texto" revela a conspiração através de autópsias arquitetônicas (ferrugem, fluidos, biologia corrompida). Dano numérico de 0 a 15.
-
-Retorne EXCLUSIVAMENTE um objeto JSON:
-{
-  "salas": {
-    "${idInicio}": {
-      "texto_logico": "Prosa densa, em segunda pessoa, continuando a arquitetura...",
-      "investigacao": {
-         "texto": "Examinar a fenda escura",
-         "resultado_texto": "As bordas metálicas estão corroídas de dentro para fora. Fluidos mancham a superfície.",
-         "dano": 0
-      }
-    },
-    // ... repetir estruturalmente até a fronteira (${idFim})
-  }
-}`;
-
-            const idMsgSalas = adicionarMensagem(`🌿 [Ramo ${ramoN}] Destilando horrores arquitetônicos...`, "system", true);
-            const dataSalas = await chamarGroq([{ role: "system", content: "Retorne APENAS um JSON válido. Zero prosa extra." }, { role: "user", content: promptSalasRamo }], 0.70, { type: "json_object" }, MODELO_RAMOS, 3);
-            const salasGeradas = JSON.parse(dataSalas.choices[0].message.content).salas;
-            document.getElementById(idMsgSalas)?.remove();
-
-            // ============================================================
-            // FASE 3: MESCLAGEM FINAL NO MAPAMUNDO
-            // ============================================================
-            const salasInjetadas = {};
-
-            for (const [idStr, dadosTopologicos] of Object.entries(planoData)) {
-                const idNum = parseInt(idStr);
-                if (idNum < idInicio || idNum > idFim) continue;
-
-                const prosaSala = salasGeradas[idStr];
-                if (!prosaSala) continue;
-
-                const opcoesFinais = [];
-
-                // 1. Injeta as saídas topológicas de navegação
-                dadosTopologicos.saidas.forEach(saida => {
-                    let destinoFinal = saida.destino;
-                    if (destinoFinal === "FRONTEIRA") destinoFinal = primeiraSalaNovaZona;
-                    opcoesFinais.push({
-                        texto: saida.acao,
-                        destino: destinoFinal
-                    });
-                });
-
-                // 2. Injeta a opção arquitetural (investigativa) gerada na Fase 2
-                if (prosaSala.investigacao) {
-                    opcoesFinais.push({
-                        texto: prosaSala.investigacao.texto || "Examinar a anomalia",
-                        arquiteto: true,
-                        resultado_texto: prosaSala.investigacao.resultado_texto || "A realidade material aqui cede a algo pior.",
-                        dano: prosaSala.investigacao.dano || 0,
-                        tipo_resultado: "revelacao",
-                        disparado: false
-                    });
-                }
-
-                salasInjetadas[idStr] = {
-                    nome: dadosTopologicos.local_fisico || "Setor Obscuro",
-                    texto_logico: prosaSala.texto_logico || "O cheiro de ferrugem se mistura a fluidos velhos.",
-                    tipo: "ramo",
-                    ramo_id: ramoN,
-                    sala_fronteira: (idNum === idFim),
-                    opcoes: opcoesFinais
-                };
-            }
-
-            if (!mapaMundo) mapaMundo = {};
-            Object.assign(mapaMundo, salasInjetadas);
-            window.mapaMundo = mapaMundo;
-
-            console.log(`[Ramos] ✅ Ramo ${ramoN} injetado com coerência material: "${nomeRamo}". Fronteira → Zona ${novaZonaNum}.`);
-
-            return idInicio;
-        }
-    
-        // ============================================================
         // PUZZLES & GERAÇÃO PROCEDURAL
         // ============================================================
 
@@ -1932,7 +1603,7 @@ async function injetarPuzzles(planoZonal, zonaId) {
     const salasBloqueadas = candidatos.filter(id => planoZonal[String(id)]?.bloqueio?.ativo);
     const naoBloquedas    = candidatos.filter(id => !planoZonal[String(id)]?.bloqueio?.ativo);
 
-    const numPuzzles = Math.min(naoBloquedas.length, Math.random() < 0.2 ? 2 : 1);
+    const numPuzzles = Math.min(naoBloquedas.length, Math.random() < 0.5 ? 1 : 2);
     const escolhidas = naoBloquedas.sort(() => Math.random() - 0.5).slice(0, numPuzzles);
 
     const puzzles = await Promise.all(
@@ -2016,8 +1687,6 @@ async function injetarPuzzles(planoZonal, zonaId) {
                     
                     // CARREGA HISTÓRICO DE INDS
                     if (data.historicoIND) historicoIND = data.historicoIND;
-                    // CARREGA CONTADOR DE RAMOS
-                    if (data.contadorRamos !== undefined) contadorRamos = data.contadorRamos;
                     
                 } else {
                     const dadosPadrao = {
@@ -2058,7 +1727,6 @@ async function injetarPuzzles(planoZonal, zonaId) {
                     zonaAtual: zonaAtual,
                     historicoIND: historicoIND,
                     salasVisitadas: [...salasVisitadas],
-                    contadorRamos: contadorRamos,
                 };
 
                 await updateDoc(doc(db, "players", uidAtual), dadosAtualizados);
@@ -2106,7 +1774,7 @@ async function injetarPuzzles(planoZonal, zonaId) {
             if (!dnaGlobal) {
                 await gerarDNAGlobal(cenarioTema);
             }
-            window._ganchosZonaAnterior = await gerarZona(1);
+            await gerarZona(1);
         }
 
         async function gerarDNAGlobal(cenarioTema) {
@@ -2459,12 +2127,6 @@ ${resumoPlano}
 ${infoZona.segredo_local || "Há algo oculto que destoa do ambiente."}
 IMPORTANTE: Esta zona tem 10 salas. Você DEVE incluir uma referência VISÍVEL ao segredo local em pelo menos 2 dessas salas.
 
-[GANCHOS PARA A PRÓXIMA ZONA]
-Ao concluir os textos, preencha "ganchos_para_proxima_zona" com base no que você escreveu:
-- "salas_fronteira": IDs (números) das salas desta zona que estão na borda — aquelas que olham para o desconhecido, sem saída para dentro da zona (ex: [8, 10])
-- "objetos_nao_usados": 1 a 3 nomes de objetos físicos que aparecem nos textos mas ficam sem resolução — coisas que o jogador viu e não entendeu (ex: ["faca enferrujada no canto", "carta rasgada no chão"])
-- "informacao_pendente": uma frase com o que o jogador carrega mentalmente sem compreender (ex: "o símbolo gravado na porta enferrujada do corredor norte")
-
 [ESTRUTURA DO JSON]
 Retorne APENAS o JSON abaixo. NÃO gere arrays de opções ou destinos, apenas o texto bruto.
 {
@@ -2476,9 +2138,9 @@ Retorne APENAS o JSON abaixo. NÃO gere arrays de opções ou destinos, apenas o
     "3": { ... }
   },
   "ganchos_para_proxima_zona": {
-    "salas_fronteira": [10],
-    "objetos_nao_usados": ["exemplo de objeto visto mas não resolvido"],
-    "informacao_pendente": "exemplo do que o jogador carrega sem entender"
+    "salas_fronteira": [],
+    "objetos_nao_usados": [],
+    "informacao_pendente": ""
   }
 }`;
             };
@@ -2760,18 +2422,6 @@ mapaFinalMesclado[puzzleIdStr] = {
                 }
                 // --- FIM DO AJUSTE: ARQUITETO DE PERIGOS ---
 
-                // --- INÍCIO DO AJUSTE: ARQUITETO DE RAMOS (Gatilhos) ---
-                if (Math.random() < 1.0) {   // 100% de chance, antes era 70%
-                    const idMsgRamo = adicionarMensagem("🌿 O Arquiteto de Ramos está semeando escolhas...", "system", true);
-                    try {
-                        await gerarGatilhosDeRamo(mapaFinalMesclado, infoZona);
-                    } catch(e) {
-                        console.error("[Ramos] Gatilho falhou silenciosamente:", e);
-                    }
-                    document.getElementById(idMsgRamo)?.remove();
-                }
-                // --- FIM DO AJUSTE: ARQUITETO DE RAMOS ---
-
                 zonaData.salas = mapaFinalMesclado;
 
                 if (!mapaMundo) mapaMundo = {};
@@ -2811,17 +2461,14 @@ mapaFinalMesclado[puzzleIdStr] = {
                     _expansaoEmAndamento = true;
                     console.log(`[Expansão] Jogador em sala ${salaAtualNum}. Gerando Zona ${proximaZona} em background...`);
 
-                    const ganchosSalvos = window._ganchosZonaAnterior || null;
+                    const ganchosSalvos = null;
 
-gerarZona(proximaZona, ganchosSalvos)
-    .then(novosGanchos => {
-        window._ganchosZonaAnterior = novosGanchos;
-        _expansaoEmAndamento = false;
-    })
-    .catch(e => {
-        console.error('[Expansão] Falhou:', e);
-        _expansaoEmAndamento = false;
-    });
+                    gerarZona(proximaZona, ganchosSalvos)
+                        .then(() => { _expansaoEmAndamento = false; })
+                        .catch(e => {
+                            console.error('[Expansão] Falhou:', e);
+                            _expansaoEmAndamento = false;
+                        });
                 }
             }
         }
@@ -3398,8 +3045,7 @@ Retorne EXATAMENTE o JSON abaixo. Nenhuma palavra extra.`
 
         function prepararTextoChegada(textoLogico, acaoUsada, idOrigem, idDestino) {
             if (!acaoUsada) return textoLogico;
-            // Travessia ramo → nova zona nunca é retorno (IDs numericamente menores mas semanticamente à frente)
-            if (idOrigem >= 50000 && idDestino < 10000) return textoLogico;
+
             const isRetorno = /(voltar|de volta)\b/i.test(acaoUsada.trim()) || (idDestino < idOrigem);
             if (!isRetorno) return textoLogico; 
 
@@ -3426,84 +3072,6 @@ function atualizarBotoesNavegacao() {
     if (!sala.opcoes) return;
 
     sala.opcoes.forEach(opcao => {
-
-        // ── RAMO: gatilho de geração narrativa ─────────────────────────────────
-        if (opcao.gera_ramo === true) {
-            if (opcao.disparado) return;
-            const btnRamo = document.createElement('button');
-            btnRamo.className = 'nav-btn';
-            btnRamo.style.borderColor = '#6a3d8a';
-            btnRamo.style.color = '#c084fc';
-            btnRamo.innerText = `> ${opcao.texto}`;
-            btnRamo.onclick = async () => {
-                if (window._transicaoEmAndamento) return;
-                window._transicaoEmAndamento = true;
-                opcao.disparado = true;
-
-                document.getElementById('controls').style.pointerEvents = 'none';
-                container.style.pointerEvents = 'none';
-
-                const overlay = document.createElement('div');
-                overlay.className = 'fade-overlay';
-                document.body.appendChild(overlay);
-                setTimeout(() => overlay.classList.add('active'), 10);
-                await new Promise(resolve => setTimeout(resolve, 500));
-
-                try {
-                    const audio = new Audio('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/passos.mp3');
-                    await audio.play();
-                    await new Promise(resolve => setTimeout(resolve, 1500));
-                } catch (err) { console.log('[Ramo] Som:', err); }
-
-                container.innerHTML = '';
-                document.getElementById('chat-box').innerHTML = '';
-
-                const idLoad = adicionarMensagem("🌿 O tecido do mundo se desdobra...", "system", true);
-                let idInicioBranch = null;
-                try {
-                    idInicioBranch = await gerarArquitetoDeRamos(secaoAtualId, opcao.texto);
-                } catch (e) {
-                    console.error("[Ramo] Geração falhou:", e);
-                    opcao.disparado = false;
-                    document.getElementById(idLoad)?.remove();
-                    overlay.classList.remove('active');
-                    setTimeout(() => {
-                        overlay.remove();
-                        window._transicaoEmAndamento = false;
-                        document.getElementById('controls').style.pointerEvents = 'auto';
-                        container.style.pointerEvents = 'auto';
-                    }, 600);
-                    return;
-                }
-                document.getElementById(idLoad)?.remove();
-
-                secaoAtualId = String(idInicioBranch);
-                salasVisitadas.add(secaoAtualId);
-                await salvarEstadoJogador();
-
-                const novaSalaRamo = mapaMundo[secaoAtualId];
-                if (novaSalaRamo?.texto_logico) {
-                    document.getElementById('sala-desc').innerHTML = novaSalaRamo.texto_logico;
-                    historicoConversa.push({ role: 'user', content: `[Navegou para: ${opcao.texto}]` });
-                    historicoConversa.push({ role: 'assistant', content: novaSalaRamo.texto_logico });
-                    if (historicoConversa.length > 10) historicoConversa.splice(0, 2);
-                }
-
-                atualizarBotoesNavegacao();
-                if (typeof atualizarLootRoom === "function") atualizarLootRoom();
-
-                overlay.classList.remove('active');
-                setTimeout(() => {
-                    overlay.remove();
-                    window._transicaoEmAndamento = false;
-                    document.getElementById('controls').style.pointerEvents = 'auto';
-                    container.style.pointerEvents = 'auto';
-                }, 1200);
-            };
-            container.appendChild(btnRamo);
-            return;
-        }
-        // ── FIM RAMO ────────────────────────────────────────────────────────────
 
                 // ── ARQUITETO: opção sem destino (nova_opcao) ──────────────────────────
         // Agora com fade, som e escurecimento da tela, igual à navegação.
@@ -4114,8 +3682,7 @@ let systemPromptContent = `Você é um terminal de transcrição forense e narra
 REGRAS ABSOLUTAS:
 1. FOCO: Narre em segunda pessoa ("Você..."). Máximo de 4 frases. Seja seco e clínico.
 2. PROIBIÇÃO DE POESIA: Não use clichês ou atmosfera poética. Seja literal e visceral.
-3. TEMPO VERBAL: Use APENAS o presente do indicativo: "Você vê", "gotas caem". 
-4. ESTADO ATUAL DO MUNDO (NÃO INVENTE NADA FORA DISSO):
+3. ESTADO ATUAL DO MUNDO (NÃO INVENTE NADA FORA DISSO):
 ---
 [CENÁRIO]: ${descricaoSala}
 ${alertaMortos ? `[CORPOS NO LOCAL]: ${npcsMortos}\n` : ''}${textoItensOculto}
