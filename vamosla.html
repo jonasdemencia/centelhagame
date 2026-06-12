@@ -1500,191 +1500,241 @@ Retorne APENAS este JSON:
         }
 
         async function gerarArquitetoDeRamos(salaOrigemId, textoEscolha) {
-    const ramoN = ++contadorRamos;
-    const idInicio = 50001 + (ramoN - 1) * 15;
-    const idFim    = idInicio + 9; // 10 salas
+            const ramoN = ++contadorRamos;
+            const idInicio = 50001 + (ramoN - 1) * 15;
+            const idFim    = idInicio + 9; // 10 salas garantidas
 
-    // Determina o número da nova zona que será gerada ao cruzar a fronteira
-    const idsNoMapa = Object.keys(mapaMundo || {}).map(Number).filter(n => n > 0 && n < 10000);
-    const zonaMaxima = idsNoMapa.length > 0
-        ? Math.max(...idsNoMapa.map(n => Math.ceil(n / SALAS_POR_ZONA)), zonaAtual)
-        : zonaAtual;
-    const novaZonaNum      = zonaMaxima + 1;
-    const primeiraSalaNovaZona = (novaZonaNum - 1) * SALAS_POR_ZONA + 1;
+            // Determina o número da nova zona que será gerada ao cruzar a fronteira
+            const idsNoMapa = Object.keys(mapaMundo || {}).map(Number).filter(n => n > 0 && n < 10000);
+            const zonaMaxima = idsNoMapa.length > 0
+                ? Math.max(...idsNoMapa.map(n => Math.ceil(n / SALAS_POR_ZONA)), zonaAtual)
+                : zonaAtual;
+            const novaZonaNum      = zonaMaxima + 1;
+            const primeiraSalaNovaZona = (novaZonaNum - 1) * SALAS_POR_ZONA + 1;
 
-    const salaOrigem    = mapaMundo[salaOrigemId] || {};
-    const infoZonaAtual = dnaGlobal?.zonas?.find(z => z.id === zonaAtual) || {
-        nome: `Zona ${zonaAtual}`, tom_sensorial: "", segredo_local: ""
-    };
+            const salaOrigem    = mapaMundo[salaOrigemId] || {};
+            const infoZonaAtual = dnaGlobal?.zonas?.find(z => z.id === zonaAtual) || { nome: `Zona ${zonaAtual}` };
+            const conspiracao = (dnaGlobal?.conspiracoes_reais || []).slice(0, 2).join(" | ");
+            const semente = Math.random().toString(36).substring(2, 10);
 
-    const conspiracao = (dnaGlobal?.conspiracoes_reais || []).slice(0, 2).join(" | ");
-    const entidades   = (dnaGlobal?.entidades || [])
-        .filter(e => e.zona_primeira_pista <= zonaAtual + 1)
-        .slice(0, 2)
-        .map(e => `${e.nome}: ${e.natureza}`).join(" | ");
-    const objetos     = (dnaGlobal?.objetos_transzonais || [])
-        .filter(o => o.zona_origem <= zonaAtual || (o.zonas_relevantes || []).includes(zonaAtual))
-        .slice(0, 2)
-        .map(o => `${o.nome}: ${o.o_que_desvela}`).join(" | ");
+            // ============================================================
+            // FASE 1: O PLANO TOPOLÓGICO DO RAMO
+            // ============================================================
+            const promptPlanoRamo = `[SEMENTE: ${semente}] [RAMO NARRATIVO] [SALAS ${idInicio} a ${idFim}]
+Você é um gerador de matrizes de adjacência.
+SALA DE ORIGEM: "${salaOrigem.nome}"
+AÇÃO DE ENTRADA NO RAMO: "${textoEscolha}" (Esta ação leva o jogador para a sala ${idInicio})
 
-    const semente = Math.random().toString(36).substring(2, 10);
+REGRAS TOPOLÓGICAS (FALHA CRÍTICA SE VIOLAR):
+1. BIFURCAÇÃO OBRIGATÓRIA: Crie pelo menos uma divisão estrutural (ex: sala ${idInicio+1} possui saídas para ${idInicio+2} e ${idInicio+3}, que depois reconvergem).
+2. APENAS IDA: Escreva conexões estritamente para a frente (de um ID menor para um ID maior). NUNCA escreva ações de retorno. O motor fará a reversão física simétrica.
+3. CONECTIVIDADE TOTAL: Todas as salas de ${idInicio} a ${idFim} devem estar conectadas na malha, desaguando na sala final.
+4. VERBOS DE LOCOMOÇÃO PURA: A ação de transição DEVE ser uma locomoção física que referencie um elemento ("Rastejar pelo fosso", "Subir os degraus", "Deslizar pela tubulação"). PROIBIDO verbos passivos ou investigativos.
+5. FRONTEIRA ÚNICA: A sala ${idFim} é o limite final deste pesadelo. Sua única saída para frente deve ter "destino": "FRONTEIRA".
 
-    const prompt = `[SEMENTE: ${semente}]
-Você é o Arquiteto de Ramos de um RPG de horror visceral.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-SALA DE ORIGEM (onde o jogador estava):
-Nome: "${salaOrigem.nome || "Câmara desconhecida"}"
-Descrição: ${(salaOrigem.texto_logico || "").substring(0, 250)}...
-
-ESCOLHA QUE DISPAROU ESTE RAMO:
-"${textoEscolha}"
-— Esta decisão é o ponto de não retorno. O ramo existe por causa dela.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-DNA DO MUNDO:
-Mistério Central: "${dnaGlobal?.misterio_central || ""}"
-Conspirações: "${conspiracao}"
-Entidades relevantes: "${entidades}"
-Objetos transzonais: "${objetos}"
-
-ZONA ATUAL: "${infoZonaAtual.nome}"
-Segredo local: ${infoZonaAtual.segredo_local}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-MISSÃO: Gere um ramo narrativo de 10 salas (IDs ${idInicio} a ${idFim}).
-
-REGRAS ESTRUTURAIS (FALHA CRÍTICA SE VIOLADAS):
-1. IDs: Use EXATAMENTE os IDs de ${idInicio} a ${idFim}. NUNCA invente IDs fora deste intervalo.
-2. TOPOLOGIA RAMIFICADA (OBRIGATÓRIO): PROIBIDO corredor reto. O ramo DEVE ter pelo menos 1 bifurcação real: uma sala com 2 destinos distintos (caminhos A e B) que reconvergem numa mesma sala. Estrutura mínima obrigatória: ${idInicio}→${idInicio+1}→(A:${idInicio+2} | B:${idInicio+3})→${idInicio+4}→...→${idFim}. A fronteira (${idFim}) é o nó final de ambos os caminhos.
-3. NAVEGAÇÃO OBRIGATÓRIA: Toda sala exceto a primeira deve ter ao menos uma opção "Voltar" para a sala imediatamente anterior.
-4. EVENTO NARRATIVO OBRIGATÓRIO: Toda sala deve ter exatamente 1 opção com "arquiteto": true e "resultado_texto" que revele elemento direto do DNA via evidência FÍSICA (ferrugem, fluidos, maquinário, anatomia). NUNCA bilhetes, diários ou sussurros.
-5. ÂNCORA DE CHEGADA: O texto_logico da sala ${idInicio} deve começar OBRIGATORIAMENTE com "Depois de ${textoEscolha.toLowerCase()}, você...".
-6. SALA FRONTEIRA: A sala ${idFim} deve ter "sala_fronteira": true e uma opção com "destino": "FRONTEIRA" (string literal — o sistema substituirá pelo ID correto). Nome e texto_logico DEVEM ser específicos ao horror concreto deste ramo. PROIBIDO: "escuridão completa", "luz intensa", "porta para o desconhecido", "limiar sem retorno" — qualquer clichê genérico invalida a sala. A fronteira é a consequência física materializada do que foi atravessado, não uma metáfora vaga.
-7. SEPARAÇÃO ESTRITA DE VERBOS (CRÍTICO): 
-   - Opções de navegação (com "destino") DEVEM usar verbos de locomoção pura (Avançar, Recuar, Subir, Descer, Seguir, Passar). É ESTRITAMENTE PROIBIDO usar "Investigar", "Examinar" ou "Olhar" em opções que mudam de sala.
-   - Opções investigativas DEVEM ser do tipo exploração local ("arquiteto": true, com "resultado_texto"), NUNCA com campo "destino".
-
-REGRAS DE ESCRITA:
-- Prosa sensorial densa — apenas visão, som, cheiro. PROIBIDO metalinguagem ("você pode", "você tem a opção").
-- VÍCIOS BANIDOS (cada um invalida o ramo):
-  ① texto_logico: A construção "cheiro de X e algo mais... como Y" está PROIBIDA. Nomeie cada sensação diretamente e com especificidade clínica ("formaldeído", "cobre oxidado", "gordura queimada").
-  ② resultado_texto: NUNCA começa com "Você vê". O objeto é o sujeito da frase ("Os fluidos coagulados...", "A superfície exibe...", "Marcas de fresa cobrem...").
-  ③ resultado_texto: NUNCA termina com meta-explicação ("revelando a verdade", "indicando que", "revelam que"). O dado físico é a revelação — não o interprete.
-  ④ textos de navegação: "Avançar para a próxima sala/câmara" e "Recuar" isolado estão PROIBIDOS. Cada texto DEVE referenciar elemento físico do ambiente ("Cruzar o vão de concreto fraturado", "Recuar pela rampa coberta de limo").
-- O campo "dano" dos eventos: 0 para revelações puras, 1-8 traumas leves, 9-20 traumas graves. Sempre inteiro.
-- O campo "arquiteto" é sempre boolean true.
-- Toda sala tem nome de 2-4 palavras e texto_logico de 3-4 frases.
-
-Retorne APENAS este JSON:
+Retorne EXCLUSIVAMENTE um objeto JSON:
 {
-  "_rascunho_narrativo": "3 frases descrevendo o arco: o que o jogador descobre, o que escala, o que se materializa no final",
-  "nome_ramo": "Nome evocativo do percurso em 3-5 palavras",
-  "salas": {
+  "nome_ramo": "Nome evocativo do percurso em 2-4 palavras",
+  "plano": {
     "${idInicio}": {
-      "nome": "Nome em 2-4 palavras",
-      "texto_logico": "Depois de ${textoEscolha.toLowerCase()}, você... [prosa sensorial densa]",
-      "opcoes": [
-        { "texto": "Avançar pela passagem estreita", "destino": ${idInicio+1} },
-        { "texto": "Examinar [elemento físico visível]", "arquiteto": true, "resultado_texto": "Revelação via evidência física...", "dano": 0, "disparado": false }
-      ]
+      "local_fisico": "Nome do espaço em 2 a 4 palavras (Ex: Corredor de Ossos)",
+      "saidas": [ {"destino": ${idInicio+1}, "acao": "Avançar pelo duto úmido"} ]
     },
-    "${idInicio+1}": { "nome": "...", "texto_logico": "...", "opcoes": [ { "texto": "Recuar pelo [elemento físico da sala anterior]", "destino": ${idInicio} }, { "texto": "[Verbo de locomoção] pelo/pela [elemento físico desta sala]", "destino": ${idInicio+2} }, { "texto": "Examinar [elemento físico visível]", "arquiteto": true, "resultado_texto": "[Objeto como sujeito. Dado físico concreto, sem interpretação.]", "dano": 3, "disparado": false } ] },
-    "...salas ${idInicio+2} a ${idFim-1} com mesma estrutura...",
+    "... salas intermediárias ...": { "local_fisico": "...", "saidas": [...] },
     "${idFim}": {
-      "nome": "Nome da Fronteira",
-      "texto_logico": "Prosa de dread máximo...",
-      "sala_fronteira": true,
-      "opcoes": [
-        { "texto": "[Recuo específico ao elemento físico desta sala]", "destino": ${idFim-1} },
-        { "texto": "[Cruzamento específico ao que está diante do jogador]", "destino": "FRONTEIRA" }
-      ]
+      "local_fisico": "A Fronteira do Ramo",
+      "saidas": [ {"destino": "FRONTEIRA", "acao": "Atravessar o limiar sangrento"} ]
     }
   }
 }`;
 
-    const systemPrompt = `Você é o Arquiteto de Ramos de um RPG de horror visceral. Retorne APENAS JSON válido. Zero markdown. O campo "dano" deve ser sempre um inteiro. O campo "arquiteto" deve ser sempre boolean true. O campo "destino" é sempre um inteiro EXCETO na opção de fronteira onde deve ser a string literal "FRONTEIRA".`;
+            const idMsgPlano = adicionarMensagem(`🌿 [Ramo ${ramoN}] Traçando arquitetura neural...`, "system", true);
+            let planoData = null;
+            let nomeRamo = "Ramo Obscuro";
 
-    const data = await chamarGroq([
-        { role: "system", content: systemPrompt },
-        { role: "user", content: prompt }
-    ], 0.88, { type: "json_object" }, MODELO_RAMOS, 3);
+            // Tentativa de geração do plano
+            const dataPlano = await chamarGroq([{ role: "system", content: "Retorne APENAS um JSON válido. Zero markdown." }, { role: "user", content: promptPlanoRamo }], 0.6, { type: "json_object" }, MODELO_RAMOS, 3);
+            const rawPlano = JSON.parse(dataPlano.choices[0].message.content);
+            nomeRamo = rawPlano.nome_ramo || nomeRamo;
+            planoData = rawPlano.plano;
 
-    const raw = data.choices[0].message.content;
-    const match = raw.match(/{[\s\S]*}/);
-    const parsed = JSON.parse(match ? match[0] : raw);
+            // --- ESTABILIZAÇÃO TOPOLÓGICA (Idêntico ao gerarZona) ---
+            const mapeamentoPais = {};
+            for (let id = idInicio; id <= idFim; id++) {
+                const sala = planoData[String(id)];
+                if (!sala || !sala.saidas) continue;
+                sala.saidas = sala.saidas.filter(saida => {
+                    const dest = (saida.destino === "FRONTEIRA") ? "FRONTEIRA" : Number(saida.destino);
+                    if (dest !== "FRONTEIRA" && dest > id && dest <= idFim) {
+                        if (!mapeamentoPais[dest]) {
+                            mapeamentoPais[dest] = id;
+                            return true;
+                        }
+                        return false; // Evita anéis quebrando nós já pais
+                    }
+                    return true;
+                });
+            }
 
-    if (!parsed.salas) throw new Error("[Ramos] JSON sem campo 'salas'.");
+            // Fallback: garante que ninguém ficou órfão (exceto o idInicio)
+            for (let id = idInicio + 1; id <= idFim; id++) {
+                if (!mapeamentoPais[id]) {
+                    const paiPadrao = id - 1;
+                    mapeamentoPais[id] = paiPadrao;
+                    if (!planoData[String(paiPadrao)]) planoData[String(paiPadrao)] = { local_fisico: "Corredor intermédio", saidas: [] };
+                    if (!planoData[String(paiPadrao)].saidas) planoData[String(paiPadrao)].saidas = [];
+                    planoData[String(paiPadrao)].saidas.push({ destino: id, acao: "Avançar até a próxima seção" });
+                }
+            }
 
-    // Validar e injetar salas no mapaMundo
-    const salasInjetadas = {};
-    for (const [idStr, sala] of Object.entries(parsed.salas)) {
-        const idNum = parseInt(idStr);
-        if (isNaN(idNum) || idNum < idInicio || idNum > idFim) {
-            console.warn(`[Ramos] Sala com ID inválido ignorada: ${idStr}`);
-            continue;
-        }
+            // Espelhamento: injeta a rota simétrica de volta (Voltar pelo duto úmido...)
+            for (let id = idInicio; id <= idFim; id++) {
+                const sala = planoData[String(id)];
+                if (!sala || !sala.saidas) continue;
+                for (const saida of [...sala.saidas]) {
+                    const dest = saida.destino;
+                    if (dest !== "FRONTEIRA" && dest > id && dest <= idFim) {
+                        if (!planoData[String(dest)]) planoData[String(dest)] = { local_fisico: "Câmara adjacente", saidas: [] };
+                        if (!planoData[String(dest)].saidas) planoData[String(dest)].saidas = [];
+                        
+                        if (!planoData[String(dest)].saidas.some(s => s.destino === id)) {
+                            const acaoVolta = saida.acao.replace(/^(caminhar|atravessar|rastejar|subir|descer|avançar|entrar|sair|passar|seguir|cruzar|escalar|saltar|deslizar|correr|andar)\b/i, "Voltar");
+                            planoData[String(dest)].saidas.push({ destino: id, acao: acaoVolta });
+                        }
+                    }
+                }
+            }
+            document.getElementById(idMsgPlano)?.remove();
 
-        if (Array.isArray(sala.opcoes)) {
-            const novasOpcoes = [];
-            sala.opcoes.forEach(opcao => {
-                // Substitui sentinela "FRONTEIRA" pelo ID real da primeira sala da nova zona
-                if (opcao.destino === "FRONTEIRA") {
-                    opcao.destino = primeiraSalaNovaZona;
+            // ============================================================
+            // FASE 2: A PROSA SENSORIAL DO RAMO
+            // ============================================================
+            // Prepara a string de distâncias e âncoras para forçar o LLM a "ver" as portas
+            function extrairElementoFisico(acao) {
+                return acao.replace(/^(caminhar|atravessar|rastejar|subir|descer|avançar|entrar|sair|passar|seguir|cruzar|escalar|saltar|deslizar|correr|andar|voltar)\s+(pela?s?|pelos?|por\s+(?:uma?|o|a)|ao?\s+(?:longo|lado)\s+d[ao]s?|num?a?|(?:de\s+)?volta?\s+(?:pela?|pelo?|por)|até\s+(?:a|o)|em\s+(?:direção\s+a(?:o)?)?|ao?s?\s+|uma?\s+|o\s+|a\s+)/i, '').trim();
+            }
+
+            const acoesChegada = {}; 
+            for (const [idStr, sala] of Object.entries(planoData)) {
+                const idAtual = parseInt(idStr);
+                for (const saida of (sala.saidas || [])) {
+                    if (saida.destino !== "FRONTEIRA" && saida.destino > idAtual) {
+                        const destKey = String(saida.destino);
+                        if (!acoesChegada[destKey]) acoesChegada[destKey] = [];
+                        if (!acoesChegada[destKey].includes(saida.acao)) acoesChegada[destKey].push(saida.acao);
+                    }
+                }
+            }
+
+            const resumoPlanoRamo = Object.entries(planoData).map(([id, sala]) => {
+                const idAtual = parseInt(id);
+                const saidasForward = sala.saidas.filter(s => s.destino === "FRONTEIRA" || s.destino > idAtual);
+                const elementosObrigatorios = saidasForward
+                    .map(s => `    • "${extrairElementoFisico(s.acao)}" — descreva isso materialmente na sala.`)
+                    .join("\n");
+                
+                let chegada = "";
+                if (idAtual === idInicio) {
+                    chegada = `[ÂNCORA OBRIGATÓRIA: Inicie a primeira frase OBRIGATORIAMENTE com: "Depois de ${textoEscolha.toLowerCase()}, você...".]`;
+                } else {
+                    const acoesIn = acoesChegada[id] || [];
+                    if (acoesIn.length > 1) {
+                        chegada = `[ÂNCORA NEUTRA: Comece com "Ao avançar para este local, você...".]`;
+                    } else if (acoesIn.length === 1) {
+                        chegada = `[ÂNCORA OBRIGATÓRIA: Comece com "Depois de ${acoesIn[0].toLowerCase()}, você...".]`;
+                    }
                 }
 
-                const textoLower = (opcao.texto || "").toLowerCase();
-                const ehInvestigativa = /^(examinar|investigar|olhar|checar|inspecionar|ler|tocar)\b/.test(textoLower);
+                return `SALA ${id} (${sala.local_fisico}):\n${chegada}\n${elementosObrigatorios ? `ELEMENTOS FÍSICOS OBRIGATÓRIOS QUE DEVEM SER VISTOS:\n${elementosObrigatorios}` : 'Foco na descrição limpa.'}`;
+            }).join("\n\n");
 
-                // CORREÇÃO DE COERÊNCIA NARRATIVA: 
-                // Se o LLM atrelou uma ação investigativa à navegação
-                if (ehInvestigativa && opcao.destino !== undefined) {
-                    console.log(`[Ramos] 🔧 Corrigindo coerência: Dividindo ação "${opcao.texto}"...`);
-                    
-                    // 1. Transforma a ação investigativa em um evento Arquitetural local (promessa cumprida)
-                    novasOpcoes.push({
-                        texto: opcao.texto,
+            const promptSalasRamo = `[SEMENTE: ${semente}] [MISTÉRIO: ${dnaGlobal?.misterio_central}]
+Você é o Diretor de Cenários do jogo.
+A arquitetura matemática já foi validada. Você deve gerar a prosa textual e UMA interrupção/opção de investigação por sala.
+
+[O PLANO ESTRUTURAL]
+${resumoPlanoRamo}
+
+REGRAS CRÍTICAS DE PROSA:
+1. Respeite as ÂNCORAS exatas listadas no plano.
+2. Descreva visualmente OS ELEMENTOS FÍSICOS OBRIGATÓRIOS exigidos. Se o caminho for um duto, escreva sobre o duto.
+3. INVESTIGAÇÃO DO ARQUITETO: Para CADA sala, gere uma interação ("investigacao"). O "resultado_texto" NÃO deve ter metalinguagem. Ele revela a conspiração através da física (ferrugem, fluidos coagulados, modificações corporais). Dano numérico de 0 a 15.
+
+Retorne EXCLUSIVAMENTE um objeto JSON:
+{
+  "salas": {
+    "${idInicio}": {
+      "texto_logico": "Prosa densa, em segunda pessoa, visão e som...",
+      "investigacao": {
+         "texto": "Examinar a fenda escura",
+         "resultado_texto": "As bordas estão lixadas artificialmente. Há marcas de dentes humanos nela.",
+         "dano": 0
+      }
+    },
+    // ... repetir até ${idFim}
+  }
+}`;
+
+            const idMsgSalas = adicionarMensagem(`🌿 [Ramo ${ramoN}] Destilando horrores na ramificação...`, "system", true);
+            const dataSalas = await chamarGroq([{ role: "system", content: "Retorne APENAS um JSON válido." }, { role: "user", content: promptSalasRamo }], 0.75, { type: "json_object" }, MODELO_RAMOS, 3);
+            const salasGeradas = JSON.parse(dataSalas.choices[0].message.content).salas;
+            document.getElementById(idMsgSalas)?.remove();
+
+            // ============================================================
+            // FASE 3: MESCLAGEM FINAL NO MAPAMUNDO
+            // ============================================================
+            const salasInjetadas = {};
+
+            for (const [idStr, dadosTopologicos] of Object.entries(planoData)) {
+                const idNum = parseInt(idStr);
+                if (idNum < idInicio || idNum > idFim) continue;
+
+                const prosaSala = salasGeradas[idStr];
+                if (!prosaSala) continue;
+
+                const opcoesFinais = [];
+
+                // 1. Injeta as saídas topológicas de navegação
+                dadosTopologicos.saidas.forEach(saida => {
+                    let destinoFinal = saida.destino;
+                    if (destinoFinal === "FRONTEIRA") destinoFinal = primeiraSalaNovaZona;
+                    opcoesFinais.push({
+                        texto: saida.acao,
+                        destino: destinoFinal
+                    });
+                });
+
+                // 2. Injeta a opção arquitetural (investigativa) gerada na Fase 2
+                if (prosaSala.investigacao) {
+                    opcoesFinais.push({
+                        texto: prosaSala.investigacao.texto || "Examinar a anomalia",
                         arquiteto: true,
-                        resultado_texto: opcao.resultado_texto || `Você foca sua atenção nos detalhes: ${opcao.texto.replace(/^(examinar|investigar|olhar|checar|inspecionar|ler|tocar)\s/i, '')}. As formas revelam uma natureza macabra sob o ambiente escuro.`,
-                        dano: opcao.dano || 0,
-                        tipo_resultado: opcao.tipo_resultado || "revelacao",
+                        resultado_texto: prosaSala.investigacao.resultado_texto || "A realidade aqui está fraturada.",
+                        dano: prosaSala.investigacao.dano || 0,
+                        tipo_resultado: "revelacao",
                         disparado: false
                     });
-
-                    // 2. Garante a continuidade topológica com uma ação de locomoção pura, usando o nome da sala destino
-                    const salaDestFallback = parsed.salas?.[String(opcao.destino)];
-                    const nomeDestFallback = salaDestFallback?.nome?.toLowerCase() || null;
-                    novasOpcoes.push({
-                        texto: nomeDestFallback
-                            ? `Seguir até ${nomeDestFallback}`
-                            : "Passar pela abertura à frente",
-                        destino: opcao.destino
-                    });
-                } else {
-                    novasOpcoes.push(opcao); // Opção válida, mantém como está
                 }
-            });
-            sala.opcoes = novasOpcoes;
+
+                salasInjetadas[idStr] = {
+                    nome: dadosTopologicos.local_fisico || "Setor Obscuro",
+                    texto_logico: prosaSala.texto_logico || "O lugar cheira a mofo e abandono.",
+                    tipo: "ramo",
+                    ramo_id: ramoN,
+                    sala_fronteira: (idNum === idFim),
+                    opcoes: opcoesFinais
+                };
+            }
+
+            if (!mapaMundo) mapaMundo = {};
+            Object.assign(mapaMundo, salasInjetadas);
+            window.mapaMundo = mapaMundo;
+
+            console.log(`[Ramos] ✅ Ramo ${ramoN} injetado usando metodologia 2-Steps: "${nomeRamo}". Fronteira → Zona ${novaZonaNum}.`);
+
+            return idInicio;
         }
-        
-        sala.tipo  = "ramo";
-        sala.ramo_id = ramoN;
-        salasInjetadas[idStr] = sala;
-    }
-
-    if (Object.keys(salasInjetadas).length === 0) {
-        throw new Error("[Ramos] Nenhuma sala válida no JSON gerado.");
-    }
-
-    if (!mapaMundo) mapaMundo = {};
-    Object.assign(mapaMundo, salasInjetadas);
-    window.mapaMundo = mapaMundo;
-
-    console.log(`[Ramos] ✅ Ramo ${ramoN} gerado: "${parsed.nome_ramo}" — ${Object.keys(salasInjetadas).length} salas (${idInicio}–${idFim}). Fronteira → Zona ${novaZonaNum} (sala ${primeiraSalaNovaZona}).`);
-
-    return idInicio;
-}
-
+    
         // ============================================================
         // PUZZLES & GERAÇÃO PROCEDURAL
         // ============================================================
