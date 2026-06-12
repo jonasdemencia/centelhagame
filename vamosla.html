@@ -1914,7 +1914,7 @@ async function injetarPuzzles(planoZonal, zonaId) {
     const salasBloqueadas = candidatos.filter(id => planoZonal[String(id)]?.bloqueio?.ativo);
     const naoBloquedas    = candidatos.filter(id => !planoZonal[String(id)]?.bloqueio?.ativo);
 
-    const numPuzzles = Math.min(naoBloquedas.length, Math.random() < 0.5 ? 1 : 2);
+    const numPuzzles = Math.min(naoBloquedas.length, Math.random() < 0.2 ? 2 : 1);
     const escolhidas = naoBloquedas.sort(() => Math.random() - 0.5).slice(0, numPuzzles);
 
     const puzzles = await Promise.all(
@@ -2743,7 +2743,7 @@ mapaFinalMesclado[puzzleIdStr] = {
                 // --- FIM DO AJUSTE: ARQUITETO DE PERIGOS ---
 
                 // --- INÍCIO DO AJUSTE: ARQUITETO DE RAMOS (Gatilhos) ---
-                if (Math.random() < 0.70) {
+                if (Math.random() < 1.0) {   // 100% de chance, antes era 70%
                     const idMsgRamo = adicionarMensagem("🌿 O Arquiteto de Ramos está semeando escolhas...", "system", true);
                     try {
                         await gerarGatilhosDeRamo(mapaFinalMesclado, infoZona);
