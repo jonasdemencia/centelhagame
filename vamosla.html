@@ -2119,8 +2119,8 @@ ${resumoPlano}
    - Inicie a primeira frase exatamente com a âncora fornecida.
    - NÃO descreva o ponto de entrada como parte do cenário visual atual. Direcione toda a descrição para a frente, preparando as opções futuras listadas.
 2. PREPARAÇÃO PROSPECTIVA (REGRA ABSOLUTA — FALHA CRÍTICA SE VIOLADA): Cada sala tem uma lista de ⚠️ ELEMENTOS FÍSICOS OBRIGATÓRIOS. Esses substantivos foram extraídos diretamente das ações disponíveis. O texto DEVE descrever cada um desses elementos de forma visualmente concreta — o jogador precisa VÊ-LOS antes de poder escolher a ação correspondente. Se o elemento não aparecer no texto, a ação é um "botão fantasma" e o jogo quebra a imersão. Exemplo: se a ação é "Rastejar pelo túnel baixo", o texto deve descrever "um túnel baixo" visível no ambiente.
-3. ESTILO: Apenas matéria sensorial – visão, som, cheiro. PROÍBIDO mencionar "história", "segredo", "destino" ou julgar o ambiente.
-4. DENSIDADE AMBIENTAL OBRIGATÓRIA: além dos caminhos preparados na Regra 2, posicione 1 ou 2 objetos físicos independentes em cada sala (mobiliário, ferramentas, artefatos, itens pessoais, detritos, etc.). Descreva‑os brevemente com um traço sensorial (textura, cheiro, estado de conservação) e assegure‑se de que sejam coerentes com o tema e o tom da zona. Não repita o mesmo objeto ou a mesma descrição em salas consecutivas
+3. IN MEDIA RES (O Incidente Vivo): A sala não é uma fotografia estática. Descreva um evento visceral ou imprevisível que está acontecendo no momento em que o jogador entra. Pode ser a ação de uma entidade ignorando o jogador, uma física corrompida, um processo biológico nojento ou uma máquina em colapso. O ambiente está em movimento ativo.
+4. O PONTO DE PRESSÃO (O Dilema): O incidente da Regra 3 não é apenas cenário; ele exige atenção. Ele deve gerar um dilema de intervenção: um risco iminente, uma oportunidade que vai sumir rápido, ou algo que instigue o jogador a interferir na cena ao invés de apenas cruzar a sala.
 5. CEGUEIRA DE INTERFACE (REGRA ABSOLUTA): NUNCA escreva frases informativas como "Você pode escolher entre X ou Y" ou "Você tem a opção de...". NUNCA liste rotas. Apenas descreva a existência orgânica e visual dos elementos no ambiente.
 
 [SEGREDO LOCAL DA ZONA]
@@ -2128,11 +2128,19 @@ ${infoZona.segredo_local || "Há algo oculto que destoa do ambiente."}
 IMPORTANTE: Esta zona tem 10 salas. Você DEVE incluir uma referência VISÍVEL ao segredo local em pelo menos 2 dessas salas.
 
 [ESTRUTURA DO JSON]
-Retorne APENAS o JSON abaixo. NÃO gere arrays de opções ou destinos, apenas o texto bruto.
+Retorne APENAS o JSON abaixo. 
 {
   "salas": {
     "1": {
-      "texto_logico": "Texto denso e descritivo que ancora a chegada e descreve os caminhos disponíveis..."
+      "texto_logico": "Texto denso e descritivo narrando a cena em andamento e ancorando a chegada...",
+      "opcoes_dilema": [
+        {
+          "texto": "Ação intervencionista no evento (Ex: Tentar interromper a máquina / Atacar o NPC)",
+          "consequencia": "O que acontece logo em seguida se o jogador tentar isso (narração curta e visceral de 2 frases, focada na destruição ou glória).",
+          "dano": 15,
+          "tipo_resultado": "perigo"
+        }
+      ]
     },
     "2": { ... },
     "3": { ... }
@@ -2358,6 +2366,21 @@ const historicoItensZona = [];
                         texto: saida.acao,
                         destino: saida.destino
                     }));
+
+                    // --- INJEÇÃO DO DILEMA NA SALA ---
+                    if (zonaData.salas[idSala]?.opcoes_dilema) {
+                        zonaData.salas[idSala].opcoes_dilema.forEach(dilema => {
+                            opcoesGeradas.push({
+                                texto: dilema.texto || "Examinar a anomalia",
+                                arquiteto: true, // Aproveita a sua engrenagem de evento estático sem destino
+                                resultado_texto: dilema.consequencia || "Você age impulsivamente e a cena reage à sua presença.",
+                                dano: typeof dilema.dano === 'number' ? dilema.dano : 0,
+                                tipo_resultado: dilema.tipo_resultado || "perigo",
+                                disparado: false
+                            });
+                        });
+                    }
+                    // ---------------------------------
 
 
     const itensNaSala = distribuirItens(prosa, dadosEstruturais.local_fisico, idSala, semente, historicoItensZona);
