@@ -2119,8 +2119,8 @@ ${resumoPlano}
    - Inicie a primeira frase exatamente com a âncora fornecida.
    - NÃO descreva o ponto de entrada como parte do cenário visual atual. Direcione toda a descrição para a frente, preparando as opções futuras listadas.
 2. PREPARAÇÃO PROSPECTIVA (REGRA ABSOLUTA — FALHA CRÍTICA SE VIOLADA): Cada sala tem uma lista de ⚠️ ELEMENTOS FÍSICOS OBRIGATÓRIOS. Esses substantivos foram extraídos diretamente das ações disponíveis. O texto DEVE descrever cada um desses elementos de forma visualmente concreta — o jogador precisa VÊ-LOS antes de poder escolher a ação correspondente. Se o elemento não aparecer no texto, a ação é um "botão fantasma" e o jogo quebra a imersão. Exemplo: se a ação é "Rastejar pelo túnel baixo", o texto deve descrever "um túnel baixo" visível no ambiente.
-3. IN MEDIA RES (O Incidente Vivo): A sala não é uma fotografia estática. Descreva um evento visceral ou imprevisível que está acontecendo no momento em que o jogador entra. Pode ser a ação de uma entidade ignorando o jogador, uma física corrompida, um processo biológico nojento ou uma máquina em colapso. O ambiente está em movimento ativo.
-4. O PONTO DE PRESSÃO (O Dilema): O incidente da Regra 3 não é apenas cenário; ele exige atenção. Ele deve gerar um dilema de intervenção: um risco iminente, uma oportunidade que vai sumir rápido, ou algo que instigue o jogador a interferir na cena ao invés de apenas cruzar a sala.
+3. IN MEDIA RES (REGRA ABSOLUTA — FALHA CRÍTICA SE VIOLADA): A sala não é uma fotografia estática. Descreva um evento visceral ou imprevisível que está acontecendo no momento em que o jogador entra. Pode ser a ação de uma entidade ignorando o jogador, uma física corrompida, um processo biológico nojento ou uma máquina em colapso. O ambiente está em movimento ativo. Sala sem evento ativo em andamento = JSON INVÁLIDO, será rejeitado.
+4. O PONTO DE PRESSÃO (REGRA ABSOLUTA — FALHA CRÍTICA SE VIOLADA): O incidente da Regra 3 DEVE gerar ao menos 1 entrada em "opcoes_dilema". Dilema obrigatório: um risco iminente, uma oportunidade que vai sumir rápido, ou algo que instigue o jogador a interferir na cena. Sala com "opcoes_dilema" vazio ou ausente = JSON INVÁLIDO, será rejeitado.
 5. CEGUEIRA DE INTERFACE (REGRA ABSOLUTA): NUNCA escreva frases informativas como "Você pode escolher entre X ou Y" ou "Você tem a opção de...". NUNCA liste rotas. Apenas descreva a existência orgânica e visual dos elementos no ambiente.
 
 [SEGREDO LOCAL DA ZONA]
@@ -2128,22 +2128,36 @@ ${infoZona.segredo_local || "Há algo oculto que destoa do ambiente."}
 IMPORTANTE: Esta zona tem 10 salas. Você DEVE incluir uma referência VISÍVEL ao segredo local em pelo menos 2 dessas salas.
 
 [ESTRUTURA DO JSON]
+⚠️ OBRIGATÓRIO: CADA SALA deve ter "opcoes_dilema" com ao menos 1 entrada. "opcoes_dilema": [] = FALHA CRÍTICA.
 Retorne APENAS o JSON abaixo. 
 {
   "salas": {
     "1": {
-      "texto_logico": "Texto denso e descritivo narrando a cena em andamento e ancorando a chegada...",
+      "texto_logico": "Texto denso descrevendo o evento ativo que está acontecendo agora, ancorando a chegada...",
       "opcoes_dilema": [
         {
           "texto": "Ação intervencionista no evento (Ex: Tentar interromper a máquina / Atacar o NPC)",
-          "consequencia": "O que acontece logo em seguida se o jogador tentar isso (narração curta e visceral de 2 frases, focada na destruição ou glória).",
+          "consequencia": "Narração curta e visceral de 2 frases do que acontece imediatamente.",
           "dano": 15,
           "tipo_resultado": "perigo"
         }
       ]
     },
-    "2": { ... },
-    "3": { ... }
+    "2": {
+      "texto_logico": "...",
+      "opcoes_dilema": [
+        {
+          "texto": "...",
+          "consequencia": "...",
+          "dano": 10,
+          "tipo_resultado": "perigo"
+        }
+      ]
+    },
+    "3": {
+      "texto_logico": "...",
+      "opcoes_dilema": [{ "texto": "...", "consequencia": "...", "dano": 12, "tipo_resultado": "perigo" }]
+    }
   },
   "ganchos_para_proxima_zona": {
     "salas_fronteira": [],
@@ -2274,6 +2288,27 @@ for (let b = 0; b < Math.min(numBloqueios, idsCandidatosBloqueio.length); b++) {
                 );
 
                 let zonaData = JSON.parse(dataSalas.choices[0].message.content);
+
+// ── VALIDADOR: Regras 3 e 4 (IN MEDIA RES + PONTO DE PRESSÃO) ──────────────
+{
+    const salasSemDilema = Object.entries(zonaData.salas || {})
+        .filter(([id, s]) => !s.opcoes_dilema || s.opcoes_dilema.length === 0)
+        .map(([id]) => id);
+    if (salasSemDilema.length > 0) {
+        console.warn(`[Narrador] ⚠️ Regras 3/4 ignoradas em ${salasSemDilema.length} sala(s): [${salasSemDilema.join(', ')}] — injetando dilema de emergência.`);
+        salasSemDilema.forEach(id => {
+            if (zonaData.salas[id]) {
+                zonaData.salas[id].opcoes_dilema = [{
+                    texto: "Investigar o que está acontecendo aqui",
+                    consequencia: "A interferência provoca uma reação violenta. O ambiente responde à sua presença com hostilidade imprevisível.",
+                    dano: 12,
+                    tipo_resultado: "perigo"
+                }];
+            }
+        });
+    }
+}
+// ── FIM VALIDADOR ───────────────────────────────────────────────────────────
 
 Object.entries(planoData.plano).forEach(([id, dp]) => {
     if (dp.bloqueio && zonaData.salas[id]) {
