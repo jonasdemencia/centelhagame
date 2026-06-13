@@ -2118,47 +2118,24 @@ ${resumoPlano}
 1. ÂNCORA DE CHEGADA (REGRA ABSOLUTA):
    - Inicie a primeira frase exatamente com a âncora fornecida.
    - NÃO descreva o ponto de entrada como parte do cenário visual atual. Direcione toda a descrição para a frente, preparando as opções futuras listadas.
-2. PREPARAÇÃO PROSPECTIVA (REGRA ABSOLUTA — FALHA CRÍTICA SE VIOLADA): Cada sala tem uma lista de ⚠️ ELEMENTOS FÍSICOS OBRIGATÓRIOS. Esses substantivos foram extraídos diretamente das ações disponíveis. O texto DEVE descrever cada um desses elementos de forma visualmente concreta.
-3. CRIAÇÃO PURA DE EVENTOS (TAXA DE INCIDÊNCIA: 3 a 4 SALAS): Você TEM TOTAL LIBERDADE CRIATIVA para inventar cenas anômalas, acidentes de percurso, atrocidades fisiológicas ou terrores físicos. Nenhuma lista fixa, nenhum eixo engessado. OBRIGATÓRIO: Você DEVE escolher entre 3 a 4 salas desta zona para conter um evento ativo (IN MEDIA RES). O evento deve estar integrado na descrição visual desde a primeira linha (não use "De repente..."). Nas demais salas, deixe "opcoes_dilema" completamente ausente.
-4. O PONTO DE PRESSÃO (O DILEMA): Nas salas escolhidas para ter evento ativo, você criará a matriz "opcoes_dilema".
-   ❌ PROIBIDO: Opções covardes ou genéricas como "Investigar o que está acontecendo", "Checar a anomalia" ou ações que sejam re-nomeações da navegação.
-   ✅ OBRIGATÓRIO: A ação tem que ser intervencionista, criativa e visceral (Ex: "Arrancar o cabo antes que a caldeira transborde", "Esmagar a mão que tenta sair do ralo", "Desviar do maquinário em colapso").
-   ✅ OBRIGATÓRIO: A "consequencia" é declarativa e concreta: o resultado ACONTECE fisicamente na hora, mostre a destruição ou a fuga.
-5. CEGUEIRA DE INTERFACE (REGRA ABSOLUTA): NUNCA escreva frases informativas como "Você pode escolher entre X ou Y".
+2. PREPARAÇÃO PROSPECTIVA (REGRA ABSOLUTA — FALHA CRÍTICA SE VIOLADA): Cada sala tem uma lista de ⚠️ ELEMENTOS FÍSICOS OBRIGATÓRIOS. Esses substantivos foram extraídos diretamente das ações disponíveis. O texto DEVE descrever cada um desses elementos de forma visualmente concreta — o jogador precisa VÊ-LOS antes de poder escolher a ação correspondente. Se o elemento não aparecer no texto, a ação é um "botão fantasma" e o jogo quebra a imersão. Exemplo: se a ação é "Rastejar pelo túnel baixo", o texto deve descrever "um túnel baixo" visível no ambiente.
+3. ESTILO: Apenas matéria sensorial – visão, som, cheiro. PROÍBIDO mencionar "história", "segredo", "destino" ou julgar o ambiente.
+4. DENSIDADE AMBIENTAL OBRIGATÓRIA: além dos caminhos preparados na Regra 2, posicione 1 ou 2 objetos físicos independentes em cada sala (mobiliário, ferramentas, artefatos, itens pessoais, detritos, etc.). Descreva‑os brevemente com um traço sensorial (textura, cheiro, estado de conservação) e assegure‑se de que sejam coerentes com o tema e o tom da zona. Não repita o mesmo objeto ou a mesma descrição em salas consecutivas
+5. CEGUEIRA DE INTERFACE (REGRA ABSOLUTA): NUNCA escreva frases informativas como "Você pode escolher entre X ou Y" ou "Você tem a opção de...". NUNCA liste rotas. Apenas descreva a existência orgânica e visual dos elementos no ambiente.
 
 [SEGREDO LOCAL DA ZONA]
 ${infoZona.segredo_local || "Há algo oculto que destoa do ambiente."}
 IMPORTANTE: Esta zona tem 10 salas. Você DEVE incluir uma referência VISÍVEL ao segredo local em pelo menos 2 dessas salas.
 
 [ESTRUTURA DO JSON]
-Retorne APENAS o JSON abaixo. Lembre-se: apenas 3 a 4 salas terão "opcoes_dilema". As demais omitem esse campo completamente.
+Retorne APENAS o JSON abaixo. NÃO gere arrays de opções ou destinos, apenas o texto bruto.
 {
   "salas": {
     "1": {
-      "texto_logico": "Âncora obrigatória + descrição do ambiente onde o evento JÁ ESTÁ ACONTECENDO desde a primeira linha (não use 'De repente' no final).",
-      "opcoes_dilema": [
-        {
-          "texto": "Esmagar a estrutura pulsante contra o chão antes que ela termine de abrir",
-          "consequencia": "A carcaça cede com um estalo úmido, jorrando um fluido espesso e corrosivo que queima parte do seu traje e da sua pele.",
-          "dano": 8,
-          "tipo_resultado": "perigo"
-        }
-      ]
+      "texto_logico": "Texto denso e descritivo que ancora a chegada e descreve os caminhos disponíveis..."
     },
-    "2": {
-      "texto_logico": "Sala vazia de eventos anômalos — apenas descrição ambiental com âncora e elementos físicos obrigatórios das saídas."
-    },
-    "3": {
-      "texto_logico": "...",
-      "opcoes_dilema": [
-        { 
-          "texto": "Ação puramente visceral e intervencionista (NUNCA usar 'investigar' ou 'examinar')", 
-          "consequencia": "Consequência física imediata e definitiva (sem 'talvez' ou 'pode').", 
-          "dano": 12, 
-          "tipo_resultado": "perigo" 
-        }
-      ]
-    }
+    "2": { ... },
+    "3": { ... }
   },
   "ganchos_para_proxima_zona": {
     "salas_fronteira": [],
@@ -2283,17 +2260,12 @@ for (let b = 0; b < Math.min(numBloqueios, idsCandidatosBloqueio.length); b++) {
                 if (msgEl) msgEl.innerText = `⚙️ Escrevendo Zona ${numeroZona} — "${infoZona.nome}" (${SALAS_POR_ZONA} salas)...`;
 
                 const dataSalas = await chamarGroq(
-                    [
-                        { role: "system", content: "Você é um narrador de horror visceral e preciso. Retorne APENAS JSON válido. Regra absoluta: MOSTRE, NÃO CONTE. Proibido qualquer linguagem condicional ('pode encontrar', 'talvez', 'pode ser', 'pode acontecer'). Quando descrever a consequência de uma ação: o evento ACONTECE com concretude física. Nunca especule." },
-                        { role: "user", content: promptSalas(planoData.plano, planoData.conexoes_narrativas || []) }
-                    ],
+                    [{ role: "user", content: promptSalas(planoData.plano, planoData.conexoes_narrativas || []) }],
                     0.85,
                     { type: "json_object" }
                 );
 
                 let zonaData = JSON.parse(dataSalas.choices[0].message.content);
-
-
 
 Object.entries(planoData.plano).forEach(([id, dp]) => {
     if (dp.bloqueio && zonaData.salas[id]) {
@@ -2386,21 +2358,6 @@ const historicoItensZona = [];
                         texto: saida.acao,
                         destino: saida.destino
                     }));
-
-                    // --- INJEÇÃO DO DILEMA NA SALA ---
-                    if (zonaData.salas[idSala]?.opcoes_dilema) {
-                        zonaData.salas[idSala].opcoes_dilema.forEach(dilema => {
-                            opcoesGeradas.push({
-                                texto: dilema.texto || "Examinar a anomalia",
-                                arquiteto: true, // Aproveita a sua engrenagem de evento estático sem destino
-                                resultado_texto: dilema.consequencia || "Você age impulsivamente e a cena reage à sua presença.",
-                                dano: typeof dilema.dano === 'number' ? dilema.dano : 0,
-                                tipo_resultado: dilema.tipo_resultado || "perigo",
-                                disparado: false
-                            });
-                        });
-                    }
-                    // ---------------------------------
 
 
     const itensNaSala = distribuirItens(prosa, dadosEstruturais.local_fisico, idSala, semente, historicoItensZona);
