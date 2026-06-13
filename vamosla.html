@@ -2119,8 +2119,12 @@ ${resumoPlano}
    - Inicie a primeira frase exatamente com a âncora fornecida.
    - NÃO descreva o ponto de entrada como parte do cenário visual atual. Direcione toda a descrição para a frente, preparando as opções futuras listadas.
 2. PREPARAÇÃO PROSPECTIVA (REGRA ABSOLUTA — FALHA CRÍTICA SE VIOLADA): Cada sala tem uma lista de ⚠️ ELEMENTOS FÍSICOS OBRIGATÓRIOS. Esses substantivos foram extraídos diretamente das ações disponíveis. O texto DEVE descrever cada um desses elementos de forma visualmente concreta — o jogador precisa VÊ-LOS antes de poder escolher a ação correspondente. Se o elemento não aparecer no texto, a ação é um "botão fantasma" e o jogo quebra a imersão. Exemplo: se a ação é "Rastejar pelo túnel baixo", o texto deve descrever "um túnel baixo" visível no ambiente.
-3. IN MEDIA RES (REGRA ABSOLUTA — FALHA CRÍTICA SE VIOLADA): A sala não é uma fotografia estática. Descreva um evento visceral ou imprevisível que está acontecendo no momento em que o jogador entra. Pode ser a ação de uma entidade ignorando o jogador, uma física corrompida, um processo biológico nojento ou uma máquina em colapso. O ambiente está em movimento ativo. Sala sem evento ativo em andamento = JSON INVÁLIDO, será rejeitado.
-4. O PONTO DE PRESSÃO (REGRA ABSOLUTA — FALHA CRÍTICA SE VIOLADA): O incidente da Regra 3 DEVE gerar ao menos 1 entrada em "opcoes_dilema". Dilema obrigatório: um risco iminente, uma oportunidade que vai sumir rápido, ou algo que instigue o jogador a interferir na cena. Sala com "opcoes_dilema" vazio ou ausente = JSON INVÁLIDO, será rejeitado.
+3. IN MEDIA RES (Opcional — só quando genuíno): Algumas salas podem ter um evento ativo em andamento. Se criar um, ele DEVE estar integrado no corpo da descrição desde o início — não use "De repente..." no final para colar o evento numa fotografia estática. O jogador entra numa cena que já está acontecendo. Se não houver evento visceral genuíno para a sala, NÃO crie um — deixe opcoes_dilema ausente. Salas sem evento ativo são válidas.
+4. O PONTO DE PRESSÃO — PADRÃO DE QUALIDADE (Apenas quando há Regra 3):
+   ❌ PROIBIDO — "Pode encontrar X, mas também pode Y." — Nunca. Linguagem condicional = falha crítica.
+   ❌ PROIBIDO — Opções em opcoes_dilema que sejam re-nomeações das opções de navegação já existentes (ex: se já existe "Subir a escada", proibido criar dilema "Subir a escada para investigar"). O dilema deve ser uma ação NOVA e EXCLUSIVA ao evento.
+   ✅ OBRIGATÓRIO — A ação em "texto" deve ser intervencionista e só existir por causa do evento ativo (Ex: "Puxar o paciente para fora das ruínas" / "Arrancar o tubo antes que o tanque transborde").
+   ✅ OBRIGATÓRIO — A "consequencia" é declarativa e concreta: o evento ACONTECE em 2-3 frases. Descreva o resultado físico ou sensorial. Mostre, não conte.
 5. CEGUEIRA DE INTERFACE (REGRA ABSOLUTA): NUNCA escreva frases informativas como "Você pode escolher entre X ou Y" ou "Você tem a opção de...". NUNCA liste rotas. Apenas descreva a existência orgânica e visual dos elementos no ambiente.
 
 [SEGREDO LOCAL DA ZONA]
@@ -2128,35 +2132,28 @@ ${infoZona.segredo_local || "Há algo oculto que destoa do ambiente."}
 IMPORTANTE: Esta zona tem 10 salas. Você DEVE incluir uma referência VISÍVEL ao segredo local em pelo menos 2 dessas salas.
 
 [ESTRUTURA DO JSON]
-⚠️ OBRIGATÓRIO: CADA SALA deve ter "opcoes_dilema" com ao menos 1 entrada. "opcoes_dilema": [] = FALHA CRÍTICA.
-Retorne APENAS o JSON abaixo. 
+Retorne APENAS o JSON abaixo. Salas sem evento ativo omitem "opcoes_dilema" completamente.
 {
   "salas": {
     "1": {
-      "texto_logico": "Texto denso descrevendo o evento ativo que está acontecendo agora, ancorando a chegada...",
+      "texto_logico": "Âncora obrigatória + descrição do ambiente onde o evento JÁ ESTÁ ACONTECENDO desde a primeira linha (não use 'De repente' no final).",
       "opcoes_dilema": [
         {
-          "texto": "Ação intervencionista no evento (Ex: Tentar interromper a máquina / Atacar o NPC)",
-          "consequencia": "Narração curta e visceral de 2 frases do que acontece imediatamente.",
-          "dano": 15,
+          "texto": "Ação exclusiva ao evento — NÃO pode ser re-label de opção de navegação já existente (Ex: 'Puxar o paciente para fora das ruínas' / 'Gritar em direção à criatura' / 'Arrancar o tubo antes que transborde')",
+          "consequencia": "2-3 frases declarativas e físicas. O resultado ACONTECE. ❌NUNCA: 'Pode encontrar X, mas também pode Y.' ✅SEMPRE: 'O tubo cede com um estouro molhado. O líquido inunda o chão em segundos. A criatura para de se mover.'",
+          "dano": 0,
           "tipo_resultado": "perigo"
         }
       ]
     },
     "2": {
-      "texto_logico": "...",
-      "opcoes_dilema": [
-        {
-          "texto": "...",
-          "consequencia": "...",
-          "dano": 10,
-          "tipo_resultado": "perigo"
-        }
-      ]
+      "texto_logico": "Sala sem evento ativo — apenas descrição ambiental com âncora e elementos obrigatórios."
     },
     "3": {
       "texto_logico": "...",
-      "opcoes_dilema": [{ "texto": "...", "consequencia": "...", "dano": 12, "tipo_resultado": "perigo" }]
+      "opcoes_dilema": [
+        { "texto": "...", "consequencia": "...", "dano": 12, "tipo_resultado": "perigo" }
+      ]
     }
   },
   "ganchos_para_proxima_zona": {
@@ -2282,7 +2279,10 @@ for (let b = 0; b < Math.min(numBloqueios, idsCandidatosBloqueio.length); b++) {
                 if (msgEl) msgEl.innerText = `⚙️ Escrevendo Zona ${numeroZona} — "${infoZona.nome}" (${SALAS_POR_ZONA} salas)...`;
 
                 const dataSalas = await chamarGroq(
-                    [{ role: "user", content: promptSalas(planoData.plano, planoData.conexoes_narrativas || []) }],
+                    [
+                        { role: "system", content: "Você é um narrador de horror visceral e preciso. Retorne APENAS JSON válido. Regra absoluta: MOSTRE, NÃO CONTE. Proibido qualquer linguagem condicional ('pode encontrar', 'talvez', 'pode ser', 'pode acontecer'). Quando descrever a consequência de uma ação: o evento ACONTECE com concretude física. Nunca especule." },
+                        { role: "user", content: promptSalas(planoData.plano, planoData.conexoes_narrativas || []) }
+                    ],
                     0.85,
                     { type: "json_object" }
                 );
