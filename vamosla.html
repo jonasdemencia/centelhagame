@@ -1510,7 +1510,7 @@ MISSÃO: Para cada sala acima, crie UM evento situacional que o jogador encontra
 Estrutura obrigatória de cada cena:
 • TÍTULO: Curto e evocativo (ex: "A Briga dos Goblins", "O Paciente que se Levanta")
 • DESCRIÇÃO DO EVENTO: 3-5 frases em 2ª pessoa. O que o jogador vê, ouve e cheira ao entrar. Use o ambiente já descrito na sala.
-• DILEMAS: 2 a 3 opções mutuamente exclusivas de ação.
+• DILEMAS: 2 opções mutuamente exclusivas de ação.
   – Ao menos UMA opção com dano 0 (recuar, observar, esquivar, fingir).
   – Dano máximo: 8. Nunca escreva "perde energia" ou "perde X" na narrativa.
   – resultado_texto: 2-4 frases viscerais e consequentes.
@@ -1583,8 +1583,8 @@ Retorne APENAS JSON neste formato exato (zero markdown, zero texto fora do JSON)
                 const descricao = (cena.descricao_evento || '').trim();
                 if (!descricao) return;
 
-                // Injeta o evento no início do texto da sala
-                sala.texto_logico = `${descricao}\n\n${sala.texto_logico || ''}`;
+                // Injeta o evento no final do texto da sala
+                sala.texto_logico = `${sala.texto_logico || ''}\n\n${descricao}`;
                 sala.cena_titulo  = titulo;
                 sala.cena_aplicada = true;
 
