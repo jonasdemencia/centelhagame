@@ -144,6 +144,38 @@
     }
     .nav-btn:hover:not(:disabled) { background: #ccc; color: #000; border-color: #fff; }
 
+    /* ── Dilemas (Arquiteto de Cenas) ── */
+    .nav-btn--dilema {
+        color: #c8a456;
+        border-color: #4a3010;
+        background: #0c0905;
+        letter-spacing: 0.05em;
+    }
+    .nav-btn--dilema:hover:not(:disabled) {
+        background: #c8a456;
+        color: #000;
+        border-color: #c8a456;
+    }
+    .dilema-separator {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 10px 0 4px 0;
+        font-size: 0.72em;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: #4a3010;
+        pointer-events: none;
+        user-select: none;
+    }
+    .dilema-separator::before,
+    .dilema-separator::after {
+        content: '';
+        flex: 1;
+        border-top: 1px solid #2a1a04;
+    }
+    .dilema-separator span { color: #7a5020; }
+
     /* =========================================
        ESTILOS DO CHAT (mensagens)
        ========================================= */
@@ -539,6 +571,7 @@ window.dispatchEvent(new Event('firebase-initialized'));
         const MODELO_PUZZLE = "openai/gpt-oss-120b";
         const MODELO_IND = "qwen/qwen3-32b"; // Modelo responsável pelas cinematics
         const MODELO_ARQUITETO = "llama-3.3-70b-versatile"; // Arquiteto de Perigos
+        const MODELO_CENAS = "qwen/qwen3-32b"; // Arquiteto de Cenas e Dilemas
 
         let mapaMundo = null;
         let secaoAtualId = "1";
@@ -1423,6 +1456,168 @@ Retorne APENAS o JSON rigorosamente neste formato:
         }
     });
 }
+
+        // ============================================================
+        // ARQUITETO DE CENAS E DILEMAS
+        // ============================================================
+
+        async function gerarArquitetoDeCenas(mapaFinalMesclado, infoZona, salaFim) {
+            // Seleciona 2-3 salas elegíveis:
+            // • id < 10000  (não puzzle)
+            // • id !== salaFim  (não fronteira)
+            // • sem ind_disponivel  (sem IND)
+            // • sem puzzle_status
+            // • tem opcoes
+            const idsElegiveis = Object.keys(mapaFinalMesclado)
+                .map(Number)
+                .filter(id => {
+                    const sala = mapaFinalMesclado[String(id)];
+                    return id < 10000
+                        && id !== salaFim
+                        && !sala.ind_disponivel
+                        && !sala.puzzle_status
+                        && Array.isArray(sala.opcoes)
+                        && sala.opcoes.length > 0;
+                })
+                .sort(() => Math.random() - 0.5)
+                .slice(0, 3);
+
+            if (idsElegiveis.length === 0) return;
+
+            const contextSalas = idsElegiveis.map(id => {
+                const sala = mapaFinalMesclado[String(id)];
+                const descTruncada = (sala.texto_logico || '').replace(/\n/g, ' ').substring(0, 300);
+                return `SALA_ID:${id} — "${sala.nome}"\nDescrição: ${descTruncada}...`;
+            }).join('\n\n');
+
+            const semente = Math.random().toString(36).substring(2, 8);
+            const teseDoMundo = dnaGlobal?.tese_fundacional || dnaGlobal?.misterio_central || '';
+
+            const prompt = `[SEMENTE:${semente}]
+/no_think
+Você é o Arquiteto de Cenas de um RPG de survival horror textual brasileiro.
+
+MUNDO: "${infoZona.nome}"
+TESE: "${teseDoMundo}"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SALAS SELECIONADAS:
+${contextSalas}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+MISSÃO: Para cada sala acima, crie UM evento situacional que o jogador encontra ao entrar.
+
+Estrutura obrigatória de cada cena:
+• TÍTULO: Curto e evocativo (ex: "A Briga dos Goblins", "O Paciente que se Levanta")
+• DESCRIÇÃO DO EVENTO: 3-5 frases em 2ª pessoa. O que o jogador vê, ouve e cheira ao entrar. Use o ambiente já descrito na sala.
+• DILEMAS: 2 a 3 opções mutuamente exclusivas de ação.
+  – Ao menos UMA opção com dano 0 (recuar, observar, esquivar, fingir).
+  – Dano máximo: 8. Nunca escreva "perde energia" ou "perde X" na narrativa.
+  – resultado_texto: 2-4 frases viscerais e consequentes.
+
+🔥 REGRAS INVIOLÁVEIS:
+1. O evento emerge do ambiente da própria sala. Não invente criaturas que não caibam naquele espaço.
+2. Mostre, não diga: odores, texturas, sons, fluidos. Proibido "assustador", "horrível" diretamente.
+3. Prefira dilemas de situação/julgamento. Violência é permitida, mas não é obrigatória.
+4. Língua: português brasileiro. Tom seco, preciso, sem floreios.
+
+Retorne APENAS JSON neste formato exato (zero markdown, zero texto fora do JSON):
+{
+  "cenas": [
+    {
+      "sala_id": "ID_NUMÉRICO",
+      "titulo": "Título do Evento",
+      "descricao_evento": "3-5 frases descrevendo o que o jogador encontra.",
+      "dilemas": [
+        {
+          "opcao_texto": "Ação breve do jogador",
+          "resultado_texto": "2-4 frases narrando a consequência.",
+          "dano": 0
+        }
+      ]
+    }
+  ]
+}`;
+
+            const systemPrompt = 'Você é o Arquiteto de Cenas de um RPG de horror. Retorne APENAS JSON válido. Zero markdown. O campo "dano" deve ser um integer entre 0 e 8.';
+
+            let data;
+            try {
+                data = await chamarGroq([
+                    { role: 'system', content: systemPrompt },
+                    { role: 'user', content: prompt }
+                ], 0.85, { type: 'json_object' }, MODELO_CENAS, 3);
+            } catch (e) {
+                console.error('[Cenas] Falha na chamada Groq:', e);
+                return;
+            }
+
+            let parsed;
+            try {
+                const raw = data.choices[0].message.content;
+                const match = raw.match(/{[\s\S]*}/);
+                parsed = JSON.parse(match ? match[0] : raw);
+            } catch (e) {
+                console.error('[Cenas] Falha no parse JSON:', e);
+                return;
+            }
+
+            const cenas = parsed.cenas || [];
+            console.log(`[Cenas] ✅ ${cenas.length} cenas geradas para zona "${infoZona.nome}".`, cenas);
+            aplicarArquitetoDeCenas(cenas, mapaFinalMesclado, idsElegiveis);
+        }
+
+        function aplicarArquitetoDeCenas(cenas, mapaFinalMesclado, idsValidos) {
+            const idsValidosSet = new Set(idsValidos.map(String));
+
+            cenas.forEach(cena => {
+                const salaId = String(cena.sala_id);
+                const sala = mapaFinalMesclado[salaId];
+
+                if (!sala || !idsValidosSet.has(salaId)) {
+                    console.warn(`[Cenas] Sala ${salaId} fora do escopo. Ignorando.`);
+                    return;
+                }
+
+                const titulo    = (cena.titulo || 'Evento Inesperado').trim();
+                const descricao = (cena.descricao_evento || '').trim();
+                if (!descricao) return;
+
+                // Injeta o evento no início do texto da sala
+                sala.texto_logico = `${descricao}\n\n${sala.texto_logico || ''}`;
+                sala.cena_titulo  = titulo;
+                sala.cena_aplicada = true;
+
+                // Adiciona as opções de dilema à sala
+                if (!sala.opcoes) sala.opcoes = [];
+                const dilemas = Array.isArray(cena.dilemas) ? cena.dilemas : [];
+
+                dilemas.forEach(dilema => {
+                    const opcaoTexto     = (dilema.opcao_texto   || 'Observar com cautela').trim();
+                    const narrativaBruta = (dilema.resultado_texto || '').trim();
+                    if (!narrativaBruta) return;
+
+                    const dano = typeof dilema.dano === 'number'
+                        ? Math.min(8, Math.max(0, Math.round(dilema.dano)))
+                        : 0;
+
+                    const resultadoTexto = dano > 0
+                        ? `${narrativaBruta.replace(/[.\s]+$/, '')}. Você perde ${dano} de energia.`
+                        : narrativaBruta;
+
+                    sala.opcoes.push({
+                        texto:          opcaoTexto,
+                        arquiteto:      true,
+                        dilema:         true,
+                        resultado_texto: resultadoTexto,
+                        dano,
+                        disparado:      false
+                    });
+                });
+
+                console.log(`[Cenas] ✅ "${titulo}" → Sala ${salaId} | ${dilemas.length} dilemas injetados`);
+            });
+        }
 
         // ============================================================
         // PUZZLES & GERAÇÃO PROCEDURAL
@@ -2422,6 +2617,18 @@ mapaFinalMesclado[puzzleIdStr] = {
                 }
                 // --- FIM DO AJUSTE: ARQUITETO DE PERIGOS ---
 
+                // --- INÍCIO DO AJUSTE: ARQUITETO DE CENAS ---
+                {
+                    const idMsgCenas = adicionarMensagem("🎭 O Arquiteto de Cenas está preparando os dilemas...", "system", true);
+                    try {
+                        await gerarArquitetoDeCenas(mapaFinalMesclado, infoZona, salaFim);
+                    } catch(e) {
+                        console.error("[Cenas] Falhou silenciosamente:", e);
+                    }
+                    document.getElementById(idMsgCenas)?.remove();
+                }
+                // --- FIM DO AJUSTE: ARQUITETO DE CENAS ---
+
                 zonaData.salas = mapaFinalMesclado;
 
                 if (!mapaMundo) mapaMundo = {};
@@ -3071,12 +3278,76 @@ function atualizarBotoesNavegacao() {
 
     if (!sala.opcoes) return;
 
+    let _dilemaHeaderAdded = false; // garante que o separador apareça só uma vez
+
     sala.opcoes.forEach(opcao => {
 
                 // ── ARQUITETO: opção sem destino (nova_opcao) ──────────────────────────
         // Agora com fade, som e escurecimento da tela, igual à navegação.
         if (opcao.arquiteto === true && !opcao.destino) {
             if (opcao.disparado) return; // já consumida
+
+            // ── DILEMA (Arquiteto de Cenas) ─────────────────────────────────────
+            if (opcao.dilema === true) {
+                // Injeta o cabeçalho do evento uma única vez antes do 1º dilema
+                if (!_dilemaHeaderAdded) {
+                    const sep = document.createElement('div');
+                    sep.className = 'dilema-separator';
+                    sep.innerHTML = `<span>${sala.cena_titulo || '— evento —'}</span>`;
+                    container.appendChild(sep);
+                    _dilemaHeaderAdded = true;
+                }
+                const btnDilema = document.createElement('button');
+                btnDilema.className = 'nav-btn nav-btn--dilema';
+                btnDilema.innerText = `⚖️ ${opcao.texto}`;
+                btnDilema.onclick = async () => {
+                    if (window._transicaoEmAndamento) return;
+                    window._transicaoEmAndamento = true;
+                    document.getElementById('controls').style.pointerEvents = 'none';
+                    container.style.pointerEvents = 'none';
+
+                    const overlay = document.createElement('div');
+                    overlay.className = 'fade-overlay';
+                    document.body.appendChild(overlay);
+                    setTimeout(() => overlay.classList.add('active'), 10);
+                    await new Promise(resolve => setTimeout(resolve, 400));
+
+                    // Marca este dilema e todos os outros da sala como disparados
+                    opcao.disparado = true;
+                    sala.opcoes
+                        .filter(o => o.dilema === true && !o.disparado)
+                        .forEach(o => { o.disparado = true; });
+
+                    adicionarMensagem(`> ${opcao.texto}`, 'user');
+
+                    const resultDiv = document.createElement('div');
+                    resultDiv.className = 'result-message';
+                    resultDiv.innerText = opcao.resultado_texto;
+                    chatBox.appendChild(resultDiv);
+                    chatBox.scrollTop = chatBox.scrollHeight;
+
+                    if (opcao.dano > 0) {
+                        energia = Math.max(0, energia - opcao.dano);
+                        document.getElementById('energia-span').innerText = `🩸 ${energia}/10`;
+                        await salvarEstadoJogador();
+                    }
+
+                    atualizarBotoesNavegacao();
+                    atualizarLootRoom();
+
+                    overlay.classList.remove('active');
+                    setTimeout(() => {
+                        overlay.remove();
+                        window._transicaoEmAndamento = false;
+                        document.getElementById('controls').style.pointerEvents = 'auto';
+                        container.style.pointerEvents = 'auto';
+                    }, 1200);
+                };
+                container.appendChild(btnDilema);
+                return;
+            }
+            // ── FIM DILEMA ──────────────────────────────────────────────────────
+
             const btnArq = document.createElement('button');
             btnArq.className = 'nav-btn';
             btnArq.innerText = `> ${opcao.texto}`;
