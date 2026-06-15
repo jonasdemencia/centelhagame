@@ -1494,31 +1494,155 @@ Retorne APENAS o JSON rigorosamente neste formato:
             const teseDoMundo = dnaGlobal?.tese_fundacional || dnaGlobal?.misterio_central || '';
 
             const prompt = `[SEMENTE:${semente}]
-Você é um designer de cenas para um RPG de aventura e exploração (estilo Fighting Fantasy / Lone Wolf). 
-O tom é de fantasia sombria, imprevisível e às vezes grotesca, mas NÃO necessariamente terror sobrenatural.
+
+Você é um designer narrativo especializado em RPG de exploração e aventura
+(estética próxima de Fighting Fantasy / Lone Wolf).
+
+OBJETIVO:
+Criar cenas memoráveis que gerem decisão difícil.
+O jogador deve terminar cada evento pensando:
+"não sei qual escolha é menos errada."
 
 MUNDO: "${infoZona.nome}"
-TESE/TEMA: "${teseDoMundo}"
+TESE CENTRAL DO MUNDO:
+"${teseDoMundo}"
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-SALAS SELECIONADAS PARA EVENTOS:
+SALAS DISPONÍVEIS:
 ${contextSalas}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-MISSÃO: Para cada sala acima, crie UM evento anômalo ou perturbador que subverta a expectativa do jogador, culminando em um DILEMA REAL.
+TAREFA
 
-🔥 O QUE É UM DILEMA REAL NESTE JOGO?
-Um dilema NÃO é "abrir a porta vs. não abrir" ou "ler um livro vs. jogar no chão". 
-Um dilema é uma escolha angustiante entre:
+Para CADA sala:
 
-A) Pragmatismo Covarde (Dano 0): Ignorar, recuar, observar de longe. Salva sua pele, mas a tensão continua ou você perde uma oportunidade.
-B) Curiosidade Mórbida / Intervenção (Risco de Dano): Investigar o horror, colocar a mão onde não deve, interagir com a anomalia. Traz risco físico ou mental, mas avança a narrativa ou revela algo.
+Crie EXATAMENTE 1 EVENTO.
 
-🔥 DIRETRIZES DE ESCRITA INVIOLÁVEIS:
-1. ZERO CLICHÊS: Proibido usar "sussurros", "sombras fugazes", "risadas no escuro", "sangue escorrendo" ou "olhos te observando". Crie eventos específicos e originais (ex: três goblins brigando por um pedaço de carne; uma estátua que chora tinta; um baú que respira; uma janela que mostra um lugar impossível).
-2. MOSTRE, NÃO DIGA: Descreva texturas (pegajoso, áspero), odores (cobre, amônia, carne doce, flores podres) e sons mecânicos ou orgânicos irregulares. Nunca use palavras como "assustador", "horrível" ou "medo".
-3. RESULTADOS VISCERAIS: As consequências das escolhas devem ser físicas ou psicologicamente descritivas. O jogador deve sentir repulsa ou alívio culposo.
-4. PROIBIDO TRANSIÇÃO ENTRE SALAS: Os dilemas NÃO podem envolver sair da sala, atravessar portas, corredores, escadas, alçapões ou qualquer movimento que mude de ambiente. Tudo deve acontecer dentro do mesmo espaço descrito.
+O evento deve nascer naturalmente dos elementos presentes na sala
+e evoluir para um DILEMA CONCRETO.
+
+O evento NÃO pode parecer encontro aleatório.
+Ele deve parecer consequência de algo que aconteceu ali.
+
+Estrutura obrigatória do evento:
+
+ESTADO NORMAL
+O que existe na sala antes do jogador tocar em qualquer coisa.
+QUEBRA DE EXPECTATIVA
+Algo específico contradiz a lógica inicial da cena.
+DESCOBERTA
+O jogador percebe que existe uma regra escondida ou uma verdade desconfortável.
+DILEMA
+Escolha entre dois caminhos imperfeitos.
+CONSEQUÊNCIA
+Ambas as escolhas alteram algo.
+Nunca terminar em "nada acontece".
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+O QUE É DILEMA NESTE JOGO
+
+Dilema NÃO é:
+
+interagir ou ignorar
+abrir ou não abrir
+pegar ou não pegar
+seguir ou voltar
+
+Dilema É:
+
+Escolha entre dois custos incompatíveis.
+
+Exemplos de tensão desejada:
+
+• segurança × conhecimento
+• dignidade × sobrevivência
+• curiosidade × integridade física
+• ganho imediato × consequência futura
+• aliviar sofrimento × perder oportunidade
+• preservar recurso × revelar verdade
+• ajudar algo × tornar-se responsável por isso
+
+O jogador deve perder alguma coisa
+ou carregar alguma consequência,
+mesmo escolhendo "certo".
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+REGRAS INVIOLÁVEIS
+
+EVENTO LOCAL
+Tudo acontece dentro da própria sala.
+Proibido:
+portas, corredores, escadas, fuga para outra área,
+transições de ambiente.
+ORIGINALIDADE MATERIAL
+Proibido:
+"sussurros"
+"algo te observa"
+"risada distante"
+"sombra estranha"
+"sangue escorrendo"
+"presença maligna"
+
+Substitua abstrações por objetos,
+comportamentos e detalhes concretos.
+
+BOM:
+
+uma mesa posta para cinco pessoas e seis pratos usados
+um poço que devolve objetos diferentes dos lançados
+um animal preso que não tenta escapar
+um armário onde tudo está levemente morno
+
+RUIM:
+
+energia estranha
+sensação ruim
+entidade invisível
+SENSORIALIDADE
+Descreva SOMENTE o que pode ser percebido.
+
+Use:
+textura
+temperatura
+peso
+ritmo
+resistência
+odor
+som mecânico ou orgânico
+
+Evite emoção explícita.
+
+Não escreva:
+"é perturbador"
+"é assustador"
+
+CAUSALIDADE
+Toda consequência deve parecer inevitável depois que acontece.
+
+Evite:
+"do nada"
+"misteriosamente"
+
+CONSEQUÊNCIAS FÍSICAS
+Consequências devem alterar pelo menos UM:
+corpo
+informação
+estado da sala
+SEM MORAL ÓBVIA
+Nenhuma opção pode parecer claramente correta.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TESTE FINAL (OBRIGATÓRIO)
+
+Antes de finalizar cada evento, valide:
+
+✓ Isso poderia existir só nesta sala?
+✓ Existe algo concreto acontecendo?
+✓ O dilema continua difícil mesmo sabendo os resultados?
+✓ As duas escolhas custam algo?
+✓ O jogador teria vontade genuína de contar essa cena depois?
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Retorne APENAS JSON neste formato exato (zero markdown, zero texto fora do JSON):
 {
