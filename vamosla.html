@@ -3354,14 +3354,6 @@ function atualizarBotoesNavegacao() {
                 btnDilema.onclick = async () => {
                     if (window._transicaoEmAndamento) return;
                     window._transicaoEmAndamento = true;
-                    document.getElementById('controls').style.pointerEvents = 'none';
-                    container.style.pointerEvents = 'none';
-
-                    const overlay = document.createElement('div');
-                    overlay.className = 'fade-overlay';
-                    document.body.appendChild(overlay);
-                    setTimeout(() => overlay.classList.add('active'), 10);
-                    await new Promise(resolve => setTimeout(resolve, 400));
 
                     // Marca este dilema e todos os outros da sala como disparados
                     opcao.disparado = true;
@@ -3386,13 +3378,7 @@ function atualizarBotoesNavegacao() {
                     atualizarBotoesNavegacao();
                     atualizarLootRoom();
 
-                    overlay.classList.remove('active');
-                    setTimeout(() => {
-                        overlay.remove();
-                        window._transicaoEmAndamento = false;
-                        document.getElementById('controls').style.pointerEvents = 'auto';
-                        container.style.pointerEvents = 'auto';
-                    }, 1200);
+                    window._transicaoEmAndamento = false;
                 };
                 container.appendChild(btnDilema);
                 return;
@@ -3406,25 +3392,7 @@ function atualizarBotoesNavegacao() {
                 if (window._transicaoEmAndamento) return;
                 window._transicaoEmAndamento = true;
 
-                // Bloqueia controles durante a transição
-                document.getElementById('controls').style.pointerEvents = 'none';
-                container.style.pointerEvents = 'none';
-
-                // Cria overlay de fade (escurecimento)
-                const overlay = document.createElement('div');
-                overlay.className = 'fade-overlay';
-                document.body.appendChild(overlay);
-                setTimeout(() => overlay.classList.add('active'), 10);
-                await new Promise(resolve => setTimeout(resolve, 500)); // aguarda fade in
-
-                // Toca o som de passos
-                try {
-                    const audio = new Audio('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/passos.mp3');
-                    await audio.play();
-                    await new Promise(resolve => setTimeout(resolve, 1500));
-                } catch (error) {
-                    console.log('Erro ao tocar som:', error);
-                }
+                
 
                 // Marca como disparado e exibe a ação do jogador
                 opcao.disparado = true;
@@ -3460,14 +3428,7 @@ function atualizarBotoesNavegacao() {
                 atualizarBotoesNavegacao();
                 atualizarLootRoom();
 
-                // Remove o overlay (fade out)
-                overlay.classList.remove('active');
-                setTimeout(() => {
-                    overlay.remove();
-                    window._transicaoEmAndamento = false;
-                    document.getElementById('controls').style.pointerEvents = 'auto';
-                    container.style.pointerEvents = 'auto';
-                }, 1200);
+                window._transicaoEmAndamento = false;
             };
             container.appendChild(btnArq);
             return; // não cai no código de navegação abaixo
