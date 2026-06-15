@@ -1494,155 +1494,77 @@ Retorne APENAS o JSON rigorosamente neste formato:
             const teseDoMundo = dnaGlobal?.tese_fundacional || dnaGlobal?.misterio_central || '';
 
             const prompt = `[SEMENTE:${semente}]
+/no_think
+Você é um designer de encontros para um RPG de aventura textual, no nível de Fighting Fantasy (Steve Jackson / Ian Livingstone). Sua função é criar cenas situacionais memoráveis — não sustos baratos, mas momentos com tensão real, escolhas difíceis e consequências assimétricas.
 
-Você é um designer narrativo especializado em RPG de exploração e aventura
-(estética próxima de Fighting Fantasy / Lone Wolf).
-
-OBJETIVO:
-Criar cenas memoráveis que gerem decisão difícil.
-O jogador deve terminar cada evento pensando:
-"não sei qual escolha é menos errada."
-
-MUNDO: "${infoZona.nome}"
-TESE CENTRAL DO MUNDO:
-"${teseDoMundo}"
+ZONA ATUAL: "${infoZona.nome}"
+TESE DO MUNDO: "${teseDoMundo}"
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-SALAS DISPONÍVEIS:
+SALAS:
 ${contextSalas}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-TAREFA
-
-Para CADA sala:
-
-Crie EXATAMENTE 1 EVENTO.
-
-O evento deve nascer naturalmente dos elementos presentes na sala
-e evoluir para um DILEMA CONCRETO.
-
-O evento NÃO pode parecer encontro aleatório.
-Ele deve parecer consequência de algo que aconteceu ali.
-
-Estrutura obrigatória do evento:
-
-ESTADO NORMAL
-O que existe na sala antes do jogador tocar em qualquer coisa.
-QUEBRA DE EXPECTATIVA
-Algo específico contradiz a lógica inicial da cena.
-DESCOBERTA
-O jogador percebe que existe uma regra escondida ou uma verdade desconfortável.
-DILEMA
-Escolha entre dois caminhos imperfeitos.
-CONSEQUÊNCIA
-Ambas as escolhas alteram algo.
-Nunca terminar em "nada acontece".
+MISSÃO: Para cada sala, crie UM evento situacional encontrado ao entrar.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-O QUE É DILEMA NESTE JOGO
+DESIGN DE CENA — O QUE TORNA UMA CENA MEMORÁVEL:
 
-Dilema NÃO é:
+① EMERGE DO AMBIENTE, NÃO DO NADA
+Use o que já existe na sala. Um depósito tem um trabalhador, uma câmara fria tem um açougueiro, um corredor inundado tem algo que afogou. A situação deve parecer que SEMPRE esteve ali, esperando.
 
-interagir ou ignorar
-abrir ou não abrir
-pegar ou não pegar
-seguir ou voltar
+② ESPECIFICIDADE É TUDO
+"Um homem costurando a própria pálpebra com linha de pesca" > "uma figura perturbadora".
+Detalhes concretos e estranhos criam realidade. Invente um detalhe absurdo-mas-coerente: um objeto fora de lugar, um comportamento sem explicação óbvia, um cheiro que não deveria estar ali.
 
-Dilema É:
+③ A SITUAÇÃO É O GANCHO — O "MONSTRO" É OPCIONAL
+Os melhores encontros de Fighting Fantasy são sobre decidir: em quem confiar, o que sacrificar, o que arriscar. Um NPC que precisa de ajuda mas pode ser uma cilada. Um objeto valioso que parece maldito. Uma informação com preço implícito. Use criaturas com moderação — quando aparecerem, elas têm motivação, não apenas comportamento.
 
-Escolha entre dois custos incompatíveis.
-
-Exemplos de tensão desejada:
-
-• segurança × conhecimento
-• dignidade × sobrevivência
-• curiosidade × integridade física
-• ganho imediato × consequência futura
-• aliviar sofrimento × perder oportunidade
-• preservar recurso × revelar verdade
-• ajudar algo × tornar-se responsável por isso
-
-O jogador deve perder alguma coisa
-ou carregar alguma consequência,
-mesmo escolhendo "certo".
+④ TERMINE A DESCRIÇÃO COM TENSÃO ABERTA
+A cena termina no momento de decisão — o jogador ainda não agiu. "Ela vira o rosto devagar na sua direção." Não resolva: suspenda.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-REGRAS INVIOLÁVEIS
+DESIGN DE DILEMAS — O QUE TORNA UMA ESCOLHA REAL:
 
-EVENTO LOCAL
-Tudo acontece dentro da própria sala.
-Proibido:
-portas, corredores, escadas, fuga para outra área,
-transições de ambiente.
-ORIGINALIDADE MATERIAL
-Proibido:
-"sussurros"
-"algo te observa"
-"risada distante"
-"sombra estranha"
-"sangue escorrendo"
-"presença maligna"
+① APELOS DIFERENTES, RISCOS DIFERENTES — NUNCA "CERTO VS ERRADO"
+Cada opção deve ter seu próprio custo e sua própria promessa. O jogador deve hesitar de verdade.
+MAL: "Atacar" (óbvio risco físico) vs "Fugir" (seguro).
+BEM: "Interagir arriscando algo" vs "Recuar perdendo uma oportunidade única" vs "Observar mais, mas com tempo se esgotando".
 
-Substitua abstrações por objetos,
-comportamentos e detalhes concretos.
+② PELO MENOS UMA OPÇÃO COM DANO 0 — MAS NÃO GRATUITA
+Dano 0 não significa sem consequência. Pode ser: janela de oportunidade fechada, informação nunca obtida, aliado não conquistado, recurso não coletado. O resultado narrativo deve refletir essa perda.
 
-BOM:
+③ CONSEQUÊNCIAS ASSIMÉTRICAS — NÃO SIMÉTRICAS
+Opção A: risco físico alto, mas com ganho potencial.
+Opção B: risco físico zero, mas com perda narrativa real.
+Opção C (se houver): risco ambíguo — a consequência é incerta ou estranha.
 
-uma mesa posta para cinco pessoas e seis pratos usados
-um poço que devolve objetos diferentes dos lançados
-um animal preso que não tenta escapar
-um armário onde tudo está levemente morno
-
-RUIM:
-
-energia estranha
-sensação ruim
-entidade invisível
-SENSORIALIDADE
-Descreva SOMENTE o que pode ser percebido.
-
-Use:
-textura
-temperatura
-peso
-ritmo
-resistência
-odor
-som mecânico ou orgânico
-
-Evite emoção explícita.
-
-Não escreva:
-"é perturbador"
-"é assustador"
-
-CAUSALIDADE
-Toda consequência deve parecer inevitável depois que acontece.
-
-Evite:
-"do nada"
-"misteriosamente"
-
-CONSEQUÊNCIAS FÍSICAS
-Consequências devem alterar pelo menos UM:
-corpo
-informação
-estado da sala
-SEM MORAL ÓBVIA
-Nenhuma opção pode parecer claramente correta.
+④ VERBOS ESPECÍFICOS COM ALVOS ESPECÍFICOS
+Ruim: "Tentar pegar o objeto" — Bom: "Arrancar o medalhão do pescoço enquanto ela não olha"
+O texto da opção já deve criar imersão antes de o jogador clicar.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-TESTE FINAL (OBRIGATÓRIO)
+DESIGN DE RESULTADO — O QUE TORNA UMA CONSEQUÊNCIA SATISFATÓRIA:
 
-Antes de finalizar cada evento, valide:
+O resultado é narrativa, não relatório. Mostre o que aconteceu em 2-4 frases específicas e viscerais. A dor é descrita, não contabilizada. Nunca escreva "você perde X de energia" — a mecânica existe fora do texto.
 
-✓ Isso poderia existir só nesta sala?
-✓ Existe algo concreto acontecendo?
-✓ O dilema continua difícil mesmo sabendo os resultados?
-✓ As duas escolhas custam algo?
-✓ O jogador teria vontade genuína de contar essa cena depois?
+Calibre o dano como sinal narrativo:
+1-2 → contusão, arranhão, susto físico
+3-4 → ferimento real, queda, golpe
+5-6 → dano sério, sangue, comprometimento temporário  
+7-8 → quase fatal — reserve para consequências de má leitura grave de situação
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PROIBIDO — NUNCA FAÇA:
+✗ Situações genéricas que poderiam estar em qualquer sala de qualquer jogo
+✗ Dilemas binários sem nuance: apenas "atacar vs fugir"
+✗ Adjetivos de horror fácil: assustador, aterrorizante, horrível, perturbador (mostre, não nomeie)
+✗ Criaturas sem motivação ou lógica interna
+✗ Resultados que mencionam perda de energia diretamente
+✗ Títulos descritivos — o título deve criar curiosidade, não descrever ("O Açougueiro Paciente" > "O Homem com o Machado")
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+RETORNE APENAS JSON — ZERO MARKDOWN, ZERO TEXTO FORA DO OBJETO:
 
 Retorne APENAS JSON neste formato exato (zero markdown, zero texto fora do JSON):
 {
