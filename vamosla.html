@@ -1486,8 +1486,8 @@ Retorne APENAS o JSON rigorosamente neste formato:
 
             const contextSalas = idsElegiveis.map(id => {
                 const sala = mapaFinalMesclado[String(id)];
-                const descTruncada = (sala.texto_logico || '').replace(/\n/g, ' ').substring(0, 300);
-                return `SALA_ID:${id} — "${sala.nome}"\nDescrição: ${descTruncada}...`;
+                const textoOriginal = (sala.texto_logico || '').substring(0, 700);
+return `SALA_ID:${id} — "${sala.nome}"\nTEXTO ORIGINAL DA SALA:\n${textoOriginal}`;
             }).join('\n\n');
 
             const semente = Math.random().toString(36).substring(2, 8);
@@ -1505,7 +1505,13 @@ SALAS:
 ${contextSalas}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-MISSÃO: Para cada sala, crie UM evento situacional encontrado ao entrar.
+MISSÃO: Para cada sala, crie UM evento situacional e reescreva o TEXTO ORIGINAL DA SALA incorporando o evento como parte orgânica. O texto deve ser um bloco único e contínuo — o jogador nunca perceberá onde termina a sala e começa o evento. O evento não é uma seção separada: ele emerge da ambiência já estabelecida.
+
+REGRAS DE FUSÃO:
+- A sala existente é o solo — o evento brota dele, não cai sobre ele
+- Os elementos já descritos (objetos, luz, cheiro, arquitetura) devem servir de ponte para o evento
+- O texto fundido deve parecer que SEMPRE foi assim — como se o evento já fosse parte da sala desde a geração
+- Termine no momento de suspensão, antes da decisão do jogador
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 DESIGN DE CENA — O QUE TORNA UMA CENA MEMORÁVEL:
@@ -1572,7 +1578,7 @@ Retorne APENAS JSON neste formato exato (zero markdown, zero texto fora do JSON)
     {
       "sala_id": "ID_NUMÉRICO",
       "titulo": "Título do Evento",
-      "descricao_evento": "3-5 frases descrevendo o que o jogador encontra.",
+      "texto_sala_fundido": "Reescrita completa da sala com o evento embutido organicamente. 5-8 frases. O texto termina no momento de tensão — o jogador ainda não agiu.",
       "dilemas": [
         {
           "opcao_texto": "Ação breve do jogador",
@@ -1624,14 +1630,13 @@ Retorne APENAS JSON neste formato exato (zero markdown, zero texto fora do JSON)
                     return;
                 }
 
-                const titulo    = (cena.titulo || 'Evento Inesperado').trim();
-                const descricao = (cena.descricao_evento || '').trim();
-                if (!descricao) return;
+                const titulo     = (cena.titulo || 'Evento Inesperado').trim();
+const textoFusao = (cena.texto_sala_fundido || '').trim();
+if (!textoFusao) return;
 
-                // Injeta o evento no final do texto da sala
-                sala.texto_logico = `${sala.texto_logico || ''}\n\n${descricao}`;
-                sala.cena_titulo  = titulo;
-                sala.cena_aplicada = true;
+sala.texto_logico  = textoFusao;
+sala.cena_titulo   = titulo;
+sala.cena_aplicada = true;
 
                 // Adiciona as opções de dilema à sala
                 if (!sala.opcoes) sala.opcoes = [];
