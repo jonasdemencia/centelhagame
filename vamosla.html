@@ -1494,32 +1494,30 @@ Retorne APENAS o JSON rigorosamente neste formato:
             const teseDoMundo = dnaGlobal?.tese_fundacional || dnaGlobal?.misterio_central || '';
 
             const prompt = `[SEMENTE:${semente}]
-/no_think
-Você é o Arquiteto de Cenas de um RPG de survival horror textual brasileiro.
+Você é um designer de cenas para um RPG de aventura e exploração (estilo Fighting Fantasy / Lone Wolf). 
+O tom é de fantasia sombria, imprevisível e às vezes grotesca, mas NÃO necessariamente terror sobrenatural.
 
 MUNDO: "${infoZona.nome}"
-TESE: "${teseDoMundo}"
+TESE/TEMA: "${teseDoMundo}"
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-SALAS SELECIONADAS:
+SALAS SELECIONADAS PARA EVENTOS:
 ${contextSalas}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-MISSÃO: Para cada sala acima, crie UM evento situacional que o jogador encontra ao entrar.
+MISSÃO: Para cada sala acima, crie UM evento anômalo ou perturbador que subverta a expectativa do jogador, culminando em um DILEMA REAL.
 
-Estrutura obrigatória de cada cena:
-• TÍTULO: Curto e evocativo (ex: "A Briga dos Goblins", "O Paciente que se Levanta")
-• DESCRIÇÃO DO EVENTO: 3-5 frases em 2ª pessoa. O que o jogador vê, ouve e cheira ao entrar. Use o ambiente já descrito na sala.
-• DILEMAS: 2 opções mutuamente exclusivas de ação.
-  – Ao menos UMA opção com dano 0 (recuar, observar, esquivar, fingir).
-  – Dano máximo: 8. Nunca escreva "perde energia" ou "perde X" na narrativa.
-  – resultado_texto: 2-4 frases viscerais e consequentes.
+🔥 O QUE É UM DILEMA REAL NESTE JOGO?
+Um dilema NÃO é "abrir a porta vs. não abrir" ou "ler um livro vs. jogar no chão". 
+Um dilema é uma escolha angustiante entre:
 
-🔥 REGRAS INVIOLÁVEIS:
-1. O evento emerge do ambiente da própria sala. Não invente criaturas que não caibam naquele espaço.
-2. Mostre, não diga: odores, texturas, sons, fluidos. Proibido "assustador", "horrível" diretamente.
-3. Prefira dilemas de situação/julgamento. Violência é permitida, mas não é obrigatória.
-4. Língua: português brasileiro. Tom seco, preciso, sem floreios.
+A) Pragmatismo Covarde (Dano 0): Ignorar, recuar, observar de longe. Salva sua pele, mas a tensão continua ou você perde uma oportunidade.
+B) Curiosidade Mórbida / Intervenção (Risco de Dano): Investigar o horror, colocar a mão onde não deve, interagir com a anomalia. Traz risco físico ou mental, mas avança a narrativa ou revela algo.
+
+🔥 DIRETRIZES DE ESCRITA INVIOLÁVEIS:
+1. ZERO CLICHÊS: Proibido usar "sussurros", "sombras fugazes", "risadas no escuro", "sangue escorrendo" ou "olhos te observando". Crie eventos específicos e originais (ex: três goblins brigando por um pedaço de carne; uma estátua que chora tinta; um baú que respira; uma janela que mostra um lugar impossível).
+2. MOSTRE, NÃO DIGA: Descreva texturas (pegajoso, áspero), odores (cobre, amônia, carne doce, flores podres) e sons mecânicos ou orgânicos irregulares. Nunca use palavras como "assustador", "horrível" ou "medo".
+3. RESULTADOS VISCERAIS: As consequências das escolhas devem ser físicas ou psicologicamente descritivas. O jogador deve sentir repulsa ou alívio culposo.
 
 Retorne APENAS JSON neste formato exato (zero markdown, zero texto fora do JSON):
 {
