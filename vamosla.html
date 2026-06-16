@@ -1686,6 +1686,12 @@ dilemas.forEach(dilema => {
         destino:         destinoValidado,
         disparado:       false
     });
+
+    // ─── LOG DE INJEÇÃO ───
+if (destinoValidado !== null) {
+    console.log(`[Cenas] Dilema com destino injetado: "${opcaoTexto}" → sala ${destinoValidado} (Sala ${salaId})`);
+}
+    
 });
 
                 console.log(`[Cenas] ✅ "${titulo}" → Sala ${salaId} | ${dilemas.length} dilemas injetados`);
