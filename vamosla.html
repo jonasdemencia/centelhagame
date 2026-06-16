@@ -1485,10 +1485,13 @@ Retorne APENAS o JSON rigorosamente neste formato:
             if (idsElegiveis.length === 0) return;
 
             const contextSalas = idsElegiveis.map(id => {
-                const sala = mapaFinalMesclado[String(id)];
-                const textoOriginal = (sala.texto_logico || '').substring(0, 700);
-return `SALA_ID:${id} — "${sala.nome}"\nTEXTO ORIGINAL DA SALA:\n${textoOriginal}`;
-            }).join('\n\n');
+    const sala = mapaFinalMesclado[String(id)];
+    const textoOriginal = (sala.texto_logico || '').substring(0, 700);
+    const destinosSala = (sala.opcoes || [])
+        .filter(o => o.destino && !o.arquiteto)
+        .map(o => `  • [${o.destino}] "${o.texto}"`).join('\n');
+    return `SALA_ID:${id} — "${sala.nome}"\nTEXTO ORIGINAL DA SALA:\n${textoOriginal}\nDESTINOS DISPONÍVEIS:\n${destinosSala || '  (nenhum)'}`;
+}).join('\n\n');
 
             const semente = Math.random().toString(36).substring(2, 8);
             const teseDoMundo = dnaGlobal?.tese_fundacional || dnaGlobal?.misterio_central || '';
@@ -1549,6 +1552,12 @@ Opção C (se houver): risco ambíguo — a consequência é incerta ou estranha
 Ruim: "Tentar pegar o objeto" — Bom: "Arrancar o medalhão do pescoço enquanto ela não olha"
 O texto da opção já deve criar imersão antes de o jogador clicar.
 
+⑤ DILEMAS COM TRÂNSITO (OPCIONAL)
+Um dilema pode fisicamente mover o jogador para outra sala, mas SOMENTE para um destino já listado em DESTINOS DISPONÍVEIS da sala.
+Use quando a ação implica atravessar um limiar — uma fuga, uma decisão de avançar, uma entrada forçada.
+Quando usar: preencha "destino_id" com o ID numérico exato do destino. O resultado deve descrever a travessia, não o que há na nova sala.
+Quando não usar: omita o campo ou deixe null.
+
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 DESIGN DE RESULTADO — O QUE TORNA UMA CONSEQUÊNCIA SATISFATÓRIA:
 
@@ -1584,7 +1593,8 @@ Retorne APENAS JSON neste formato exato (zero markdown, zero texto fora do JSON)
         {
           "opcao_texto": "Ação breve do jogador",
           "resultado_texto": "2-4 frases narrando a consequência.",
-          "dano": 0
+          "dano": 0,
+          "destino_id": null
         }
       ]
     }
@@ -1643,28 +1653,40 @@ sala.cena_aplicada = true;
                 if (!sala.opcoes) sala.opcoes = [];
                 const dilemas = Array.isArray(cena.dilemas) ? cena.dilemas : [];
 
-                dilemas.forEach(dilema => {
-                    const opcaoTexto     = (dilema.opcao_texto   || 'Observar com cautela').trim();
-                    const narrativaBruta = (dilema.resultado_texto || '').trim();
-                    if (!narrativaBruta) return;
+                const destinosValidos = new Set(
+    (sala.opcoes || [])
+        .filter(o => o.destino && !o.arquiteto)
+        .map(o => String(o.destino))
+);
 
-                    const dano = typeof dilema.dano === 'number'
-                        ? Math.min(8, Math.max(0, Math.round(dilema.dano)))
-                        : 0;
+dilemas.forEach(dilema => {
+    const opcaoTexto     = (dilema.opcao_texto    || 'Observar com cautela').trim();
+    const narrativaBruta = (dilema.resultado_texto || '').trim();
+    if (!narrativaBruta) return;
 
-                    const resultadoTexto = dano > 0
-                        ? `${narrativaBruta.replace(/[.\s]+$/, '')}. Você perde ${dano} de energia.`
-                        : narrativaBruta;
+    const dano = typeof dilema.dano === 'number'
+        ? Math.min(8, Math.max(0, Math.round(dilema.dano)))
+        : 0;
 
-                    sala.opcoes.push({
-                        texto:          opcaoTexto,
-                        arquiteto:      true,
-                        dilema:         true,
-                        resultado_texto: resultadoTexto,
-                        dano,
-                        disparado:      false
-                    });
-                });
+    const resultadoTexto = dano > 0
+        ? `${narrativaBruta.replace(/[.\s]+$/, '')}. Você perde ${dano} de energia.`
+        : narrativaBruta;
+
+    const destinoRaw     = dilema.destino_id ? String(dilema.destino_id) : null;
+    const destinoValidado = (destinoRaw && destinosValidos.has(destinoRaw))
+        ? parseInt(destinoRaw)
+        : null;
+
+    sala.opcoes.push({
+        texto:           opcaoTexto,
+        arquiteto:       true,
+        dilema:          true,
+        resultado_texto: resultadoTexto,
+        dano,
+        destino:         destinoValidado,
+        disparado:       false
+    });
+});
 
                 console.log(`[Cenas] ✅ "${titulo}" → Sala ${salaId} | ${dilemas.length} dilemas injetados`);
             });
@@ -3375,10 +3397,82 @@ function atualizarBotoesNavegacao() {
                         await salvarEstadoJogador();
                     }
 
-                    atualizarBotoesNavegacao();
-                    atualizarLootRoom();
+                    // ── TRÂNSITO POR DILEMA ──────────────────────────────
+                    if (opcao.destino) {
+                        const overlayTransit = document.createElement('div');
+                        overlayTransit.className = 'fade-overlay';
+                        document.body.appendChild(overlayTransit);
+                        setTimeout(() => overlayTransit.classList.add('active'), 10);
+                        await new Promise(resolve => setTimeout(resolve, 700));
 
-                    window._transicaoEmAndamento = false;
+                        try {
+                            const audio = new Audio('https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/passos.mp3');
+                            await audio.play();
+                            await new Promise(resolve => setTimeout(resolve, 1500));
+                        } catch (e) {}
+
+                        container.innerHTML = '';
+                        document.getElementById('chat-box').innerHTML = '';
+                        const destinoStr = String(opcao.destino);
+                        const origemId   = parseInt(secaoAtualId);
+
+                        if (!mapaMundo[destinoStr]) {
+                            const zonaAlvo = Math.ceil(opcao.destino / SALAS_POR_ZONA);
+                            const idLoading = adicionarMensagem(`[SISTEMA] Processando dados da Zona ${zonaAlvo}...`, 'system', true);
+                            window._expansaoEmAndamento = true;
+                            await gerarZona(zonaAlvo, null);
+                            window._expansaoEmAndamento = false;
+                            document.getElementById(idLoading)?.remove();
+                        }
+
+                        secaoAtualId = destinoStr;
+                        salasVisitadas.add(destinoStr);
+                        if (parseInt(secaoAtualId) < 10000) {
+                            zonaAtual = Math.ceil(parseInt(secaoAtualId) / SALAS_POR_ZONA);
+                        }
+                        await salvarEstadoJogador();
+
+                        const novaSala = mapaMundo[secaoAtualId];
+                        if (novaSala && novaSala.ind_disponivel) {
+                            novaSala.ind_disponivel = false;
+                            await salvarEstadoJogador();
+                            const idLoadingIND = adicionarMensagem(`[SISTEMA] Anomalia detectada...`, 'system', true);
+                            try {
+                                const textoIND = await gerarIND(secaoAtualId);
+                                document.getElementById(idLoadingIND)?.remove();
+                                historicoIND.push(textoIND);
+                                await salvarEstadoJogador();
+                                await exibirModalIND(textoIND);
+                            } catch (error) {
+                                document.getElementById(idLoadingIND)?.remove();
+                            }
+                        }
+
+                        verificarEExpandirMundo();
+
+                        if (novaSala?.texto_logico) {
+                            const textoFinal = prepararTextoChegada(novaSala.texto_logico, opcao.texto, origemId, opcao.destino);
+                            salaDesc.innerHTML = textoFinal;
+                            historicoConversa.push({ role: 'user', content: `[Navegou para: ${opcao.texto}]` });
+                            historicoConversa.push({ role: 'assistant', content: novaSala.texto_logico });
+                            if (historicoConversa.length > 10) historicoConversa.splice(0, 2);
+                        }
+
+                        atualizarBotoesNavegacao();
+                        if (typeof atualizarLootRoom === 'function') atualizarLootRoom();
+
+                        overlayTransit.classList.remove('active');
+                        setTimeout(() => {
+                            overlayTransit.remove();
+                            window._transicaoEmAndamento = false;
+                        }, 1200);
+
+                    } else {
+                        atualizarBotoesNavegacao();
+                        atualizarLootRoom();
+                        window._transicaoEmAndamento = false;
+                    }
+                    // ── FIM TRÂNSITO ─────────────────────────────────────
                 };
                 container.appendChild(btnDilema);
                 return;
