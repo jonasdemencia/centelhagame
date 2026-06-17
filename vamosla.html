@@ -3357,11 +3357,18 @@ function atualizarBotoesNavegacao() {
 
     if (!sala.opcoes) return;
 
+    // 1. ADICIONE ESTA LINHA: Verifica se há pelo menos um dilema ativo (não disparado)
+    const temDilemaAtivo = sala.opcoes.some(o => o.dilema === true && !o.disparado);
+
     let _dilemaHeaderAdded = false; // garante que o separador apareça só uma vez
 
     sala.opcoes.forEach(opcao => {
+        // 2. ADICIONE ESTE BLOCO: Se há um dilema ativo, oculta qualquer opção que NÃO seja um dilema
+        if (temDilemaAtivo && opcao.dilema !== true) {
+            return;
+        }
 
-                // ── ARQUITETO: opção sem destino (nova_opcao) ──────────────────────────
+        // ── ARQUITETO: opção sem destino (nova_opcao) ──────────────────────────
         // Agora com fade, som e escurecimento da tela, igual à navegação.
         if (opcao.arquiteto === true && (!opcao.destino || opcao.dilema === true)) {
             if (opcao.disparado) return; // já consumida
