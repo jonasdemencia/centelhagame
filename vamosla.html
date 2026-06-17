@@ -3363,10 +3363,7 @@ function atualizarBotoesNavegacao() {
 
                 // ── ARQUITETO: opção sem destino (nova_opcao) ──────────────────────────
         // Agora com fade, som e escurecimento da tela, igual à navegação.
-        if (opcao.arquiteto === true && !opcao.destino) {
-
-            if (opcao.arquiteto === true && (!opcao.destino || opcao.dilema === true)) {
-
+        if (opcao.arquiteto === true && (!opcao.destino || opcao.dilema === true)) {
             if (opcao.disparado) return; // já consumida
 
             // ── DILEMA (Arquiteto de Cenas) ─────────────────────────────────────
@@ -3406,7 +3403,6 @@ function atualizarBotoesNavegacao() {
                         await salvarEstadoJogador();
                     }
 
-                 
                     // ── TRÂNSITO POR DILEMA ──────────────────────────────
                     if (opcao.destino) {
                         // Desabilita botões e aguarda CONTINUAR
