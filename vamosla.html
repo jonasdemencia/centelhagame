@@ -1555,7 +1555,7 @@ O texto da opção já deve criar imersão antes de o jogador clicar.
 ⑤ DILEMAS COM TRÂNSITO (OPCIONAL)
 Um dilema pode fisicamente mover o jogador para outra sala, mas SOMENTE para um destino já listado em DESTINOS DISPONÍVEIS da sala.
 Use quando a ação implica atravessar um limiar — uma fuga, uma decisão de avançar, uma entrada forçada.
-Quando usar: preencha "destino_id" com o ID numérico exato do destino. O resultado deve descrever a travessia, não o que há na nova sala.
+Quando usar: preencha "destino_id" com o ID numérico exato do destino. O resultado não deve descrever o que há na nova sala.
 Quando não usar: omita o campo ou deixe null.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -1574,7 +1574,7 @@ PROIBIDO — NUNCA FAÇA:
 ✗ Situações genéricas que poderiam estar em qualquer sala de qualquer jogo
 ✗ Dilemas binários sem nuance: apenas "atacar vs fugir"
 ✗ Adjetivos de horror fácil: assustador, aterrorizante, horrível, perturbador (mostre, não nomeie)
-✗ Opções de dilema que envolvam locomoção para outra área (ex: "sair", "subir", "descer", "seguir", "atravessar"). Toda opção deve ser uma ação que se resolva completamente dentro da sala atual.
+✗ Opções SEM destino_id que usem verbos de locomoção (ex: "sair", "subir", "descer", "seguir", "atravessar"). Opções sem destino_id devem se resolver completamente dentro da sala atual.
 ✗ Criaturas sem motivação ou lógica interna
 ✗ Resultados que mencionam perda de energia diretamente
 ✗ Títulos descritivos — o título deve criar curiosidade, não descrever ("O Açougueiro Paciente" > "O Homem com o Machado")
@@ -3364,6 +3364,9 @@ function atualizarBotoesNavegacao() {
                 // ── ARQUITETO: opção sem destino (nova_opcao) ──────────────────────────
         // Agora com fade, som e escurecimento da tela, igual à navegação.
         if (opcao.arquiteto === true && !opcao.destino) {
+
+            if (opcao.arquiteto === true && (!opcao.destino || opcao.dilema === true)) {
+
             if (opcao.disparado) return; // já consumida
 
             // ── DILEMA (Arquiteto de Cenas) ─────────────────────────────────────
@@ -3404,7 +3407,28 @@ function atualizarBotoesNavegacao() {
                     }
 
                     // ── TRÂNSITO POR DILEMA ──────────────────────────────
+                    // ── TRÂNSITO POR DILEMA ──────────────────────────────
                     if (opcao.destino) {
+                        // Desabilita botões e aguarda CONTINUAR
+                        const botoesAtuais = document.querySelectorAll('#map-controls .nav-btn');
+                        botoesAtuais.forEach(b => { b.disabled = true; });
+                        const btnContinuar = document.createElement('button');
+                        btnContinuar.className = 'nav-btn';
+                        btnContinuar.innerText = '> CONTINUAR';
+                        btnContinuar.style.background = '#1a2a1a';
+                        btnContinuar.style.borderColor = '#4caf50';
+                        btnContinuar.style.color = '#4caf50';
+                        document.getElementById('map-controls').appendChild(btnContinuar);
+                        container.style.pointerEvents = 'auto';
+                        await new Promise(resolve => {
+                            btnContinuar.onclick = () => {
+                                btnContinuar.remove();
+                                botoesAtuais.forEach(b => { b.disabled = false; });
+                                container.style.pointerEvents = 'none';
+                                resolve();
+                            };
+                        });
+
                         const overlayTransit = document.createElement('div');
                         overlayTransit.className = 'fade-overlay';
                         document.body.appendChild(overlayTransit);
