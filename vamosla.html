@@ -3404,22 +3404,22 @@ function atualizarBotoesNavegacao() {
                     }
 
                     // ── TRÂNSITO POR DILEMA ──────────────────────────────
+                    // DEPOIS:
                     if (opcao.destino) {
-                        // Desabilita botões e aguarda CONTINUAR
-                        const botoesAtuais = document.querySelectorAll('#map-controls .nav-btn');
-                        botoesAtuais.forEach(b => { b.disabled = true; });
+                        // Limpa botões antigos, exibe só CONTINUAR, rola para mostrar resultado
+                        container.innerHTML = '';
                         const btnContinuar = document.createElement('button');
                         btnContinuar.className = 'nav-btn';
                         btnContinuar.innerText = '> CONTINUAR';
                         btnContinuar.style.background = '#1a2a1a';
                         btnContinuar.style.borderColor = '#4caf50';
                         btnContinuar.style.color = '#4caf50';
-                        document.getElementById('map-controls').appendChild(btnContinuar);
+                        container.appendChild(btnContinuar);
                         container.style.pointerEvents = 'auto';
+                        const mainScroll = document.getElementById('main-scroll-area');
+                        mainScroll.scrollTop = mainScroll.scrollHeight;
                         await new Promise(resolve => {
                             btnContinuar.onclick = () => {
-                                btnContinuar.remove();
-                                botoesAtuais.forEach(b => { b.disabled = false; });
                                 container.style.pointerEvents = 'none';
                                 resolve();
                             };
@@ -3491,6 +3491,9 @@ function atualizarBotoesNavegacao() {
                         setTimeout(() => {
                             overlayTransit.remove();
                             window._transicaoEmAndamento = false;
+                            document.getElementById('controls').style.pointerEvents = 'auto';
+                            const novoContainer = document.getElementById('map-controls');
+                            if (novoContainer) novoContainer.style.pointerEvents = 'auto';
                         }, 1200);
 
                     } else {
