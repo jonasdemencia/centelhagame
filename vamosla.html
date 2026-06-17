@@ -1677,6 +1677,17 @@ dilemas.forEach(dilema => {
         ? parseInt(destinoRaw)
         : null;
 
+    // --- NOVO: Substituição do Botão Original ---
+    // Remove a opção de trânsito original se o dilema apontar para o mesmo destino
+    if (destinoValidado !== null) {
+        const indexOriginal = sala.opcoes.findIndex(o => o.destino === destinoValidado && !o.arquiteto);
+        if (indexOriginal !== -1) {
+            console.log(`[Cenas] Substituindo opção original para a sala ${destinoValidado} pelo dilema.`);
+            sala.opcoes.splice(indexOriginal, 1);
+        }
+    }
+    // --------------------------------------------
+
     sala.opcoes.push({
         texto:           opcaoTexto,
         arquiteto:       true,
@@ -3459,6 +3470,16 @@ function atualizarBotoesNavegacao() {
                         await salvarEstadoJogador();
 
                         const novaSala = mapaMundo[secaoAtualId];
+
+// --- NOVO: Restaurar dilemas ao entrar na sala ---
+                        if (novaSala && novaSala.opcoes) {
+                            novaSala.opcoes.forEach(opt => {
+                                if (opt.dilema === true) opt.disparado = false;
+                            });
+                        }
+                        // -------------------------------------------------
+
+                        
                         if (novaSala && novaSala.ind_disponivel) {
                             novaSala.ind_disponivel = false;
                             await salvarEstadoJogador();
@@ -3694,6 +3715,15 @@ if (interceptor && !interceptor.disparado) {
             await salvarEstadoJogador();
 
             const novaSala = mapaMundo[secaoAtualId];
+
+// --- NOVO: Restaurar dilemas ao entrar na sala ---
+            if (novaSala && novaSala.opcoes) {
+                novaSala.opcoes.forEach(opt => {
+                    if (opt.dilema === true) opt.disparado = false;
+                });
+            }
+            // -------------------------------------------------
+            
 
             // IND TRIGGER
             if (novaSala && novaSala.ind_disponivel) {
