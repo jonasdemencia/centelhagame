@@ -176,6 +176,39 @@
     }
     .dilema-separator span { color: #7a5020; }
 
+        /* ── Ramificações de Dilema ── */
+.nav-btn--ramificacao {
+    color: #b48ae8;
+    border-color: #3a2050;
+    background: #080610;
+    letter-spacing: 0.05em;
+    padding-left: 20px;
+}
+.nav-btn--ramificacao:hover:not(:disabled) {
+    background: #b48ae8;
+    color: #000;
+    border-color: #b48ae8;
+}
+.ramificacao-separator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 8px 0 4px 18px;
+    font-size: 0.72em;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #3a2050;
+    pointer-events: none;
+    user-select: none;
+}
+.ramificacao-separator::before,
+.ramificacao-separator::after {
+    content: '';
+    flex: 1;
+    border-top: 1px solid #220a35;
+}
+.ramificacao-separator span { color: #7a4aa0; }
+
     /* =========================================
        ESTILOS DO CHAT (mensagens)
        ========================================= */
@@ -1559,6 +1592,14 @@ Use quando a ação implica atravessar um limiar — uma fuga, uma decisão de a
 Quando usar: preencha "destino_id" com o ID numérico exato do destino. O resultado não deve descrever o que há na nova sala.
 Quando não usar: omita o campo ou deixe null.
 
+⑥ RAMIFICAÇÕES — AO MENOS 1 DILEMA POR CENA DEVE TER
+Algumas ações não se resolvem de imediato — o jogador avança e a situação se complica, exigindo uma segunda decisão imediata.
+Quando usar: quando o ato de escolher abre um novo momento de bifurcação genuína (ex: você entra na sala e ela trava atrás de você — agora tem de decidir o quê?).
+Estrutura: o dilema principal tem resultado_texto como texto de transição mostrando a complicação (2-3 frases, termina em tensão aberta). As ramificacoes (2-3 opções) têm cada uma seu próprio opcao_texto, resultado_texto final, dano e destino_id.
+Dilemas COM ramificacoes devem ter dano: 0 no nível principal (o dano pertence às ramificacoes).
+NUNCA aninha ramificacoes dentro de ramificacoes.
+Dilemas SEM ramificacoes omitem o campo ou passam null — resolvem-se diretamente como sempre.
+
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 DESIGN DE RESULTADO — O QUE TORNA UMA CONSEQUÊNCIA SATISFATÓRIA:
 
@@ -1591,15 +1632,34 @@ Retorne APENAS JSON neste formato exato (zero markdown, zero texto fora do JSON)
       "titulo": "Título do Evento",
       "texto_sala_fundido": "Reescrita completa da sala com o evento embutido organicamente. 5-8 frases. O texto termina no momento de tensão — o jogador ainda não agiu.",
       "dilemas": [
-        {
-          "opcao_texto": "Ação breve do jogador",
-          "resultado_texto": "2-4 frases narrando a consequência.",
-          "dano": 0,
-          "destino_id": null
-        }
-      ]
-    }
-  ]
+  {
+    "opcao_texto": "Ação que resolve na hora",
+    "resultado_texto": "2-4 frases narrando a consequência direta.",
+    "dano": 0,
+    "destino_id": null,
+    "ramificacoes": null
+  },
+  {
+    "opcao_texto": "Ação que se desdobra numa segunda decisão",
+    "resultado_texto": "2-3 frases de transição — a situação se complicou. Termina em tensão aberta.",
+    "dano": 0,
+    "destino_id": null,
+    "ramificacoes": [
+      {
+        "opcao_texto": "Como reagir — desdobramento A",
+        "resultado_texto": "2-3 frases narrando a consequência de A.",
+        "dano": 3,
+        "destino_id": null
+      },
+      {
+        "opcao_texto": "Como reagir — desdobramento B",
+        "resultado_texto": "2-3 frases narrando a consequência de B.",
+        "dano": 0,
+        "destino_id": null
+      }
+    ]
+  }
+]
 }`;
 
             const systemPrompt = 'Você é o Arquiteto de Cenas de um RPG de horror. Retorne APENAS JSON válido. Zero markdown. O campo "dano" deve ser um integer entre 0 e 20.';
@@ -1678,15 +1738,38 @@ dilemas.forEach(dilema => {
         ? parseInt(destinoRaw)
         : null;
 
-    sala.opcoes.push({
-        texto:           opcaoTexto,
-        arquiteto:       true,
-        dilema:          true,
-        resultado_texto: resultadoTexto,
-        dano,
-        destino:         destinoValidado,
-        disparado:       false
+    // Valida e prepara ramificações
+const ramsRaw = Array.isArray(dilema.ramificacoes) ? dilema.ramificacoes : [];
+const ramificacoes = ramsRaw
+    .filter(r => r.opcao_texto && r.resultado_texto)
+    .map(r => {
+        const rDano = typeof r.dano === 'number'
+            ? Math.min(20, Math.max(0, Math.round(r.dano)))
+            : 0;
+        const rDestinoRaw = r.destino_id ? String(r.destino_id) : null;
+        const rDestino = (rDestinoRaw && destinosValidos.has(rDestinoRaw))
+            ? parseInt(rDestinoRaw)
+            : null;
+        return {
+            opcao_texto:     r.opcao_texto.trim(),
+            resultado_texto: rDano > 0
+                ? `${r.resultado_texto.trim().replace(/[.\s]+$/, '')}. Você perde ${rDano} de energia.`
+                : r.resultado_texto.trim(),
+            dano:    rDano,
+            destino: rDestino
+        };
     });
+
+sala.opcoes.push({
+    texto:           opcaoTexto,
+    arquiteto:       true,
+    dilema:          true,
+    resultado_texto: resultadoTexto,
+    dano,
+    destino:         destinoValidado,
+    disparado:       false,
+    ramificacoes:    ramificacoes.length > 0 ? ramificacoes : null
+});
 
     // ─── LOG DE INJEÇÃO ───
 if (destinoValidado !== null) {
@@ -3432,6 +3515,71 @@ function atualizarBotoesNavegacao() {
 
                     adicionarMensagem(`> ${opcao.texto}`, 'user');
 
+                    // ── CAMINHO A: DILEMA COM RAMIFICAÇÕES ──────────────
+                    if (opcao.ramificacoes && opcao.ramificacoes.length > 0) {
+                        if (opcao.resultado_texto) {
+                            const bridgeDiv = document.createElement('div');
+                            bridgeDiv.className = 'result-message';
+                            bridgeDiv.innerText = opcao.resultado_texto;
+                            chatBox.appendChild(bridgeDiv);
+                            chatBox.scrollTop = chatBox.scrollHeight;
+                        }
+                        if (opcao.dano > 0) {
+                            energia = Math.max(0, energia - opcao.dano);
+                            document.getElementById('energia-span').innerText = `🩸 ${energia}/10`;
+                            await salvarEstadoJogador();
+                        }
+
+                        container.innerHTML = '';
+                        const ramSep = document.createElement('div');
+                        ramSep.className = 'ramificacao-separator';
+                        ramSep.innerHTML = `<span>— desdobramento —</span>`;
+                        container.appendChild(ramSep);
+
+                        opcao.ramificacoes.forEach(ram => {
+                            const btnRam = document.createElement('button');
+                            btnRam.className = 'nav-btn nav-btn--ramificacao';
+                            btnRam.innerText = `↳ ${ram.opcao_texto}`;
+                            btnRam.onclick = async () => {
+                                if (window._transicaoEmAndamento) return;
+                                window._transicaoEmAndamento = true;
+
+                                adicionarMensagem(`> ${ram.opcao_texto}`, 'user');
+
+                                const resultDiv = document.createElement('div');
+                                resultDiv.className = 'result-message';
+                                resultDiv.innerText = ram.resultado_texto;
+                                chatBox.appendChild(resultDiv);
+                                chatBox.scrollTop = chatBox.scrollHeight;
+
+                                if (ram.dano > 0) {
+                                    energia = Math.max(0, energia - ram.dano);
+                                    document.getElementById('energia-span').innerText = `🩸 ${energia}/10`;
+                                    await salvarEstadoJogador();
+                                }
+
+                                if (ram.destino) {
+                                    // COLAR AQUI o bloco de trânsito existente (linhas ~3449–3544)
+                                    // Substituições necessárias dentro do bloco copiado:
+                                    //   String(opcao.destino)  →  String(ram.destino)
+                                    //   opcao.destino          →  ram.destino
+                                    //   prepararTextoChegada(..., opcao.texto, ...) → ram.opcao_texto
+                                    //   historicoConversa: "[Navegou para: ${opcao.texto}]" → ram.opcao_texto
+                                } else {
+                                    atualizarBotoesNavegacao();
+                                    atualizarLootRoom();
+                                    window._transicaoEmAndamento = false;
+                                }
+                            };
+                            container.appendChild(btnRam);
+                        });
+
+                        window._transicaoEmAndamento = false; // libera para o clique na ramificação
+                        return;
+                    }
+                    // ── FIM CAMINHO A ────────────────────────────────────
+
+                    // ── CAMINHO B: DILEMA SIMPLES (código original) ──────
                     const resultDiv = document.createElement('div');
                     resultDiv.className = 'result-message';
                     resultDiv.innerText = opcao.resultado_texto;
