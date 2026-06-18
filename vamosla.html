@@ -1477,7 +1477,8 @@ Retorne APENAS o JSON rigorosamente neste formato:
                         && !sala.ind_disponivel
                         && !sala.puzzle_status
                         && Array.isArray(sala.opcoes)
-                        && sala.opcoes.length > 0;
+                        && sala.opcoes.length > 0
+                        && !sala.opcoes.some(o => o.interceptor_arquiteto); // <-- INSERIDO AQUI
                 })
                 .sort(() => Math.random() - 0.5)
                 .slice(0, 3);
@@ -3359,6 +3360,13 @@ function atualizarBotoesNavegacao() {
 
     let _dilemaHeaderAdded = false; // garante que o separador apareça só uma vez
 
+    // [NOVO] Mapeia quais destinos já estão sendo cobertos por dilemas ativos
+    const destinosSequestrados = new Set(
+        sala.opcoes
+            .filter(o => o.dilema === true && !o.disparado && o.destino)
+            .map(o => String(o.destino))
+    );
+
     sala.opcoes.forEach(opcao => {
 
                 // ── ARQUITETO: opção sem destino (nova_opcao) ──────────────────────────
@@ -3459,6 +3467,12 @@ function atualizarBotoesNavegacao() {
                         await salvarEstadoJogador();
 
                         const novaSala = mapaMundo[secaoAtualId];
+
+// [NOVO] Renascer dilemas ao entrar no local
+            if (novaSala && novaSala.opcoes) {
+                novaSala.opcoes.forEach(o => { if (o.dilema) o.disparado = false; });
+            }
+                        
                         if (novaSala && novaSala.ind_disponivel) {
                             novaSala.ind_disponivel = false;
                             await salvarEstadoJogador();
@@ -3557,6 +3571,12 @@ function atualizarBotoesNavegacao() {
             return; // não cai no código de navegação abaixo
         }
         // ── FIM ARQUITETO nova_opcao ────────────────────────────────────────────
+
+        // [NOVO] Se for um botão de navegação normal e o destino foi sequestrado por um dilema, não renderiza.
+        if (!opcao.arquiteto && opcao.destino && destinosSequestrados.has(String(opcao.destino))) {
+            return; 
+        }
+        
         const destinoSala = mapaMundo?.[String(opcao.destino)];
         if (destinoSala?.bloqueio?.ativo) {
     const btnBloqueado = document.createElement('button');
@@ -3694,6 +3714,11 @@ if (interceptor && !interceptor.disparado) {
             await salvarEstadoJogador();
 
             const novaSala = mapaMundo[secaoAtualId];
+
+            // [NOVO] Renascer dilemas ao entrar no local
+                        if (novaSala && novaSala.opcoes) {
+                            novaSala.opcoes.forEach(o => { if (o.dilema) o.disparado = false; });
+                        }
 
             // IND TRIGGER
             if (novaSala && novaSala.ind_disponivel) {
