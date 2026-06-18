@@ -1488,7 +1488,7 @@ Retorne APENAS o JSON rigorosamente neste formato:
     const sala = mapaFinalMesclado[String(id)];
     const textoOriginal = (sala.texto_logico || '').substring(0, 700);
     const destinosSala = (sala.opcoes || [])
-        .filter(o => o.destino && !o.arquiteto)
+        .filter(o => o.destino && !o.arquiteto && !o.interceptor_arquiteto)
         .map(o => `  • [${o.destino}] "${o.texto}"`).join('\n');
     return `SALA_ID:${id} — "${sala.nome}"\nTEXTO ORIGINAL DA SALA:\n${textoOriginal}\nDESTINOS DISPONÍVEIS:\n${destinosSala || '  (nenhum)'}`;
 }).join('\n\n');
@@ -1654,10 +1654,10 @@ sala.cena_aplicada = true;
                 const dilemas = Array.isArray(cena.dilemas) ? cena.dilemas : [];
 
                 const destinosValidos = new Set(
-    (sala.opcoes || [])
-        .filter(o => o.destino && !o.arquiteto)
-        .map(o => String(o.destino))
-);
+        (sala.opcoes || [])
+            .filter(o => o.destino && !o.arquiteto && !o.interceptor_arquiteto)
+            .map(o => String(o.destino))
+    );
 
 dilemas.forEach(dilema => {
     const opcaoTexto     = (dilema.opcao_texto    || 'Observar com cautela').trim();
