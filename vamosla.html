@@ -3331,38 +3331,43 @@ Retorne EXATAMENTE o JSON abaixo. Nenhuma palavra extra.`
         }
 
         function prepararTextoChegada(textoLogico, acaoUsada, idOrigem, idDestino) {
-    const isRetorno = /(voltar|de volta|retornar)\b/i.test(acaoUsada.trim()) || (idDestino < idOrigem);
-    if (!isRetorno) return textoLogico;
-
-    // Remove a primeira frase (a âncora antiga)
-    const semAncora = textoLogico.replace(/^[^.!?]+[.!?]\s*/, '');
-
-    // Extrai o complemento da ação (ex: "Voltar pela escada" -> "pela escada")
-    const acaoLimpa = acaoUsada
-        .replace(/^(voltar|de volta|retornar)\s+/i, '')
-        .trim();
-
-    let novaAncora;
-    if (acaoLimpa) {
-        // Ex: "pela escada em caracol" -> "De volta pela escada em caracol,"
-        novaAncora = `De volta ${acaoLimpa},`;
-    } else {
-        // Fallback com variações
-        const abertura = [
-            "De volta ao local,",
-            "Ao pisar novamente neste chão,",
-            "O ambiente familiar se recompõe diante de você,"
-        ];
-        novaAncora = abertura[Math.floor(Math.random() * abertura.length)];
+    // Adicionei "retornar" na regex para garantir maior cobertura de verbos de volta
+    const isRetorno = /(voltar|de volta|retornar)\b/i.test(acaoUsada) || (idDestino < idOrigem);    
+    
+    if (!isRetorno) return textoLogico;    
+    
+    // Remove a primeira frase (âncora original de chegada)
+    const semAncora = textoLogico.replace(/^[^.!?]+[.!?]\s*/, '');    
+    
+    // Fallback caso a ação venha vazia por algum motivo
+    if (!acaoUsada) {
+        return `Você retorna os seus passos. ${semAncora}`;
     }
 
-    // Ajusta a primeira letra do restante para minúscula (para fluir com a vírgula)
-    const resto = semAncora.charAt(0).toLowerCase() + semAncora.slice(1);
-    return `${novaAncora} ${resto}`;
+    // Prepara o texto da ação para entrar no meio de uma frase:
+    // 1. Remove espaços extras
+    // 2. Coloca a primeira letra em minúscula (ex: "Voltar pela escada" -> "voltar pela escada")
+    // 3. Remove pontuação final acidental se houver
+    let acaoFormatada = acaoUsada.trim();
+    acaoFormatada = acaoFormatada.charAt(0).toLowerCase() + acaoFormatada.slice(1);
+    acaoFormatada = acaoFormatada.replace(/[.!?]+$/, '');
+
+    // Banco de variações para manter a naturalidade e evitar repetição
+    const introducoes = [
+        `Ao ${acaoFormatada}, você observa o ambiente novamente.`,
+        `Após ${acaoFormatada}, você se encontra mais uma vez neste local.`,
+        `Você decide ${acaoFormatada}, retornando ao espaço familiar.`,
+        `Refazendo seus passos ao ${acaoFormatada}, o cenário já conhecido se revela.`,
+        `Com a decisão de ${acaoFormatada}, você recua para a área anterior.`
+    ];
+
+    // Sorteia uma das frases da lista
+    const introEscolhida = introducoes[Math.floor(Math.random() * introducoes.length)];
+
+    // Monta a nova string concatenando a âncora dinâmica com o resto do texto
+    return `${introEscolhida} ${semAncora}`;
 }
         
-
-
 
 function atualizarBotoesNavegacao() {
     const container = document.getElementById('map-controls');
