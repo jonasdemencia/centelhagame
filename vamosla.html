@@ -3331,14 +3331,35 @@ Retorne EXATAMENTE o JSON abaixo. Nenhuma palavra extra.`
         }
 
         function prepararTextoChegada(textoLogico, acaoUsada, idOrigem, idDestino) {
-            if (!acaoUsada) return textoLogico;
+    const isRetorno = /(voltar|de volta|retornar)\b/i.test(acaoUsada.trim()) || (idDestino < idOrigem);
+    if (!isRetorno) return textoLogico;
 
-            const isRetorno = /(voltar|de volta)\b/i.test(acaoUsada.trim()) || (idDestino < idOrigem);
-            if (!isRetorno) return textoLogico; 
+    // Remove a primeira frase (a âncora antiga)
+    const semAncora = textoLogico.replace(/^[^.!?]+[.!?]\s*/, '');
 
-            const semAncora = textoLogico.replace(/^[^.!?]+[.!?]\s*/, '');
-            return `Ao retornar, você se encontra novamente aqui. ${semAncora}`;
-        }
+    // Extrai o complemento da ação (ex: "Voltar pela escada" -> "pela escada")
+    const acaoLimpa = acaoUsada
+        .replace(/^(voltar|de volta|retornar)\s+/i, '')
+        .trim();
+
+    let novaAncora;
+    if (acaoLimpa) {
+        // Ex: "pela escada em caracol" -> "De volta pela escada em caracol,"
+        novaAncora = `De volta ${acaoLimpa},`;
+    } else {
+        // Fallback com variações
+        const abertura = [
+            "De volta ao local,",
+            "Ao pisar novamente neste chão,",
+            "O ambiente familiar se recompõe diante de você,"
+        ];
+        novaAncora = abertura[Math.floor(Math.random() * abertura.length)];
+    }
+
+    // Ajusta a primeira letra do restante para minúscula (para fluir com a vírgula)
+    const resto = semAncora.charAt(0).toLowerCase() + semAncora.slice(1);
+    return `${novaAncora} ${resto}`;
+}
         
 
 
