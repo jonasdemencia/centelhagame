@@ -1511,7 +1511,8 @@ Retorne APENAS o JSON rigorosamente neste formato:
                         && !sala.puzzle_status
                         && Array.isArray(sala.opcoes)
                         && sala.opcoes.length > 0
-                        && !sala.opcoes.some(o => o.interceptor_arquiteto); // <-- INSERIDO AQUI
+                        && !sala.opcoes.some(o => o.interceptor_arquiteto)
+                        && !sala.opcoes.some(o => o.arquiteto === true && !o.dilema); // exclui salas com nova_opcao do Perigos
                 })
                 .sort(() => Math.random() - 0.5)
                 .slice(0, 3);
@@ -1591,11 +1592,13 @@ Um dilema pode fisicamente mover o jogador para outra sala, mas SOMENTE para um 
 Use quando a ação implica atravessar um limiar — uma fuga, uma decisão de avançar, uma entrada forçada.
 Quando usar: preencha "destino_id" com o ID numérico exato do destino. O resultado não deve descrever o que há na nova sala.
 Quando não usar: omita o campo ou deixe null.
+CRÍTICO: destino_id jamais pode ser um ID já listado em DESTINOS DISPONÍVEIS da sala. Dilemas de trânsito existem apenas para destinos que NÃO têm botão de navegação normal. Se todos os destinos disponíveis já existem como navegação, use null.
 
-⑥ RAMIFICAÇÕES — AO MENOS 1 DILEMA POR CENA DEVE TER
+⑥ RAMIFICAÇÕES — EXATAMENTE 1 dilema por cena tem ramificacoes — os restantes têm ramificacoes: null.
 Algumas ações não se resolvem de imediato — o jogador avança e a situação se complica, exigindo uma segunda decisão imediata.
 Quando usar: quando o ato de escolher abre um novo momento de bifurcação genuína (ex: você entra na sala e ela trava atrás de você — agora tem de decidir o quê?).
 Estrutura: o dilema principal tem resultado_texto como texto de transição mostrando a complicação (2-3 frases, termina em tensão aberta). As ramificacoes (2-3 opções) têm cada uma seu próprio opcao_texto, resultado_texto final, dano e destino_id.
+CONSISTÊNCIA CAUSAL OBRIGATÓRIA: o resultado_texto do dilema COM ramificacoes começa exatamente onde opcao_texto termina. Se o jogador "Pergunta sobre X", o resultado descreve o que acontece quando ele pergunta — não invente uma ação extra ("Ao tocar a ferramenta") que o jogador não realizou. A bridge é a CONTINUAÇÃO da ação, não uma nova cena.
 Dilemas COM ramificacoes devem ter dano: 0 no nível principal (o dano pertence às ramificacoes).
 NUNCA aninha ramificacoes dentro de ramificacoes.
 Dilemas SEM ramificacoes omitem o campo ou passam null — resolvem-se diretamente como sempre.
@@ -1620,6 +1623,9 @@ PROIBIDO — NUNCA FAÇA:
 ✗ Criaturas sem motivação ou lógica interna
 ✗ Resultados que mencionam perda de energia diretamente
 ✗ Títulos descritivos — o título deve criar curiosidade, não descrever ("O Açougueiro Paciente" > "O Homem com o Machado")
+✗ Mais de 1 dilema com ramificacoes por cena
+✗ resultado_texto de dilema-pai descrevendo ação que o jogador não executou em opcao_texto
+✗ destino_id igual a qualquer ID listado em DESTINOS DISPONÍVEIS da sala
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 RETORNE APENAS JSON — ZERO MARKDOWN, ZERO TEXTO FORA DO OBJETO:
