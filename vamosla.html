@@ -1488,7 +1488,7 @@ Retorne APENAS o JSON rigorosamente neste formato:
     const sala = mapaFinalMesclado[String(id)];
     const textoOriginal = (sala.texto_logico || '').substring(0, 700);
     const destinosSala = (sala.opcoes || [])
-        .filter(o => o.destino && !o.arquiteto && !o.interceptor_arquiteto)
+        .filter(o => o.destino && !o.arquiteto)
         .map(o => `  • [${o.destino}] "${o.texto}"`).join('\n');
     return `SALA_ID:${id} — "${sala.nome}"\nTEXTO ORIGINAL DA SALA:\n${textoOriginal}\nDESTINOS DISPONÍVEIS:\n${destinosSala || '  (nenhum)'}`;
 }).join('\n\n');
@@ -1654,10 +1654,10 @@ sala.cena_aplicada = true;
                 const dilemas = Array.isArray(cena.dilemas) ? cena.dilemas : [];
 
                 const destinosValidos = new Set(
-        (sala.opcoes || [])
-            .filter(o => o.destino && !o.arquiteto && !o.interceptor_arquiteto)
-            .map(o => String(o.destino))
-    );
+    (sala.opcoes || [])
+        .filter(o => o.destino && !o.arquiteto)
+        .map(o => String(o.destino))
+);
 
 dilemas.forEach(dilema => {
     const opcaoTexto     = (dilema.opcao_texto    || 'Observar com cautela').trim();
@@ -1676,23 +1676,6 @@ dilemas.forEach(dilema => {
     const destinoValidado = (destinoRaw && destinosValidos.has(destinoRaw))
         ? parseInt(destinoRaw)
         : null;
-
-    // --- NOVO: Substituição Robusta do Botão Original ---
-    if (destinoValidado !== null) {
-        const qtdAntes = sala.opcoes.length;
-        
-        // Reconstrói a array cortando qualquer opção original que leve ao mesmo destino
-        sala.opcoes = sala.opcoes.filter(o => {
-            if (o.arquiteto) return true; // Preserva outros dilemas e perigos
-            if (!o.destino) return true;  // Preserva ações locais sem movimento
-            return String(o.destino) !== String(destinoValidado); // Corta a original
-        });
-
-        if (sala.opcoes.length < qtdAntes) {
-            console.log(`[Cenas] Rota padrão para a sala ${destinoValidado} aniquilada.`);
-        }
-    }
-    // ----------------------------------------------------
 
     sala.opcoes.push({
         texto:           opcaoTexto,
@@ -3476,16 +3459,6 @@ function atualizarBotoesNavegacao() {
                         await salvarEstadoJogador();
 
                         const novaSala = mapaMundo[secaoAtualId];
-
-// --- NOVO: Restaurar dilemas ao entrar na sala ---
-                        if (novaSala && novaSala.opcoes) {
-                            novaSala.opcoes.forEach(opt => {
-                                if (opt.dilema === true) opt.disparado = false;
-                            });
-                        }
-                        // -------------------------------------------------
-
-                        
                         if (novaSala && novaSala.ind_disponivel) {
                             novaSala.ind_disponivel = false;
                             await salvarEstadoJogador();
@@ -3721,15 +3694,6 @@ if (interceptor && !interceptor.disparado) {
             await salvarEstadoJogador();
 
             const novaSala = mapaMundo[secaoAtualId];
-
-// --- NOVO: Restaurar dilemas ao entrar na sala ---
-            if (novaSala && novaSala.opcoes) {
-                novaSala.opcoes.forEach(opt => {
-                    if (opt.dilema === true) opt.disparado = false;
-                });
-            }
-            // -------------------------------------------------
-            
 
             // IND TRIGGER
             if (novaSala && novaSala.ind_disponivel) {
