@@ -1677,16 +1677,22 @@ dilemas.forEach(dilema => {
         ? parseInt(destinoRaw)
         : null;
 
-    // --- NOVO: Substituição do Botão Original ---
-    // Remove a opção de trânsito original se o dilema apontar para o mesmo destino
+    // --- NOVO: Substituição Robusta do Botão Original ---
     if (destinoValidado !== null) {
-        const indexOriginal = sala.opcoes.findIndex(o => o.destino === destinoValidado && !o.arquiteto);
-        if (indexOriginal !== -1) {
-            console.log(`[Cenas] Substituindo opção original para a sala ${destinoValidado} pelo dilema.`);
-            sala.opcoes.splice(indexOriginal, 1);
+        const qtdAntes = sala.opcoes.length;
+        
+        // Reconstrói a array cortando qualquer opção original que leve ao mesmo destino
+        sala.opcoes = sala.opcoes.filter(o => {
+            if (o.arquiteto) return true; // Preserva outros dilemas e perigos
+            if (!o.destino) return true;  // Preserva ações locais sem movimento
+            return String(o.destino) !== String(destinoValidado); // Corta a original
+        });
+
+        if (sala.opcoes.length < qtdAntes) {
+            console.log(`[Cenas] Rota padrão para a sala ${destinoValidado} aniquilada.`);
         }
     }
-    // --------------------------------------------
+    // ----------------------------------------------------
 
     sala.opcoes.push({
         texto:           opcaoTexto,
