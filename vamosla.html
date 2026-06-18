@@ -3335,15 +3335,39 @@ Retorne EXATAMENTE o JSON abaixo. Nenhuma palavra extra.`
     if (!isRetorno) return textoLogico;
 
     // Remove a primeira frase (âncora original)
-    const semAncora = textoLogico.replace(/^[^.!?]+[.!?]\s*/, '');
+    const semAncora = textoLogico.replace(/^[^.!?]+[.!?]\s*/, '').trim();
 
     // Extrai só o complemento da ação (ex: "Voltar pela escada" -> "pela escada")
     const complemento = acaoUsada
         .replace(/^(voltar|de volta|retornar)\s+/i, '')
         .trim();
 
-    // Âncora mínima: usa o complemento ou fallback curto
-    const ancora = complemento ? `De volta ${complemento},` : `De volta,`;
+    if (!complemento) {
+        return `De volta. ${semAncora}`;
+    }
+
+    // ── INÍCIO DO FILTRO ANTI-REDUNDÂNCIA ────────────────────────────
+    
+    // 1. Limpa as preposições do complemento para pegar o núcleo (ex: "pelo corredor lateral" -> "corredor lateral")
+    const nucleoLugar = complemento.replace(/^(pel[ao]s?|n[ao]s?|a|ao|às?|por|para)\s+/i, '').trim();
+
+    // 2. Escapa caracteres especiais por segurança no Regex
+    const nucleoEscapado = nucleoLugar.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+    // 3. Checa se o texto da sala já começa falando desse núcleo (olhando os primeiros 60 caracteres)
+    const inicioDoTexto = semAncora.substring(0, 60);
+    const temRepeticao = new RegExp(`\\b${nucleoEscapado}\\b`, 'i').test(inicioDoTexto);
+
+    if (temRepeticao) {
+        // Se houver choque, em vez de juntar os dois com vírgula, nós omitimos o complemento.
+        // Ex: "De volta. O corredor lateral, estreito..." (Evita o "De volta pelo corredor lateral, o corredor lateral...")
+        return `De volta. ${semAncora}`;
+    }
+    
+    // ── FIM DO FILTRO ───────────────────────────────────────────────
+
+    // Âncora mínima: usa o complemento (já validado que não repete)
+    const ancora = `De volta ${complemento},`;
 
     // Ajusta a primeira letra do restante para minúscula
     const resto = semAncora.charAt(0).toLowerCase() + semAncora.slice(1);
