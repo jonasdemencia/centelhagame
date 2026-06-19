@@ -3496,13 +3496,13 @@ function atualizarBotoesNavegacao() {
                 if (!_dilemaHeaderAdded) {
                     const sep = document.createElement('div');
                     sep.className = 'dilema-separator';
-                    sep.innerHTML = `<span>${sala.cena_titulo || '— evento —'}</span>`;
+                    // sep.innerHTML = `<span>${sala.cena_titulo || '— evento —'}</span>`;
                     container.appendChild(sep);
                     _dilemaHeaderAdded = true;
                 }
                 const btnDilema = document.createElement('button');
                 btnDilema.className = 'nav-btn nav-btn--dilema';
-                btnDilema.innerText = `⚖️ ${opcao.texto}`;
+                btnDilema.innerText = `> ${opcao.texto}`;
                 btnDilema.onclick = async () => {
                     if (window._transicaoEmAndamento) return;
                     window._transicaoEmAndamento = true;
