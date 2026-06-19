@@ -1603,10 +1603,10 @@ DESIGN DE RESULTADO:
 O resultado é narrativa, não relatório. 2-4 frases específicas e viscerais. A dor é descrita, não contabilizada. Nunca escreva "você perde X de energia".
 
 Calibre o dano:
-1-2 → contusão, arranhão, susto físico
-3-4 → ferimento real, queda, golpe
-5-6 → dano sério, sangue, comprometimento temporário
-7-20 → quase fatal — reserve para má leitura grave de situação
+1-3 → Dano leve (contusão, arranhão, susto físico).
+4-8 → Punição padrão por risco físico direto (corte profundo, toxina, queimadura, golpe, queda). Use esta faixa frequentemente para escolhas precipitadas.
+9-14 → Dano grave e visceral (fratura, mutilação parcial, ataque direto forte). Aplique sem hesitar se a opção for imprudente ou de alto risco.
+15-20 → Catástrofe física quase fatal — reserve para o pior cenário possível da cena.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 PROIBIDO:
@@ -1662,7 +1662,7 @@ Retorne APENAS JSON neste formato exato (zero markdown, zero texto fora do JSON)
 ]
 }`;
 
-            const systemPrompt = 'Você é o Arquiteto de Cenas de um RPG de horror. Retorne APENAS JSON válido. Zero markdown. O campo "dano" deve ser um integer entre 0 e 20.';
+            const systemPrompt = 'Você é o Arquiteto de Cenas de um RPG de horror. Retorne APENAS JSON válido. Zero markdown. O campo "dano" deve ser um integer entre 0 e 20. não hesite em aplicar danos altos (8-15) em consequências de ações imprudentes.';
 
             let data;
             try {
