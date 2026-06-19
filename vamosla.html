@@ -3496,7 +3496,7 @@ function atualizarBotoesNavegacao() {
                 if (!_dilemaHeaderAdded) {
                     const sep = document.createElement('div');
                     sep.className = 'dilema-separator';
-                    sep.innerHTML = `<span></span>`;
+                    //sep.innerHTML = `<span>${sala.cena_titulo || '— evento —'}</span>`;
                     container.appendChild(sep);
                     _dilemaHeaderAdded = true;
                 }
