@@ -1543,89 +1543,81 @@ SALAS:
 ${contextSalas}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-MISSÃO: Para cada sala, crie UM evento situacional e reescreva o TEXTO ORIGINAL DA SALA incorporando o evento como parte orgânica. O texto deve ser um bloco único e contínuo — o jogador nunca perceberá onde termina a sala e começa o evento. O evento não é uma seção separada: ele emerge da ambiência já estabelecida.
+MISSÃO: Para cada sala, crie UM evento situacional e reescreva o TEXTO ORIGINAL DA SALA incorporando o evento como parte orgânica. O texto deve ser um bloco único e contínuo — o jogador nunca perceberá onde termina a sala e começa o evento.
 
 REGRAS DE FUSÃO:
 - A sala existente é o solo — o evento brota dele, não cai sobre ele
 - Os elementos já descritos (objetos, luz, cheiro, arquitetura) devem servir de ponte para o evento
-- O texto fundido deve parecer que SEMPRE foi assim — como se o evento já fosse parte da sala desde a geração
+- O texto fundido deve parecer que SEMPRE foi assim
 - Termine no momento de suspensão, antes da decisão do jogador
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-DESIGN DE CENA — O QUE TORNA UMA CENA MEMORÁVEL:
+DESIGN DE CENA:
 
 ① EMERGE DO AMBIENTE, NÃO DO NADA
 Use o que já existe na sala. Um depósito tem um trabalhador, uma câmara fria tem um açougueiro, um corredor inundado tem algo que afogou. A situação deve parecer que SEMPRE esteve ali, esperando.
 
-② ESPECIFICIDADE É TUDO
-"Um homem costurando a própria pálpebra com linha de pesca" > "uma figura perturbadora".
-Detalhes concretos e estranhos criam realidade. Invente um detalhe absurdo-mas-coerente: um objeto fora de lugar, um comportamento sem explicação óbvia, um cheiro que não deveria estar ali.
+② ESPECIFICIDADE E ÂNCORA FÍSICA
+"Um homem costurando a própria pálpebra com linha de pesca" > "uma figura perturbadora". Detalhes concretos criam realidade — e todo estranhamento exige forma física objetiva:
+NÃO: "a fonte parecia viva" / SIM: "a água marcava 4°C no pior verão em décadas e sua superfície não reagia ao vento"
+NÃO: "o corredor queria algo" / SIM: "a bússola girava ao contrário apenas dentro deste quarto"
+O fenômeno é dado concreto. A interpretação pertence ao jogador.
 
 ③ A SITUAÇÃO É O GANCHO — O "MONSTRO" É OPCIONAL
-Os melhores encontros de Fighting Fantasy são sobre decidir: em quem confiar, o que sacrificar, o que arriscar. Um NPC que precisa de ajuda mas pode ser uma cilada. Um objeto valioso que parece maldito. Uma informação com preço implícito. Use criaturas com moderação — quando aparecerem, elas têm motivação, não apenas comportamento.
+Os melhores encontros são sobre decidir: em quem confiar, o que sacrificar, o que arriscar. Um NPC que precisa de ajuda mas pode ser uma cilada. Um objeto valioso que parece maldito. Use criaturas com moderação — quando aparecerem, têm motivação, não apenas comportamento.
 
-④ TERMINE A DESCRIÇÃO COM TENSÃO ABERTA
-A cena termina no momento de decisão — o jogador ainda não agiu. "Ela vira o rosto devagar na sua direção." Não resolva: suspenda.
+④ TERMINE COM TENSÃO ABERTA
+A cena termina no momento de decisão. "Ela vira o rosto devagar na sua direção." Não resolva: suspenda.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-DESIGN DE DILEMAS — O QUE TORNA UMA ESCOLHA REAL:
+DESIGN DE DILEMAS:
 
 ① APELOS DIFERENTES, RISCOS DIFERENTES — NUNCA "CERTO VS ERRADO"
-Cada opção deve ter seu próprio custo e sua própria promessa. O jogador deve hesitar de verdade.
-MAL: "Atacar" (óbvio risco físico) vs "Fugir" (seguro).
-BEM: "Interagir arriscando algo" vs "Recuar perdendo uma oportunidade única" vs "Observar mais, mas com tempo se esgotando".
+Cada opção tem seu próprio custo e sua própria promessa. O jogador deve hesitar de verdade.
+MAL: "Atacar" vs "Fugir". BEM: "Interagir arriscando algo" vs "Recuar perdendo oportunidade única" vs "Observar mais, mas o tempo se esgota".
 
 ② PELO MENOS UMA OPÇÃO COM DANO 0 — MAS NÃO GRATUITA
-Dano 0 não significa sem consequência. Pode ser: janela de oportunidade fechada, informação nunca obtida, aliado não conquistado, recurso não coletado. O resultado narrativo deve refletir essa perda.
+Dano 0 não significa sem consequência: janela de oportunidade fechada, informação perdida, aliado não conquistado.
 
-③ CONSEQUÊNCIAS ASSIMÉTRICAS — NÃO SIMÉTRICAS
-Opção A: risco físico alto, mas com ganho potencial.
-Opção B: risco físico zero, mas com perda narrativa real.
-Opção C (se houver): risco ambíguo — a consequência é incerta ou estranha.
+③ CONSEQUÊNCIAS ASSIMÉTRICAS
+Opção A: risco físico, ganho potencial. Opção B: risco zero, perda narrativa real. Opção C (se houver): risco ambíguo — consequência incerta ou estranha.
 
 ④ VERBOS ESPECÍFICOS COM ALVOS ESPECÍFICOS
 Ruim: "Tentar pegar o objeto" — Bom: "Arrancar o medalhão do pescoço enquanto ela não olha"
-O texto da opção já deve criar imersão antes de o jogador clicar.
 
 ⑤ DILEMAS COM TRÂNSITO (OPCIONAL)
-Um dilema pode fisicamente mover o jogador para outra sala, mas SOMENTE para um destino já listado em DESTINOS DISPONÍVEIS da sala.
-Use quando a ação implica atravessar um limiar — uma fuga, uma decisão de avançar, uma entrada forçada.
-Quando usar: preencha "destino_id" com o ID numérico exato do destino. O resultado não deve descrever o que há na nova sala.
-Quando não usar: omita o campo ou deixe null.
-CRÍTICO: destino_id jamais pode ser um ID já listado em DESTINOS DISPONÍVEIS da sala. Dilemas de trânsito existem apenas para destinos que NÃO têm botão de navegação normal. Se todos os destinos disponíveis já existem como navegação, use null.
+Um dilema pode mover o jogador para outra sala usando um destino de DESTINOS DISPONÍVEIS. Use quando a ação implica atravessar um limiar físico (fuga, avanço forçado, entrada). O resultado não descreve o que há na nova sala. Quando usar: preencha destino_id. Quando não: null.
 
-⑥ RAMIFICAÇÕES — EXATAMENTE 1 dilema por cena tem ramificacoes — os restantes têm ramificacoes: null.
-Algumas ações não se resolvem de imediato — o jogador avança e a situação se complica, exigindo uma segunda decisão imediata.
-Quando usar: quando o ato de escolher abre um novo momento de bifurcação genuína (ex: você entra na sala e ela trava atrás de você — agora tem de decidir o quê?).
-Estrutura: o dilema principal tem resultado_texto como texto de transição mostrando a complicação (2-3 frases, termina em tensão aberta). As ramificacoes (2-3 opções) têm cada uma seu próprio opcao_texto, resultado_texto final, dano e destino_id.
-CONSISTÊNCIA CAUSAL OBRIGATÓRIA: o resultado_texto do dilema COM ramificacoes começa exatamente onde opcao_texto termina. Se o jogador "Pergunta sobre X", o resultado descreve o que acontece quando ele pergunta — não invente uma ação extra ("Ao tocar a ferramenta") que o jogador não realizou. A bridge é a CONTINUAÇÃO da ação, não uma nova cena.
-Dilemas COM ramificacoes devem ter dano: 0 no nível principal (o dano pertence às ramificacoes).
-NUNCA aninha ramificacoes dentro de ramificacoes.
-Dilemas SEM ramificacoes omitem o campo ou passam null — resolvem-se diretamente como sempre.
+⑥ RAMIFICAÇÕES — exatamente 1 dilema por cena; os restantes têm ramificacoes: null.
+Quando usar: a ação do jogador abre um momento de bifurcação genuína antes da resolução.
+Estrutura: dilema-pai tem resultado_texto como ponte narrativa (2-3 frases, tensão aberta) + dano: 0. As ramificacoes (2-3) têm opcao_texto, resultado_texto, dano e destino_id próprios.
+Causalidade: resultado_texto do pai começa exatamente onde opcao_texto termina — não invente ação que o jogador não executou.
+Qualidade das ramificações — mesma exigência do DESIGN DE RESULTADO:
+"O degrau cede sob seu pé esquerdo e você ouve o estalo antes de sentir" — não "você sente dor"
+"A porta entreaberta está agora fechada por dentro" — não "você se sente observado"
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-DESIGN DE RESULTADO — O QUE TORNA UMA CONSEQUÊNCIA SATISFATÓRIA:
+DESIGN DE RESULTADO:
 
-O resultado é narrativa, não relatório. Mostre o que aconteceu em 2-4 frases específicas e viscerais. A dor é descrita, não contabilizada. Nunca escreva "você perde X de energia" — a mecânica existe fora do texto.
+O resultado é narrativa, não relatório. 2-4 frases específicas e viscerais. A dor é descrita, não contabilizada. Nunca escreva "você perde X de energia".
 
-Calibre o dano como sinal narrativo:
+Calibre o dano:
 1-2 → contusão, arranhão, susto físico
 3-4 → ferimento real, queda, golpe
-5-6 → dano sério, sangue, comprometimento temporário  
-7-20 → quase fatal — reserve para consequências de má leitura grave de situação
+5-6 → dano sério, sangue, comprometimento temporário
+7-20 → quase fatal — reserve para má leitura grave de situação
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-PROIBIDO — NUNCA FAÇA:
-✗ Situações genéricas que poderiam estar em qualquer sala de qualquer jogo
+PROIBIDO:
 ✗ Dilemas binários sem nuance: apenas "atacar vs fugir"
 ✗ Adjetivos de horror fácil: assustador, aterrorizante, horrível, perturbador (mostre, não nomeie)
-✗ Opções SEM destino_id que usem verbos de locomoção (ex: "sair", "subir", "descer", "seguir", "atravessar"). Opções sem destino_id devem se resolver completamente dentro da sala atual.
+✗ Opções sem destino_id com verbos de locomoção (sair, subir, descer, seguir, atravessar)
 ✗ Criaturas sem motivação ou lógica interna
 ✗ Resultados que mencionam perda de energia diretamente
-✗ Títulos descritivos — o título deve criar curiosidade, não descrever ("O Açougueiro Paciente" > "O Homem com o Machado")
+✗ Títulos descritivos — o título cria curiosidade, não descreve ("O Açougueiro Paciente" > "O Homem com o Machado")
 ✗ Mais de 1 dilema com ramificacoes por cena
 ✗ resultado_texto de dilema-pai descrevendo ação que o jogador não executou em opcao_texto
-✗ destino_id igual a qualquer ID listado em DESTINOS DISPONÍVEIS da sala
+✗ Antropomorfização fácil: objetos que "sorriem", "têm olhos", "apontam" ou "querem algo" — descreva o comportamento físico observável, nunca afirme intenção
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 RETORNE APENAS JSON — ZERO MARKDOWN, ZERO TEXTO FORA DO OBJETO:
