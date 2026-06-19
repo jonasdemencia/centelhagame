@@ -1506,7 +1506,7 @@ Retorne APENAS o JSON rigorosamente neste formato:
                 .filter(id => {
                     const sala = mapaFinalMesclado[String(id)];
                     return id < 10000
-                        && id !== salaFim
+                        // && id !== salaFim   // <-- remova esta condição
                         && !sala.ind_disponivel
                         && !sala.puzzle_status
                         && Array.isArray(sala.opcoes)
