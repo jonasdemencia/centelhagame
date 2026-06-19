@@ -1336,7 +1336,7 @@ Retorne EXCLUSIVAMENTE um objeto JSON válido no formato: {"narrativa": "texto d
             .filter(o => !mapaFinalMesclado[String(o.destino)]?.ind_disponivel) // ignora destinos IND
             .map(o => `"${o.texto}"`)
             .join(", ");
-        const descTruncada = (sala.texto_logico || "").replace(/\n/g, " ").substring(0, 220);
+        const descTruncada = (sala.texto_logico || "").replace(/\n/g, " ").substring(0, 500);
         return `SALA_ID:${id} — "${sala.nome}"\nDescrição: ${descTruncada}...\nOpções de movimento disponíveis: ${opcoesInterceptaveis || "nenhuma interceptável"}`;
     }).join("\n\n");
 
