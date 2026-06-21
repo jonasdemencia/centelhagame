@@ -1533,7 +1533,7 @@ Retorne APENAS o JSON rigorosamente neste formato:
 
             const prompt = `[SEMENTE:${semente}]
 /no_think
-Você é um designer de encontros para um RPG de aventura textual, no nível de Fighting Fantasy (Steve Jackson / Ian Livingstone). Sua função é criar cenas situacionais memoráveis — não sustos baratos, mas momentos com tensão real, escolhas difíceis e consequências assimétricas.
+Você é um designer de encontros para um RPG de aventura textual, no nível de Fighting Fantasy (Steve Jackson / Ian Livingstone). Sua função é criar cenas situacionais memoráveis — não sustos baratos, mas momentos com tensão real, escolhas difíceis e consequências assimétricas. Escreva em português-brasileito correto. 
 
 ZONA ATUAL: "${infoZona.nome}"
 TESE DO MUNDO: "${teseDoMundo}"
@@ -1619,8 +1619,11 @@ PROIBIDO:
 ✗ Mais de 1 dilema com ramificacoes por cena
 ✗ resultado_texto de dilema-pai descrevendo ação que o jogador não executou em opcao_texto
 ✗ Antropomorfização fácil: objetos que "sorriem", "têm olhos", "apontam" ou "querem algo" — descreva o comportamento físico observável, nunca afirme intenção
-✗ BANIMENTO ABSOLUTO DE VOCABULÁRIO: É ESTRITAMENTE PROIBIDO usar as expressões "como se", "parecia", "parece", "dando a impressão" ou "como que". 
-
+✗ "Como se" em qualquer conjugação — proibição absoluta. Valem também "parecia que", "o que parece ser", "dava a impressão de", "como se estivesse". O narrador afirma; nunca especula nem interpreta por conta própria. Corrija toda ocorrência antes de fechar o JSON:
+  "como se recentemente aspirado" → "aspirado ontem à tarde"
+  "como se a carne tivesse crescido em volta" → "a carne havia crescido em volta"
+  "o que parece ser dor silenciosa" → "dor silenciosa"
+  
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 RETORNE APENAS JSON — ZERO MARKDOWN, ZERO TEXTO FORA DO OBJETO:
 
