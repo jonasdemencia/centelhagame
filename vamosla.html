@@ -2462,8 +2462,16 @@ Retorne exclusivamente um objeto JSON válido.`;
                     } else {
                         chegada = `[SALA SEM ÂNCORA: Inicie descrevendo o ambiente à frente.]`;
                     }
-const notaBloqueio = sala.bloqueio?.ativo
-    ? `\n⚠️ OBSTÁCULO FÍSICO NESTA SALA: Uma saída está fisicamente bloqueada por [${sala.bloqueio.tipo}]. Descreva o obstáculo de forma visceral e integrada ao ambiente: "${sala.bloqueio.descricao}". As outras saídas permanecem acessíveis.`
+// Verifica se alguma das saídas desta sala aponta para um destino bloqueado
+const bloqueiosNasSaidas = (sala.saidas || [])
+    .filter(saida => plano[String(saida.destino)]?.bloqueio?.ativo)
+    .map(saida => {
+        const blockInfo = plano[String(saida.destino)].bloqueio;
+        return `O caminho para "${extrairElementoFisico(saida.acao)}" está obstruído por [${blockInfo.tipo}]. Descreva este obstáculo de forma visceral e integrada ao ambiente: "${blockInfo.descricao}".`;
+    });
+
+const notaBloqueio = bloqueiosNasSaidas.length > 0
+    ? `\n⚠️ OBSTÁCULO FÍSICO NESTA SALA: ${bloqueiosNasSaidas.join(" ")} O jogador não consegue passar por ali agora. As outras saídas da sala permanecem normais.`
     : '';
 return `SALA ${id} (${sala.local_fisico}):\n${chegada}\nAções futuras disponíveis -> [${acoes || 'Foco apenas no ambiente'}]${blocoElementos}${notaBloqueio}`;
                 }).join("\n\n");
