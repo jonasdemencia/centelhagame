@@ -1533,7 +1533,7 @@ Retorne APENAS o JSON rigorosamente neste formato:
 
             const prompt = `[SEMENTE:${semente}]
 /no_think
-Você é um designer de encontros para um RPG de aventura textual, no nível de Fighting Fantasy (Steve Jackson / Ian Livingstone). Sua função é criar cenas situacionais memoráveis — não sustos baratos, mas momentos com tensão real, escolhas difíceis e consequências assimétricas. Escreva em português-brasileito correto. 
+Você é um designer de encontros para um RPG de aventura textual, no nível de Fighting Fantasy (Steve Jackson / Ian Livingstone). Sua função é criar cenas situacionais memoráveis — não sustos baratos, mas momentos com tensão real, escolhas difíceis e consequências assimétricas.
 
 ZONA ATUAL: "${infoZona.nome}"
 TESE DO MUNDO: "${teseDoMundo}"
@@ -1567,15 +1567,8 @@ O fenômeno é dado concreto. A interpretação pertence ao jogador.
 ③ A SITUAÇÃO É O GANCHO — O "MONSTRO" É OPCIONAL
 Os melhores encontros são sobre decidir: em quem confiar, o que sacrificar, o que arriscar. Um NPC que precisa de ajuda mas pode ser uma cilada. Um objeto valioso que parece maldito. Use criaturas com moderação — quando aparecerem, têm motivação, não apenas comportamento.
 
-④ FÍSICA E LÓGICA CONCRETA: "Proibido surrealismo mágico, efeitos flutuantes ou quebras na física da realidade (ex: objetos girando no ar sozinhos). O horror deve ser físico, biológico, decadente ou psicológico, mas sempre tangível."
-
-⑤ TERMINE COM TENSÃO ABERTA
+④ TERMINE COM TENSÃO ABERTA
 A cena termina no momento de decisão. "Ela vira o rosto devagar na sua direção." Não resolva: suspenda.
-
-⑥ MATERIALISMO LITERÁRIO E ABSOLUTISMO
-Escreva usando apenas afirmações absolutas e literais. Você é o narrador onisciente de uma realidade concreta. Descreva a ação nua e crua, focando apenas no que pode ser captado por uma câmera ou um microfone. Nenhuma especulação, nenhuma metáfora, nenhuma comparação analógica.
-Ação fraca e comparativa: "Ele segurava o lençol, com as mãos presas em um movimento estranho, indicando cirurgia."
-Ação forte e literal: "Suas mãos apertam o lençol da mesa. Os nós dos dedos estão brancos. O movimento repete a tensão de uma cirurgia recente."
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 DESIGN DE DILEMAS:
@@ -1588,7 +1581,7 @@ MAL: "Atacar" vs "Fugir". BEM: "Interagir arriscando algo" vs "Recuar perdendo o
 Dano 0 não significa sem consequência: janela de oportunidade fechada, informação perdida, aliado não conquistado.
 
 ③ CONSEQUÊNCIAS ASSIMÉTRICAS
-Opção A: risco físico, ganho potencial. Opção B: risco zero, perda narrativa real. Opção C (se houver): risco ambíguo — consequência incerta ou estranha. Por cena, ao menos uma consequência deve inverter o esperado.
+Opção A: risco físico, ganho potencial. Opção B: risco zero, perda narrativa real. Opção C (se houver): risco ambíguo — consequência incerta ou estranha.
 
 ④ VERBOS ESPECÍFICOS COM ALVOS ESPECÍFICOS
 Ruim: "Tentar pegar o objeto" — Bom: "Arrancar o medalhão do pescoço enquanto ela não olha"
@@ -1610,10 +1603,10 @@ DESIGN DE RESULTADO:
 O resultado é narrativa, não relatório. 2-4 frases específicas e viscerais. A dor é descrita, não contabilizada. Nunca escreva "você perde X de energia".
 
 Calibre o dano:
-1-3 → Dano leve (contusão, arranhão, susto físico).
-4-8 → Punição padrão por risco físico direto (corte profundo, toxina, queimadura, golpe, queda). Use esta faixa frequentemente para escolhas precipitadas.
-9-14 → Dano grave e visceral (fratura, mutilação parcial, ataque direto forte). Aplique sem hesitar se a opção for imprudente ou de alto risco.
-15-20 → Catástrofe física quase fatal — reserve para o pior cenário possível da cena.
+1-2 → contusão, arranhão, susto físico
+3-4 → ferimento real, queda, golpe
+5-6 → dano sério, sangue, comprometimento temporário
+7-20 → quase fatal — reserve para má leitura grave de situação
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 PROIBIDO:
@@ -1622,12 +1615,12 @@ PROIBIDO:
 ✗ Opções sem destino_id com verbos de locomoção (sair, subir, descer, seguir, atravessar)
 ✗ Criaturas sem motivação ou lógica interna
 ✗ Resultados que mencionam perda de energia diretamente
+✗ "Como se" narratorial: o narrador afirma, não especula. "A tinta estava fresca" > "como se tivesse acabado de escrever". "Havia marcas de uso recente" > "como se alguém a houvesse segurado". Reserve "como se" para a percepção do personagem sob tensão — nunca para o narrador duvidar do que observa.
 ✗ Títulos descritivos — o título cria curiosidade, não descreve ("O Açougueiro Paciente" > "O Homem com o Machado")
 ✗ Mais de 1 dilema com ramificacoes por cena
 ✗ resultado_texto de dilema-pai descrevendo ação que o jogador não executou em opcao_texto
 ✗ Antropomorfização fácil: objetos que "sorriem", "têm olhos", "apontam" ou "querem algo" — descreva o comportamento físico observável, nunca afirme intenção
-✗ Expressões traduzidas ou artificiais: "Proibido usar traduções literais de expressões em inglês (ex: 'a tensão desaba', 'o ar parece pesar'). Use o português idiomático e natural do Brasil ('o ambiente ficou silencioso', 'um frio repentino tomou a sala')."
-  
+
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 RETORNE APENAS JSON — ZERO MARKDOWN, ZERO TEXTO FORA DO OBJETO:
 
@@ -1669,7 +1662,7 @@ Retorne APENAS JSON neste formato exato (zero markdown, zero texto fora do JSON)
 ]
 }`;
 
-            const systemPrompt = 'Você é o Arquiteto de Cenas de um RPG de horror. Retorne APENAS JSON válido. Zero markdown. O campo "dano" deve ser um integer entre 0 e 20. não hesite em aplicar danos altos (8-15) em consequências de ações imprudentes.';
+            const systemPrompt = 'Você é o Arquiteto de Cenas de um RPG de horror. Retorne APENAS JSON válido. Zero markdown. O campo "dano" deve ser um integer entre 0 e 20.';
 
             let data;
             try {
@@ -1788,6 +1781,7 @@ if (destinoValidado !== null) {
                 console.log(`[Cenas] ✅ "${titulo}" → Sala ${salaId} | ${dilemas.length} dilemas injetados`);
             });
         }
+
 
         // ============================================================
         // PUZZLES & GERAÇÃO PROCEDURAL
