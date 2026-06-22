@@ -2434,6 +2434,22 @@ Retorne exclusivamente um objeto JSON válido.`;
                 }
                 delete acoesChegada[String(idPrimeiraSala)];
 
+                // === INCLUA ESTE NOVO BLOCO AQUI ===
+                // Mapeia qual é a origem principal de cada sala bloqueada (a mais próxima da entrada)
+                const origemPrimariaBloqueios = {};
+                for (const [idStr, sala] of Object.entries(plano)) {
+                    const idAtual = parseInt(idStr);
+                    for (const saida of (sala.saidas || [])) {
+                        const destStr = String(saida.destino);
+                        if (plano[destStr]?.bloqueio?.ativo) {
+                            if (!origemPrimariaBloqueios[destStr] || distancias[idAtual] < distancias[origemPrimariaBloqueios[destStr]]) {
+                                origemPrimariaBloqueios[destStr] = idAtual;
+                            }
+                        }
+                    }
+                }
+                // ===================================
+
                 const resumoPlano = Object.entries(plano).map(([id, sala]) => {
                     const idAtual = parseInt(id);
 
@@ -2462,9 +2478,12 @@ Retorne exclusivamente um objeto JSON válido.`;
                     } else {
                         chegada = `[SALA SEM ÂNCORA: Inicie descrevendo o ambiente à frente.]`;
                     }
-// Verifica se alguma das saídas desta sala aponta para um destino bloqueado
+// Verifica se alguma das saídas aponta para um destino bloqueado E se esta sala é a origem primária do bloqueio
 const bloqueiosNasSaidas = (sala.saidas || [])
-    .filter(saida => plano[String(saida.destino)]?.bloqueio?.ativo)
+    .filter(saida => {
+        const destStr = String(saida.destino);
+        return plano[destStr]?.bloqueio?.ativo && origemPrimariaBloqueios[destStr] === parseInt(id);
+    })
     .map(saida => {
         const blockInfo = plano[String(saida.destino)].bloqueio;
         return `O caminho para "${extrairElementoFisico(saida.acao)}" está obstruído por [${blockInfo.tipo}]. Descreva este obstáculo de forma visceral e integrada ao ambiente: "${blockInfo.descricao}".`;
