@@ -1567,7 +1567,9 @@ O fenômeno é dado concreto. A interpretação pertence ao jogador.
 ③ A SITUAÇÃO É O GANCHO — O "MONSTRO" É OPCIONAL
 Os melhores encontros são sobre decidir: em quem confiar, o que sacrificar, o que arriscar. Um NPC que precisa de ajuda mas pode ser uma cilada. Um objeto valioso que parece maldito. Use criaturas com moderação — quando aparecerem, têm motivação, não apenas comportamento.
 
-④ TERMINE COM TENSÃO ABERTA
+④ FÍSICA E LÓGICA CONCRETA: "Proibido surrealismo mágico, efeitos flutuantes ou quebras na física da realidade (ex: objetos girando no ar sozinhos). O horror deve ser físico, biológico, decadente ou psicológico, mas sempre tangível."
+
+⑤ TERMINE COM TENSÃO ABERTA
 A cena termina no momento de decisão. "Ela vira o rosto devagar na sua direção." Não resolva: suspenda.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -1623,6 +1625,7 @@ PROIBIDO:
   "como se recentemente aspirado" → "aspirado ontem à tarde"
   "como se a carne tivesse crescido em volta" → "a carne havia crescido em volta"
   "o que parece ser dor silenciosa" → "dor silenciosa"
+✗ Expressões traduzidas ou artificiais: "Proibido usar traduções literais de expressões em inglês (ex: 'a tensão desaba', 'o ar parece pesar'). Use o português idiomático e natural do Brasil ('o ambiente ficou silencioso', 'um frio repentino tomou a sala')."
   
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 RETORNE APENAS JSON — ZERO MARKDOWN, ZERO TEXTO FORA DO OBJETO:
@@ -1672,7 +1675,7 @@ Retorne APENAS JSON neste formato exato (zero markdown, zero texto fora do JSON)
                 data = await chamarGroq([
                     { role: 'system', content: systemPrompt },
                     { role: 'user', content: prompt }
-                ], 0.85, { type: 'json_object' }, MODELO_CENAS, 3);
+                ], 0.8, { type: 'json_object' }, MODELO_CENAS, 3);
             } catch (e) {
                 console.error('[Cenas] Falha na chamada Groq:', e);
                 return;
