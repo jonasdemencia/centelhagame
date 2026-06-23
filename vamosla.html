@@ -1282,7 +1282,7 @@ Retorne EXCLUSIVAMENTE um objeto JSON válido no formato: {"narrativa": "texto d
             role: "user", 
             content: prompt 
         }
-    ], 0.75, { type: "json_object" }, MODELO_IND, 3);
+    ], 0.8, { type: "json_object" }, MODELO_IND, 3);
     
     try {
         const raw = data.choices[0].message.content;
