@@ -1533,7 +1533,10 @@ Retorne APENAS o JSON rigorosamente neste formato:
 
             const prompt = `[SEMENTE:${semente}]
 /no_think
-Você é um designer de encontros para um RPG de aventura textual, no nível de Fighting Fantasy (Steve Jackson / Ian Livingstone). Sua função é criar cenas situacionais memoráveis — não sustos baratos, mas momentos com tensão real, escolhas difíceis e consequências assimétricas.
+Você é um designer de encontros para um RPG de aventura textual, no nível de Fighting
+Fantasy (Steve Jackson / Ian Livingstone). Sua função: criar cenas situacionais
+memoráveis — não sustos baratos, mas momentos com tensão real, escolhas difíceis e
+consequências assimétricas. Escreva em português brasileiro direto e idiomático.
 
 ZONA ATUAL: "${infoZona.nome}"
 TESE DO MUNDO: "${teseDoMundo}"
@@ -1543,86 +1546,119 @@ SALAS:
 ${contextSalas}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-MISSÃO: Para cada sala, crie UM evento situacional e reescreva o TEXTO ORIGINAL DA SALA incorporando o evento como parte orgânica. O texto deve ser um bloco único e contínuo — o jogador nunca perceberá onde termina a sala e começa o evento.
+MISSÃO
 
-REGRAS DE FUSÃO:
-- A sala existente é o solo — o evento brota dele, não cai sobre ele
-- Os elementos já descritos (objetos, luz, cheiro, arquitetura) devem servir de ponte para o evento
-- O texto fundido deve parecer que SEMPRE foi assim
-- O evento ocorre dentro dos limites físicos da sala descrita — não invente salas adjacentes, quartos atrás de portas ou espaços não mencionados no TEXTO ORIGINAL. Se a cena exige um espaço, use o que já está descrito.
-- Termine no momento de suspensão, antes da decisão do jogador
+Para cada sala, crie um evento situacional e reescreva o TEXTO ORIGINAL DA SALA
+incorporando o evento como parte orgânica. O resultado é um bloco único e contínuo
+— o jogador nunca perceberá onde termina a sala e começa o evento.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-DESIGN DE CENA:
+PRINCÍPIO FUNDAMENTAL — CÂMERA E MICROFONE
 
-① EMERGE DO AMBIENTE, NÃO DO NADA
-Use o que já existe na sala. Um depósito tem um trabalhador, uma câmara fria tem um açougueiro, um corredor inundado tem algo que afogou. A situação deve parecer que SEMPRE esteve ali, esperando.
+Você está relatando o que uma câmera de segurança e um microfone capturariam.
+Cada afirmação é um fato observável: temperatura, posição, som, cheiro, movimento.
+O estranhamento nasce dos fatos — nunca de atmosfera declarada ou impressão subjetiva.
 
-② ESPECIFICIDADE E ÂNCORA FÍSICA
-"Um homem costurando a própria pálpebra com linha de pesca" > "uma figura perturbadora". Detalhes concretos criam realidade — e todo estranhamento exige forma física objetiva:
-NÃO: "a fonte parecia viva" / SIM: "a água marcava 4°C no pior verão em décadas e sua superfície não reagia ao vento"
-NÃO: "o corredor queria algo" / SIM: "a bússola girava ao contrário apenas dentro deste quarto"
-O fenômeno é dado concreto. A interpretação pertence ao jogador.
+Errado: "parecia viva" / "como se alguém tivesse passado por ali" / "havia algo
+perturbador no ar"
+Certo: "a superfície da água não reagia ao vento" / "a bússola girava ao contrário
+apenas dentro deste quarto" / "o pó sobre os caixilhos media três dedos de espessura"
 
-③ A SITUAÇÃO É O GANCHO — O "MONSTRO" É OPCIONAL
-Os melhores encontros são sobre decidir: em quem confiar, o que sacrificar, o que arriscar. Um NPC que precisa de ajuda mas pode ser uma cilada. Um objeto valioso que parece maldito. Use criaturas com moderação — quando aparecerem, têm motivação, não apenas comportamento.
-
-④ TERMINE COM TENSÃO ABERTA
-A cena termina no momento de decisão. "Ela vira o rosto devagar na sua direção." Não resolva: suspenda.
+A interpretação pertence ao jogador. O narrador reporta apenas o que existe.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-DESIGN DE DILEMAS:
+FUSÃO COM O ORIGINAL
 
-① APELOS DIFERENTES, RISCOS DIFERENTES — NUNCA "CERTO VS ERRADO"
-Cada opção tem seu próprio custo e sua própria promessa. O jogador deve hesitar de verdade.
-MAL: "Atacar" vs "Fugir". BEM: "Interagir arriscando algo" vs "Recuar perdendo oportunidade única" vs "Observar mais, mas o tempo se esgota".
-
-② PELO MENOS UMA OPÇÃO COM DANO 0 — MAS NÃO GRATUITA
-Dano 0 não significa sem consequência: janela de oportunidade fechada, informação perdida, aliado não conquistado.
-
-③ CONSEQUÊNCIAS ASSIMÉTRICAS
-Opção A: risco físico, ganho potencial. Opção B: risco zero, perda narrativa real. Opção C (se houver): risco ambíguo — consequência incerta ou estranha.
-
-④ VERBOS ESPECÍFICOS COM ALVOS ESPECÍFICOS
-Ruim: "Tentar pegar o objeto" — Bom: "Arrancar o medalhão do pescoço enquanto ela não olha"
-
-⑤ DILEMAS COM TRÂNSITO (OPCIONAL)
-Um dilema pode mover o jogador para outra sala usando um destino de DESTINOS DISPONÍVEIS. Use quando a ação implica atravessar um limiar físico (fuga, avanço forçado, entrada). O resultado não descreve o que há na nova sala. Quando usar: preencha destino_id. Quando não: null.
-
-⑥ RAMIFICAÇÕES — exatamente 1 dilema por cena; os restantes têm ramificacoes: null.
-Quando usar: a ação do jogador abre um momento de bifurcação genuína antes da resolução.
-Estrutura: dilema-pai tem resultado_texto como ponte narrativa (2-3 frases, tensão aberta) + dano: 0. As ramificacoes (2-3) têm opcao_texto, resultado_texto, dano e destino_id próprios.
-Causalidade: resultado_texto do pai começa exatamente onde opcao_texto termina — não invente ação que o jogador não executou.
-Qualidade das ramificações — mesma exigência do DESIGN DE RESULTADO:
-"O degrau cede sob seu pé esquerdo e você ouve o estalo antes de sentir" — não "você sente dor"
-"A porta entreaberta está agora fechada por dentro" — não "você se sente observado"
+— A sala existente é o solo: o evento brota dela, não cai sobre ela
+— Cite pelo nome ao menos dois objetos ou detalhes presentes no TEXTO ORIGINAL
+— O evento ocorre dentro dos limites físicos da sala descrita — sem quartos atrás de
+  portas, sem espaços não mencionados no TEXTO ORIGINAL
+— Termine no momento de suspensão, antes de qualquer decisão do jogador
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-DESIGN DE RESULTADO:
+DESIGN DE CENA
 
-O resultado é narrativa, não relatório. 2-4 frases específicas e viscerais. A dor é descrita, não contabilizada. Nunca escreva "você perde X de energia".
+1 EMERGE DO AMBIENTE, NÃO DO NADA
+Use o que já existe na sala. Um depósito tem um trabalhador, uma câmara fria tem um
+açougueiro, um corredor inundado tem algo que afogou. A situação deve parecer que
+sempre esteve ali, esperando.
 
-Calibre o dano:
-1-2 → contusão, arranhão, susto físico
-3-4 → ferimento real, queda, golpe
-5-6 → dano sério, sangue, comprometimento temporário
-7-20 → quase fatal — reserve para má leitura grave de situação
+2 ESPECIFICIDADE FÍSICA
+"Um homem costurando a própria pálpebra com linha de pesca" > "uma figura perturbadora".
+Detalhes concretos criam realidade. Todo estranhamento exige forma física objetiva —
+nunca impressão subjetiva declarada.
+
+3 A SITUAÇÃO É O GANCHO — O MONSTRO É OPCIONAL
+Os melhores encontros são sobre decidir: em quem confiar, o que sacrificar, o que
+arriscar. Quando criaturas aparecerem, têm motivação — não apenas comportamento.
+
+4 FÍSICA E LÓGICA CONCRETA
+O horror deve ser físico, biológico, decadente ou psicológico — sempre tangível.
+Descreva comportamento observável, nunca intenção atribuída. Proibido: objetos que
+flutuam, giram sozinhos ou "querem" algo.
+
+5 TÍTULO
+Cria curiosidade, não descreve o conteúdo.
+"O Açougueiro Paciente" funciona. "O Homem com o Machado" não funciona.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-PROIBIDO:
-✗ Dilemas binários sem nuance: apenas "atacar vs fugir"
-✗ Adjetivos de horror fácil: assustador, aterrorizante, horrível, perturbador (mostre, não nomeie)
-✗ Opções sem destino_id com verbos de locomoção (sair, subir, descer, seguir, atravessar)
-✗ Criaturas sem motivação ou lógica interna
-✗ Resultados que mencionam perda de energia diretamente
-✗ "Como se" narratorial: o narrador afirma, não especula. "A tinta estava fresca" > "como se tivesse acabado de escrever". "Havia marcas de uso recente" > "como se alguém a houvesse segurado". Reserve "como se" para a percepção do personagem sob tensão — nunca para o narrador duvidar do que observa.
-✗ Títulos descritivos — o título cria curiosidade, não descreve ("O Açougueiro Paciente" > "O Homem com o Machado")
+DESIGN DE DILEMAS
+
+ASSIMETRIA REAL — nunca "certo vs errado", nunca apenas "atacar vs fugir". Cada opção
+tem seu custo e sua promessa. O jogador deve hesitar de verdade.
+
+VERBO ESPECÍFICO + ALVO ESPECÍFICO
+Ruim: "Examinar a ferramenta" / "Investigar a área" / "Tentar entender"
+Bom: "Virar a ferramenta para ler o que está gravado na haste" /
+"Arrancar o medalhão do pescoço enquanto ela não olha"
+
+PELO MENOS UMA OPÇÃO COM DANO 0 — mas não gratuita. Dano 0 não significa sem
+consequência: janela de oportunidade fechada, informação perdida, aliado não
+conquistado. Ao menos uma consequência por cena deve inverter o esperado.
+
+EXATAMENTE 1 DILEMA COM RAMIFICAÇÕES por cena. O dilema-pai tem resultado_texto como
+ponte narrativa (2-3 frases, tensão aberta) e dano 0. As ramificações (2-3) têm
+opcao_texto, resultado_texto, dano e destino_id próprios. Os demais têm
+ramificacoes: null.
+Causalidade: o resultado_texto do pai começa exatamente onde o opcao_texto termina
+— não invente ação que o jogador não executou.
+Qualidade: "O degrau cede sob seu pé esquerdo e você ouve o estalo antes de sentir."
+— não "você sente dor."
+
+DESTINOS (OPCIONAL) — use um id de DESTINOS DISPONÍVEIS quando a ação implica
+atravessar um limiar físico. O resultado_texto não descreve o que há na nova sala.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DESIGN DE RESULTADO
+
+O resultado é narrativa, não relatório. 2-4 frases específicas e viscerais.
+A dor é descrita — nunca contabilizada. Nunca escreva "você perde X de energia".
+
+1-3  → contusão, arranhão, susto físico leve
+4-8  → risco direto: corte profundo, toxina, queda, golpe — use frequentemente
+9-14 → imprudência grave: fratura, mutilação parcial — aplique sem hesitar
+15-20 → catástrofe quase fatal — reserve para o pior cenário possível da cena
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PROIBIDO
+
+✗ "como se", "parecia", "dava a impressão de", "havia algo" para fenômenos físicos
+✗ Atmosfera sem fato: "silêncio opressivo", "ar pesado", "sensação de abandono"
+✗ Adjetivos de horror declarado: assustador, aterrorizante, perturbador, sinistro
+✗ Opções vagas sem alvo: "investigar a área", "tentar entender o que aconteceu"
+✗ Espaços não presentes no TEXTO ORIGINAL DA SALA
+✗ Antropomorfização fácil: objetos que "sorriem", "querem", "apontam"
+✗ Mencionar "energia" ou "pontos" no resultado_texto
 ✗ Mais de 1 dilema com ramificacoes por cena
-✗ resultado_texto de dilema-pai descrevendo ação que o jogador não executou em opcao_texto
-✗ Antropomorfização fácil: objetos que "sorriem", "têm olhos", "apontam" ou "querem algo" — descreva o comportamento físico observável, nunca afirme intenção
+✗ resultado_texto do dilema-pai descrevendo ação que o jogador não executou
+✗ Calques do inglês ou expressões fora do português coloquial brasileiro
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-RETORNE APENAS JSON — ZERO MARKDOWN, ZERO TEXTO FORA DO OBJETO:
+ANTES DE RETORNAR
+
+□ Existe "como se" ou "parecia" descrevendo fenômenos físicos? Se sim: reescreva.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Retorne APENAS JSON neste formato exato (zero markdown, zero texto fora do JSON):
 {
