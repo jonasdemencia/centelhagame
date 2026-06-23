@@ -1240,7 +1240,7 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
         async function gerarIND(idSala) {
     const sala = mapaMundo[idSala];
     
-    const prompt = `Você é o Diretor de Cinematics de um jogo de mistério adulto e realista (estilo Resident Evil clássico). Sua função é criar a "Interrupção Narrativa Dinâmica", uma cena curta e MEMORÁVEL.
+    const prompt = `Você é o Diretor de Cinematics de um jogo de "Survival Horror" adulto, cru e realista (estilo Resident Evil clássico). Sua função é criar a "Interrupção Narrativa Dinâmica", uma cena memorável onde o cenário reage fisicamente à história.
 
 O ENREDO (Inspiração oculta - NÃO NOMEIE ESTES TERMOS NA CENA):
 - MISTÉRIO CENTRAL: ${dnaGlobal?.misterio_central || "Desconhecido"}
@@ -1254,7 +1254,7 @@ DIRETRIZ DE DIREÇÃO DE ARTE (A ÂNCORA DE REALIDADE):
 O horror no seu mundo NÃO é mágico, iluminado ou fantasioso. O horror é PESADO e CLÍNICO. O sobrenatural opera através da física crua: concreto, carne, poeira, madeira quebrando, sangue e gravidade. Tudo que se move tem atrito e peso.
 
 REGRAS DE ESCRITA:
-1. Formato: 5 a 8 frases contínuas. Um único parágrafo. Foco em UM único evento (Não liste múltiplos acontecimentos na sala).
+1. Formato: 5 a 8 frases contínuas. Um único parágrafo. Foco em UM único objeto/evento (Não liste múltiplos acontecimentos na sala).
 2. Materialidade Absoluta (PROIBIÇÃO DE FANTASIA): É expressamente PROIBIDO o uso de "símbolos brilhantes", "cristais", "objetos flutuando", "almas", "luzes mágicas", "equações no ar" ou "mudanças de dimensão". Nada levita. A gravidade existe.
 3. Proibido Metáforas: NUNCA use "como se", "parecia", "dava a impressão". O evento é narrado no indicativo direto, como um relatório pericial.
 4. Omissão de Nomes: Nunca use os nomes das entidades ou organizações. O jogador deve inferir a conspiração pela *natureza física* do evento (ex: algemas revelam controle, chumbo revela radiação, um brinquedo sujo revela a criança).
@@ -1265,7 +1265,7 @@ EXEMPLOS DE CENAS QUE REVELAM A LORE SEM EXPLICAR:
 Exemplo 1 (Lore: Parasita mutável usado por corporação):
 "O papel de parede floral descasca no canto da sala de jantar. A argamassa úmida cede para frente, caindo esfarelada sobre o assoalho. De dentro da fenda exposta na alvenaria, um casulo de carne pálida e sem pelos pulsa no ritmo de um batimento cardíaco lento, esmagando-se contra os tijolos. A película do casulo rasga no centro em um rasgo vertical. Um líquido negro e espesso escorre pela parede, pingando copiosamente até manchar o rodapé de madeira."
 
-Exemplo 2 (Lore: Magia temporal / Alquimia corrompida):
+Exemplo 2 (Lore: Mortos retornando a vida):
 "A cadeira de rodas caída no corredor gira lentamente sozinha sobre o piso úmido. Um dos sacos de cadáver presos à parede infla de repente até rasgar no centro. Um braço humano revestido por veias negras desliza para fora da abertura e se agarra ao chão. As unhas quebradas arranham o azulejo enquanto o restante do corpo continua preso dentro do plástico pulsante. Sangue fresco começa a escorrer da gaveta metálica logo acima do saco rompido."
 
 Retorne EXCLUSIVAMENTE um objeto JSON válido no formato: {"narrativa": "texto da cena aqui"}`;
