@@ -1629,9 +1629,9 @@ PROIBIDO:
 ✗ Opções sem destino_id com verbos de locomoção (sair, subir, descer, seguir, atravessar)
 ✗ Criaturas sem motivação ou lógica interna
 ✗ Resultados que mencionam perda de energia diretamente
-✗ BANIMENTO DE VOCABULÁRIO (BLACKLIST): É terminantemente proibido imprimir as seguintes palavras ou expressões no JSON final: "como se", "parece", "parecia", "lembra", "lembrava".
-✗ Âncora de Câmera de Segurança: Descreva a cena como uma lente de câmera gravando fatos brutos. A corrente aperta (fato material). A placa se move (fato material). 
-✗ Proibição de Intenção e Metáfora: Objetos inanimados e o ambiente NÃO têm vontade. A escuridão não "ganha peso", o metal não "ganha vida" e coisas não "esperam por alguém". Descreva a física (o rangido, a ferrugem, o frio, o movimento), nunca a intenção.
+✗ Limite do Protagonista: O jogador é um humano comum de carne e osso. NUNCA invente características corporais (ex: "mão mecânica"), roupas, passado ou emoções para o jogador
+✗ Âncora de Câmera de Segurança: Descreva a cena como uma lente de câmera gravando fatos brutos. A corrente aperta (fato material). A placa se move (fato material) 
+✗ Proibição de Intenção e Metáfora: Objetos inanimados e o ambiente NÃO têm vontade. A escuridão não "ganha peso", o metal não "ganha vida" e coisas não "esperam por alguém". Descreva a física (o rangido, a ferrugem, o frio, o movimento), nunca a intenção
 ✗ Títulos descritivos — o título cria curiosidade, não descreve ("O Açougueiro Paciente" > "O Homem com o Machado")
 ✗ Mais de 1 dilema com ramificacoes por cena
 ✗ resultado_texto de dilema-pai descrevendo ação que o jogador não executou em opcao_texto
@@ -1684,7 +1684,7 @@ Retorne APENAS JSON neste formato exato (zero markdown, zero texto fora do JSON)
                 data = await chamarGroq([
                     { role: 'system', content: systemPrompt },
                     { role: 'user', content: prompt }
-                ], 0.75, { type: 'json_object' }, MODELO_CENAS, 3);
+                ], 0.8, { type: 'json_object' }, MODELO_CENAS, 3);
             } catch (e) {
                 console.error('[Cenas] Falha na chamada Groq:', e);
                 return;
