@@ -1701,8 +1701,9 @@ Retorne APENAS JSON neste formato exato (zero markdown, zero texto fora do JSON)
             }
 
             const cenas = parsed.cenas || [];
-            console.log(`[Cenas] ✅ ${cenas.length} cenas geradas para zona "${infoZona.nome}".`, cenas);
-            aplicarArquitetoDeCenas(cenas, mapaFinalMesclado, idsElegiveis);
+console.log(`[Cenas] ✅ ${cenas.length} cenas geradas para zona "${infoZona.nome}".`, cenas);
+const cenasRevisadas = await revisarCoerenciaCenas(cenas);  // ← única inserção
+aplicarArquitetoDeCenas(cenasRevisadas, mapaFinalMesclado, idsElegiveis);
         }
 
         function aplicarArquitetoDeCenas(cenas, mapaFinalMesclado, idsValidos) {
@@ -1800,6 +1801,94 @@ if (destinoValidado !== null) {
                 console.log(`[Cenas] ✅ "${titulo}" → Sala ${salaId} | ${dilemas.length} dilemas injetados`);
             });
         }
+
+
+    // ============================================================
+// REVISOR DE COERÊNCIA FÍSICA — pós-processador de Cenas
+// ============================================================
+
+async function revisarCoerenciaCenas(cenas) {
+    // Extrai todos os pares ação→consequência da árvore de dilemas
+    const pares = [];
+    cenas.forEach((cena, ci) => {
+        (cena.dilemas || []).forEach((d, di) => {
+            pares.push({ ref: `c${ci}_d${di}`, acao: d.opcao_texto, consequencia: d.resultado_texto });
+            (d.ramificacoes || []).forEach((r, ri) => {
+                pares.push({ ref: `c${ci}_d${di}_r${ri}`, acao: r.opcao_texto, consequencia: r.resultado_texto });
+            });
+        });
+    });
+
+    if (pares.length === 0) return cenas;
+
+    const prompt = `/no_think
+Você é um verificador de causalidade física para narrativa de RPG em Português brasileiro.
+
+PRINCÍPIO ÚNICO: Uma ação sobre o objeto A não pode causar mudanças espontâneas em objetos B, C, D não relacionados. Marcas físicas não crescem, não apontam para lugares e não mudam de forma como resultado de outras ações. Se a consequência descreve fenômeno que viola física básica — não magia estabelecida, mas causalidade oculta implausível — deve ser corrigida.
+
+Para cada par abaixo:
+- Se a consequência for fisicamente incoerente, reescreva-a: mesma sala, mesmo dano implícito, mesma tensão, sem causalidade mágica não estabelecida.
+- Se estiver coerente, retorne consequencia_corrigida: null.
+
+PARES:
+${JSON.stringify(pares)}
+
+Retorne APENAS JSON:
+{"revisoes":[{"ref":"ID","consequencia_corrigida":"TEXTO_OU_NULL"}]}`;
+
+    let data;
+    try {
+        data = await chamarGroq(
+            [{ role: 'user', content: prompt }],
+            0.15,
+            { type: 'json_object' },
+            MODELO_CENAS,
+            1
+        );
+    } catch (e) {
+        console.warn('[Revisor] Falha na chamada — output original preservado:', e);
+        return cenas; // graceful fallback
+    }
+
+    let revisoes = [];
+    try {
+        const raw = data.choices[0].message.content;
+        const match = raw.match(/{[\s\S]*}/);
+        revisoes = (JSON.parse(match ? match[0] : raw).revisoes) || [];
+    } catch (e) {
+        console.warn('[Revisor] Parse falhou — output original preservado');
+        return cenas;
+    }
+
+    const mapa = Object.fromEntries(
+        revisoes
+            .filter(r => r.consequencia_corrigida)
+            .map(r => [r.ref, expurgarViciosIA(r.consequencia_corrigida.trim())])
+    );
+
+    if (Object.keys(mapa).length === 0) {
+        console.log('[Revisor] ✅ Coerência física validada — sem correções');
+        return cenas;
+    }
+
+    console.warn(`[Revisor] ⚠️ ${Object.keys(mapa).length} consequência(s) corrigida(s):`, mapa);
+
+    return cenas.map((cena, ci) => ({
+        ...cena,
+        dilemas: (cena.dilemas || []).map((d, di) => {
+            const mainKey = `c${ci}_d${di}`;
+            const ramsCorrigidas = (d.ramificacoes || []).map((r, ri) => {
+                const rKey = `c${ci}_d${di}_r${ri}`;
+                return mapa[rKey] ? { ...r, resultado_texto: mapa[rKey] } : r;
+            });
+            return {
+                ...d,
+                resultado_texto: mapa[mainKey] || d.resultado_texto,
+                ramificacoes: d.ramificacoes ? ramsCorrigidas : null
+            };
+        })
+    }));
+}
 
 
         // ============================================================
