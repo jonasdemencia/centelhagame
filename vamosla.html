@@ -1491,6 +1491,22 @@ Retorne APENAS o JSON rigorosamente neste formato:
     });
 }
 
+    function expurgarViciosIA(texto) {
+    if (!texto) return texto;
+
+    // 1. Guilhotina para "como se" e "quase como se"
+    // Captura a vírgula/espaço anterior, a expressão, e todo o texto até a pontuação final,
+    // substituindo tudo apenas pela pontuação encontrada (ponto, exclamação, etc).
+    let limpo = texto.replace(/(?:,\s*|\s+)\b(?:quase\s+)?como se\b[^.!?]*([.!?]|$)/gi, '$1');
+
+    // 2. Guilhotina para comparações diretas no fim da frase (Ex: "como uma memória congelada.")
+    // Remove "como um", "como uma", "como se fosse" no final das frases.
+    limpo = limpo.replace(/(?:,\s*|\s+)\b(?:quase\s+)?como (?:um|uma)\b[^.!?]*([.!?]|$)/gi, '$1');
+
+    // Remove espaços duplos acidentais que possam sobrar
+    return limpo.replace(/\s{2,}/g, ' ').trim();
+}
+
         // ============================================================
         // ARQUITETO DE CENAS E DILEMAS
         // ============================================================
@@ -1702,7 +1718,7 @@ Retorne APENAS JSON neste formato exato (zero markdown, zero texto fora do JSON)
                 }
 
                 const titulo     = (cena.titulo || 'Evento Inesperado').trim();
-const textoFusao = (cena.texto_sala_fundido || '').trim();
+const textoFusao = expurgarViciosIA((cena.texto_sala_fundido || '').trim());
 if (!textoFusao) return;
 
 sala.texto_logico  = textoFusao;
@@ -1721,7 +1737,7 @@ sala.cena_aplicada = true;
 
 dilemas.forEach(dilema => {
     const opcaoTexto     = (dilema.opcao_texto    || 'Observar com cautela').trim();
-    const narrativaBruta = (dilema.resultado_texto || '').trim();
+    const narrativaBruta = expurgarViciosIA((dilema.resultado_texto || '').trim());
     if (!narrativaBruta) return;
 
     const dano = typeof dilema.dano === 'number'
@@ -1751,9 +1767,11 @@ const ramificacoes = ramsRaw
             : null;
         return {
             opcao_texto:     r.opcao_texto.trim(),
-            resultado_texto: rDano > 0
-                ? `${r.resultado_texto.trim().replace(/[.\s]+$/, '')}. Você perde ${rDano} de energia.`
-                : r.resultado_texto.trim(),
+            const rNarrativaLimpa = expurgarViciosIA((r.resultado_texto || '').trim());
+// ...
+resultado_texto: rDano > 0
+    ? `${rNarrativaLimpa.replace(/[.\s]+$/, '')}. Você perde ${rDano} de energia.`
+    : rNarrativaLimpa,
             dano:    rDano,
             destino: rDestino
         };
