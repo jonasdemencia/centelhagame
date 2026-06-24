@@ -1765,16 +1765,19 @@ const ramificacoes = ramsRaw
         const rDestino = (rDestinoRaw && destinosValidos.has(rDestinoRaw))
             ? parseInt(rDestinoRaw)
             : null;
+
+// 👇 Declare a variável aqui, fora do objeto
+        const rNarrativaLimpa = expurgarViciosIA((r.resultado_texto || '').trim());
+        
         return {
-            opcao_texto:     r.opcao_texto.trim(),
-            const rNarrativaLimpa = expurgarViciosIA((r.resultado_texto || '').trim());
-// ...
-resultado_texto: rDano > 0
-    ? `${rNarrativaLimpa.replace(/[.\s]+$/, '')}. Você perde ${rDano} de energia.`
-    : rNarrativaLimpa,
-            dano:    rDano,
+            opcao_texto: r.opcao_texto.trim(),
+            resultado_texto: rDano > 0
+                ? `${rNarrativaLimpa.replace(/[.\s]+$/, '')}. Você perde ${rDano} de energia.`
+                : rNarrativaLimpa,
+            dano: rDano,
             destino: rDestino
         };
+    });
     });
 
 sala.opcoes.push({
