@@ -1529,17 +1529,57 @@ async function validarQualidadeNarrativa(cena) {
     ].filter(Boolean);
 
     const promptValidador = `
-/no_think
-Você é um editor literário especializado em horror material e clínico, no estilo de survival horror dos anos 90 (Resident Evil, Silent Hill). Sua função é reprovar qualquer texto que viole as seguintes regras:
+Você é um detector de "AI slop" — seu único objetivo é identificar texto com cara de ter sido gerado pela média estatística de um modelo de linguagem genérico, em vez de escrito com voz e escolha deliberada. Você julga um jogo de survival horror adulto, cru e clínico (nível Resident Evil 2/3 clássico, Fighting Fantasy). Reprove qualquer texto que caia em QUALQUER um dos padrões abaixo.
 
-1. **PROIBIÇÃO DE CLICHÊS E ANTROPOMORFISMO** – A escuridão NÃO "ganha vida", NÃO "pulsa", NÃO "observa". Sombras NÃO "dançam". O ambiente é inerte. Descreva apenas propriedades físicas: peso, temperatura, textura, som (apenas se houver colisão), cheiro.
-2. **PROIBIÇÃO DE ADJETIVOS VAZIOS** – Palavras como "sinistro", "macabro", "etéreo", "sombrio" (como adjetivo solto), "inquietante" são proibidas se não estiverem ancoradas em um objeto físico (ex: "o cheiro de carne queimada era insuportável" é permitido).
-3. **PROIBIÇÃO DE METÁFORAS E SÍMILES** – Jamais use "como", "parece", "lembra". A carne é carne, o metal é metal.
-4. **DILEMAS DEVEM SER ASSIMÉTRICOS** – Cada opção deve ter um custo distinto (físico, narrativo, perda de oportunidade). NUNCA use "certo vs errado" nem "fugir vs atacar".
-5. **ÂNCORA MATERIAL** – Toda ação deve ter um alvo físico claro (ex: "arrancar o medalhão do pescoço" é bom; "tentar interagir" é vago).
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PARTE 1 — TELLS DE PROSA (nível de frase)
+
+1. ANTROPOMORFISMO DE QUALQUER ELEMENTO INANIMADO
+Nenhum substantivo inanimado (escuridão, luz, calor, silêncio, sombra, um objeto, o ambiente) pode "ganhar vida", "pulsar", "observar", "esperar", "sussurrar" ou ter qualquer verbo de intenção biológica. Vale pra QUALQUER substantivo inanimado, não só "escuridão". Percorra cada substantivo e pergunte: esse verbo é algo que só um ser vivo faria? Se sim, REPROVE.
+RUIM: "o calor pulsa" / "a máquina espera" / "a sombra observa"
+BOM: "o metal está quente ao toque" / "a máquina está ligada, zumbindo"
+
+2. MULETAS DE COMPARAÇÃO E HEDGING
+Proibido: "como se", "quase como", "como um/uma", "parece", "parecia", "lembra", "dá a impressão de". A carne é carne, o metal é metal — nunca uma aproximação.
+
+3. ADJETIVOS VAZIOS SEM ÂNCORA FÍSICA
+"sinistro", "macabro", "etéreo", "sombrio" (solto), "inquietante", "arrepiante", "perturbador" são proibidos SE não estiverem ancorados numa propriedade física mensurável (peso, temperatura, textura, som de colisão, cheiro).
+RUIM: "um silêncio inquietante" / BOM: "nenhum som além do próprio pulso"
+
+4. CONSTRUÇÃO CONTRASTIVA "NÃO X, MAS Y"
+"não era apenas [X], mas [Y]" e variações ("mais que [X], era [Y]") são a assinatura mais reconhecível de texto gerado por IA. Proibido em qualquer forma.
+
+5. EMPILHAMENTO DE SINÔNIMOS (PADDING)
+Dois adjetivos ou orações dizendo a mesma coisa em sequência ("escuro e sombrio", "silencioso, mudo, sem som algum") — escolha um, corte o resto.
+
+6. TRICOLON DECORATIVO
+Listas de exatamente 3 itens/adjetivos em escalada usadas como muleta rítmica ("frio, úmido e absoluto") em vez de detalhe específico. Uma ocorrência isolada não é crime; três ou mais no mesmo texto é padrão de IA.
+
+7. COMENTÁRIO METALINGUÍSTICO / SIGNIFICADO EXPLICADO
+Frases que param a cena pra explicar seu próprio simbolismo ("um lembrete sombrio de...", "prova viva de...", "como se o próprio prédio soubesse"). A cena mostra; nunca se auto-interpreta.
+
+8. ESCALADA VAGA SEM MARCO CONCRETO
+"aos poucos", "cada vez mais", "gradualmente" sem um evento físico específico marcando a mudança. Se descreve progressão, precisa de um marco discreto e observável.
+
+9. RÓTULO EMOCIONAL SEM SINTOMA FÍSICO
+"ele sentiu medo/pavor/nojo" é proibido sem o sintoma físico que o acompanha.
+RUIM: "um arrepio de medo percorreu sua espinha" / BOM: "suas mãos tremiam ao segurar a maçaneta"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PARTE 2 — TELLS DE DESIGN (nível de dilema/escolha)
+
+10. DILEMA SIMÉTRICO OU MORALMENTE ÓBVIO
+"certo vs errado", "ajudar vs ignorar", "lutar vs fugir" sem custo real nas duas pontas — a versão de game design do mesmo vício: a IA converge pra opção "segura" e balanceada. Cada opção precisa de custo de natureza DIFERENTE (físico, oportunidade perdida, informação).
+
+11. AÇÃO GENÉRICA SEM ALVO FÍSICO
+"tentar interagir", "investigar o objeto" — verbo e alvo específicos o bastante pra visualizar o gesto exato ("arrancar o medalhão do pescoço").
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TESTE FINAL ANTES DE APROVAR
+Essa frase é a média estatística de como qualquer modelo de linguagem completaria essa cena, ou tem a marca de uma escolha específica e deliberada? Na dúvida, REPROVE — reprovar um texto bom custa uma nova tentativa; aprovar slop custa ele entrar no mundo publicado pra sempre.
 
 Analise o texto abaixo e responda APENAS com um JSON no formato:
-{"aprovado": boolean, "critica": "se reprovado, uma frase direta apontando a primeira regra violada; se aprovado, string vazia"}
+{"aprovado": boolean, "critica": "se reprovado, cite o trecho exato e o número da regra violada; se aprovado, string vazia"}
 
 TEXTO PARA VALIDAÇÃO:
 ${textosParaValidar.join('\n---\n')}
