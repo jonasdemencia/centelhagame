@@ -1193,18 +1193,19 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
         // SISTEMA IND (CINEMATICS) E API
         // ============================================================
         
-        async function chamarGroq(messages, temperatura = 0.7, formato = { type: "json_object" }, modeloPadrao = MODELO_GROQ, tentativas = 3) {
+        async function chamarGroq(messages, temperatura = 0.7, formato = { type: "json_object" }, modeloPadrao = MODELO_GROQ, tentativas = 3, reasoningEffort = null) {
     for (let i = 0; i < tentativas; i++) {
         const response = await fetch(WORKER_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-    model: modeloPadrao,
-    messages: messages,
-    temperature: temperatura,
-    max_tokens: 4096,
-    ...(formato ? { response_format: formato } : {}),
-}),
+                model: modeloPadrao,
+                messages: messages,
+                temperature: temperatura,
+                max_tokens: 4096,
+                ...(formato ? { response_format: formato } : {}),
+                ...(reasoningEffort ? { reasoning_effort: reasoningEffort } : {}),
+            }),
         });
 
                 const data = await response.json();
@@ -1546,15 +1547,16 @@ ${textosParaValidar.join('\n---\n')}
 
     try {
         const data = await chamarGroq(
-            [
-                { role: 'system', content: 'Você é um validador estrito. Retorne APENAS JSON válido. Zero markdown.' },
-                { role: 'user', content: promptValidador }
-            ],
-            0.0,
-            { type: 'json_object' },
-            MODELO_VALIDADOR,
-            2
-        );
+    [
+        { role: 'system', content: 'Você é um validador estrito. Retorne APENAS JSON válido. Zero markdown.' },
+        { role: 'user', content: promptValidador }
+    ],
+    0.0,
+    { type: 'json_object' },
+    MODELO_VALIDADOR,
+    2,
+    'none'   // desliga reasoning de fato — não é sugestão, é parâmetro da API
+);
         const raw = data.choices[0].message.content;
         const match = raw.match(/\{[\s\S]*\}/);
         return JSON.parse(match ? match[0] : raw);
