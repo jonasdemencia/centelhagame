@@ -606,7 +606,7 @@ window.dispatchEvent(new Event('firebase-initialized'));
         const MODELO_ARQUITETO = "llama-3.3-70b-versatile"; // Arquiteto de Perigos
         const MODELO_CENAS = "qwen/qwen3-32b"; // Arquiteto de Cenas e Dilemas
         const MODELO_CENAS_FALLBACK = "openai/gpt-oss-120b";
-        const MODELO_VALIDADOR = "qwen/qwen3.6-27b";  // modelo de validação (edição implacável)
+        const MODELO_VALIDADOR = "meta-llama/llama-4-scout-17b-16e-instruct";
 
 
         let mapaMundo = null;
@@ -1554,8 +1554,8 @@ ${textosParaValidar.join('\n---\n')}
     0.0,
     { type: 'json_object' },
     MODELO_VALIDADOR,
-    2,
-    'none'   // desliga reasoning de fato — não é sugestão, é parâmetro da API
+    2
+    // sem reasoning_effort — não se aplica a esse modelo
 );
         const raw = data.choices[0].message.content;
         const match = raw.match(/\{[\s\S]*\}/);
