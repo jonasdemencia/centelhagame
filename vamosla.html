@@ -1590,13 +1590,23 @@ Todo pronome (ele, ela, isso, algo, aquilo) precisa ter antecedente único e rec
 Palavras clínicas, estrangeiras, ou que soam a tradução literal/dicionário em vez de escolha de escritor nativo do gênero (ex: "fobia" no lugar de "medo") quebram a voz. Se uma palavra do texto soaria estranha na boca de um narrador humano de survival horror, REPROVE.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 TESTE FINAL ANTES DE APROVAR
-Essa frase é a média estatística de como qualquer modelo de linguagem completaria essa cena, ou tem a marca de uma escolha específica e deliberada? Na dúvida, REPROVE — reprovar um texto bom custa uma nova tentativa; aprovar slop custa ele entrar no mundo publicado pra sempre.
+Analise os textos fornecidos. Você é obrigado a extrair aspas exatas de qualquer trecho que viole as regras acima.
 
-Analise o texto abaixo e responda APENAS com um JSON no formato:
-{"aprovado": boolean, "critica": "se reprovado, cite o trecho exato e o número da regra violada; se aprovado, string vazia"}
+Responda APENAS com um JSON estrito no formato abaixo. O campo "trechos_violadores" deve ser preenchido antes do veredito.
+{
+  "trechos_violadores": [
+    {
+      "citacao_exata": "a frase exata do texto que quebra a regra",
+      "regra_quebrada": "Numero e nome da regra",
+      "motivo_clinico": "Explicação curta e impiedosa de por que é slop"
+    }
+  ],
+  "aprovado": boolean // Só será true se o array 'trechos_violadores' estiver absolutamente VAZIO.
+}
 
-TEXTO PARA VALIDAÇÃO:
+TEXTOS PARA VALIDAÇÃO:
 ${textosParaValidar.join('\n---\n')}
 `;
 
