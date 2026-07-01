@@ -1509,47 +1509,100 @@ Retorne APENAS o JSON rigorosamente neste formato:
     return limpo.replace(/\s{2,}/g, ' ').trim();
 }
 
+
+// ============================================================
+// VALIDADOR NARRATIVO (Editor Implacável)
+// ============================================================
+async function validarQualidadeNarrativa(cena) {
+    // Extrai todos os textos relevantes da cena
+    const textosParaValidar = [
+        cena.texto_sala_fundido,
+        ...(cena.dilemas || []).flatMap(d => [
+            d.resultado_texto,
+            ...(d.ramificacoes || []).map(r => r.resultado_texto)
+        ])
+    ].filter(Boolean);
+
+    const promptValidador = `
+Você é um editor literário especializado em horror material e clínico, no estilo de survival horror dos anos 90 (Resident Evil, Silent Hill). Sua função é reprovar qualquer texto que viole as seguintes regras:
+
+1. **PROIBIÇÃO DE CLICHÊS E ANTROPOMORFISMO** – A escuridão NÃO "ganha vida", NÃO "pulsa", NÃO "observa". Sombras NÃO "dançam". O ambiente é inerte. Descreva apenas propriedades físicas: peso, temperatura, textura, som (apenas se houver colisão), cheiro.
+2. **PROIBIÇÃO DE ADJETIVOS VAZIOS** – Palavras como "sinistro", "macabro", "etéreo", "sombrio" (como adjetivo solto), "inquietante" são proibidas se não estiverem ancoradas em um objeto físico (ex: "o cheiro de carne queimada era insuportável" é permitido).
+3. **PROIBIÇÃO DE METÁFORAS E SÍMILES** – Jamais use "como", "parece", "lembra". A carne é carne, o metal é metal.
+4. **DILEMAS DEVEM SER ASSIMÉTRICOS** – Cada opção deve ter um custo distinto (físico, narrativo, perda de oportunidade). NUNCA use "certo vs errado" nem "fugir vs atacar".
+5. **ÂNCORA MATERIAL** – Toda ação deve ter um alvo físico claro (ex: "arrancar o medalhão do pescoço" é bom; "tentar interagir" é vago).
+
+Analise o texto abaixo e responda APENAS com um JSON no formato:
+{"aprovado": boolean, "critica": "se reprovado, uma frase direta apontando a primeira regra violada; se aprovado, string vazia"}
+
+TEXTO PARA VALIDAÇÃO:
+${textosParaValidar.join('\n---\n')}
+`;
+
+    try {
+        const data = await chamarGroq(
+            [
+                { role: 'system', content: 'Você é um validador estrito. Retorne APENAS JSON válido. Zero markdown.' },
+                { role: 'user', content: promptValidador }
+            ],
+            0.0,
+            { type: 'json_object' },
+            MODELO_VALIDADOR,
+            2
+        );
+        const raw = data.choices[0].message.content;
+        const match = raw.match(/\{[\s\S]*\}/);
+        return JSON.parse(match ? match[0] : raw);
+    } catch (e) {
+        console.error('[Validador] Erro ao validar cena:', e);
+        // Em caso de erro, aprovamos por segurança (evita loop infinito)
+        return { aprovado: true, critica: '' };
+    }
+}
+
+    
+
         // ============================================================
         // ARQUITETO DE CENAS E DILEMAS
         // ============================================================
 
         async function gerarArquitetoDeCenas(mapaFinalMesclado, infoZona, salaFim) {
-            // Seleciona 2-3 salas elegíveis:
-            // • id < 10000  (não puzzle)
-            // • id !== salaFim  (não fronteira)
-            // • sem ind_disponivel  (sem IND)
-            // • sem puzzle_status
-            // • tem opcoes
-            const idsElegiveis = Object.keys(mapaFinalMesclado)
-                .map(Number)
-                .filter(id => {
-                    const sala = mapaFinalMesclado[String(id)];
-                    return id < 10000
-                        // && id !== salaFim   // <-- remova esta condição
-                        && !sala.ind_disponivel
-                        && !sala.puzzle_status
-                        && Array.isArray(sala.opcoes)
-                        && sala.opcoes.length > 0
-                        && !sala.opcoes.some(o => o.interceptor_arquiteto)
-                        && !sala.opcoes.some(o => o.arquiteto === true && !o.dilema); // exclui salas com nova_opcao do Perigos
-                })
-                .sort(() => Math.random() - 0.5)
-                .slice(0, 3);
+    // Seleciona 2-3 salas elegíveis:
+    // • id < 10000  (não puzzle)
+    // • id !== salaFim  (não fronteira)
+    // • sem ind_disponivel  (sem IND)
+    // • sem puzzle_status
+    // • tem opcoes
+    const idsElegiveis = Object.keys(mapaFinalMesclado)
+        .map(Number)
+        .filter(id => {
+            const sala = mapaFinalMesclado[String(id)];
+            return id < 10000
+                // && id !== salaFim   // <-- remova esta condição
+                && !sala.ind_disponivel
+                && !sala.puzzle_status
+                && Array.isArray(sala.opcoes)
+                && sala.opcoes.length > 0
+                && !sala.opcoes.some(o => o.interceptor_arquiteto)
+                && !sala.opcoes.some(o => o.arquiteto === true && !o.dilema); // exclui salas com nova_opcao do Perigos
+        })
+        .sort(() => Math.random() - 0.5)
+        .slice(0, 3);
 
-            if (idsElegiveis.length === 0) return;
+    if (idsElegiveis.length === 0) return;
 
-            const contextSalas = idsElegiveis.map(id => {
-    const sala = mapaFinalMesclado[String(id)];
-    const textoOriginal = (sala.texto_logico || '').substring(0, 700);
-    const destinosSala = (sala.opcoes || [])
-        .filter(o => o.destino && !o.arquiteto)
-        .map(o => `  • [${o.destino}] "${o.texto}"`).join('\n');
-    return `SALA_ID:${id} — "${sala.nome}"\nTEXTO ORIGINAL DA SALA:\n${textoOriginal}\nDESTINOS DISPONÍVEIS:\n${destinosSala || '  (nenhum)'}`;
-}).join('\n\n');
+    const contextSalas = idsElegiveis.map(id => {
+        const sala = mapaFinalMesclado[String(id)];
+        const textoOriginal = (sala.texto_logico || '').substring(0, 700);
+        const destinosSala = (sala.opcoes || [])
+            .filter(o => o.destino && !o.arquiteto)
+            .map(o => `  • [${o.destino}] "${o.texto}"`).join('\n');
+        return `SALA_ID:${id} — "${sala.nome}"\nTEXTO ORIGINAL DA SALA:\n${textoOriginal}\nDESTINOS DISPONÍVEIS:\n${destinosSala || '  (nenhum)'}`;
+    }).join('\n\n');
 
-            const semente = Math.random().toString(36).substring(2, 8);
+    const semente = Math.random().toString(36).substring(2, 8);
 
-            const prompt = `[SEMENTE:${semente}]
+    const prompt = `[SEMENTE:${semente}]
 /no_think
 Você é um designer de encontros para um RPG de aventura textual, no nível de Steve Jackson e Ian Livingstone. Sua função é criar cenas situacionais memoráveis — não sustos baratos, mas momentos com tensão real, escolhas difíceis e consequências assimétricas.
 
@@ -1670,145 +1723,210 @@ Retorne APENAS JSON neste formato exato (zero markdown, zero texto fora do JSON)
 ]
 }`;
 
-            const systemPrompt = 'Você é o Arquiteto de Cenas de um RPG de aventura textual em Português brasileiro. Retorne APENAS JSON válido. Zero markdown. O campo "dano" deve ser um integer entre 0 e 20.';
+    const systemPrompt = 'Você é o Arquiteto de Cenas de um RPG de aventura textual em Português brasileiro. Retorne APENAS JSON válido. Zero markdown. O campo "dano" deve ser um integer entre 0 e 20.';
 
-            let data;
-let modeloUsado = MODELO_CENAS;
+    // ---- LOOP DE RETENTATIVA COM VALIDAÇÃO ----
+    let parsed = null;
+    let feedbackCritico = "";
+    let data = null;
+    let modeloUsado = MODELO_CENAS;
 
-try {
-    data = await chamarGroq([
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: prompt }
-    ], 0.8, { type: 'json_object' }, MODELO_CENAS, 2);
-} catch (e) {
-    console.warn(`[Cenas] Falha com ${MODELO_CENAS}:`, e.message);
-    console.log(`[Cenas] Tentando fallback com ${MODELO_CENAS_FALLBACK}...`);
-    
-    try {
-        data = await chamarGroq([
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: prompt }
-        ], 0.8, { type: 'json_object' }, MODELO_CENAS_FALLBACK, 1);
-        modeloUsado = MODELO_CENAS_FALLBACK;
-    } catch (fallbackError) {
-        console.error(`[Cenas] Falha também com ${MODELO_CENAS_FALLBACK}:`, fallbackError.message);
-        return;
-    }
-}
-
-console.log(`[Cenas] Modelo usado: ${modeloUsado}`);
-
-            let parsed;
-            try {
-                const raw = data.choices[0].message.content;
-                const match = raw.match(/{[\s\S]*}/);
-                parsed = JSON.parse(match ? match[0] : raw);
-            } catch (e) {
-                console.error('[Cenas] Falha no parse JSON:', e);
-                return;
-            }
-
-            const cenas = parsed.cenas || [];
-            console.log(`[Cenas] ✅ ${cenas.length} cenas geradas para zona "${infoZona.nome}".`, cenas);
-            aplicarArquitetoDeCenas(cenas, mapaFinalMesclado, idsElegiveis);
+    for (let tentativa = 1; tentativa <= 3; tentativa++) {
+        // Monta o prompt com feedback, se houver
+        let promptComFeedback = prompt;
+        if (feedbackCritico) {
+            promptComFeedback += `\n\n⚠️ NA TENTATIVA ANTERIOR, O EDITOR REPROVOU SUA CRIAÇÃO PELOS SEGUINTES MOTIVOS:\n${feedbackCritico}\n\nREESCREVA TODAS AS CENAS CORRIGINDO ESTAS FALHAS DE TOM E ESTRUTURA.`;
         }
 
-        function aplicarArquitetoDeCenas(cenas, mapaFinalMesclado, idsValidos) {
-            const idsValidosSet = new Set(idsValidos.map(String));
+        try {
+            data = await chamarGroq(
+                [
+                    { role: 'system', content: systemPrompt },
+                    { role: 'user', content: promptComFeedback }
+                ],
+                0.8,
+                { type: 'json_object' },
+                modeloUsado,
+                2
+            );
+        } catch (e) {
+            console.warn(`[Cenas] Falha na tentativa ${tentativa} com ${modeloUsado}:`, e.message);
+            if (modeloUsado === MODELO_CENAS) {
+                modeloUsado = MODELO_CENAS_FALLBACK;
+                console.log(`[Cenas] Fallback para ${MODELO_CENAS_FALLBACK}...`);
+                continue;
+            } else {
+                break;
+            }
+        }
 
-            cenas.forEach(cena => {
-                const salaId = String(cena.sala_id);
-                const sala = mapaFinalMesclado[salaId];
+        // Parse do JSON
+        let raw;
+        try {
+            raw = data.choices[0].message.content;
+            const match = raw.match(/{[\s\S]*}/);
+            parsed = JSON.parse(match ? match[0] : raw);
+        } catch (e) {
+            console.error('[Cenas] Erro no parse JSON na tentativa', tentativa, e);
+            if (tentativa === 3) break;
+            feedbackCritico = "O JSON retornado estava malformado. Por favor, retorne apenas um JSON válido.";
+            continue;
+        }
 
-                if (!sala || !idsValidosSet.has(salaId)) {
-                    console.warn(`[Cenas] Sala ${salaId} fora do escopo. Ignorando.`);
-                    return;
+        // Limpeza com expurgarViciosIA (antes da validação)
+        if (parsed.cenas && Array.isArray(parsed.cenas)) {
+            parsed.cenas = parsed.cenas.map(cena => {
+                cena.texto_sala_fundido = expurgarViciosIA(cena.texto_sala_fundido);
+                if (cena.dilemas) {
+                    cena.dilemas = cena.dilemas.map(d => {
+                        d.resultado_texto = expurgarViciosIA(d.resultado_texto);
+                        if (d.ramificacoes) {
+                            d.ramificacoes = d.ramificacoes.map(r => {
+                                r.resultado_texto = expurgarViciosIA(r.resultado_texto);
+                                return r;
+                            });
+                        }
+                        return d;
+                    });
                 }
-
-                const titulo     = (cena.titulo || 'Evento Inesperado').trim();
-const textoFusao = expurgarViciosIA((cena.texto_sala_fundido || '').trim());
-if (!textoFusao) return;
-
-sala.texto_logico  = textoFusao;
-sala.cena_titulo   = titulo;
-sala.cena_aplicada = true;
-
-                // Adiciona as opções de dilema à sala
-                if (!sala.opcoes) sala.opcoes = [];
-                const dilemas = Array.isArray(cena.dilemas) ? cena.dilemas : [];
-
-                const destinosValidos = new Set(
-    (sala.opcoes || [])
-        .filter(o => o.destino && !o.arquiteto)
-        .map(o => String(o.destino))
-);
-
-dilemas.forEach(dilema => {
-    const opcaoTexto     = (dilema.opcao_texto    || 'Observar com cautela').trim();
-    const narrativaBruta = expurgarViciosIA((dilema.resultado_texto || '').trim());
-    if (!narrativaBruta) return;
-
-    const dano = typeof dilema.dano === 'number'
-        ? Math.min(20, Math.max(0, Math.round(dilema.dano)))
-        : 0;
-
-    const resultadoTexto = dano > 0
-        ? `${narrativaBruta.replace(/[.\s]+$/, '')}. Você perde ${dano} de energia.`
-        : narrativaBruta;
-
-    const destinoRaw     = dilema.destino_id ? String(dilema.destino_id) : null;
-    const destinoValidado = (destinoRaw && destinosValidos.has(destinoRaw))
-        ? parseInt(destinoRaw)
-        : null;
-
-    // Valida e prepara ramificações
-const ramsRaw = Array.isArray(dilema.ramificacoes) ? dilema.ramificacoes : [];
-const ramificacoes = ramsRaw
-    .filter(r => r.opcao_texto && r.resultado_texto)
-    .map(r => {
-        const rDano = typeof r.dano === 'number'
-            ? Math.min(20, Math.max(0, Math.round(r.dano)))
-            : 0;
-        const rDestinoRaw = r.destino_id ? String(r.destino_id) : null;
-        const rDestino = (rDestinoRaw && destinosValidos.has(rDestinoRaw))
-            ? parseInt(rDestinoRaw)
-            : null;
-
-// 👇 Declare a variável aqui, fora do objeto
-        const rNarrativaLimpa = expurgarViciosIA((r.resultado_texto || '').trim());
-        
-        return {
-            opcao_texto: r.opcao_texto.trim(),
-            resultado_texto: rDano > 0
-                ? `${rNarrativaLimpa.replace(/[.\s]+$/, '')}. Você perde ${rDano} de energia.`
-                : rNarrativaLimpa,
-            dano: rDano,
-            destino: rDestino
-        };
-    });
-
-sala.opcoes.push({
-    texto:           opcaoTexto,
-    arquiteto:       true,
-    dilema:          true,
-    resultado_texto: resultadoTexto,
-    dano,
-    destino:         destinoValidado,
-    disparado:       false,
-    ramificacoes:    ramificacoes.length > 0 ? ramificacoes : null
-});
-
-    // ─── LOG DE INJEÇÃO ───
-if (destinoValidado !== null) {
-    console.log(`[Cenas] Dilema com destino injetado: "${opcaoTexto}" → sala ${destinoValidado} (Sala ${salaId})`);
-}
-    
-});
-
-                console.log(`[Cenas] ✅ "${titulo}" → Sala ${salaId} | ${dilemas.length} dilemas injetados`);
+                return cena;
             });
         }
 
+        // Validação de cada cena
+        let aprovadoGeral = true;
+        const criticasAcumuladas = [];
+
+        for (const cena of (parsed.cenas || [])) {
+            const resultado = await validarQualidadeNarrativa(cena);
+            if (!resultado.aprovado) {
+                aprovadoGeral = false;
+                criticasAcumuladas.push(`- Cena "${cena.titulo || 'sem título'}": ${resultado.critica}`);
+            }
+        }
+
+        if (aprovadoGeral) {
+            console.log(`[Cenas] ✅ Validação aprovada na tentativa ${tentativa}.`);
+            break;
+        } else {
+            feedbackCritico = criticasAcumuladas.join('\n');
+            console.warn(`[Cenas] ❌ Validação reprovada na tentativa ${tentativa}. Críticas:`, feedbackCritico);
+            if (tentativa === 3) {
+                console.warn('[Cenas] 3 tentativas esgotadas. Forçando aprovação da última versão.');
+                break;
+            }
+            // Se ainda há tentativas, o loop continua com feedbackCritico
+        }
+    }
+
+    // Se ainda assim parsed estiver nulo, aborta
+    if (!parsed) {
+        console.error('[Cenas] Falha total na geração. Abortando.');
+        return;
+    }
+
+    console.log(`[Cenas] Modelo usado: ${modeloUsado}`);
+    // ---- FIM DO LOOP ----
+
+    const cenas = parsed.cenas || [];
+    console.log(`[Cenas] ✅ ${cenas.length} cenas geradas para zona "${infoZona.nome}".`, cenas);
+    aplicarArquitetoDeCenas(cenas, mapaFinalMesclado, idsElegiveis);
+}
+
+        function aplicarArquitetoDeCenas(cenas, mapaFinalMesclado, idsValidos) {
+    const idsValidosSet = new Set(idsValidos.map(String));
+
+    cenas.forEach(cena => {
+        const salaId = String(cena.sala_id);
+        const sala = mapaFinalMesclado[salaId];
+
+        if (!sala || !idsValidosSet.has(salaId)) {
+            console.warn(`[Cenas] Sala ${salaId} fora do escopo. Ignorando.`);
+            return;
+        }
+
+        const titulo     = (cena.titulo || 'Evento Inesperado').trim();
+        const textoFusao = (cena.texto_sala_fundido || '').trim();  // sem expurgarViciosIA
+        if (!textoFusao) return;
+
+        sala.texto_logico  = textoFusao;
+        sala.cena_titulo   = titulo;
+        sala.cena_aplicada = true;
+
+        // Adiciona as opções de dilema à sala
+        if (!sala.opcoes) sala.opcoes = [];
+        const dilemas = Array.isArray(cena.dilemas) ? cena.dilemas : [];
+
+        const destinosValidos = new Set(
+            (sala.opcoes || [])
+                .filter(o => o.destino && !o.arquiteto)
+                .map(o => String(o.destino))
+        );
+
+        dilemas.forEach(dilema => {
+            const opcaoTexto     = (dilema.opcao_texto    || 'Observar com cautela').trim();
+            const narrativaBruta = (dilema.resultado_texto || '').trim();  // sem expurgarViciosIA
+            if (!narrativaBruta) return;
+
+            const dano = typeof dilema.dano === 'number'
+                ? Math.min(20, Math.max(0, Math.round(dilema.dano)))
+                : 0;
+
+            const resultadoTexto = dano > 0
+                ? `${narrativaBruta.replace(/[.\s]+$/, '')}. Você perde ${dano} de energia.`
+                : narrativaBruta;
+
+            const destinoRaw     = dilema.destino_id ? String(dilema.destino_id) : null;
+            const destinoValidado = (destinoRaw && destinosValidos.has(destinoRaw))
+                ? parseInt(destinoRaw)
+                : null;
+
+            // Valida e prepara ramificações
+            const ramsRaw = Array.isArray(dilema.ramificacoes) ? dilema.ramificacoes : [];
+            const ramificacoes = ramsRaw
+                .filter(r => r.opcao_texto && r.resultado_texto)
+                .map(r => {
+                    const rDano = typeof r.dano === 'number'
+                        ? Math.min(20, Math.max(0, Math.round(r.dano)))
+                        : 0;
+                    const rDestinoRaw = r.destino_id ? String(r.destino_id) : null;
+                    const rDestino = (rDestinoRaw && destinosValidos.has(rDestinoRaw))
+                        ? parseInt(rDestinoRaw)
+                        : null;
+
+                    // Texto já limpo, apenas usa diretamente
+                    const rNarrativaLimpa = (r.resultado_texto || '').trim();
+                    
+                    return {
+                        opcao_texto: r.opcao_texto.trim(),
+                        resultado_texto: rDano > 0
+                            ? `${rNarrativaLimpa.replace(/[.\s]+$/, '')}. Você perde ${rDano} de energia.`
+                            : rNarrativaLimpa,
+                        dano: rDano,
+                        destino: rDestino
+                    };
+                });
+
+            sala.opcoes.push({
+                texto:           opcaoTexto,
+                arquiteto:       true,
+                dilema:          true,
+                resultado_texto: resultadoTexto,
+                dano,
+                destino:         destinoValidado,
+                disparado:       false,
+                ramificacoes:    ramificacoes.length > 0 ? ramificacoes : null
+            });
+
+            // ─── LOG DE INJEÇÃO ───
+            if (destinoValidado !== null) {
+                console.log(`[Cenas] Dilema com destino injetado: "${opcaoTexto}" → sala ${destinoValidado} (Sala ${salaId})`);
+            }
+        });
+
+        console.log(`[Cenas] ✅ "${titulo}" → Sala ${salaId} | ${dilemas.length} dilemas injetados`);
+    });
+}
 
         // ============================================================
         // PUZZLES & GERAÇÃO PROCEDURAL
