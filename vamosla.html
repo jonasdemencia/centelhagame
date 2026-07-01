@@ -1559,11 +1559,6 @@ SALAS (apenas nome e saídas físicas disponíveis):
 ${contextSalas}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-MISSÃO: Para cada sala, crie uma descrição de ambiente do zero, baseando-se APENAS no nome da sala e nas saídas listadas. A descrição deve ser um bloco contínuo de 5 a 8 frases, em segunda pessoa, que apresente o espaço de forma sensorial e material. Não mencione as saídas como opções — descreva os elementos físicos que correspondem a cada saída (ex: se uma saída é "Subir a escada", a escada deve estar visível na descrição; se é "Atravessar a ponte", a ponte deve ser mencionada). A cena deve terminar num momento de tensão ou curiosidade, antes da ação do jogador.
-
-Além disso, para cada sala, crie um conjunto de dilemas (ações interativas) seguindo as regras abaixo.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 DESIGN DE CENA (para a descrição):
 
 1. ESPECIFICIDADE E ÂNCORA FÍSICA
@@ -1635,7 +1630,7 @@ RETORNE APENAS JSON — ZERO MARKDOWN, ZERO TEXTO FORA DO OBJETO:
     {
       "sala_id": "ID_NUMÉRICO",
       "titulo": "Título do Evento (curto, evocativo)",
-      "texto_sala_fundido": "Descrição da sala (5-8 frases) criada do zero, baseada no nome e nas saídas. Termine em tensão.",
+      "texto_sala_fundido": "Descrição da cena na sala (5-8 frases), baseada no nome e nas saídas. Termine em tensão.",
       "dilemas": [
         {
           "opcao_texto": "Ação que resolve na hora",
