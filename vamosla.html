@@ -1209,10 +1209,13 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
 
                 const data = await response.json();
 
-                const isRateLimit = (!response.ok && response.status === 429) || 
-                                    (data.error && data.error.message && data.error.message.includes("Rate limit"));
+                const isRetryable = (!response.ok && response.status === 429) || 
+                    (data.error && data.error.message && (
+                        data.error.message.includes("Rate limit") ||
+                        data.error.message.includes("json_validate_failed")
+                    ));
 
-                if (isRateLimit && i < tentativas - 1) {
+if (isRetryable && i < tentativas - 1) {
                     const errMsg = data.error?.message || "";
                     const match = errMsg.match(/try again in ([\d\.]+)s/);
                     const waitTime = match ? (parseFloat(match[1]) * 1000) + 2000 : 15000;
@@ -1525,6 +1528,7 @@ async function validarQualidadeNarrativa(cena) {
     ].filter(Boolean);
 
     const promptValidador = `
+/no_think
 Você é um editor literário especializado em horror material e clínico, no estilo de survival horror dos anos 90 (Resident Evil, Silent Hill). Sua função é reprovar qualquer texto que viole as seguintes regras:
 
 1. **PROIBIÇÃO DE CLICHÊS E ANTROPOMORFISMO** – A escuridão NÃO "ganha vida", NÃO "pulsa", NÃO "observa". Sombras NÃO "dançam". O ambiente é inerte. Descreva apenas propriedades físicas: peso, temperatura, textura, som (apenas se houver colisão), cheiro.
