@@ -604,8 +604,8 @@ window.dispatchEvent(new Event('firebase-initialized'));
         const MODELO_PUZZLE = "openai/gpt-oss-120b";
         const MODELO_IND = "qwen/qwen3-32b"; // Modelo responsável pelas cinematics
         const MODELO_ARQUITETO = "llama-3.3-70b-versatile"; // Arquiteto de Perigos
-        const MODELO_CENAS = "meta-llama/llama-4-scout-17b-16e-instruct"; // Arquiteto de Cenas (PRINCIPAL)
-        const MODELO_CENAS_PROSA = "qwen/qwen3-32b"; // Arquiteto de Cenas — Chamada B (prosa)
+        const MODELO_CENAS = "qwen/qwen3-32b"; // Arquiteto de Cenas e Dilemas
+        const MODELO_CENAS_FALLBACK = "openai/gpt-oss-120b";
 
 
         let mapaMundo = null;
@@ -1192,7 +1192,7 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
         // SISTEMA IND (CINEMATICS) E API
         // ============================================================
         
-        async function chamarGroq(messages, temperatura = 0.7, formato = { type: "json_object" }, modeloPadrao = MODELO_GROQ, tentativas = 3, maxTokens = 4096, opcoesExtras = {}) {
+        async function chamarGroq(messages, temperatura = 0.7, formato = { type: "json_object" }, modeloPadrao = MODELO_GROQ, tentativas = 3) {
     for (let i = 0; i < tentativas; i++) {
         const response = await fetch(WORKER_URL, {
             method: "POST",
@@ -1201,9 +1201,8 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
     model: modeloPadrao,
     messages: messages,
     temperature: temperatura,
-    max_tokens: maxTokens,
+    max_tokens: 4096,
     ...(formato ? { response_format: formato } : {}),
-    ...opcoesExtras,
 }),
         });
 
@@ -1515,268 +1514,212 @@ Retorne APENAS o JSON rigorosamente neste formato:
         // ============================================================
 
         async function gerarArquitetoDeCenas(mapaFinalMesclado, infoZona, salaFim) {
-    // Seleciona 2-3 salas elegíveis:
-    // • id < 10000  (não puzzle)
-    // • sem ind_disponivel
-    // • sem puzzle_status
-    // • tem opcoes
-    const idsElegiveis = Object.keys(mapaFinalMesclado)
-        .map(Number)
-        .filter(id => {
-            const sala = mapaFinalMesclado[String(id)];
-            return id < 10000
-                && !sala.ind_disponivel
-                && !sala.puzzle_status
-                && Array.isArray(sala.opcoes)
-                && sala.opcoes.length > 0
-                && !sala.opcoes.some(o => o.interceptor_arquiteto)
-                && !sala.opcoes.some(o => o.arquiteto === true && !o.dilema);
-        })
-        .sort(() => Math.random() - 0.5)
-        .slice(0, 3);
+            // Seleciona 2-3 salas elegíveis:
+            // • id < 10000  (não puzzle)
+            // • id !== salaFim  (não fronteira)
+            // • sem ind_disponivel  (sem IND)
+            // • sem puzzle_status
+            // • tem opcoes
+            const idsElegiveis = Object.keys(mapaFinalMesclado)
+                .map(Number)
+                .filter(id => {
+                    const sala = mapaFinalMesclado[String(id)];
+                    return id < 10000
+                        // && id !== salaFim   // <-- remova esta condição
+                        && !sala.ind_disponivel
+                        && !sala.puzzle_status
+                        && Array.isArray(sala.opcoes)
+                        && sala.opcoes.length > 0
+                        && !sala.opcoes.some(o => o.interceptor_arquiteto)
+                        && !sala.opcoes.some(o => o.arquiteto === true && !o.dilema); // exclui salas com nova_opcao do Perigos
+                })
+                .sort(() => Math.random() - 0.5)
+                .slice(0, 3);
 
-    if (idsElegiveis.length === 0) return;
+            if (idsElegiveis.length === 0) return;
 
-    const contextSalas = idsElegiveis.map(id => {
-        const sala = mapaFinalMesclado[String(id)];
-        const textoOriginal = (sala.texto_logico || '').substring(0, 700);
-        const destinosSala = (sala.opcoes || [])
-            .filter(o => o.destino && !o.arquiteto)
-            .map(o => `  • [${o.destino}] "${o.texto}"`).join('\n');
-        return `SALA_ID:${id} — "${sala.nome}"\nTEXTO ORIGINAL DA SALA:\n${textoOriginal}\nDESTINOS DISPONÍVEIS:\n${destinosSala || '  (nenhum)'}`;
-    }).join('\n\n');
+            const contextSalas = idsElegiveis.map(id => {
+    const sala = mapaFinalMesclado[String(id)];
+    const textoOriginal = (sala.texto_logico || '').substring(0, 700);
+    const destinosSala = (sala.opcoes || [])
+        .filter(o => o.destino && !o.arquiteto)
+        .map(o => `  • [${o.destino}] "${o.texto}"`).join('\n');
+    return `SALA_ID:${id} — "${sala.nome}"\nTEXTO ORIGINAL DA SALA:\n${textoOriginal}\nDESTINOS DISPONÍVEIS:\n${destinosSala || '  (nenhum)'}`;
+}).join('\n\n');
 
-    const semente = Math.random().toString(36).substring(2, 8);
+            const semente = Math.random().toString(36).substring(2, 8);
 
-    // ================================================================
-    // CHAMADA A — Scout T=0.2 — ESTRUTURA LÓGICA (sem prosa)
-    // Decide QUEM está lá, O QUE acontece, QUAIS objetos envolvidos,
-    // QUAL o dano calibrado, QUAIS destinos são usados.
-    // NÃO escreve texto narrativo — apenas o esqueleto causal.
-    // ================================================================
-    const systemPromptA = `Você é o Arquiteto Lógico de Cenas de um RPG de horror textual. Retorne APENAS JSON válido. Zero markdown. O campo "dano" deve ser um integer entre 0 e 20.
+            const prompt = `[SEMENTE:${semente}]
+/no_think
+Você é um designer de encontros para um RPG de aventura textual, no nível de Steve Jackson e Ian Livingstone. Sua função é criar cenas situacionais memoráveis — não sustos baratos, mas momentos com tensão real, escolhas difíceis e consequências assimétricas.
 
-MISSÃO: Para cada sala fornecida, projete a estrutura lógica da cena — sem escrever prosa elaborada.
+ZONA ATUAL: "${infoZona.nome}"
+MISTÉRIO CENTRAL: "${dnaGlobal?.misterio_central || ''}"
 
-REGRAS DE SITUAÇÃO:
-- O evento deve emergir dos objetos e contexto JÁ EXISTENTES no texto da sala
-- NUNCA invente objetos, entidades ou espaços não mencionados no TEXTO ORIGINAL DA SALA
-- Especificidade concreta obrigatória: "paciente imóvel com cateter no braço" > "figura estranha"
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SALAS:
+${contextSalas}
 
-REGRAS DE DILEMAS:
-- Mínimo 2, máximo 3 dilemas por cena
-- Apelos diferentes, riscos diferentes — nunca apenas "atacar vs fugir"
-- Pelo menos 1 dilema com dano 0 (custo narrativo real: janela fechada, aliado perdido)
-- destino_id usa APENAS IDs da lista DESTINOS DISPONÍVEIS, ou null
-- Exatamente 1 dilema por cena pode ter ramificacoes; os demais têm ramificacoes: null
-- Ramificacoes: quando a ação do jogador abre bifurcação genuína antes da resolução
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+MISSÃO: Para cada sala, crie UM evento situacional e reescreva o TEXTO ORIGINAL DA SALA incorporando o evento como parte orgânica. O texto deve ser um bloco único e contínuo — o jogador nunca perceberá onde termina a sala e começa o evento.
 
-CALIBRAÇÃO DE DANO:
-0 → sem dano físico, custo narrativo real | 1-2 → contusão, arranhão | 3-4 → ferimento, queda | 5-6 → sangue, comprometimento | 7-20 → quase fatal
+REGRAS DE FUSÃO:
+- A sala existente é o solo — o evento surge dele, não cai sobre ele
+- Os elementos já descritos (objetos, luz, cheiro, arquitetura) devem servir de ponte para o evento
+- O texto fundido deve parecer que SEMPRE foi assim
+- O evento ocorre dentro dos limites físicos da sala descrita — não invente salas adjacentes, quartos atrás de portas ou espaços não mencionados no TEXTO ORIGINAL. Se a cena exige um espaço, use o que já está descrito.
+- Termine no momento de suspensão, antes da decisão do jogador
 
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DESIGN DE CENA:
+
+1. EMERGE DO AMBIENTE, NÃO DO NADA
+Use o que já existe na sala. Um depósito tem um trabalhador, uma câmara fria tem um açougueiro, um corredor inundado tem algo que afogou. A situação deve parecer que SEMPRE esteve ali, esperando.
+
+2. ESPECIFICIDADE E ÂNCORA FÍSICA
+"Um homem costurando a própria pálpebra com linha de pesca" > "uma figura perturbadora". Detalhes concretos criam realidade — e todo estranhamento exige forma física objetiva:
+NÃO: "a fonte parecia viva" / SIM: "a água marcava 4°C no pior verão em décadas e sua superfície não reagia ao vento"
+NÃO: "o corredor queria algo" / SIM: "a bússola girava ao contrário apenas dentro deste quarto"
+O fenômeno é dado concreto. A interpretação pertence ao jogador.
+
+3. TERMINE COM TENSÃO ABERTA
+A cena termina no momento de decisão. "Ela vira o rosto devagar na sua direção." Não resolva: suspenda.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DESIGN DE DILEMAS:
+
+1. APELOS DIFERENTES, RISCOS DIFERENTES — NUNCA "CERTO VS ERRADO"
+Cada opção tem seu próprio custo e sua própria promessa. O jogador deve hesitar de verdade.
+MAL: "Atacar" vs "Fugir". BEM: "Interagir arriscando algo" vs "Recuar perdendo oportunidade única" vs "Observar mais, mas o tempo se esgota".
+
+2. PELO MENOS UMA OPÇÃO COM DANO 0 — MAS NÃO GRATUITA
+Dano 0 não significa sem consequência: janela de oportunidade fechada, informação perdida, aliado não conquistado.
+
+3. CONSEQUÊNCIAS ASSIMÉTRICAS
+Opção A: risco físico, ganho potencial. Opção B: risco zero, perda narrativa real. Opção C (se houver): risco ambíguo — consequência incerta ou estranha.
+
+4. VERBOS ESPECÍFICOS COM ALVOS ESPECÍFICOS
+Ruim: "Tentar pegar o objeto" — Bom: "Arrancar o medalhão do pescoço enquanto ela não olha"
+
+5. DILEMAS COM TRÂNSITO (OPCIONAL)
+Um dilema pode mover o jogador para outra sala usando um destino de DESTINOS DISPONÍVEIS. Use quando a ação implica atravessar um limiar físico (fuga, avanço forçado, entrada). O resultado não descreve o que há na nova sala. Quando usar: preencha destino_id. Quando não: null.
+
+6. RAMIFICAÇÕES — exatamente 1 dilema por cena; os restantes têm ramificacoes: null.
+Quando usar: a ação do jogador abre um momento de bifurcação genuína antes da resolução.
+Estrutura: dilema-pai tem resultado_texto como ponte narrativa (2-3 frases, tensão aberta) + dano: 0. As ramificacoes (2-3) têm opcao_texto, resultado_texto, dano e destino_id próprios.
+Causalidade: resultado_texto do pai começa exatamente onde opcao_texto termina — não invente ação que o jogador não executou.
+Qualidade das ramificações — mesma exigência do DESIGN DE RESULTADO:
+"O degrau cede sob seu pé esquerdo e você ouve o estalo antes de sentir" — não "você sente dor"
+"A porta entreaberta está agora fechada por dentro" — não "você se sente observado"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DESIGN DE RESULTADO:
+
+O resultado é narrativa, não relatório. 2-4 frases específicas e viscerais. A dor é descrita, não contabilizada. Nunca escreva "você perde X de energia".
+
+Calibre o dano:
+1-2 → contusão, arranhão, susto físico
+3-4 → ferimento real, queda, golpe
+5-6 → dano sério, sangue, comprometimento temporário
+7-20 → quase fatal — reserve para má leitura grave de situação
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 PROIBIDO:
-✗ Objetos não mencionados no TEXTO ORIGINAL DA SALA
+✗ Dilemas binários sem nuance: apenas "atacar vs fugir"
+✗ Adjetivos de horror fácil: assustador, aterrorizante, horrível, perturbador (mostre, não nomeie)
+✗ Opções sem destino_id com verbos de locomoção (sair, subir, descer, seguir, atravessar)
+✗ Criaturas sem motivação ou lógica interna
+✗ Resultados que mencionam perda de energia diretamente
+✗ Limite do Protagonista: O jogador é um humano comum de carne e osso. NUNCA invente características corporais (ex: "mão mecânica"), roupas, passado ou emoções para o jogador
+✗ Âncora de Câmera de Segurança: Descreva a cena como uma lente de câmera gravando fatos brutos. A corrente aperta (fato material). A placa se move (fato material) 
+✗ Proibição de Intenção e Metáfora: Objetos inanimados e o ambiente NÃO têm vontade. A escuridão não "ganha peso", o metal não "ganha vida" e coisas não "esperam por alguém". Descreva a física (o rangido, a ferrugem, o frio, o movimento), nunca a intenção
+✗ Títulos descritivos — o título cria curiosidade, não descreve ("O Açougueiro Paciente" > "O Homem com o Machado")
 ✗ Mais de 1 dilema com ramificacoes por cena
-✗ destino_id inventado (use apenas os IDs listados ou null)
-✗ Títulos descritivos ("O Homem com o Machado") — prefira enigmáticos ("O Açougueiro Paciente")
+✗ resultado_texto de dilema-pai descrevendo ação que o jogador não executou em opcao_texto
 
-RETORNE EXATAMENTE:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+RETORNE APENAS JSON — ZERO MARKDOWN, ZERO TEXTO FORA DO OBJETO:
+
+Retorne APENAS JSON neste formato exato (zero markdown, zero texto fora do JSON):
 {
   "cenas": [
     {
       "sala_id": "ID_NUMÉRICO",
-      "titulo": "Título enigmático",
-      "situacao": "1-2 frases descrevendo o evento físico que emerge da sala — sem prosa literária, apenas a lógica do evento e os objetos/entidades envolvidos",
+      "titulo": "Título do Evento",
+      "texto_sala_fundido": "Reescrita completa da sala com o evento embutido organicamente. 5-8 frases. O texto termina no momento de tensão — o jogador ainda não agiu.",
       "dilemas": [
-        {
-          "opcao_texto": "Verbo concreto + objeto físico da sala",
-          "dano": 0,
-          "destino_id": null,
-          "ramificacoes": null
-        },
-        {
-          "opcao_texto": "Alternativa com custo diferente",
-          "dano": 3,
-          "destino_id": null,
-          "ramificacoes": [
-            { "opcao_texto": "Desdobramento A — como reagir", "dano": 2, "destino_id": null },
-            { "opcao_texto": "Desdobramento B — alternativa", "dano": 0, "destino_id": null }
-          ]
-        }
-      ]
-    }
-  ]
+  {
+    "opcao_texto": "Ação que resolve na hora",
+    "resultado_texto": "2-4 frases narrando a consequência direta.",
+    "dano": 0,
+    "destino_id": null,
+    "ramificacoes": null
+  },
+  {
+    "opcao_texto": "Ação que se desdobra numa segunda decisão",
+    "resultado_texto": "2-3 frases de transição — a situação se complicou. Termina em tensão aberta.",
+    "dano": 0,
+    "destino_id": null,
+    "ramificacoes": [
+      {
+        "opcao_texto": "Como reagir — desdobramento A",
+        "resultado_texto": "2-3 frases narrando a consequência de A.",
+        "dano": 3,
+        "destino_id": null
+      },
+      {
+        "opcao_texto": "Como reagir — desdobramento B",
+        "resultado_texto": "2-3 frases narrando a consequência de B.",
+        "dano": 0,
+        "destino_id": null
+      }
+    ]
+  }
+]
 }`;
 
-    const promptA = `[SEMENTE:${semente}]
-ZONA: "${infoZona.nome}"
-MISTÉRIO CENTRAL: "${dnaGlobal?.misterio_central || ''}"
-Gere exatamente ${idsElegiveis.length} cenas — uma por sala.
+            const systemPrompt = 'Você é o Arquiteto de Cenas de um RPG de aventura textual em Português brasileiro. Retorne APENAS JSON válido. Zero markdown. O campo "dano" deve ser um integer entre 0 e 20.';
 
-${contextSalas}`;
+            let data;
+let modeloUsado = MODELO_CENAS;
 
-    let skeletonData;
+try {
+    data = await chamarGroq([
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: prompt }
+    ], 0.8, { type: 'json_object' }, MODELO_CENAS, 2);
+} catch (e) {
+    console.warn(`[Cenas] Falha com ${MODELO_CENAS}:`, e.message);
+    console.log(`[Cenas] Tentando fallback com ${MODELO_CENAS_FALLBACK}...`);
+    
     try {
-        skeletonData = await chamarGroq([
-            { role: 'system', content: systemPromptA },
-            { role: 'user', content: promptA }
-        ], 0.2, { type: 'json_object' }, MODELO_CENAS, 2, 3000);
-    } catch (e) {
-        console.error('[Cenas/A] Falha no Scout:', e.message);
+        data = await chamarGroq([
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: prompt }
+        ], 0.8, { type: 'json_object' }, MODELO_CENAS_FALLBACK, 1);
+        modeloUsado = MODELO_CENAS_FALLBACK;
+    } catch (fallbackError) {
+        console.error(`[Cenas] Falha também com ${MODELO_CENAS_FALLBACK}:`, fallbackError.message);
         return;
     }
-
-    let skeleton;
-    try {
-        const rawA = skeletonData.choices[0].message.content;
-        const matchA = rawA.match(/{[\s\S]*}/);
-        skeleton = JSON.parse(matchA ? matchA[0] : rawA);
-    } catch (e) {
-        console.error('[Cenas/A] Falha no parse JSON do esqueleto:', e);
-        return;
-    }
-
-    if (!skeleton.cenas || skeleton.cenas.length === 0) {
-        console.error('[Cenas/A] Esqueleto vazio, abortando.');
-        return;
-    }
-
-    console.log(`[Cenas/A] ✅ Esqueleto lógico: ${skeleton.cenas.length} cenas (Scout).`, skeleton);
-
-    // ================================================================
-    // CHAMADA B — Qwen3-32b T=0.85 + frequency_penalty=0.3 — PROSA
-    // Recebe o esqueleto causal e escreve texto_sala_fundido +
-    // resultado_texto de cada dilema e ramificação.
-    // NÃO decide estrutura — apenas proseifica o que A definiu.
-    // ================================================================
-    const resumoEsqueleto = skeleton.cenas.map(cena => {
-        const salaId = String(cena.sala_id);
-        const sala = mapaFinalMesclado[salaId] || {};
-        const textoOriginal = (sala.texto_logico || '').substring(0, 700);
-        const dilemaTxt = (cena.dilemas || []).map((d, i) => {
-            let r = `  DILEMA ${i + 1}: "${d.opcao_texto}" (dano:${d.dano}, destino:${d.destino_id ?? 'null'})`;
-            if (d.ramificacoes) {
-                r += '\n' + d.ramificacoes.map((ram, j) =>
-                    `    RAMIFICAÇÃO ${j + 1}: "${ram.opcao_texto}" (dano:${ram.dano})`
-                ).join('\n');
-            }
-            return r;
-        }).join('\n');
-        return `SALA_ID:${salaId} — "${sala.nome || ''}"\nTEXTO ORIGINAL:\n${textoOriginal}\nSITUAÇÃO LÓGICA: ${cena.situacao || ''}\nTÍTULO: ${cena.titulo}\n${dilemaTxt}`;
-    }).join('\n\n━━━━━━━━━━━━━━━━━━━━\n\n');
-
-    const systemPromptB = `Você é o Escritor de Cenas de um RPG de horror textual brasileiro. Retorne APENAS JSON válido. Zero markdown.
-
-MISSÃO: Receba o esqueleto lógico de cada cena e escreva APENAS os campos de prosa. Não invente novos eventos ou objetos — siga a SITUAÇÃO LÓGICA fornecida.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-CÂMERA E MICROFONE — REGRA ABSOLUTA:
-Descreva apenas o que uma câmera filmaria e um microfone captaria. O fenômeno é fato bruto — a interpretação pertence ao jogador.
-✗ "a fonte parecia viva" → ✓ "a água marcava 4°C e sua superfície não reagia ao vento"
-✗ "o corredor queria algo" → ✓ "a bússola girava ao contrário apenas dentro deste quarto"
-
-PROIBIDO CAUSALIDADE: Nunca explique por que algo acontece. Apague "como se", "pois", "respondendo a", "em reação a".
-PROIBIDO METÁFORAS: Nunca use "parece", "lembra", "como se fosse". Um objeto é o que ele é.
-PROIBIDO HORROR FÁCIL: Nunca use "assustador", "aterrorizante", "perturbador". Mostre, não nomeie.
-PROIBIDO: "você perde X de energia" em qualquer resultado_texto.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-ESPECIFICIDADE FÍSICA:
-✗ "uma figura perturbadora" → ✓ "um homem costurando a própria pálpebra com linha de pesca"
-✗ "estava frio" → ✓ "o termômetro pendurado na parede marcava 4°C"
-
-TEXTO_SALA_FUNDIDO (5-8 frases):
-- Começa antes do evento, termina no momento de suspensão — jogador ainda não agiu
-- O evento está integrado como se SEMPRE estivesse ali
-- Usa apenas objetos do TEXTO ORIGINAL ou da SITUAÇÃO LÓGICA
-
-RESULTADO_TEXTO por dilema/ramificação (2-4 frases):
-- Narrativa visceral e específica
-- Para dilemas com ramificacoes: resultado_texto é ponte narrativa (2-3 frases, termina em tensão aberta)
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-RETORNE EXATAMENTE (mesma ordem de dilemas e ramificações do esqueleto):
-{
-  "cenas": [
-    {
-      "sala_id": "ID",
-      "texto_sala_fundido": "...",
-      "dilemas": [
-        { "resultado_texto": "..." },
-        { "resultado_texto": "...", "ramificacoes": [
-          { "resultado_texto": "..." },
-          { "resultado_texto": "..." }
-        ]}
-      ]
-    }
-  ]
-}`;
-
-    const promptB = `/no_think
-ZONA: "${infoZona.nome}"
-MISTÉRIO CENTRAL: "${dnaGlobal?.misterio_central || ''}"
-
-ESQUELETO LÓGICO A PROSEIFICAR:
-${resumoEsqueleto}`;
-
-    let prosaData;
-    try {
-        prosaData = await chamarGroq([
-            { role: 'system', content: systemPromptB },
-            { role: 'user', content: promptB }
-        ], 0.85, { type: 'json_object' }, MODELO_CENAS_PROSA, 2, 8192, { frequency_penalty: 0.3 });
-    } catch (e) {
-        console.error('[Cenas/B] Falha no Qwen3:', e.message);
-        return;
-    }
-
-    let prosa;
-    try {
-        const rawB = prosaData.choices[0].message.content;
-        const matchB = rawB.match(/{[\s\S]*}/);
-        prosa = JSON.parse(matchB ? matchB[0] : rawB);
-    } catch (e) {
-        console.error('[Cenas/B] Falha no parse JSON da prosa:', e);
-        return;
-    }
-
-    // ================================================================
-    // ASSEMBLER — mescla esqueleto (A) com prosa (B)
-    // Estrutura final idêntica ao contrato de aplicarArquitetoDeCenas
-    // ================================================================
-    const cenas = (skeleton.cenas || []).map((cenaSk, i) => {
-        const cenaProsa = (prosa.cenas || [])[i] || {};
-        return {
-            sala_id: cenaSk.sala_id,
-            titulo: cenaSk.titulo,
-            texto_sala_fundido: cenaProsa.texto_sala_fundido || '',
-            dilemas: (cenaSk.dilemas || []).map((dilema, j) => {
-                const dilemaProsa = (cenaProsa.dilemas || [])[j] || {};
-                const ramificacoes = dilema.ramificacoes
-                    ? dilema.ramificacoes.map((ram, k) => {
-                        const ramProsa = (dilemaProsa.ramificacoes || [])[k] || {};
-                        return {
-                            opcao_texto: ram.opcao_texto,
-                            resultado_texto: ramProsa.resultado_texto || '',
-                            dano: typeof ram.dano === 'number' ? ram.dano : 0,
-                            destino_id: ram.destino_id ?? null
-                        };
-                    })
-                    : null;
-                return {
-                    opcao_texto: dilema.opcao_texto,
-                    resultado_texto: dilemaProsa.resultado_texto || '',
-                    dano: typeof dilema.dano === 'number' ? dilema.dano : 0,
-                    destino_id: dilema.destino_id ?? null,
-                    ramificacoes
-                };
-            })
-        };
-    });
-
-    console.log(`[Cenas] ✅ ${cenas.length} cenas montadas (Scout→estrutura + Qwen3→prosa).`, cenas);
-    aplicarArquitetoDeCenas(cenas, mapaFinalMesclado, idsElegiveis);
 }
+
+console.log(`[Cenas] Modelo usado: ${modeloUsado}`);
+
+            let parsed;
+            try {
+                const raw = data.choices[0].message.content;
+                const match = raw.match(/{[\s\S]*}/);
+                parsed = JSON.parse(match ? match[0] : raw);
+            } catch (e) {
+                console.error('[Cenas] Falha no parse JSON:', e);
+                return;
+            }
+
+            const cenas = parsed.cenas || [];
+            console.log(`[Cenas] ✅ ${cenas.length} cenas geradas para zona "${infoZona.nome}".`, cenas);
+            aplicarArquitetoDeCenas(cenas, mapaFinalMesclado, idsElegiveis);
+        }
 
         function aplicarArquitetoDeCenas(cenas, mapaFinalMesclado, idsValidos) {
             const idsValidosSet = new Set(idsValidos.map(String));
@@ -2054,7 +1997,7 @@ async function injetarPuzzles(planoZonal, zonaId) {
     const salasBloqueadas = candidatos.filter(id => planoZonal[String(id)]?.bloqueio?.ativo);
     const naoBloquedas    = candidatos.filter(id => !planoZonal[String(id)]?.bloqueio?.ativo);
 
-    const numPuzzles = Math.min(naoBloquedas.length, Math.random() < 0.5 ? 1 : 0);
+    const numPuzzles = Math.min(naoBloquedas.length, Math.random() < 0.5 ? 1 : 2);
     const escolhidas = naoBloquedas.sort(() => Math.random() - 0.5).slice(0, numPuzzles);
 
     const puzzles = await Promise.all(
