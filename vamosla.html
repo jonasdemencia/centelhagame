@@ -1544,58 +1544,125 @@ Retorne APENAS o JSON rigorosamente neste formato:
 
     const semente = Math.random().toString(36).substring(2, 8);
 
-    const systemPrompt = `Você é um designer de encontros de RPG textual (estilo Ian Livingstone). Crie cenas com tensão real e consequências assimétricas. Retorne EXCLUSIVAMENTE um objeto JSON válido, sem markdown (\`\`\`). O campo "dano" deve ser um integer entre 0 e 20.`;
+    const systemPrompt = `Você é um designer de encontros para um RPG de aventura textual, no nível de Steve Jackson e Ian Livingstone. Sua função é criar cenas situacionais memoráveis — não sustos baratos, mas momentos com tensão real, escolhas difíceis e consequências assimétricas.
 
-    const prompt = `[SEMENTE:${semente}] /no_think
-ZONA ATUAL: "${infoZona.nome}" | MISTÉRIO CENTRAL: "${dnaGlobal?.misterio_central || ''}"
+ZONA ATUAL: "${infoZona.nome}"
+MISTÉRIO CENTRAL: "${dnaGlobal?.misterio_central || ''}"
 
-SALAS DISPONÍVEIS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SALAS:
 ${contextSalas}
 
-MISSÃO: Para cada sala, crie 1 evento situacional orgânico fundido ao texto original. O jogador não deve perceber onde a sala termina e o evento começa.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+MISSÃO: Para cada sala, crie UM evento situacional e reescreva o TEXTO ORIGINAL DA SALA incorporando o evento como parte orgânica. O texto deve ser um bloco único e contínuo — o jogador nunca perceberá onde termina a sala e começa o evento.
 
-REGRAS DE DESIGN (ESTRITAMENTE OBRIGATÓRIAS):
-1. AMBIENTE: O evento surge dos elementos já existentes (luz, cheiros, objetos). Não invente espaços físicos não citados.
-2. CONCRETISMO: Proibido adjetivos de horror fácil (ex: "assustador"). Descreva física e ações tangíveis. Objetos inanimados NÃO têm vontade própria (proibido: "a escuridão quer...").
-3. TENSÃO ABERTA: O texto termina exatamente no momento da decisão ("suspenda, não resolva").
-4. DILEMAS (VERBOS ESPECÍFICOS): Cada opção exige custos/promessas distintas. Evite "Certo vs Errado". Pelo menos 1 opção com dano 0 (dano 0 cobra preço narrativo: tempo perdido, info perdida).
-5. LOCOMOÇÃO: Se a ação exigir atravessar um limiar físico (fuga/avanço), preencha 'destino_id' com um dos DESTINOS DISPONÍVEIS. Caso contrário, use null.
-6. RAMIFICAÇÕES: Apenas UM dilema por cena pode ter desdobramentos (array em 'ramificacoes'). Os outros dilemas recebem 'ramificacoes: null'. 
-7. DILEMA-PAI: Se houver ramificações, o 'resultado_texto' do pai serve apenas como ponte narrativa (tensão aberta, dano: 0) e NUNCA descreve uma ação que o jogador não executou na 'opcao_texto'.
-8. RESULTADOS: Descreva a dor de forma visceral (2-4 frases), mas NUNCA cite a mecânica (proibido: "perdeu X energia"). Danos: 1-2 (susto/arranhão), 3-6 (ferimento real), 7-20 (grave/quase fatal).
+REGRAS DE FUSÃO:
+- A sala existente é o solo — o evento surge dele, não cai sobre ele
+- Os elementos já descritos (objetos, luz, cheiro, arquitetura) devem servir de ponte para o evento
+- O texto fundido deve parecer que SEMPRE foi assim
+- O evento ocorre dentro dos limites físicos da sala descrita — não invente salas adjacentes, quartos atrás de portas ou espaços não mencionados no TEXTO ORIGINAL. Você pode, no entanto, usar estímulos que cruzam as fronteiras (sons, cheiros, correntes de ar) desde que provenham de uma passagem já existente (porta, janela, grelha) sem descrever a fonte do outro lado.
 
-FORMATO DE RESPOSTA (ESTRITO):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DESIGN DE CENA:
+
+1. EMERGE DO AMBIENTE, NÃO DO NADA
+Use o que já existe na sala. Um depósito tem um trabalhador, uma câmara fria tem um açougueiro, um corredor inundado tem algo que afogou. A situação deve parecer que SEMPRE esteve ali, esperando.
+
+2. ESPECIFICIDADE E ÂNCORA FÍSICA
+"Um homem costurando a própria pálpebra com linha de pesca" > "uma figura perturbadora". Detalhes concretos criam realidade — e todo estranhamento exige forma física objetiva:
+NÃO: "a fonte parecia viva" / SIM: "a água marcava 4°C no pior verão em décadas e sua superfície não reagia ao vento"
+NÃO: "o corredor queria algo" / SIM: "a bússola girava ao contrário apenas dentro deste quarto"
+O fenômeno é dado concreto. A interpretação pertence ao jogador.
+Não atribua vontade, emoção ou agência a objetos e ao ambiente. Descreva apenas o que os sentidos captam (o rangido, a temperatura, o movimento). Frases como "a água se recusava a ondular" devem ser trocadas por "a superfície permanecia imóvel apesar do vento".
+
+3. TERMINE COM TENSÃO ABERTA (NATURAL)
+A cena termina no momento em que o jogador precisa agir ou decidir. Essa tensão deve brotar organicamente da situação, sem forçar um gancho artificial. Se o evento é naturalmente contínuo (alguém trabalhando, uma paisagem estática), o dilema pode ser mais sutil, mas ainda exige uma escolha. Suspenda a narrativa antes da ação do jogador.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DESIGN DE DILEMAS:
+
+1. APELOS DIFERENTES, RISCOS DIFERENTES — NUNCA "CERTO VS ERRADO"
+Cada opção tem seu próprio custo e sua própria promessa. O jogador deve hesitar de verdade.
+MAL: "Atacar" vs "Fugir". BEM: "Interagir arriscando algo" vs "Recuar perdendo oportunidade única" vs "Observar mais, mas o tempo se esgota".
+
+2. PELO MENOS UMA OPÇÃO COM DANO 0 (ENTRE AS OPÇÕES INICIAIS) — MAS NÃO GRATUITA
+Garanta que ao menos uma das opções do array "dilemas" (nível superior) tenha dano 0. Dano 0 não significa sem consequência: janela de oportunidade fechada, informação perdida, aliado não conquistado. Ramificações posteriores (dentro de um dilema) podem envolver dano, pois o jogador optou por se aprofundar naquela via — isso é parte da assimetria.
+
+3. CONSEQUÊNCIAS ASSIMÉTRICAS
+Opção A: risco físico, ganho potencial. Opção B: risco zero, perda narrativa real. Opção C (se houver): risco ambíguo — consequência incerta ou estranha.
+
+4. VERBOS ESPECÍFICOS COM ALVOS ESPECÍFICOS
+Ruim: "Tentar pegar o objeto" — Bom: "Arrancar o medalhão do pescoço enquanto ela não olha"
+
+5. DILEMAS COM TRÂNSITO (OPCIONAL)
+Um dilema pode mover o jogador para outra sala usando um destino de DESTINOS DISPONÍVEIS. Use quando a ação implica atravessar um limiar físico (fuga, avanço forçado, entrada). O resultado não descreve o que há na nova sala. Quando usar: preencha destino_id. Quando não: null.
+
+6. RAMIFICAÇÕES — use apenas se a cena genuinamente exigir uma bifurcação após a escolha inicial.
+   - No máximo 1 dilema com ramificações por cena; os demais têm ramificacoes: null.
+   - Não force uma ramificação onde a situação pede uma única decisão direta. Se a cena não comportar desdobramentos, todos os dilemas podem ter ramificacoes: null.
+   - Estrutura: o dilema-pai tem resultado_texto como ponte narrativa (2-3 frases, tensão aberta) + dano: 0. As ramificacoes (2-3) têm opcao_texto, resultado_texto, dano e destino_id próprios.
+   - Causalidade: resultado_texto do pai começa exatamente onde opcao_texto termina — não invente ação que o jogador não executou.
+   - Se o dilema-pai envolver transição de sala (destino_id não null), as ramificações ocorrerão já no novo ambiente. Você pode usar elementos do texto original da sala de destino (disponível no contexto) para ancorar as descrições, mas sem adicionar objetos ou detalhes que não estejam nela.
+   - Qualidade das ramificações — mesma exigência do DESIGN DE RESULTADO:
+     "O degrau cede sob seu pé esquerdo e você ouve o estalo antes de sentir" — não "você sente dor"
+     "A porta entreaberta está agora fechada por dentro" — não "você se sente observado"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DESIGN DE RESULTADO:
+
+O resultado é narrativa, não relatório. 2-4 frases específicas e viscerais. A dor é descrita, não contabilizada. Nunca escreva "você perde X de energia".
+
+Calibre o dano:
+1-2 → contusão, arranhão, susto físico
+3-4 → ferimento real, queda, golpe
+5-6 → dano sério, sangue, comprometimento temporário
+7-20 → quase fatal — reserve para má leitura grave de situação
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PROIBIDO:
+✗ Adjetivos de horror fácil: assustador, aterrorizante, horrível, perturbador (mostre, não nomeie)
+✗ Opções sem destino_id com verbos de locomoção (sair, subir, descer, seguir, atravessar)
+✗ Criaturas sem motivação ou lógica interna
+✗ Resultados que mencionam perda de energia diretamente
+✗ Proibição de Intenção e Metáfora: Não atribua vontade, desejo ou agência a objetos e ambientes. Descreva a física (o rangido, a ferrugem, o frio, o movimento), nunca a intenção. Em fenômenos estranhos, restrinja-se ao que é sensorialmente verificável.
+✗ Mais de 1 dilema com ramificacoes por cena
+✗ resultado_texto de dilema-pai descrevendo ação que o jogador não executou em opcao_texto
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+RETORNE APENAS JSON — ZERO MARKDOWN, ZERO TEXTO FORA DO OBJETO:
+
+Retorne APENAS JSON neste formato exato (zero markdown, zero texto fora do JSON):
 {
   "cenas": [
     {
       "sala_id": "ID_NUMÉRICO",
-      "titulo": "Título Curto",
-      "texto_sala_fundido": "Reescrita completa fundindo ambiente e evento (5-8 frases). Termina na tensão.",
+      "titulo": "Título do Evento",
+      "texto_sala_fundido": "Reescrita completa da sala com o evento embutido organicamente. 5-8 frases. O texto termina no momento de tensão — o jogador ainda não agiu.",
       "dilemas": [
-        {
-          "opcao_texto": "Ação imediata com alvo específico",
-          "resultado_texto": "Consequência direta (2-4 frases).",
-          "dano": 0,
-          "destino_id": null,
-          "ramificacoes": null
-        },
-        {
-          "opcao_texto": "Ação que gera bifurcação",
-          "resultado_texto": "Ponte narrativa (situação complicou, 2-3 frases).",
-          "dano": 0,
-          "destino_id": null,
-          "ramificacoes": [
-            {
-              "opcao_texto": "Reação A",
-              "resultado_texto": "Consequência final de A.",
-              "dano": 3,
-              "destino_id": "ID_DESTINO_OU_NULL"
-            },
-            {
-              "opcao_texto": "Reação B",
-              "resultado_texto": "Consequência final de B.",
-              "dano": 0,
-              "destino_id": null
+  {
+    "opcao_texto": "Ação que resolve na hora",
+    "resultado_texto": "2-4 frases narrando a consequência direta.",
+    "dano": 0,
+    "destino_id": null,
+    "ramificacoes": null
+  },
+  {
+    "opcao_texto": "Ação que se desdobra numa segunda decisão (apenas se fizer sentido na cena)",
+    "resultado_texto": "2-3 frases de transição — a situação se complicou. Termina em tensão aberta.",
+    "dano": 0,
+    "destino_id": null,
+    "ramificacoes": [
+      {
+        "opcao_texto": "Como reagir — desdobramento A",
+        "resultado_texto": "2-3 frases narrando a consequência de A.",
+        "dano": 3,
+        "destino_id": null
+      },
+      {
+        "opcao_texto": "Como reagir — desdobramento B",
+        "resultado_texto": "2-3 frases narrando a consequência de B.",
+        "dano": 0,
+        "destino_id": null
             }
           ]
         }
