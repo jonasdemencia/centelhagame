@@ -1551,7 +1551,7 @@ Retorne APENAS o JSON rigorosamente neste formato:
 
             const prompt = `[SEMENTE:${semente}]
 /no_think
-Você é um designer de encontros para um RPG de aventura textual, no nível de Steve Jackson e Ian Livingstone. Sua função é criar cenas situacionais memoráveis — não sustos baratos, mas momentos com tensão real, escolhas difíceis e consequências assimétricas.
+Você é um designer de encontros para um RPG de aventura textual, no nível de Steve Jackson e Ian Livingstone. Sua função é criar cenas situacionais memoráveis em português — não sustos baratos, mas momentos com tensão real, escolhas difíceis e consequências assimétricas.
 
 ZONA ATUAL: "${infoZona.nome}"
 MISTÉRIO CENTRAL: "${dnaGlobal?.misterio_central || ''}"
@@ -1562,17 +1562,26 @@ ${contextSalas}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 MISSÃO E FUSÃO:
-Para cada sala, crie UM evento orgânico fundido ao TEXTO ORIGINAL, formando um bloco único contínuo (o jogador não pode notar a transição). 
-
-- O evento brota dos elementos já descritos (luz, objetos, arquitetura).
-- Não invente salas adjacentes ou espaços não mencionados.
-- Termine o texto em suspensão, exato instante antes da decisão.
+Para cada sala, crie UM evento orgânico fundido ao TEXTO ORIGINAL.
+- O texto original é o solo. O evento brota do que JÁ ESTÁ ESCRITO.
+- O texto fundido deve ser um bloco contínuo, sem quebras visíveis.
+- Termine em suspensão, no exato instante antes da decisão do jogador.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-DESIGN DE CENA:
-1. EMERGE DO AMBIENTE: Use o que existe. Um trabalhador no depósito, um afogado no corredor inundado. Sempre esteve lá.
-2. ESPECIFICIDADE E FÍSICA: "Um senhor com jaleco branco costurando a pálpebra com linha" > "figura perturbadora". "Água a 4°C que não reflete a luz" > "fonte parecia viva". O estranhamento exige forma objetiva. A interpretação é do jogador.
-3. LENTE DE CÂMERA: Descreva fatos crus (A corrente aperta, a placa move), não emoções embutidas na cena.
+CONTROLE DE REALIDADE E LÓGICA (TOLERÂNCIA ZERO):
+1. PROIBIDO INVENTAR OBJETOS (ALUCINAÇÃO): O jogador SÓ PODE interagir com o que está EXPLICITAMENTE descrito no Texto Lógico ou com o próprio corpo. Nunca invente ferramentas convenientes (mangueiras, bisturis, pedaços de pau) do nada. 
+2. TESTE DE SANIDADE DAS AÇÕES: As opções devem ser reações humanas lógicas, racionais e de autopreservação. Ninguém coloca uma luva nojenta no dedo para "explorar" ou guarda algo que não faz sentido. Pense: "Um ser humano real faria isso sob estresse?".
+3. COERÊNCIA FÍSICA IMUTÁVEL: As propriedades do ambiente são absolutas. Se a água queima na opção A, ela não pode congelar na opção B.
+4. PORTUGUÊS IMPECÁVEL E LÓGICO: Proibido inventar palavras (como "corteia" ou "sujada"). Use vocabulário preciso, gramática perfeita e sentenças que façam sentido visual.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DESIGN DE DILEMAS:
+1. APELOS E RISCOS: Cada opção tem um custo e uma promessa. Nunca "Certo vs Errado".
+2. DANO ZERO CUSTA ALGO: Perda de janela de tempo, informação ou aliado.
+3. ASSIMETRIA: A(risco físico/ganho) vs B(risco 0/perda narrativa) vs C(risco ambíguo/estranho).
+4. VERBOS ESPECÍFICOS E REAIS: Ação direta e clara. (Ex: "Limpar a superfície com a manga da camisa" em vez de "Examinar o texto").
+5. TRÂNSITO (OPCIONAL): Se a ação cruza um limiar físico, preencha destino_id com um dos DESTINOS DISPONÍVEIS (senão, null). O resultado não descreve a nova sala.
+6. RAMIFICAÇÕES: Exatamente 1 dilema ramificado por cena (demais terão ramificacoes: null). O dilema-pai tem dano: 0 e resultado_texto curto (ponte de tensão, sem inventar ação nova). As ramificações (2-3) têm seus próprios textos, resultados e danos.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 DESIGN DE DILEMAS:
