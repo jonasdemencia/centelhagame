@@ -1564,78 +1564,40 @@ ${contextSalas}
 MISSÃO: Para cada sala, crie UM evento situacional e reescreva o TEXTO ORIGINAL DA SALA incorporando o evento como parte orgânica. O texto deve ser um bloco único e contínuo — o jogador nunca perceberá onde termina a sala e começa o evento.
 
 REGRAS DE FUSÃO:
-- A sala existente é o solo — o evento surge dele, não cai sobre ele
-- Os elementos já descritos (objetos, luz, cheiro, arquitetura) devem servir de ponte para o evento
-- O texto fundido deve parecer que SEMPRE foi assim
-- O evento ocorre dentro dos limites físicos da sala descrita — não invente salas adjacentes, quartos atrás de portas ou espaços não mencionados no TEXTO ORIGINAL. Se a cena exige um espaço, use o que já está descrito.
-- Termine no momento de suspensão, antes da decisão do jogador
+- A sala existente é a base; o evento emerge dela usando objetos, luz, cheiro e arquitetura descritos.
+- O evento ocorre estritamente dentro dos limites físicos da sala original (não invente áreas adjacentes ou portas novas).
+- ÂNCORA DE CÂMERA DE SEGURANÇA: Registre apenas fatos brutos e materiais captáveis por uma lente. "A corrente aperta", "a placa cede".
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 DESIGN DE CENA:
-
-1. EMERGE DO AMBIENTE, NÃO DO NADA
-Use o que já existe na sala. Um depósito tem um trabalhador, uma câmara fria tem um açougueiro, um corredor inundado tem algo que afogou. A situação deve parecer que SEMPRE esteve ali, esperando.
-
-2. ESPECIFICIDADE E ÂNCORA FÍSICA
-"Um homem costurando a própria pálpebra com linha de pesca" > "uma figura perturbadora". Detalhes concretos criam realidade — e todo estranhamento exige forma física objetiva:
-NÃO: "a fonte parecia viva" / SIM: "a água marcava 4°C no pior verão em décadas e sua superfície não reagia ao vento"
-NÃO: "o corredor queria algo" / SIM: "a bússola girava ao contrário apenas dentro deste quarto"
-O fenômeno é dado concreto. A interpretação pertence ao jogador.
-
-3. TERMINE COM TENSÃO ABERTA
-A cena termina no momento de decisão. "Ela vira o rosto devagar na sua direção." Não resolva: suspenda.
+1. EMERGE DO AMBIENTE: A situação deve parecer que sempre esteve lá (ex: depósito tem trabalhador, câmara fria tem açougueiro).
+2. ÂNCORA FÍSICA E ESPECIFICIDADE: Detalhes concretos geram realidade. O fenômeno é fato bruto; a interpretação é do jogador.
+   - NÃO: "a fonte parecia viva" / SIM: "a água marcava 4°C no pior verão em décadas e a superfície não reagia ao vento"
+   - NÃO: "o corredor queria algo" / SIM: "a bússola girava ao contrário apenas dentro deste quarto"
+3. TENSÃO ABERTA: Termine no estalar da ação. Não resolva; suspenda.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 DESIGN DE DILEMAS:
-
-1. APELOS DIFERENTES, RISCOS DIFERENTES — NUNCA "CERTO VS ERRADO"
-Cada opção tem seu próprio custo e sua própria promessa. O jogador deve hesitar de verdade.
-MAL: "Atacar" vs "Fugir". BEM: "Interagir arriscando algo" vs "Recuar perdendo oportunidade única" vs "Observar mais, mas o tempo se esgota".
-
-2. PELO MENOS UMA OPÇÃO COM DANO 0 — MAS NÃO GRATUITA
-Dano 0 não significa sem consequência: janela de oportunidade fechada, informação perdida, aliado não conquistado.
-
-3. CONSEQUÊNCIAS ASSIMÉTRICAS
-Opção A: risco físico, ganho potencial. Opção B: risco zero, perda narrativa real. Opção C (se houver): risco ambíguo — consequência incerta ou estranha.
-
-4. VERBOS ESPECÍFICOS COM ALVOS ESPECÍFICOS
-Ruim: "Tentar pegar o objeto" — Bom: "Arrancar o medalhão do pescoço enquanto ela não olha"
-
-5. DILEMAS COM TRÂNSITO (OPCIONAL)
-Um dilema pode mover o jogador para outra sala usando um destino de DESTINOS DISPONÍVEIS. Use quando a ação implica atravessar um limiar físico (fuga, avanço forçado, entrada). O resultado não descreve o que há na nova sala. Quando usar: preencha destino_id. Quando não: null.
-
-6. RAMIFICAÇÕES — exatamente 1 dilema por cena; os restantes têm ramificacoes: null.
-Quando usar: a ação do jogador abre um momento de bifurcação genuína antes da resolução.
-Estrutura: dilema-pai tem resultado_texto como ponte narrativa (2-3 frases, tensão aberta) + dano: 0. As ramificacoes (2-3) têm opcao_texto, resultado_texto, dano e destino_id próprios.
-Causalidade: resultado_texto do pai começa exatamente onde opcao_texto termina — não invente ação que o jogador não executou.
-Qualidade das ramificações — mesma exigência do DESIGN DE RESULTADO:
-"O degrau cede sob seu pé esquerdo e você ouve o estalo antes de sentir" — não "você sente dor"
-"A porta entreaberta está agora fechada por dentro" — não "você se sente observado"
+1. APELOS E RISCOS DIFERENTES: Nunca "Certo vs. Errado". Cada opção tem custo e promessa reais.
+2. OPÇÃO COM DANO 0: Obrigatória, mas não gratuita (custa oportunidade, informação ou aliança).
+3. CONSEQUÊNCIAS ASSIMÉTRICAS: Opção A (risco físico/ganho); Opção B (risco zero/perda narrativa); Opção C (risco ambíguo/incerto).
+4. VERBOS ESPECÍFICOS: "Arrancar o medalhão do pescoço dela" em vez de "Tentar pegar o objeto".
+5. TRÂNSITO: Use destino_id de DESTINOS DISPONÍVEIS apenas se a ação implicar mudar de sala. Caso contrário, null. Não descreva a nova sala.
+6. RAMIFICAÇÕES: Exatamente 1 dilema por cena possui ramificações (os outros são null). O pai tem resultado_texto de 2-3 frases (tensão aberta) e dano 0. As ramificações (2-3) têm opcao_texto, resultado_texto, dano e destino_id próprios. O resultado do pai começa exatamente onde a opção termina.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 DESIGN DE RESULTADO:
-
-O resultado é narrativa, não relatório. 2-4 frases específicas e viscerais. A dor é descrita, não contabilizada. Nunca escreva "você perde X de energia".
-
-Calibre o dano:
-1-2 → contusão, arranhão, susto físico
-3-4 → ferimento real, queda, golpe
-5-6 → dano sério, sangue, comprometimento temporário
-7-20 → quase fatal — reserve para má leitura grave de situação
+Narrativa visceral de 2-4 frases, nunca um relatório mecânico (proibido "você perde X de energia").
+Calibragem de Dano: 1-2 (contusão, arranhão, susto físico); 3-4 (ferimento real, queda, golpe); 5-6 (dano sério, sangue, comprometimento); 7-20 (quase fatal).
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-PROIBIDO:
-✗ Dilemas binários sem nuance: apenas "atacar vs fugir"
-✗ Adjetivos de horror fácil: assustador, aterrorizante, horrível, perturbador (mostre, não nomeie)
-✗ Opções sem destino_id com verbos de locomoção (sair, subir, descer, seguir, atravessar)
-✗ Criaturas sem motivação ou lógica interna
-✗ Resultados que mencionam perda de energia diretamente
-✗ Limite do Protagonista: O jogador é um humano comum de carne e osso. NUNCA invente características corporais (ex: "mão mecânica"), roupas, passado ou emoções para o jogador
-✗ Âncora de Câmera de Segurança: Descreva a cena como uma lente de câmera gravando fatos brutos. A corrente aperta (fato material). A placa se move (fato material) 
-✗ Proibição de Intenção e Metáfora: Objetos inanimados e o ambiente NÃO têm vontade. A escuridão não "ganha peso", o metal não "ganha vida" e coisas não "esperam por alguém". Descreva a física (o rangido, a ferrugem, o frio, o movimento), nunca a intenção
-✗ Títulos descritivos — o título cria curiosidade, não descreve ("O Açougueiro Paciente" > "O Homem com o Machado")
-✗ Mais de 1 dilema com ramificacoes por cena
-✗ resultado_texto de dilema-pai descrevendo ação que o jogador não executou em opcao_texto
+PROIBIDO (DIRETRIZES DE TOLERÂNCIA ZERO):
+✗ AI SLOP (PROSA ARTIFICIAL): Banido o uso de clichês vagos de IA, adjetivação poética ou resumos emocionais (ex: "sussurros do passado", "ecoar", "manto de escuridão", "testemunho", "um sentimento de opressão tomou conta"). Escreva em prosa visceral, crua, com ordem direta e substantivos concretos. Não diga que o ambiente "é hostil", mostre a lâmina enferrujada e o cheiro de infecção.
+✗ INTENÇÃO E METÁFORA EM INANIMADOS: Objetos e cenários NÃO têm vontade ou sentimentos. A escuridão não "ganha peso", o metal não "ganha vida". Descreva apenas a física pura: o rangido, o frio, a ferrugem, o vetor do movimento.
+✗ Opções sem destino_id contendo verbos de locomoção (sair, seguir, atravessar).
+✗ Títulos descritivos ("O Homem com o Machado" > "O Açougueiro Paciente"). O título deve suscitar curiosidade.
+✗ Mais de 1 dilema com ramificações por cena.
+✗ Resultado do pai inventando ações que o jogador não executou na opção.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 RETORNE APENAS JSON — ZERO MARKDOWN, ZERO TEXTO FORA DO OBJETO:
