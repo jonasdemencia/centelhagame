@@ -1561,43 +1561,44 @@ SALAS:
 ${contextSalas}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-MISSÃO: Para cada sala, crie UM evento situacional e reescreva o TEXTO ORIGINAL DA SALA incorporando o evento como parte orgânica. O texto deve ser um bloco único e contínuo — o jogador nunca perceberá onde termina a sala e começa o evento.
+MISSÃO E FUSÃO:
+Para cada sala, crie UM evento orgânico fundido ao TEXTO ORIGINAL, formando um bloco único contínuo (o jogador não pode notar a transição). 
 
-REGRAS DE FUSÃO:
-- A sala existente é a base; o evento emerge dela usando objetos, luz, cheiro e arquitetura descritos.
-- O evento ocorre estritamente dentro dos limites físicos da sala original (não invente áreas adjacentes ou portas novas).
-- ÂNCORA DE CÂMERA DE SEGURANÇA: Registre apenas fatos brutos e materiais captáveis por uma lente. "A corrente aperta", "a placa cede".
+- O evento brota dos elementos já descritos (luz, objetos, arquitetura).
+- Não invente salas adjacentes ou espaços não mencionados.
+- Termine o texto em suspensão, exato instante antes da decisão.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 DESIGN DE CENA:
-1. EMERGE DO AMBIENTE: A situação deve parecer que sempre esteve lá (ex: depósito tem trabalhador, câmara fria tem açougueiro).
-2. ÂNCORA FÍSICA E ESPECIFICIDADE: Detalhes concretos geram realidade. O fenômeno é fato bruto; a interpretação é do jogador.
-   - NÃO: "a fonte parecia viva" / SIM: "a água marcava 4°C no pior verão em décadas e a superfície não reagia ao vento"
-   - NÃO: "o corredor queria algo" / SIM: "a bússola girava ao contrário apenas dentro deste quarto"
-3. TENSÃO ABERTA: Termine no estalar da ação. Não resolva; suspenda.
+1. EMERGE DO AMBIENTE: Use o que existe. Um trabalhador no depósito, um afogado no corredor inundado. Sempre esteve lá.
+2. ESPECIFICIDADE E FÍSICA: "Um senhor com jaleco branco costurando a pálpebra com linha" > "figura perturbadora". "Água a 4°C que não reflete a luz" > "fonte parecia viva". O estranhamento exige forma objetiva. A interpretação é do jogador.
+3. LENTE DE CÂMERA: Descreva fatos crus (A corrente aperta, a placa move), não emoções embutidas na cena.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 DESIGN DE DILEMAS:
-1. APELOS E RISCOS DIFERENTES: Nunca "Certo vs. Errado". Cada opção tem custo e promessa reais.
-2. OPÇÃO COM DANO 0: Obrigatória, mas não gratuita (custa oportunidade, informação ou aliança).
-3. CONSEQUÊNCIAS ASSIMÉTRICAS: Opção A (risco físico/ganho); Opção B (risco zero/perda narrativa); Opção C (risco ambíguo/incerto).
-4. VERBOS ESPECÍFICOS: "Arrancar o medalhão do pescoço dela" em vez de "Tentar pegar o objeto".
-5. TRÂNSITO: Use destino_id de DESTINOS DISPONÍVEIS apenas se a ação implicar mudar de sala. Caso contrário, null. Não descreva a nova sala.
-6. RAMIFICAÇÕES: Exatamente 1 dilema por cena possui ramificações (os outros são null). O pai tem resultado_texto de 2-3 frases (tensão aberta) e dano 0. As ramificações (2-3) têm opcao_texto, resultado_texto, dano e destino_id próprios. O resultado do pai começa exatamente onde a opção termina.
+1. APELOS E RISCOS: Nunca "Certo vs Errado". (Mal: Ataque vs Fuga | Bem: Arriscar por item vs Recuar perdendo chance única).
+2. DANO ZERO CUSTA ALGO: Perda de janela de tempo, informação ou aliado.
+3. ASSIMETRIA: Opção A: risco físico, ganho potencial. Opção B: risco zero, perda narrativa real. Opção C (se houver): risco ambíguo — consequência incerta ou estranha.
+4. VERBOS ESPECÍFICOS: "Arrancar o medalhão sem ela ver" > "Tentar pegar o objeto".
+5. TRÂNSITO (OPCIONAL): Se a ação cruza um limiar físico, preencha destino_id com um dos DESTINOS DISPONÍVEIS (senão, null). O resultado não descreve a nova sala.
+6. RAMIFICAÇÕES: Exatamente 1 dilema ramificado por cena (demais terão ramificacoes: null). O dilema-pai tem dano: 0 e resultado_texto curto (ponte de tensão que não inventa ação extra). As ramificações (2-3) têm seus próprios textos, resultados, danos e destino_id, mantendo a regra de física material nos resultados.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 DESIGN DE RESULTADO:
-Narrativa visceral de 2-4 frases, nunca um relatório mecânico (proibido "você perde X de energia").
-Calibragem de Dano: 1-2 (contusão, arranhão, susto físico); 3-4 (ferimento real, queda, golpe); 5-6 (dano sério, sangue, comprometimento); 7-20 (quase fatal).
+Narrativa visceral de 2-4 frases. Descreva a dor física, nunca "você perde X energia".
+1-2: Arranhão, contusão, susto físico.
+3-4: Ferimento real, queda, golpe.
+5-6: Dano sério, sangue, comprometimento.
+7-20: Quase fatal (apenas para má leitura grave do jogador).
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-PROIBIDO (DIRETRIZES DE TOLERÂNCIA ZERO):
-✗ AI SLOP (PROSA ARTIFICIAL): Banido o uso de clichês vagos de IA, adjetivação poética ou resumos emocionais (ex: "sussurros do passado", "ecoar", "manto de escuridão", "testemunho", "um sentimento de opressão tomou conta"). Escreva em prosa visceral, crua, com ordem direta e substantivos concretos. Não diga que o ambiente "é hostil", mostre a lâmina enferrujada e o cheiro de infecção.
-✗ INTENÇÃO E METÁFORA EM INANIMADOS: Objetos e cenários NÃO têm vontade ou sentimentos. A escuridão não "ganha peso", o metal não "ganha vida". Descreva apenas a física pura: o rangido, o frio, a ferrugem, o vetor do movimento.
-✗ Opções sem destino_id contendo verbos de locomoção (sair, seguir, atravessar).
-✗ Títulos descritivos ("O Homem com o Machado" > "O Açougueiro Paciente"). O título deve suscitar curiosidade.
-✗ Mais de 1 dilema com ramificações por cena.
-✗ Resultado do pai inventando ações que o jogador não executou na opção.
+PROIBIDO:
+[ANTI-AI SLOP EXTREMO]: Tolerância ZERO para "prosa roxa", advérbios dramáticos e clichês de IA (ex: "tensão palpável", "arrepio na espinha", "dança macabra", "silêncio ensurdecedor"). Use a regra de Hemingway: frases curtas, secas, focadas apenas em substantivos e verbos de ação. O terror nasce da secura clínica e de fatos brutos, não de floreios literários. Se soar poético, místico ou abstrato, APAGUE E REESCREVA descrevendo apenas a matéria.
+✗ Intenção e Metáfora: Ambientes e objetos NÃO têm vontade. A escuridão não "ganha peso". Descreva a física (ferrugem, frio, movimento), nunca intenção.
+✗ Verbos de locomoção sem destino_id válido.
+✗ Resultados citando perda de energia numéricamente.
+✗ Títulos descritivos ("O Homem do Machado" - prefira "O Açougueiro Paciente"). O título precisa criar curiosidade. 
+✗ Mais de 1 ramificação por cena ou resultado-pai descrevendo ação que o jogador não fez.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 RETORNE APENAS JSON — ZERO MARKDOWN, ZERO TEXTO FORA DO OBJETO:
