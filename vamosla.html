@@ -1513,7 +1513,7 @@ Retorne APENAS o JSON rigorosamente neste formato:
         // ARQUITETO DE CENAS E DILEMAS
         // ============================================================
 
-        async function gerarArquitetoDeCenas(mapaFinalMesclado, infoZona, salaFim) {
+      async function gerarArquitetoDeCenas(mapaFinalMesclado, infoZona, salaFim) {
     // Seleciona 2-3 salas elegíveis
     const idsElegiveis = Object.keys(mapaFinalMesclado)
         .map(Number)
@@ -1541,8 +1541,6 @@ Retorne APENAS o JSON rigorosamente neste formato:
         
         return `SALA_ID:${id} — "${sala.nome}"\nTEXTO ORIGINAL:\n${textoOriginal}\nDESTINOS DISPONÍVEIS:\n${destinosSala || '  (nenhum)'}`;
     }).join('\n\n');
-
-    const semente = Math.random().toString(36).substring(2, 8);
 
     const systemPrompt = `Você é um designer de encontros para um RPG de aventura textual, no nível de Steve Jackson e Ian Livingstone. Sua função é criar cenas situacionais memoráveis — não sustos baratos, mas momentos com tensão real, escolhas difíceis e consequências assimétricas.
 
@@ -1671,13 +1669,16 @@ Retorne APENAS JSON neste formato exato (zero markdown, zero texto fora do JSON)
   ]
 }`;
 
+    // Mensagem do usuário para iniciar a geração (antes estava faltando)
+    const userPrompt = "Gere as cenas conforme as instruções.";
+
     let data;
     let modeloUsado = MODELO_CENAS;
 
     try {
         data = await chamarGroq([
             { role: 'system', content: systemPrompt },
-            { role: 'user', content: prompt }
+            { role: 'user', content: userPrompt }
         ], 0.8, { type: 'json_object' }, MODELO_CENAS, 2);
     } catch (e) {
         console.warn(`[Cenas] Falha com ${MODELO_CENAS}:`, e.message);
@@ -1686,7 +1687,7 @@ Retorne APENAS JSON neste formato exato (zero markdown, zero texto fora do JSON)
         try {
             data = await chamarGroq([
                 { role: 'system', content: systemPrompt },
-                { role: 'user', content: prompt }
+                { role: 'user', content: userPrompt }
             ], 0.8, { type: 'json_object' }, MODELO_CENAS_FALLBACK, 1);
             modeloUsado = MODELO_CENAS_FALLBACK;
         } catch (fallbackError) {
