@@ -1580,7 +1580,7 @@ Retorne APENAS o JSON rigorosamente neste formato:
                 // O Prompt foi mantido intacto em sua riqueza, apenas adaptado para o singular (SALA ALVO)
                 const prompt = `[SEMENTE:${semente}]
 /no_think
-Você é um designer de encontros para um RPG de aventura textual em Português brasileiro, no nível de Steve Jackson e Ian Livingstone. Sua função é criar cenas situacionais memoráveis — não sustos baratos, mas momentos com tensão real, escolhas difíceis e consequências assimétricas.
+Você é um designer de encontros para um RPG de aventura textual em Português brasileiro, no nível de Steve Jackson e Ian Livingstone. Sua função é criar cenas situacionais memoráveis E CONSISTENTES — não sustos baratos, mas momentos com tensão real, escolhas difíceis e consequências assimétricas.
 
 ZONA ATUAL: "${infoZona.nome}"
 MISTÉRIO CENTRAL: "${dnaGlobal?.misterio_central || ''}"
@@ -1653,13 +1653,11 @@ Calibre o dano:
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 PROIBIDO:
-✗ Dilemas binários sem nuance: apenas "atacar vs fugir"
-✗ Adjetivos de horror fácil: assustador, aterrorizante, horrível, perturbador (mostre, não nomeie)
+✗ Linguagem obscura e obtusa, o texto deve estar absolutamente claro para quem lê.
 ✗ Opções sem destino_id com verbos de locomoção (sair, subir, descer, seguir, atravessar)
 ✗ Criaturas sem motivação ou lógica interna
 ✗ Resultados que mencionam perda de energia diretamente
-✗ Proibição de Intenção e Metáfora: Objetos inanimados e o ambiente NÃO têm vontade. A escuridão não "ganha peso", o metal não "ganha vida" e coisas não "esperam por alguém". Descreva a física (o rangido, a ferrugem, o frio, o movimento), nunca a intenção
-✗ Títulos descritivos — o título cria curiosidade, não descreve ("O Açougueiro Paciente" > "O Homem com o Machado")
+✗ Intenção e Metáfora: Objetos inanimados e o ambiente NÃO têm vontade. A escuridão não "ganha peso", o metal não "ganha vida" e coisas não "esperam por alguém". Descreva a física (o rangido, a ferrugem, o frio, o movimento), nunca a intenção
 ✗ Mais de 1 dilema com ramificacoes por cena
 ✗ resultado_texto de dilema-pai descrevendo ação que o jogador não executou em opcao_texto
 
@@ -1710,7 +1708,7 @@ Retorne APENAS JSON neste formato exato (zero markdown, zero texto fora do JSON)
                     data = await chamarGroq([
                         { role: 'system', content: systemPrompt },
                         { role: 'user', content: prompt }
-                    ], 0.8, { type: 'json_object' }, MODELO_CENAS, 2);
+                    ], 0.75, { type: 'json_object' }, MODELO_CENAS, 2);
                 } catch (e) {
                     console.warn(`[Cenas] Falha com ${MODELO_CENAS}:`, e.message);
                     console.log(`[Cenas] Tentando fallback com ${MODELO_CENAS_FALLBACK}...`);
@@ -1719,7 +1717,7 @@ Retorne APENAS JSON neste formato exato (zero markdown, zero texto fora do JSON)
                         data = await chamarGroq([
                             { role: 'system', content: systemPrompt },
                             { role: 'user', content: prompt }
-                        ], 0.8, { type: 'json_object' }, MODELO_CENAS_FALLBACK, 1);
+                        ], 0.75, { type: 'json_object' }, MODELO_CENAS_FALLBACK, 1);
                         modeloUsado = MODELO_CENAS_FALLBACK;
                     } catch (fallbackError) {
                         console.warn(`[Cenas] Falha também com ${MODELO_CENAS_FALLBACK}, tentando Cerebras:`, fallbackError.message);
@@ -1728,7 +1726,7 @@ Retorne APENAS JSON neste formato exato (zero markdown, zero texto fora do JSON)
                             data = await chamarCerebras([
                                 { role: 'system', content: systemPrompt },
                                 { role: 'user', content: prompt }
-                            ], 0.8, { type: 'json_object' }, MODELO_CEREBRAS, 2);
+                            ], 0.75, { type: 'json_object' }, MODELO_CEREBRAS, 2);
                             modeloUsado = `cerebras/${MODELO_CEREBRAS}`;
                         } catch (cerebrasError) {
                             console.error(`[Cenas] Falha também com Cerebras:`, cerebrasError.message);
