@@ -605,7 +605,7 @@ window.dispatchEvent(new Event('firebase-initialized'));
         const MODELO_IND = "qwen/qwen3-32b"; // Modelo responsável pelas cinematics
         const MODELO_ARQUITETO = "llama-3.3-70b-versatile"; // Arquiteto de Perigos
         const MODELO_CENAS = "qwen/qwen3-32b"; // Arquiteto de Cenas e Dilemas
-        const MODELO_CENAS_FALLBACK =  "openai/gpt-oss-120b";
+        const MODELO_CENAS_FALLBACK = "openai/gpt-oss-120b";
 
 
         let mapaMundo = null;
@@ -1548,91 +1548,56 @@ Retorne APENAS o JSON rigorosamente neste formato:
 
                 const semente = Math.random().toString(36).substring(2, 8);
 
-                // O Prompt foi mantido intacto em sua riqueza, apenas adaptado para o singular (SALA ALVO)
                 const prompt = `[SEMENTE:${semente}]
 /no_think
-Você é um designer de encontros para um RPG de aventura textual, no nível de Steve Jackson e Ian Livingstone. Sua função é criar cenas situacionais memoráveis — não sustos baratos, mas momentos com tensão real, escolhas difíceis e consequências assimétricas.
+Você é um designer de encontros para RPG de aventura textual. Crie UM evento situacional para a SALA ALVO e reescreva o TEXTO ORIGINAL fundindo o evento organicamente — bloco único contínuo, sem costura visível.
 
 ZONA ATUAL: "${infoZona.nome}"
 MISTÉRIO CENTRAL: "${dnaGlobal?.misterio_central || ''}"
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 SALA ALVO:
 ${contextoSala}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-MISSÃO: Para a SALA ALVO, crie UM evento situacional e reescreva o TEXTO ORIGINAL DA SALA incorporando o evento como parte orgânica. O texto deve ser um bloco único e contínuo — o jogador nunca perceberá onde termina a sala e começa o evento.
+REGRAS DE FUSÃO
+- O evento emerge do que já existe na sala. Não invente salas adjacentes, portas não mencionadas ou espaços ocultos. Se a cena precisa de espaço, use o que está descrito.
+- Termine no momento de suspensão, antes da decisão do jogador.
 
-REGRAS DE FUSÃO:
-- Os elementos já descritos (objetos, luz, cheiro, arquitetura) servem de ponte para o evento principal
-- O texto fundido deve parecer que a situação SEMPRE esteve ali
-- O evento ocorre estritamente nos limites físicos da sala descrita — não invente salas adjacentes ou espaços não mencionados no TEXTO ORIGINAL. Use a sala apenas para ancorar a cena.
-- Termine no momento exato de suspensão, antes do dilema do jogador
+REGRAS DE ESTILO
+- Estranhamento exige forma física objetiva. NÃO: "a fonte parecia viva". SIM: "a água marcava 4°C no pior verão e sua superfície não reagia ao vento".
+- O ambiente não tem vontade. NÃO: "a escuridão ganha peso". SIM: "a corrente aperta, a placa se move".
+- Proibido adjetivos de horror fácil: assustador, aterrorizante, perturbador.
+- O jogador é humano comum. NUNCA invente características corporais, roupas, passado ou emoções para ele.
+- Descreva como câmera de segurança: fatos brutos, não interpretações.
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-DESIGN DE CENA (O CORAÇÃO DA TAREFA):
+DESIGN DE DILEMAS
+- Exatamente 1 dilema por cena. Os demais: ramificacoes: null.
+- Cada opção tem custo e promessa próprios. NUNCA "certo vs errado".
+- Pelo menos uma opção com dano 0, mas nunca gratuita (perda de informação, janela fechada).
+- Consequências assimétricas: A (risco físico, ganho potencial), B (risco zero, perda narrativa real), C (risco ambíguo, consequência incerta).
+- Verbos específicos com alvos específicos. NÃO: "Tentar pegar o objeto". SIM: "Arrancar o medalhão do pescoço enquanto ela não olha".
+- Opções sem destino_id NÃO usam verbos de locomoção (sair, subir, descer, seguir, atravessar).
+- Dilemas com trânsito: preencha destino_id quando a ação implica atravessar limiar físico. Não descreva a sala de destino.
 
-1. EMERGE DO AMBIENTE, NÃO DO NADA
-Use o que já existe. Um depósito tem um trabalhador, uma câmara fria tem um açougueiro, um corredor tem algo que afogou. O evento domina a atenção, mas usa o cenário como suporte.
+RAMIFICAÇÕES (apenas no dilema-pai)
+- dilema-pai: resultado_texto é ponte narrativa (2-3 frases, tensão aberta), dano: 0.
+- ramificacoes (2-3): opcao_texto, resultado_texto, dano, destino_id.
+- Causalidade: resultado_texto do pai começa exatamente onde opcao_texto termina. Não invente ação não escolhida.
 
-2. ESPECIFICIDADE E ÂNCORA FÍSICA
-"Um homem costurando a própria pálpebra" > "uma figura perturbadora". Detalhes concretos criam realidade — e o estranhamento exige forma física objetiva:
-NÃO: "a fonte parecia viva" / SIM: "a água marcava 4°C no pior verão em décadas e não reagia ao vento"
-O fenômeno é dado concreto. A interpretação é do jogador.
+DESIGN DE RESULTADO
+- 2-4 frases específicas e viscerais. Dor é descrita, não contabilizada. NUNCA "você perde X de energia".
+- Calibre: 1-2 (contusão), 3-4 (ferimento), 5-6 (sangue, comprometimento), 7-20 (quase fatal, só para má leitura grave).
 
-3. TERMINE COM TENSÃO ABERTA
-A cena culmina na decisão. "Ela vira o rosto devagar na sua direção." Não resolva: suspenda.
+TÍTULO
+- Cria curiosidade, não descreve. "O Açougueiro Paciente" > "O Homem com o Machado".
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-DESIGN DE DILEMAS (O MOTOR DA ESCOLHA):
-
-1. APELOS DIFERENTES, RISCOS DIFERENTES
-Cada opção tem seu próprio custo e promessa. O jogador deve hesitar de verdade.
-MAL: "Atacar" vs "Fugir". BEM: "Interagir arriscando algo" vs "Recuar perdendo oportunidade" vs "Observar mais, mas o tempo se esgota".
-
-2. PELO MENOS UMA OPÇÃO COM DANO 0 — MAS NÃO GRATUITA
-Dano 0 não significa sem consequência: janela de oportunidade fechada, informação perdida, aliado não conquistado.
-
-3. CONSEQUÊNCIAS ASSIMÉTRICAS
-Opção A: risco físico, ganho potencial. Opção B: risco zero, perda narrativa real. Opção C (se houver): risco ambíguo — consequência incerta ou estranha.
-
-4. VERBOS ESPECÍFICOS COM ALVOS ESPECÍFICOS
-Ruim: "Tentar pegar o objeto" — Bom: "Arrancar o medalhão do pescoço enquanto ela não olha"
-
-5. DILEMAS COM TRÂNSITO (OPCIONAL)
-Um dilema pode mover o jogador usando um destino de DESTINOS DISPONÍVEIS. Use quando a ação implica atravessar um limiar físico (fuga, avanço forçado). O resultado não descreve o que há na nova sala. Para usar: preencha destino_id. Senão: null.
-
-6. RAMIFICAÇÕES — EXATAMENTE 1 DILEMA POR CENA
-Os restantes têm ramificacoes: null. Use quando a ação abre bifurcação genuína antes da resolução.
-Estrutura: dilema-pai tem resultado_texto como ponte narrativa (2-3 frases, tensão) + dano: 0. As ramificacoes (2-3) têm opcao_texto, resultado_texto, dano e destino_id próprios.
-Causalidade: resultado_texto do pai começa onde opcao_texto termina — não invente ação não executada.
-Qualidade: "O degrau cede sob seu pé e você ouve o estalo" — não "você sente dor".
+PROIBIDO
+- Dilemas binários sem nuance.
+- Criaturas sem motivação ou lógica interna.
+- Mais de 1 dilema com ramificacoes por cena.
+- resultado_texto descrevendo ação não executada em opcao_texto.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-DESIGN DE RESULTADO:
-
-O resultado é narrativa, não relatório. 2-4 frases específicas e viscerais. A dor é descrita, não contabilizada. Nunca escreva "você perde X de energia".
-
-Calibre o dano:
-1-2 → contusão, arranhão, susto físico
-3-4 → ferimento real, queda, golpe
-5-6 → dano sério, sangue, comprometimento temporário
-7-20 → quase fatal — reserve para má leitura grave de situação
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-PROIBIDO:
-✗ Dilemas binários sem nuance: apenas "atacar vs fugir"
-✗ Adjetivos de horror fácil: assustador, aterrorizante, horrível, perturbador (mostre, não nomeie)
-✗ Opções sem destino_id com verbos de locomoção (sair, subir, descer, seguir, atravessar)
-✗ Criaturas sem motivação ou lógica interna
-✗ Resultados que mencionam perda de energia diretamente
-✗ Proibição de Intenção e Metáfora: Objetos inanimados e o ambiente NÃO têm vontade. A escuridão não "ganha peso", o metal não "ganha vida". Descreva a física, nunca a intenção.
-✗ Títulos descritivos — o título cria curiosidade, não descreve ("O Açougueiro Paciente" > "Homem com o Machado")
-✗ Mais de 1 dilema com ramificacoes por cena
-✗ resultado_texto de dilema-pai descrevendo ação que o jogador não executou em opcao_texto
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-RETORNE APENAS JSON — ZERO MARKDOWN, ZERO TEXTO FORA DO OBJETO:
 
 Retorne APENAS JSON neste formato exato (zero markdown, zero texto fora do JSON):
 {
@@ -1678,7 +1643,7 @@ Retorne APENAS JSON neste formato exato (zero markdown, zero texto fora do JSON)
                     data = await chamarGroq([
                         { role: 'system', content: systemPrompt },
                         { role: 'user', content: prompt }
-                    ], 0.8, { type: 'json_object' }, MODELO_CENAS, 2);
+                    ], 0.75, { type: 'json_object' }, MODELO_CENAS, 2);
                 } catch (e) {
                     console.warn(`[Cenas] Falha com ${MODELO_CENAS}:`, e.message);
                     console.log(`[Cenas] Tentando fallback com ${MODELO_CENAS_FALLBACK}...`);
@@ -1687,7 +1652,7 @@ Retorne APENAS JSON neste formato exato (zero markdown, zero texto fora do JSON)
                         data = await chamarGroq([
                             { role: 'system', content: systemPrompt },
                             { role: 'user', content: prompt }
-                        ], 0.8, { type: 'json_object' }, MODELO_CENAS_FALLBACK, 1);
+                        ], 0.75, { type: 'json_object' }, MODELO_CENAS_FALLBACK, 1);
                         modeloUsado = MODELO_CENAS_FALLBACK;
                     } catch (fallbackError) {
                         console.error(`[Cenas] Falha também com ${MODELO_CENAS_FALLBACK}:`, fallbackError.message);
