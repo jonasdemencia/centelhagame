@@ -1551,7 +1551,7 @@ Retorne APENAS o JSON rigorosamente neste formato:
                 // O Prompt foi mantido intacto em sua riqueza, apenas adaptado para o singular (SALA ALVO)
                 const prompt = `[SEMENTE:${semente}]
 /no_think
-Você é um designer de encontros para um RPG de aventura textual, no nível de Steve Jackson e Ian Livingstone. Sua função é criar cenas situacionais memoráveis — não sustos baratos, mas momentos com tensão real, escolhas difíceis e consequências assimétricas.
+Você é um designer de encontros para um RPG de aventura textual em Português Brasileiro, no nível de Steve Jackson e Ian Livingstone. Sua função é criar cenas situacionais memoráveis — não sustos baratos, mas momentos com tensão real, escolhas difíceis e consequências assimétricas.
 
 ZONA ATUAL: "${infoZona.nome}"
 MISTÉRIO CENTRAL: "${dnaGlobal?.misterio_central || ''}"
@@ -1573,13 +1573,15 @@ REGRAS DE FUSÃO:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 DESIGN DE CENA:
 
+0. ÂNCORA DE CÂMERA DE SEGURANÇA: 
+Descreva a cena como uma lente de câmera gravando fatos brutos. A corrente aperta (fato material). A placa se move (fato material).
+
 1. EMERGE DO AMBIENTE, NÃO DO NADA
 Use o que já existe na sala. Um depósito tem um trabalhador, uma câmara fria tem um açougueiro, um corredor inundado tem algo que afogou. A situação deve parecer que SEMPRE esteve ali, esperando.
 
 2. ESPECIFICIDADE E ÂNCORA FÍSICA
 "Um homem costurando a própria pálpebra com linha de pesca" > "uma figura perturbadora". Detalhes concretos criam realidade — e todo estranhamento exige forma física objetiva:
 NÃO: "a fonte parecia viva" / SIM: "a água marcava 4°C no pior verão em décadas e sua superfície não reagia ao vento"
-NÃO: "o corredor queria algo" / SIM: "a bússola girava ao contrário apenas dentro deste quarto"
 O fenômeno é dado concreto. A interpretação pertence ao jogador.
 
 3. TERMINE COM TENSÃO ABERTA
@@ -1625,15 +1627,11 @@ Calibre o dano:
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 PROIBIDO:
-✗ Dilemas binários sem nuance: apenas "atacar vs fugir"
-✗ Adjetivos de horror fácil: assustador, aterrorizante, horrível, perturbador (mostre, não nomeie)
 ✗ Opções sem destino_id com verbos de locomoção (sair, subir, descer, seguir, atravessar)
 ✗ Criaturas sem motivação ou lógica interna
 ✗ Resultados que mencionam perda de energia diretamente
-✗ Limite do Protagonista: O jogador é um humano comum de carne e osso. NUNCA invente características corporais (ex: "mão mecânica"), roupas, passado ou emoções para o jogador
-✗ Âncora de Câmera de Segurança: Descreva a cena como uma lente de câmera gravando fatos brutos. A corrente aperta (fato material). A placa se move (fato material) 
 ✗ Proibição de Intenção e Metáfora: Objetos inanimados e o ambiente NÃO têm vontade. A escuridão não "ganha peso", o metal não "ganha vida" e coisas não "esperam por alguém". Descreva a física (o rangido, a ferrugem, o frio, o movimento), nunca a intenção
-✗ Títulos descritivos — o título cria curiosidade, não descreve ("O Açougueiro Paciente" > "O Homem com o Machado")
+✗ Títulos descritivos — o título DEVE criar curiosidade, não descrever ("O Açougueiro Paciente" > "O Homem com o Machado")
 ✗ Mais de 1 dilema com ramificacoes por cena
 ✗ resultado_texto de dilema-pai descrevendo ação que o jogador não executou em opcao_texto
 
