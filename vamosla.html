@@ -1578,7 +1578,7 @@ Retorne EXCLUSIVAMENTE o JSON no formato abaixo. O campo _diretriz_material é O
 {
   "_diretriz_material": "1 frase explicando COMO o evento vai emergir dos objetos físicos já descritos na sala, sem usar mágica ou intenções ocultas.",
   "titulo": "Título Frio e Clínico",
-  "texto_sala_fundido": "A reescrita do texto original integrando o evento de forma orgânica. 4-6 frases. Termina na tensão máxima.",
+  "texto_sala_fundido": "A reescrita do texto original integrando o evento de forma orgânica. 3-5 frases. Termina na tensão máxima.",
   "dilemas": [
     {
       "opcao_texto": "Ação física direta e específica",
@@ -1610,8 +1610,7 @@ Retorne EXCLUSIVAMENTE o JSON no formato abaixo. O campo _diretriz_material é O
   ]
 }`;
 
-                const systemPrompt = 'Você é um parser rigoroso. Retorne apenas JSON válido. O campo "dano" deve ser um integer. Não adicione marcações markdown.';
-
+               const systemPrompt = 'Você é um servidor backend. Retorne EXCLUSIVAMENTE JSON válido. O output deve começar com { e terminar com }. NENHUM texto introdutório. NENHUMA marcação markdown como ```json. O campo "dano" deve ser um integer puro.';
                 let data;
                 let modeloUsado = MODELO_CENAS;
 
