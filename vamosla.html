@@ -1573,9 +1573,6 @@ REGRAS DE FUSÃO:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 DESIGN DE CENA:
 
-0. ÂNCORA DE CÂMERA DE SEGURANÇA: 
-Descreva a cena como uma lente de câmera gravando fatos brutos. A corrente aperta (fato material). A placa se move (fato material).
-
 1. EMERGE DO AMBIENTE, NÃO DO NADA
 Use o que já existe na sala. Um depósito tem um trabalhador, uma câmara fria tem um açougueiro, um corredor inundado tem algo que afogou. A situação deve parecer que SEMPRE esteve ali, esperando.
 
@@ -1593,6 +1590,7 @@ DESIGN DE DILEMAS:
 1. APELOS DIFERENTES, RISCOS DIFERENTES — NUNCA "CERTO VS ERRADO"
 Cada opção tem seu próprio custo e sua própria promessa. O jogador deve hesitar de verdade.
 MAL: "Atacar" vs "Fugir". BEM: "Interagir arriscando algo" vs "Recuar perdendo oportunidade única" vs "Observar mais, mas o tempo se esgota".
+O gatilho do dilema é o elemento de MAIOR peso humano da cena — ligado ao mistério, ao evento ou ao que está em jogo. Nunca o detalhe mais incidental só porque ele "se move" ou "parece estranho": um objeto de cenário não sustenta um dilema inteiro se não carrega risco real, informação ou fuga.
 
 2. PELO MENOS UMA OPÇÃO COM DANO 0 — MAS NÃO GRATUITA
 Dano 0 não significa sem consequência: janela de oportunidade fechada, informação perdida, aliado não conquistado.
@@ -1600,11 +1598,10 @@ Dano 0 não significa sem consequência: janela de oportunidade fechada, informa
 3. CONSEQUÊNCIAS ASSIMÉTRICAS
 Opção A: risco físico, ganho potencial. Opção B: risco zero, perda narrativa real. Opção C (se houver): risco ambíguo — consequência incerta ou estranha.
 
-4. VERBOS ESPECÍFICOS COM ALVOS ESPECÍFICOS
-Ruim: "Tentar pegar o objeto" — Bom: "Arrancar o medalhão do pescoço enquanto ela não olha"
+4. VERBOS ESPECÍFICOS, ALVOS JÁ EXISTENTES
+Ruim: "Tentar pegar o objeto" — Bom: "Arrancar o medalhão do pescoço enquanto ela não olha". O alvo (medalhão, chave, alavanca) precisa já estar nomeado no texto_sala_fundido — um resultado_texto nunca é o primeiro lugar onde um objeto passa a existir.
 
-5. DILEMAS COM TRÂNSITO (OPCIONAL)
-Um dilema pode mover o jogador para outra sala usando um destino de DESTINOS DISPONÍVEIS. Use quando a ação implica atravessar um limiar físico (fuga, avanço forçado, entrada). O resultado não descreve o que há na nova sala. Quando usar: preencha destino_id. Quando não: null.
+5. TRÂNSITO (opcional): destino_id só quando a ação atravessa um limiar físico real (fuga, avanço, entrada), usando um destino de DESTINOS DISPONÍVEIS; o resultado não descreve a nova sala.
 
 6. RAMIFICAÇÕES — exatamente 1 dilema por cena; os restantes têm ramificacoes: null.
 Quando usar: a ação do jogador abre um momento de bifurcação genuína antes da resolução.
@@ -1618,23 +1615,17 @@ Qualidade das ramificações — mesma exigência do DESIGN DE RESULTADO:
 DESIGN DE RESULTADO:
 
 O resultado é narrativa, não relatório. 2-4 frases específicas e viscerais. A dor é descrita, não contabilizada. Nunca escreva "você perde X de energia".
-
-Calibre o dano:
-1-2 → contusão, arranhão, susto físico
-3-4 → ferimento real, queda, golpe
-5-6 → dano sério, sangue, comprometimento temporário
-7-20 → quase fatal — reserve para má leitura grave de situação
+Calibre o dano: 1-2 contusão/arranhão/susto físico · 3-4 ferimento real/queda/golpe · 5-6 dano sério com sangue/comprometimento temporário · 7-20 quase fatal (reserve para má leitura grave de situação).
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 PROIBIDO:
 ✗ Opções sem destino_id com verbos de locomoção (sair, subir, descer, seguir, atravessar)
-✗ Criaturas sem motivação ou lógica interna
+✗ Criaturas ou dilemas sem motivação ou lógica interna — incluindo dilemas erguidos sobre o detalhe mais incidental da sala, sem ligação ao mistério
 ✗ Resultados que mencionam perda de energia diretamente
 ✗ Proibição de Intenção e Metáfora: Objetos inanimados e o ambiente NÃO têm vontade. A escuridão não "ganha peso", o metal não "ganha vida" e coisas não "esperam por alguém". Descreva a física (o rangido, a ferrugem, o frio, o movimento), nunca a intenção
 ✗ Títulos descritivos — o título DEVE criar curiosidade, não descrever ("O Açougueiro Paciente" > "O Homem com o Machado")
 ✗ Mais de 1 dilema com ramificacoes por cena
 ✗ resultado_texto de dilema-pai descrevendo ação que o jogador não executou em opcao_texto
-
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 RETORNE APENAS JSON — ZERO MARKDOWN, ZERO TEXTO FORA DO OBJETO:
 
