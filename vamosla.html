@@ -1551,9 +1551,9 @@ Retorne APENAS o JSON rigorosamente neste formato:
 
             const prompt = `[SEMENTE:${semente}]
 /no_think
-Você é um designer de encontros para um RPG de aventura textual em português brasileiro. Sua função é criar cenas situacionais memoráveis — não sustos baratos, mas momentos com tensão real, escolhas difíceis e consequências assimétricas.
+Você é um designer de encontros para um RPG de aventura textual em português. Sua função é criar cenas situacionais memoráveis — não sustos baratos, mas momentos com tensão real, escolhas difíceis e consequências assimétricas.
 
-ZONA ATUAL: "${infoZona.nome}"
+MISTÉRIO CENTRAL: "${dnaGlobal?.misterio_central || ''}"
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 SALAS:
@@ -1561,8 +1561,6 @@ ${contextSalas}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 MISSÃO: Para cada sala, crie UM evento situacional e reescreva o TEXTO ORIGINAL DA SALA incorporando o evento como parte orgânica. O texto deve ser um bloco único e contínuo — o jogador nunca perceberá onde termina a sala e começa o evento.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 REGRAS DE FUSÃO:
 
@@ -1660,7 +1658,7 @@ try {
     data = await chamarGroq([
         { role: 'system', content: systemPrompt },
         { role: 'user', content: prompt }
-    ], 0.65, { type: 'json_object' }, MODELO_CENAS, 2);
+    ], 0.7, { type: 'json_object' }, MODELO_CENAS, 2);
 } catch (e) {
     console.warn(`[Cenas] Falha com ${MODELO_CENAS}:`, e.message);
     console.log(`[Cenas] Tentando fallback com ${MODELO_CENAS_FALLBACK}...`);
@@ -1669,7 +1667,7 @@ try {
         data = await chamarGroq([
             { role: 'system', content: systemPrompt },
             { role: 'user', content: prompt }
-        ], 0.8, { type: 'json_object' }, MODELO_CENAS_FALLBACK, 1);
+        ], 0.7, { type: 'json_object' }, MODELO_CENAS_FALLBACK, 1);
         modeloUsado = MODELO_CENAS_FALLBACK;
     } catch (fallbackError) {
         console.error(`[Cenas] Falha também com ${MODELO_CENAS_FALLBACK}:`, fallbackError.message);
