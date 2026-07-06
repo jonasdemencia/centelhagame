@@ -604,8 +604,8 @@ window.dispatchEvent(new Event('firebase-initialized'));
         const MODELO_PUZZLE = "openai/gpt-oss-120b";
         const MODELO_IND = "qwen/qwen3-32b"; // Modelo responsável pelas cinematics
         const MODELO_ARQUITETO = "llama-3.3-70b-versatile"; // Arquiteto de Perigos
-        const MODELO_CENAS = "qwen/qwen3-32b"; // Arquiteto de Cenas e Dilemas
-        const MODELO_CENAS_FALLBACK = "openai/gpt-oss-120b";
+        const MODELO_CENAS = "openai/gpt-oss-120b";  // Arquiteto de Cenas e Dilemas
+        const MODELO_CENAS_FALLBACK = "qwen/qwen3-32b";
 
 
         let mapaMundo = null;
@@ -1514,176 +1514,208 @@ Retorne APENAS o JSON rigorosamente neste formato:
         // ============================================================
 
         async function gerarArquitetoDeCenas(mapaFinalMesclado, infoZona, salaFim) {
-            // Seleciona 2-3 salas elegíveis mantendo suas regras originais
+            // Seleciona 2-3 salas elegíveis:
+            // • id < 10000  (não puzzle)
+            // • id !== salaFim  (não fronteira)
+            // • sem ind_disponivel  (sem IND)
+            // • sem puzzle_status
+            // • tem opcoes
             const idsElegiveis = Object.keys(mapaFinalMesclado)
                 .map(Number)
                 .filter(id => {
                     const sala = mapaFinalMesclado[String(id)];
                     return id < 10000
+                        // && id !== salaFim   // <-- remova esta condição
                         && !sala.ind_disponivel
                         && !sala.puzzle_status
                         && Array.isArray(sala.opcoes)
                         && sala.opcoes.length > 0
                         && !sala.opcoes.some(o => o.interceptor_arquiteto)
-                        && !sala.opcoes.some(o => o.arquiteto === true && !o.dilema); 
+                        && !sala.opcoes.some(o => o.arquiteto === true && !o.dilema); // exclui salas com nova_opcao do Perigos
                 })
                 .sort(() => Math.random() - 0.5)
                 .slice(0, 3);
 
             if (idsElegiveis.length === 0) return;
 
-            const cenasGeradas = [];
+            const contextSalas = idsElegiveis.map(id => {
+    const sala = mapaFinalMesclado[String(id)];
+    const textoOriginal = (sala.texto_logico || '').substring(0, 700);
+    const destinosSala = (sala.opcoes || [])
+        .filter(o => o.destino && !o.arquiteto)
+        .map(o => `  • [${o.destino}] "${o.texto}"`).join('\n');
+    return `SALA_ID:${id} — "${sala.nome}"\nTEXTO ORIGINAL DA SALA:\n${textoOriginal}\nDESTINOS DISPONÍVEIS:\n${destinosSala || '  (nenhum)'}`;
+}).join('\n\n');
 
-            // ESTRUTURA NOVA: Laço sequencial para Isolamento de Contexto
-            // Isso impede que o LLM misture o açougueiro da Sala 1 com a arquitetura da Sala 3
-            for (const id of idsElegiveis) {
-                const sala = mapaFinalMesclado[String(id)];
-                const textoOriginal = (sala.texto_logico || '').substring(0, 700);
-                const destinosSala = (sala.opcoes || [])
-                    .filter(o => o.destino && !o.arquiteto)
-                    .map(o => `  • [${o.destino}] "${o.texto}"`).join('\n');
-                
-                // O contexto agora foca puramente em UMA sala
-                const contextoSala = `SALA_ID:${id} — "${sala.nome}"\nTEXTO ORIGINAL DA SALA:\n${textoOriginal}\nDESTINOS DISPONÍVEIS:\n${destinosSala || '  (nenhum)'}`;
+            const semente = Math.random().toString(36).substring(2, 8);
 
-                const semente = Math.random().toString(36).substring(2, 8);
-
-                const prompt = `[SEMENTE:${semente}]
+            const prompt = `[SEMENTE:${semente}]
 /no_think
-Você é um designer de encontros para RPG de aventura textual. Crie UM evento situacional para a SALA ALVO e reescreva o TEXTO ORIGINAL fundindo o evento organicamente — bloco único contínuo, sem costura visível.
+Você é um designer de encontros para um RPG de aventura textual em português brasileiro. Sua função é criar cenas situacionais memoráveis — não sustos baratos, mas momentos com tensão real, escolhas difíceis e consequências assimétricas.
 
 ZONA ATUAL: "${infoZona.nome}"
 MISTÉRIO CENTRAL: "${dnaGlobal?.misterio_central || ''}"
 
-SALA ALVO:
-${contextoSala}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SALAS:
+${contextSalas}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-REGRAS DE FUSÃO
-- O evento emerge do que já existe na sala. Não invente salas adjacentes, portas não mencionadas ou espaços ocultos. Se a cena precisa de espaço, use o que está descrito.
-- Termine no momento de suspensão, antes da decisão do jogador.
+MISSÃO: Para cada sala, crie UM evento situacional e reescreva o TEXTO ORIGINAL DA SALA incorporando o evento como parte orgânica. O texto deve ser um bloco único e contínuo — o jogador nunca perceberá onde termina a sala e começa o evento.
 
-REGRAS DE ESTILO
-- Estranhamento exige forma física objetiva. NÃO: "a fonte parecia viva". SIM: "a água marcava 4°C no pior verão e sua superfície não reagia ao vento".
-- O ambiente não tem vontade. NÃO: "a escuridão ganha peso". SIM: "a corrente aperta, a placa se move".
-- Proibido adjetivos de horror fácil: assustador, aterrorizante, perturbador.
-- O jogador é humano comum. NUNCA invente características corporais, roupas, passado ou emoções para ele.
-- Descreva como câmera de segurança: fatos brutos, não interpretações.
-
-DESIGN DE DILEMAS
-- Exatamente 1 dilema por cena. Os demais: ramificacoes: null.
-- Cada opção tem custo e promessa próprios. NUNCA "certo vs errado".
-- Pelo menos uma opção com dano 0, mas nunca gratuita (perda de informação, janela fechada).
-- Consequências assimétricas: A (risco físico, ganho potencial), B (risco zero, perda narrativa real), C (risco ambíguo, consequência incerta).
-- Verbos específicos com alvos específicos. NÃO: "Tentar pegar o objeto". SIM: "Arrancar o medalhão do pescoço enquanto ela não olha".
-- Opções sem destino_id NÃO usam verbos de locomoção (sair, subir, descer, seguir, atravessar).
-- Dilemas com trânsito: preencha destino_id quando a ação implica atravessar limiar físico. Não descreva a sala de destino.
-
-RAMIFICAÇÕES (apenas no dilema-pai)
-- dilema-pai: resultado_texto é ponte narrativa (2-3 frases, tensão aberta), dano: 0.
-- ramificacoes (2-3): opcao_texto, resultado_texto, dano, destino_id.
-- Causalidade: resultado_texto do pai começa exatamente onde opcao_texto termina. Não invente ação não escolhida.
-
-DESIGN DE RESULTADO
-- 2-4 frases específicas e viscerais. Dor é descrita, não contabilizada. NUNCA "você perde X de energia".
-- Calibre: 1-2 (contusão), 3-4 (ferimento), 5-6 (sangue, comprometimento), 7-20 (quase fatal, só para má leitura grave).
-
-TÍTULO
-- Cria curiosidade, não descreve. "O Açougueiro Paciente" > "O Homem com o Machado".
-
-PROIBIDO
-- Dilemas binários sem nuance.
-- Criaturas sem motivação ou lógica interna.
-- Mais de 1 dilema com ramificacoes por cena.
-- resultado_texto descrevendo ação não executada em opcao_texto.
+REGRAS DE FUSÃO:
+- A sala existente é o solo — o evento surge dele, não cai sobre ele
+- Os elementos já descritos (objetos, luz, cheiro, arquitetura) devem servir de ponte para o evento
+- O texto fundido deve parecer que SEMPRE foi assim
+- O evento ocorre dentro dos limites físicos da sala descrita — não invente salas adjacentes, quartos atrás de portas ou espaços não mencionados no TEXTO ORIGINAL. Se a cena exige um espaço, use o que já está descrito.
+- Termine no momento de suspensão, antes da decisão do jogador
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DESIGN DE CENA:
+
+1. EMERGE DO AMBIENTE, NÃO DO NADA
+Use o que já existe na sala. Um depósito tem um trabalhador, uma câmara fria tem um açougueiro, um corredor inundado tem algo que afogou. A situação deve parecer que SEMPRE esteve ali, esperando.
+
+2. ESPECIFICIDADE E ÂNCORA FÍSICA
+"Um homem costurando a própria pálpebra com linha de pesca" > "uma figura perturbadora". Detalhes concretos criam realidade — e todo estranhamento exige forma física objetiva:
+NÃO: "a fonte parecia viva" / SIM: "a água marcava 4°C no pior verão em décadas e sua superfície não reagia ao vento"
+NÃO: "o corredor queria algo" / SIM: "a bússola girava ao contrário apenas dentro deste quarto"
+O fenômeno é dado concreto. A interpretação pertence ao jogador.
+
+3. TERMINE COM TENSÃO ABERTA
+A cena termina no momento de decisão. "Ela vira o rosto devagar na sua direção." Não resolva: suspenda.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DESIGN DE DILEMAS:
+
+1. APELOS DIFERENTES, RISCOS DIFERENTES — NUNCA "CERTO VS ERRADO"
+Cada opção tem seu próprio custo e sua própria promessa. O jogador deve hesitar de verdade.
+MAL: "Atacar" vs "Fugir". BEM: "Interagir arriscando algo" vs "Recuar perdendo oportunidade única" vs "Observar mais, mas o tempo se esgota".
+
+2. PELO MENOS UMA OPÇÃO COM DANO 0 — MAS NÃO GRATUITA
+Dano 0 não significa sem consequência: janela de oportunidade fechada, informação perdida, aliado não conquistado.
+
+3. CONSEQUÊNCIAS ASSIMÉTRICAS
+Opção A: risco físico, ganho potencial. Opção B: risco zero, perda narrativa real. Opção C (se houver): risco ambíguo — consequência incerta ou estranha.
+
+4. VERBOS ESPECÍFICOS COM ALVOS ESPECÍFICOS
+Ruim: "Tentar pegar o objeto" — Bom: "Arrancar o medalhão do pescoço enquanto ela não olha"
+
+5. DILEMAS COM TRÂNSITO (OPCIONAL)
+Um dilema pode mover o jogador para outra sala usando um destino de DESTINOS DISPONÍVEIS. Use quando a ação implica atravessar um limiar físico (fuga, avanço forçado, entrada). O resultado não descreve o que há na nova sala. Quando usar: preencha destino_id. Quando não: null.
+
+6. RAMIFICAÇÕES — exatamente 1 dilema por cena; os restantes têm ramificacoes: null.
+Quando usar: a ação do jogador abre um momento de bifurcação genuína antes da resolução.
+Estrutura: dilema-pai tem resultado_texto como ponte narrativa (2-3 frases, tensão aberta) + dano: 0. As ramificacoes (2-3) têm opcao_texto, resultado_texto, dano e destino_id próprios.
+Causalidade: resultado_texto do pai começa exatamente onde opcao_texto termina — não invente ação que o jogador não executou.
+Qualidade das ramificações — mesma exigência do DESIGN DE RESULTADO:
+"O degrau cede sob seu pé esquerdo e você ouve o estalo antes de sentir" — não "você sente dor"
+"A porta entreaberta está agora fechada por dentro" — não "você se sente observado"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DESIGN DE RESULTADO:
+
+O resultado é narrativa, não relatório. 2-4 frases específicas e viscerais. A dor é descrita, não contabilizada. Nunca escreva "você perde X de energia".
+
+Calibre o dano:
+1-2 → contusão, arranhão, susto físico
+3-4 → ferimento real, queda, golpe
+5-6 → dano sério, sangue, comprometimento temporário
+7-20 → quase fatal — reserve para má leitura grave de situação
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PROIBIDO:
+✗ Adjetivos de horror fácil: assustador, aterrorizante, horrível, perturbador (mostre, não nomeie)
+✗ Opções sem destino_id com verbos de locomoção (sair, subir, descer, seguir, atravessar)
+✗ Criaturas sem motivação ou lógica interna
+✗ Resultados que mencionam perda de energia diretamente
+✗ Proibição de Intenção e Metáfora: Objetos inanimados e o ambiente NÃO têm vontade. A escuridão não "ganha peso", o metal não "ganha vida" e coisas não "esperam por alguém". Descreva a física (o rangido, a ferrugem, o frio, o movimento), nunca a intenção
+✗ Títulos descritivos — o título cria curiosidade, não descreve ("O Açougueiro Paciente" > "O Homem com o Machado")
+✗ Mais de 1 dilema com ramificacoes por cena
+✗ resultado_texto de dilema-pai descrevendo ação que o jogador não executou em opcao_texto
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+RETORNE APENAS JSON — ZERO MARKDOWN, ZERO TEXTO FORA DO OBJETO:
 
 Retorne APENAS JSON neste formato exato (zero markdown, zero texto fora do JSON):
 {
-  "titulo": "Título do Evento",
-  "texto_sala_fundido": "Reescrita completa da sala com o evento embutido organicamente. 5-8 frases. O texto termina no momento de tensão — o jogador ainda não agiu.",
-  "dilemas": [
+  "cenas": [
     {
-      "opcao_texto": "Ação que resolve na hora",
-      "resultado_texto": "2-4 frases narrando a consequência direta.",
-      "dano": 0,
-      "destino_id": null,
-      "ramificacoes": null
-    },
-    {
-      "opcao_texto": "Ação que se desdobra numa segunda decisão",
-      "resultado_texto": "2-3 frases de transição — a situação se complicou. Termina em tensão aberta.",
-      "dano": 0,
-      "destino_id": null,
-      "ramificacoes": [
-        {
-          "opcao_texto": "Como reagir — desdobramento A",
-          "resultado_texto": "2-3 frases narrando a consequência de A.",
-          "dano": 3,
-          "destino_id": null
-        },
-        {
-          "opcao_texto": "Como reagir — desdobramento B",
-          "resultado_texto": "2-3 frases narrando a consequência de B.",
-          "dano": 0,
-          "destino_id": null
-        }
-      ]
-    }
-  ]
+      "sala_id": "ID_NUMÉRICO",
+      "titulo": "Título do Evento",
+      "texto_sala_fundido": "Reescrita completa da sala com o evento embutido organicamente. 5-8 frases. O texto termina no momento de tensão — o jogador ainda não agiu.",
+      "dilemas": [
+  {
+    "opcao_texto": "Ação que resolve na hora",
+    "resultado_texto": "2-4 frases narrando a consequência direta.",
+    "dano": 0,
+    "destino_id": null,
+    "ramificacoes": null
+  },
+  {
+    "opcao_texto": "Ação que se desdobra numa segunda decisão",
+    "resultado_texto": "2-3 frases de transição — a situação se complicou. Termina em tensão aberta.",
+    "dano": 0,
+    "destino_id": null,
+    "ramificacoes": [
+      {
+        "opcao_texto": "Como reagir — desdobramento A",
+        "resultado_texto": "2-3 frases narrando a consequência de A.",
+        "dano": 3,
+        "destino_id": null
+      },
+      {
+        "opcao_texto": "Como reagir — desdobramento B",
+        "resultado_texto": "2-3 frases narrando a consequência de B.",
+        "dano": 0,
+        "destino_id": null
+      }
+    ]
+  }
+]
 }`;
 
-                const systemPrompt = 'Você é o Arquiteto de Cenas de um RPG de aventura textual em Português brasileiro. Retorne APENAS JSON válido. Zero markdown. O campo "dano" deve ser um integer entre 0 e 20.';
+            const systemPrompt = 'Você é o Arquiteto de Cenas de um RPG de aventura textual em Português brasileiro. Retorne APENAS JSON válido. Zero markdown. O campo "dano" deve ser um integer entre 0 e 20.';
 
-                let data;
-                let modeloUsado = MODELO_CENAS;
+            let data;
+let modeloUsado = MODELO_CENAS;
 
-                try {
-                    data = await chamarGroq([
-                        { role: 'system', content: systemPrompt },
-                        { role: 'user', content: prompt }
-                    ], 0.75, { type: 'json_object' }, MODELO_CENAS, 2);
-                } catch (e) {
-                    console.warn(`[Cenas] Falha com ${MODELO_CENAS}:`, e.message);
-                    console.log(`[Cenas] Tentando fallback com ${MODELO_CENAS_FALLBACK}...`);
-                    
-                    try {
-                        data = await chamarGroq([
-                            { role: 'system', content: systemPrompt },
-                            { role: 'user', content: prompt }
-                        ], 0.75, { type: 'json_object' }, MODELO_CENAS_FALLBACK, 1);
-                        modeloUsado = MODELO_CENAS_FALLBACK;
-                    } catch (fallbackError) {
-                        console.error(`[Cenas] Falha também com ${MODELO_CENAS_FALLBACK}:`, fallbackError.message);
-                        continue; // Pula esta sala se os dois modelos falharem, continua a próxima
-                    }
-                }
+try {
+    data = await chamarGroq([
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: prompt }
+    ], 0.65, { type: 'json_object' }, MODELO_CENAS, 2);
+} catch (e) {
+    console.warn(`[Cenas] Falha com ${MODELO_CENAS}:`, e.message);
+    console.log(`[Cenas] Tentando fallback com ${MODELO_CENAS_FALLBACK}...`);
+    
+    try {
+        data = await chamarGroq([
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: prompt }
+        ], 0.8, { type: 'json_object' }, MODELO_CENAS_FALLBACK, 1);
+        modeloUsado = MODELO_CENAS_FALLBACK;
+    } catch (fallbackError) {
+        console.error(`[Cenas] Falha também com ${MODELO_CENAS_FALLBACK}:`, fallbackError.message);
+        return;
+    }
+}
 
-                console.log(`[Cenas] Modelo usado para Sala ${id}: ${modeloUsado}`);
+console.log(`[Cenas] Modelo usado: ${modeloUsado}`);
 
-                let parsed;
-                try {
-                    const raw = data.choices[0].message.content;
-                    const match = raw.match(/{[\s\S]*}/);
-                    parsed = JSON.parse(match ? match[0] : raw);
-                    
-                    // Empacota o JSON limpo no formato esperado pela função aplicarArquitetoDeCenas
-                    cenasGeradas.push({
-                        sala_id: id,
-                        titulo: parsed.titulo,
-                        texto_sala_fundido: parsed.texto_sala_fundido,
-                        dilemas: parsed.dilemas
-                    });
-                } catch (e) {
-                    console.error(`[Cenas] Falha no parse JSON para Sala ${id}:`, e);
-                }
-            } // Fim do Loop
+            let parsed;
+            try {
+                const raw = data.choices[0].message.content;
+                const match = raw.match(/{[\s\S]*}/);
+                parsed = JSON.parse(match ? match[0] : raw);
+            } catch (e) {
+                console.error('[Cenas] Falha no parse JSON:', e);
+                return;
+            }
 
-            console.log(`[Cenas] ✅ ${cenasGeradas.length} cenas geradas para zona "${infoZona.nome}".`, cenasGeradas);
-            
-            // Passa o array montado manualmente para a função original de aplicação
-            aplicarArquitetoDeCenas(cenasGeradas, mapaFinalMesclado, idsElegiveis);
+            const cenas = parsed.cenas || [];
+            console.log(`[Cenas] ✅ ${cenas.length} cenas geradas para zona "${infoZona.nome}".`, cenas);
+            aplicarArquitetoDeCenas(cenas, mapaFinalMesclado, idsElegiveis);
         }
 
         function aplicarArquitetoDeCenas(cenas, mapaFinalMesclado, idsValidos) {
