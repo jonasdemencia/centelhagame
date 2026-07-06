@@ -604,8 +604,8 @@ window.dispatchEvent(new Event('firebase-initialized'));
         const MODELO_PUZZLE = "openai/gpt-oss-120b";
         const MODELO_IND = "qwen/qwen3-32b"; // Modelo responsável pelas cinematics
         const MODELO_ARQUITETO = "llama-3.3-70b-versatile"; // Arquiteto de Perigos
-        const MODELO_CENAS = "openai/gpt-oss-120b"; // Arquiteto de Cenas e Dilemas
-        const MODELO_CENAS_FALLBACK =  "qwen/qwen3-32b";
+        const MODELO_CENAS = "qwen/qwen3-32b"; // Arquiteto de Cenas e Dilemas
+        const MODELO_CENAS_FALLBACK =  "openai/gpt-oss-120b";
 
 
         let mapaMundo = null;
@@ -1561,10 +1561,9 @@ SALA ALVO:
 ${contextoSala}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-MISSÃO: O FOCO ABSOLUTO É A CENA E SEUS DILEMAS; a SALA ALVO é apenas o cenário. Reescreva o TEXTO ORIGINAL incorporando o evento situacional organicamente. O texto deve ser um bloco contínuo — o jogador nunca perceberá onde termina a arquitetura e começa a ação.
+MISSÃO: Para a SALA ALVO, crie UM evento situacional e reescreva o TEXTO ORIGINAL DA SALA incorporando o evento como parte orgânica. O texto deve ser um bloco único e contínuo — o jogador nunca perceberá onde termina a sala e começa o evento.
 
 REGRAS DE FUSÃO:
-- A sala existente é mero palco — a CENA é a protagonista que nasce dele
 - Os elementos já descritos (objetos, luz, cheiro, arquitetura) servem de ponte para o evento principal
 - O texto fundido deve parecer que a situação SEMPRE esteve ali
 - O evento ocorre estritamente nos limites físicos da sala descrita — não invente salas adjacentes ou espaços não mencionados no TEXTO ORIGINAL. Use a sala apenas para ancorar a cena.
