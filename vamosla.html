@@ -607,6 +607,14 @@ window.dispatchEvent(new Event('firebase-initialized'));
         const MODELO_CENAS = "qwen/qwen3-32b"; // Arquiteto de Cenas e Dilemas
         const MODELO_CENAS_FALLBACK = "openai/gpt-oss-120b";
 
+        // ── FALLBACK CEREBRAS (segundo provedor, usado quando a Groq estoura o teto) ──
+        // Troque pela URL do SEU worker dedicado à Cerebras depois de fazer o deploy (ver instruções).
+        const CEREBRAS_WORKER_URL = "https://dawn-shape-dc77.fabiorainersilva.workers.dev";
+        // Modelo de produção público da Cerebras hoje. É o mesmo "peso" do gpt-oss-120b que
+        // vocês já usa na Groq (MODELO_PUZZLE / MODELO_CENAS_FALLBACK), então o comportamento
+        // do texto tende a ser familiar. Confira modelos disponíveis em cloud.cerebras.ai antes de trocar.
+        const MODELO_CEREBRAS = "gpt-oss-120b";
+
 
         let mapaMundo = null;
         let secaoAtualId = "1";
@@ -1192,9 +1200,11 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
         // SISTEMA IND (CINEMATICS) E API
         // ============================================================
         
-        async function chamarGroq(messages, temperatura = 0.7, formato = { type: "json_object" }, modeloPadrao = MODELO_GROQ, tentativas = 3) {
+        // Função genérica: fala com QUALQUER worker que exponha um endpoint no formato OpenAI
+        // (Groq e Cerebras são ambos compatíveis). O nome do provedor é só para os logs.
+        async function chamarLLM(messages, temperatura = 0.7, formato = { type: "json_object" }, modeloPadrao = MODELO_GROQ, tentativas = 3, workerUrl = WORKER_URL, nomeProvedor = "Groq") {
     for (let i = 0; i < tentativas; i++) {
-        const response = await fetch(WORKER_URL, {
+        const response = await fetch(workerUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -1216,27 +1226,38 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
                     const match = errMsg.match(/try again in ([\d\.]+)s/);
                     const waitTime = match ? (parseFloat(match[1]) * 1000) + 2000 : 15000;
                     
-                    console.warn(`⏳ [Groq] Limite de tokens atingido. Pausando ${(waitTime/1000).toFixed(1)}s antes da tentativa ${i+2}/${tentativas}...`);
+                    console.warn(`⏳ [${nomeProvedor}] Limite de tokens atingido. Pausando ${(waitTime/1000).toFixed(1)}s antes da tentativa ${i+2}/${tentativas}...`);
                     await new Promise(resolve => setTimeout(resolve, waitTime));
                     continue; 
                 }
 
-                console.log('[Groq] Resposta raw do Worker:', JSON.stringify(data).slice(0, 400));
+                console.log(`[${nomeProvedor}] Resposta raw do Worker:`, JSON.stringify(data).slice(0, 400));
 
                 if (!response.ok) {
                     throw new Error(`Erro no Worker [${response.status}]: ${JSON.stringify(data)}`);
                 }
 
                 if (data.error) {
-                    throw new Error(`Erro da Groq API: ${data.error.message ?? JSON.stringify(data.error)}`);
+                    throw new Error(`Erro da ${nomeProvedor} API: ${data.error.message ?? JSON.stringify(data.error)}`);
                 }
 
                 if (!data.choices || !Array.isArray(data.choices) || data.choices.length === 0) {
-                    throw new Error(`Resposta da Groq sem 'choices': ${JSON.stringify(data).slice(0, 300)}`);
+                    throw new Error(`Resposta da ${nomeProvedor} sem 'choices': ${JSON.stringify(data).slice(0, 300)}`);
                 }
 
                 return data;
             }
+        }
+
+        // Mantido por compatibilidade: todo o código existente que chama chamarGroq(...) continua funcionando.
+        async function chamarGroq(messages, temperatura = 0.7, formato = { type: "json_object" }, modeloPadrao = MODELO_GROQ, tentativas = 3) {
+            return chamarLLM(messages, temperatura, formato, modeloPadrao, tentativas, WORKER_URL, "Groq");
+        }
+
+        // Novo: chamada ao fallback Cerebras. Usa menos tentativas (2) por padrão pois
+        // é um plano B — se falhar rápido, o chamador decide se desiste ou tenta outra coisa.
+        async function chamarCerebras(messages, temperatura = 0.7, formato = { type: "json_object" }, modeloPadrao = MODELO_CEREBRAS, tentativas = 2) {
+            return chamarLLM(messages, temperatura, formato, modeloPadrao, tentativas, CEREBRAS_WORKER_URL, "Cerebras");
         }
 
         async function gerarIND(idSala) {
@@ -1404,8 +1425,16 @@ Retorne APENAS o JSON rigorosamente neste formato:
             { role: "user", content: prompt }
         ], 0.8, { type: "json_object" }, MODELO_ARQUITETO, 3);
     } catch(e) {
-        console.error("[Arquiteto] Falha na chamada Groq:", e);
-        return;
+        console.warn("[Arquiteto de Perigos] Groq falhou, tentando fallback Cerebras:", e.message);
+        try {
+            data = await chamarCerebras([
+                { role: "system", content: systemPrompt },
+                { role: "user", content: prompt }
+            ], 0.8, { type: "json_object" }, MODELO_CEREBRAS, 2);
+        } catch (e2) {
+            console.error("[Arquiteto de Perigos] Falha também no fallback Cerebras:", e2.message);
+            return;
+        }
     }
 
     let parsed;
@@ -1695,8 +1724,18 @@ Retorne APENAS JSON neste formato exato (zero markdown, zero texto fora do JSON)
                         ], 0.8, { type: 'json_object' }, MODELO_CENAS_FALLBACK, 1);
                         modeloUsado = MODELO_CENAS_FALLBACK;
                     } catch (fallbackError) {
-                        console.error(`[Cenas] Falha também com ${MODELO_CENAS_FALLBACK}:`, fallbackError.message);
-                        continue; // Pula esta sala se os dois modelos falharem, continua a próxima
+                        console.warn(`[Cenas] Falha também com ${MODELO_CENAS_FALLBACK}, tentando Cerebras:`, fallbackError.message);
+
+                        try {
+                            data = await chamarCerebras([
+                                { role: 'system', content: systemPrompt },
+                                { role: 'user', content: prompt }
+                            ], 0.8, { type: 'json_object' }, MODELO_CEREBRAS, 2);
+                            modeloUsado = `cerebras/${MODELO_CEREBRAS}`;
+                        } catch (cerebrasError) {
+                            console.error(`[Cenas] Falha também com Cerebras:`, cerebrasError.message);
+                            continue; // Pula esta sala se os três modelos falharem, continua a próxima
+                        }
                     }
                 }
 
