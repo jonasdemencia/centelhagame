@@ -1561,14 +1561,13 @@ SALA ALVO:
 ${contextoSala}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-MISSÃO: Para a SALA ALVO, crie UM evento situacional e reescreva o TEXTO ORIGINAL DA SALA incorporando o evento como parte orgânica. O texto deve ser um bloco único e contínuo — o jogador nunca perceberá onde termina a sala e começa o evento.
+MISSÃO: Para a SALA ALVO, crie UM evento situacional. Escreva APENAS a cena que acontecerá neste ambiente. NÃO REESCREVA a descrição original da sala — seu texto será acoplado no final da descrição que já existe. Concentre todo o seu esforço na qualidade, coerência e tensão do evento em si.
 
-REGRAS DE FUSÃO:
-- A sala existente é o solo — o evento surge dele, não cai sobre ele
-- Os elementos já descritos (objetos, luz, cheiro, arquitetura) devem servir de ponte para o evento
-- O texto fundido deve parecer que SEMPRE foi assim
-- O evento ocorre dentro dos limites físicos da sala descrita — não invente salas adjacentes, quartos atrás de portas ou espaços não mencionados no TEXTO ORIGINAL. Se a cena exige um espaço, use o que já está descrito.
-- Termine no momento de suspensão, antes da decisão do jogador
+REGRAS DE INSERÇÃO:
+- A cena surge do ambiente — use os elementos físicos já descritos no TEXTO ORIGINAL DA SALA como ponte narrativa.
+- Comece a cena de forma orgânica, assumindo que o jogador acabou de observar a descrição original.
+- O evento ocorre dentro dos limites físicos da sala descrita.
+- Termine no momento de suspensão, antes da decisão do jogador.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 DESIGN DE CENA:
@@ -1643,7 +1642,7 @@ RETORNE APENAS JSON — ZERO MARKDOWN, ZERO TEXTO FORA DO OBJETO:
 Retorne APENAS JSON neste formato exato (zero markdown, zero texto fora do JSON):
 {
   "titulo": "Título do Evento",
-  "texto_sala_fundido": "Reescrita completa da sala com o evento embutido organicamente. 5-8 frases. O texto termina no momento de tensão — o jogador ainda não agiu.",
+  "texto_cena": "A descrição exclusiva do evento/cena. 3-5 frases. O texto termina no momento de tensão — o jogador ainda não agiu.",
   "dilemas": [
     {
       "opcao_texto": "Ação que resolve na hora",
@@ -1713,7 +1712,7 @@ Retorne APENAS JSON neste formato exato (zero markdown, zero texto fora do JSON)
                     cenasGeradas.push({
                         sala_id: id,
                         titulo: parsed.titulo,
-                        texto_sala_fundido: parsed.texto_sala_fundido,
+                        texto_cena: parsed.texto_cena,   // <-- chave alterada
                         dilemas: parsed.dilemas
                     });
                 } catch (e) {
@@ -1728,100 +1727,100 @@ Retorne APENAS JSON neste formato exato (zero markdown, zero texto fora do JSON)
         }
 
         function aplicarArquitetoDeCenas(cenas, mapaFinalMesclado, idsValidos) {
-            const idsValidosSet = new Set(idsValidos.map(String));
+    const idsValidosSet = new Set(idsValidos.map(String));
 
-            cenas.forEach(cena => {
-                const salaId = String(cena.sala_id);
-                const sala = mapaFinalMesclado[salaId];
+    cenas.forEach(cena => {
+        const salaId = String(cena.sala_id);
+        const sala = mapaFinalMesclado[salaId];
 
-                if (!sala || !idsValidosSet.has(salaId)) {
-                    console.warn(`[Cenas] Sala ${salaId} fora do escopo. Ignorando.`);
-                    return;
-                }
-
-                const titulo     = (cena.titulo || 'Evento Inesperado').trim();
-const textoFusao = expurgarViciosIA((cena.texto_sala_fundido || '').trim());
-if (!textoFusao) return;
-
-sala.texto_logico  = textoFusao;
-sala.cena_titulo   = titulo;
-sala.cena_aplicada = true;
-
-                // Adiciona as opções de dilema à sala
-                if (!sala.opcoes) sala.opcoes = [];
-                const dilemas = Array.isArray(cena.dilemas) ? cena.dilemas : [];
-
-                const destinosValidos = new Set(
-    (sala.opcoes || [])
-        .filter(o => o.destino && !o.arquiteto)
-        .map(o => String(o.destino))
-);
-
-dilemas.forEach(dilema => {
-    const opcaoTexto     = (dilema.opcao_texto    || 'Observar com cautela').trim();
-    const narrativaBruta = expurgarViciosIA((dilema.resultado_texto || '').trim());
-    if (!narrativaBruta) return;
-
-    const dano = typeof dilema.dano === 'number'
-        ? Math.min(20, Math.max(0, Math.round(dilema.dano)))
-        : 0;
-
-    const resultadoTexto = dano > 0
-        ? `${narrativaBruta.replace(/[.\s]+$/, '')}. Você perde ${dano} de energia.`
-        : narrativaBruta;
-
-    const destinoRaw     = dilema.destino_id ? String(dilema.destino_id) : null;
-    const destinoValidado = (destinoRaw && destinosValidos.has(destinoRaw))
-        ? parseInt(destinoRaw)
-        : null;
-
-    // Valida e prepara ramificações
-const ramsRaw = Array.isArray(dilema.ramificacoes) ? dilema.ramificacoes : [];
-const ramificacoes = ramsRaw
-    .filter(r => r.opcao_texto && r.resultado_texto)
-    .map(r => {
-        const rDano = typeof r.dano === 'number'
-            ? Math.min(20, Math.max(0, Math.round(r.dano)))
-            : 0;
-        const rDestinoRaw = r.destino_id ? String(r.destino_id) : null;
-        const rDestino = (rDestinoRaw && destinosValidos.has(rDestinoRaw))
-            ? parseInt(rDestinoRaw)
-            : null;
-
-// 👇 Declare a variável aqui, fora do objeto
-        const rNarrativaLimpa = expurgarViciosIA((r.resultado_texto || '').trim());
-        
-        return {
-            opcao_texto: r.opcao_texto.trim(),
-            resultado_texto: rDano > 0
-                ? `${rNarrativaLimpa.replace(/[.\s]+$/, '')}. Você perde ${rDano} de energia.`
-                : rNarrativaLimpa,
-            dano: rDano,
-            destino: rDestino
-        };
-    });
-
-sala.opcoes.push({
-    texto:           opcaoTexto,
-    arquiteto:       true,
-    dilema:          true,
-    resultado_texto: resultadoTexto,
-    dano,
-    destino:         destinoValidado,
-    disparado:       false,
-    ramificacoes:    ramificacoes.length > 0 ? ramificacoes : null
-});
-
-    // ─── LOG DE INJEÇÃO ───
-if (destinoValidado !== null) {
-    console.log(`[Cenas] Dilema com destino injetado: "${opcaoTexto}" → sala ${destinoValidado} (Sala ${salaId})`);
-}
-    
-});
-
-                console.log(`[Cenas] ✅ "${titulo}" → Sala ${salaId} | ${dilemas.length} dilemas injetados`);
-            });
+        if (!sala || !idsValidosSet.has(salaId)) {
+            console.warn(`[Cenas] Sala ${salaId} fora do escopo. Ignorando.`);
+            return;
         }
+
+        const titulo     = (cena.titulo || 'Evento Inesperado').trim();
+        const textoCena  = expurgarViciosIA((cena.texto_cena || '').trim()); // ← CHAVE ALTERADA
+        if (!textoCena) return;
+
+        // ─── INJEÇÃO: PRESERVA O TEXTO ORIGINAL E CONCATENA A CENA ───
+        sala.texto_logico = (sala.texto_logico || '').trim() + '\n\n' + textoCena;
+
+        sala.cena_titulo   = titulo;
+        sala.cena_aplicada = true;
+
+        // Adiciona as opções de dilema à sala
+        if (!sala.opcoes) sala.opcoes = [];
+        const dilemas = Array.isArray(cena.dilemas) ? cena.dilemas : [];
+
+        const destinosValidos = new Set(
+            (sala.opcoes || [])
+                .filter(o => o.destino && !o.arquiteto)
+                .map(o => String(o.destino))
+        );
+
+        dilemas.forEach(dilema => {
+            const opcaoTexto     = (dilema.opcao_texto    || 'Observar com cautela').trim();
+            const narrativaBruta = expurgarViciosIA((dilema.resultado_texto || '').trim());
+            if (!narrativaBruta) return;
+
+            const dano = typeof dilema.dano === 'number'
+                ? Math.min(20, Math.max(0, Math.round(dilema.dano)))
+                : 0;
+
+            const resultadoTexto = dano > 0
+                ? `${narrativaBruta.replace(/[.\s]+$/, '')}. Você perde ${dano} de energia.`
+                : narrativaBruta;
+
+            const destinoRaw     = dilema.destino_id ? String(dilema.destino_id) : null;
+            const destinoValidado = (destinoRaw && destinosValidos.has(destinoRaw))
+                ? parseInt(destinoRaw)
+                : null;
+
+            // Valida e prepara ramificações
+            const ramsRaw = Array.isArray(dilema.ramificacoes) ? dilema.ramificacoes : [];
+            const ramificacoes = ramsRaw
+                .filter(r => r.opcao_texto && r.resultado_texto)
+                .map(r => {
+                    const rDano = typeof r.dano === 'number'
+                        ? Math.min(20, Math.max(0, Math.round(r.dano)))
+                        : 0;
+                    const rDestinoRaw = r.destino_id ? String(r.destino_id) : null;
+                    const rDestino = (rDestinoRaw && destinosValidos.has(rDestinoRaw))
+                        ? parseInt(rDestinoRaw)
+                        : null;
+
+                    const rNarrativaLimpa = expurgarViciosIA((r.resultado_texto || '').trim());
+
+                    return {
+                        opcao_texto: r.opcao_texto.trim(),
+                        resultado_texto: rDano > 0
+                            ? `${rNarrativaLimpa.replace(/[.\s]+$/, '')}. Você perde ${rDano} de energia.`
+                            : rNarrativaLimpa,
+                        dano: rDano,
+                        destino: rDestino
+                    };
+                });
+
+            sala.opcoes.push({
+                texto:           opcaoTexto,
+                arquiteto:       true,
+                dilema:          true,
+                resultado_texto: resultadoTexto,
+                dano,
+                destino:         destinoValidado,
+                disparado:       false,
+                ramificacoes:    ramificacoes.length > 0 ? ramificacoes : null
+            });
+
+            // ─── LOG DE INJEÇÃO ───
+            if (destinoValidado !== null) {
+                console.log(`[Cenas] Dilema com destino injetado: "${opcaoTexto}" → sala ${destinoValidado} (Sala ${salaId})`);
+            }
+        });
+
+        console.log(`[Cenas] ✅ "${titulo}" → Sala ${salaId} | ${dilemas.length} dilemas injetados`);
+    });
+}
 
 
         // ============================================================
