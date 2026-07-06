@@ -1496,17 +1496,33 @@ Retorne APENAS o JSON rigorosamente neste formato:
     function expurgarViciosIA(texto) {
     if (!texto) return texto;
 
-    // 1. Guilhotina para "como se" e "quase como se"
-    // Captura a vírgula/espaço anterior, a expressão, e todo o texto até a pontuação final,
-    // substituindo tudo apenas pela pontuação encontrada (ponto, exclamação, etc).
+    // 1. Guilhotina para "como se" e comparações preguiçosas
     let limpo = texto.replace(/(?:,\s*|\s+)\b(?:quase\s+)?como se\b[^.!?]*([.!?]|$)/gi, '$1');
-
-    // 2. Guilhotina para comparações diretas no fim da frase (Ex: "como uma memória congelada.")
-    // Remove "como um", "como uma", "como se fosse" no final das frases.
     limpo = limpo.replace(/(?:,\s*|\s+)\b(?:quase\s+)?como (?:um|uma)\b[^.!?]*([.!?]|$)/gi, '$1');
 
-    // Remove espaços duplos acidentais que possam sobrar
-    return limpo.replace(/\s{2,}/g, ' ').trim();
+    // 2. Guilhotina de Adjetivos e Clichês de Slop (Substituições diretas e seguras)
+    const slops = [
+        /você não pode deixar de (notar|perceber)( que)? /gi,
+        /um arrepio( frio)? percorre (sua|a) espinha[.!?]?/gi,
+        /um calafrio (gelado )?sobe( pela)?( sua)? (espinha|nuca)[.!?]?/gi,
+        /um silêncio (sepulcral|mortal|ensurdecedor|pesado)/gi,
+        /(uma )?dança (macabra|sombria|assustadora)/gi,
+        /o ar (parece|está) (pesado|carregado|denso) (de|com) /gi,
+        /uma sensação (palpável )?de (pavor|medo|desespero|mal-estar)/gi,
+        /fazendo seu sangue gelar[.!?]?/gi,
+        /seu coração (dispara|bate mais forte|erra um batimento)[.!?]?/gi,
+        /como se (o próprio ambiente|a própria sala) (estivesse|fosse)/gi
+    ];
+
+    slops.forEach(regex => {
+        limpo = limpo.replace(regex, '');
+    });
+
+    // Remove espaços duplos e pontuação órfã gerada pela limpeza
+    limpo = limpo.replace(/\s{2,}/g, ' ');
+    limpo = limpo.replace(/,\s*\./g, '.'); 
+    
+    return limpo.trim();
 }
 
         // ============================================================
@@ -1514,7 +1530,6 @@ Retorne APENAS o JSON rigorosamente neste formato:
         // ============================================================
 
         async function gerarArquitetoDeCenas(mapaFinalMesclado, infoZona, salaFim) {
-            // Seleciona 2-3 salas elegíveis mantendo suas regras originais
             const idsElegiveis = Object.keys(mapaFinalMesclado)
                 .map(Number)
                 .filter(id => {
@@ -1534,8 +1549,6 @@ Retorne APENAS o JSON rigorosamente neste formato:
 
             const cenasGeradas = [];
 
-            // ESTRUTURA NOVA: Laço sequencial para Isolamento de Contexto
-            // Isso impede que o LLM misture o açougueiro da Sala 1 com a arquitetura da Sala 3
             for (const id of idsElegiveis) {
                 const sala = mapaFinalMesclado[String(id)];
                 const textoOriginal = (sala.texto_logico || '').substring(0, 700);
@@ -1543,130 +1556,52 @@ Retorne APENAS o JSON rigorosamente neste formato:
                     .filter(o => o.destino && !o.arquiteto)
                     .map(o => `  • [${o.destino}] "${o.texto}"`).join('\n');
                 
-                // O contexto agora foca puramente em UMA sala
                 const contextoSala = `SALA_ID:${id} — "${sala.nome}"\nTEXTO ORIGINAL DA SALA:\n${textoOriginal}\nDESTINOS DISPONÍVEIS:\n${destinosSala || '  (nenhum)'}`;
-
                 const semente = Math.random().toString(36).substring(2, 8);
 
-                // O Prompt foi mantido intacto em sua riqueza, apenas adaptado para o singular (SALA ALVO)
                 const prompt = `[SEMENTE:${semente}]
-/no_think
-Você é um designer de encontros para um RPG de aventura textual, no nível de Steve Jackson e Ian Livingstone. Sua função é criar cenas situacionais memoráveis — não sustos baratos, mas momentos com tensão real, escolhas difíceis e consequências assimétricas.
+Você é um arquiteto forense escrevendo para um RPG de horror visceral.
 
-ZONA ATUAL: "${infoZona.nome}"
-MISTÉRIO CENTRAL: "${dnaGlobal?.misterio_central || ''}"
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-SALA ALVO:
+SALA ALVO (Apenas este local existe):
 ${contextoSala}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-MISSÃO: Para a SALA ALVO, crie UM evento situacional e reescreva o TEXTO ORIGINAL DA SALA incorporando o evento como parte orgânica. O texto deve ser um bloco único e contínuo — o jogador nunca perceberá onde termina a sala e começa o evento.
+MISSÃO: Injetar UM evento brutal e físico no TEXTO ORIGINAL DA SALA.
 
-REGRAS DE FUSÃO:
-- A sala existente é o solo — o evento surge dele, não cai sobre ele
-- Os elementos já descritos (objetos, luz, cheiro, arquitetura) devem servir de ponte para o evento
-- O texto fundido deve parecer que SEMPRE foi assim
-- O evento ocorre dentro dos limites físicos da sala descrita — não invente salas adjacentes, quartos atrás de portas ou espaços não mencionados no TEXTO ORIGINAL. Se a cena exige um espaço, use o que já está descrito.
-- Termine no momento de suspensão, antes da decisão do jogador
+REGRAS DE CONSTRUÇÃO (FALHA CRÍTICA SE IGNORADAS):
+1. ANCORAGEM MATERIAL: O evento DEVE usar os objetos descritos no TEXTO ORIGINAL. Não invente cômodos extras.
+2. ZERO PSICOLOGIA: Descreva apenas a física. O som do metal, o peso da carne, a temperatura do sangue. Proibido descrever o que o jogador "sente", "pensa" ou "teme".
+3. TENSÃO ABERTA: O texto termina no exato segundo em que o jogador precisa tomar uma decisão.
+4. DESTINOS REAIS: Se um dilema usar transição de sala, você SÓ PODE usar as opções numéricas listadas em DESTINOS DISPONÍVEIS no campo "destino_id". Caso contrário, use null.
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-DESIGN DE CENA:
+Retorne EXCLUSIVAMENTE o JSON no formato abaixo. O campo _diretriz_material é OBRIGATÓRIO e deve ser preenchido primeiro.
 
-1. EMERGE DO AMBIENTE, NÃO DO NADA
-Use o que já existe na sala. Um depósito tem um trabalhador, uma câmara fria tem um açougueiro, um corredor inundado tem algo que afogou. A situação deve parecer que SEMPRE esteve ali, esperando.
-
-2. ESPECIFICIDADE E ÂNCORA FÍSICA
-"Um homem costurando a própria pálpebra com linha de pesca" > "uma figura perturbadora". Detalhes concretos criam realidade — e todo estranhamento exige forma física objetiva:
-NÃO: "a fonte parecia viva" / SIM: "a água marcava 4°C no pior verão em décadas e sua superfície não reagia ao vento"
-NÃO: "o corredor queria algo" / SIM: "a bússola girava ao contrário apenas dentro deste quarto"
-O fenômeno é dado concreto. A interpretação pertence ao jogador.
-
-3. TERMINE COM TENSÃO ABERTA
-A cena termina no momento de decisão. "Ela vira o rosto devagar na sua direção." Não resolva: suspenda.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-DESIGN DE DILEMAS:
-
-1. APELOS DIFERENTES, RISCOS DIFERENTES — NUNCA "CERTO VS ERRADO"
-Cada opção tem seu próprio custo e sua própria promessa. O jogador deve hesitar de verdade.
-MAL: "Atacar" vs "Fugir". BEM: "Interagir arriscando algo" vs "Recuar perdendo oportunidade única" vs "Observar mais, mas o tempo se esgota".
-
-2. PELO MENOS UMA OPÇÃO COM DANO 0 — MAS NÃO GRATUITA
-Dano 0 não significa sem consequência: janela de oportunidade fechada, informação perdida, aliado não conquistado.
-
-3. CONSEQUÊNCIAS ASSIMÉTRICAS
-Opção A: risco físico, ganho potencial. Opção B: risco zero, perda narrativa real. Opção C (se houver): risco ambíguo — consequência incerta ou estranha.
-
-4. VERBOS ESPECÍFICOS COM ALVOS ESPECÍFICOS
-Ruim: "Tentar pegar o objeto" — Bom: "Arrancar o medalhão do pescoço enquanto ela não olha"
-
-5. DILEMAS COM TRÂNSITO (OPCIONAL)
-Um dilema pode mover o jogador para outra sala usando um destino de DESTINOS DISPONÍVEIS. Use quando a ação implica atravessar um limiar físico (fuga, avanço forçado, entrada). O resultado não descreve o que há na nova sala. Quando usar: preencha destino_id. Quando não: null.
-
-6. RAMIFICAÇÕES — exatamente 1 dilema por cena; os restantes têm ramificacoes: null.
-Quando usar: a ação do jogador abre um momento de bifurcação genuína antes da resolução.
-Estrutura: dilema-pai tem resultado_texto como ponte narrativa (2-3 frases, tensão aberta) + dano: 0. As ramificacoes (2-3) têm opcao_texto, resultado_texto, dano e destino_id próprios.
-Causalidade: resultado_texto do pai começa exatamente onde opcao_texto termina — não invente ação que o jogador não executou.
-Qualidade das ramificações — mesma exigência do DESIGN DE RESULTADO:
-"O degrau cede sob seu pé esquerdo e você ouve o estalo antes de sentir" — não "você sente dor"
-"A porta entreaberta está agora fechada por dentro" — não "você se sente observado"
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-DESIGN DE RESULTADO:
-
-O resultado é narrativa, não relatório. 2-4 frases específicas e viscerais. A dor é descrita, não contabilizada. Nunca escreva "você perde X de energia".
-
-Calibre o dano:
-1-2 → contusão, arranhão, susto físico
-3-4 → ferimento real, queda, golpe
-5-6 → dano sério, sangue, comprometimento temporário
-7-20 → quase fatal — reserve para má leitura grave de situação
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-PROIBIDO:
-✗ Dilemas binários sem nuance: apenas "atacar vs fugir"
-✗ Adjetivos de horror fácil: assustador, aterrorizante, horrível, perturbador (mostre, não nomeie)
-✗ Opções sem destino_id com verbos de locomoção (sair, subir, descer, seguir, atravessar)
-✗ Criaturas sem motivação ou lógica interna
-✗ Resultados que mencionam perda de energia diretamente
-✗ Limite do Protagonista: O jogador é um humano comum de carne e osso. NUNCA invente características corporais (ex: "mão mecânica"), roupas, passado ou emoções para o jogador
-✗ Âncora de Câmera de Segurança: Descreva a cena como uma lente de câmera gravando fatos brutos. A corrente aperta (fato material). A placa se move (fato material) 
-✗ Proibição de Intenção e Metáfora: Objetos inanimados e o ambiente NÃO têm vontade. A escuridão não "ganha peso", o metal não "ganha vida" e coisas não "esperam por alguém". Descreva a física (o rangido, a ferrugem, o frio, o movimento), nunca a intenção
-✗ Títulos descritivos — o título cria curiosidade, não descreve ("O Açougueiro Paciente" > "O Homem com o Machado")
-✗ Mais de 1 dilema com ramificacoes por cena
-✗ resultado_texto de dilema-pai descrevendo ação que o jogador não executou em opcao_texto
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-RETORNE APENAS JSON — ZERO MARKDOWN, ZERO TEXTO FORA DO OBJETO:
-
-Retorne APENAS JSON neste formato exato (zero markdown, zero texto fora do JSON):
 {
-  "titulo": "Título do Evento",
-  "texto_sala_fundido": "Reescrita completa da sala com o evento embutido organicamente. 5-8 frases. O texto termina no momento de tensão — o jogador ainda não agiu.",
+  "_diretriz_material": "1 frase explicando COMO o evento vai emergir dos objetos físicos já descritos na sala, sem usar mágica ou intenções ocultas.",
+  "titulo": "Título Frio e Clínico",
+  "texto_sala_fundido": "A reescrita do texto original integrando o evento de forma orgânica. 4-6 frases. Termina na tensão máxima.",
   "dilemas": [
     {
-      "opcao_texto": "Ação que resolve na hora",
-      "resultado_texto": "2-4 frases narrando a consequência direta.",
+      "opcao_texto": "Ação física direta e específica",
+      "resultado_texto": "2-3 frases de consequência crua e anatômica.",
       "dano": 0,
       "destino_id": null,
       "ramificacoes": null
     },
     {
-      "opcao_texto": "Ação que se desdobra numa segunda decisão",
-      "resultado_texto": "2-3 frases de transição — a situação se complicou. Termina em tensão aberta.",
+      "opcao_texto": "Ação arriscada (Inicia desdobramento)",
+      "resultado_texto": "Transição de 2 frases. A situação piora estruturalmente.",
       "dano": 0,
       "destino_id": null,
       "ramificacoes": [
         {
-          "opcao_texto": "Como reagir — desdobramento A",
-          "resultado_texto": "2-3 frases narrando a consequência de A.",
-          "dano": 3,
+          "opcao_texto": "Tentativa de correção A",
+          "resultado_texto": "Consequência de A.",
+          "dano": 5,
           "destino_id": null
         },
         {
-          "opcao_texto": "Como reagir — desdobramento B",
-          "resultado_texto": "2-3 frases narrando a consequência de B.",
+          "opcao_texto": "Tentativa de correção B",
+          "resultado_texto": "Consequência de B.",
           "dano": 0,
           "destino_id": null
         }
@@ -1675,7 +1610,7 @@ Retorne APENAS JSON neste formato exato (zero markdown, zero texto fora do JSON)
   ]
 }`;
 
-                const systemPrompt = 'Você é o Arquiteto de Cenas de um RPG de aventura textual em Português brasileiro. Retorne APENAS JSON válido. Zero markdown. O campo "dano" deve ser um integer entre 0 e 20.';
+                const systemPrompt = 'Você é um parser rigoroso. Retorne apenas JSON válido. O campo "dano" deve ser um integer. Não adicione marcações markdown.';
 
                 let data;
                 let modeloUsado = MODELO_CENAS;
@@ -1684,7 +1619,7 @@ Retorne APENAS JSON neste formato exato (zero markdown, zero texto fora do JSON)
                     data = await chamarGroq([
                         { role: 'system', content: systemPrompt },
                         { role: 'user', content: prompt }
-                    ], 0.8, { type: 'json_object' }, MODELO_CENAS, 2);
+                    ], 0.7, { type: 'json_object' }, MODELO_CENAS, 2); // Temperatura reduzida para 0.7 para maior obediência lógica
                 } catch (e) {
                     console.warn(`[Cenas] Falha com ${MODELO_CENAS}:`, e.message);
                     console.log(`[Cenas] Tentando fallback com ${MODELO_CENAS_FALLBACK}...`);
@@ -1693,15 +1628,13 @@ Retorne APENAS JSON neste formato exato (zero markdown, zero texto fora do JSON)
                         data = await chamarGroq([
                             { role: 'system', content: systemPrompt },
                             { role: 'user', content: prompt }
-                        ], 0.8, { type: 'json_object' }, MODELO_CENAS_FALLBACK, 1);
+                        ], 0.7, { type: 'json_object' }, MODELO_CENAS_FALLBACK, 1);
                         modeloUsado = MODELO_CENAS_FALLBACK;
                     } catch (fallbackError) {
                         console.error(`[Cenas] Falha também com ${MODELO_CENAS_FALLBACK}:`, fallbackError.message);
-                        continue; // Pula esta sala se os dois modelos falharem, continua a próxima
+                        continue; 
                     }
                 }
-
-                console.log(`[Cenas] Modelo usado para Sala ${id}: ${modeloUsado}`);
 
                 let parsed;
                 try {
@@ -1709,7 +1642,6 @@ Retorne APENAS JSON neste formato exato (zero markdown, zero texto fora do JSON)
                     const match = raw.match(/{[\s\S]*}/);
                     parsed = JSON.parse(match ? match[0] : raw);
                     
-                    // Empacota o JSON limpo no formato esperado pela função aplicarArquitetoDeCenas
                     cenasGeradas.push({
                         sala_id: id,
                         titulo: parsed.titulo,
@@ -1719,14 +1651,13 @@ Retorne APENAS JSON neste formato exato (zero markdown, zero texto fora do JSON)
                 } catch (e) {
                     console.error(`[Cenas] Falha no parse JSON para Sala ${id}:`, e);
                 }
-            } // Fim do Loop
+            } 
 
-            console.log(`[Cenas] ✅ ${cenasGeradas.length} cenas geradas para zona "${infoZona.nome}".`, cenasGeradas);
-            
-            // Passa o array montado manualmente para a função original de aplicação
+            console.log(`[Cenas] ✅ ${cenasGeradas.length} cenas geradas para zona "${infoZona.nome}".`);
             aplicarArquitetoDeCenas(cenasGeradas, mapaFinalMesclado, idsElegiveis);
         }
 
+    
         function aplicarArquitetoDeCenas(cenas, mapaFinalMesclado, idsValidos) {
             const idsValidosSet = new Set(idsValidos.map(String));
 
@@ -1734,92 +1665,78 @@ Retorne APENAS JSON neste formato exato (zero markdown, zero texto fora do JSON)
                 const salaId = String(cena.sala_id);
                 const sala = mapaFinalMesclado[salaId];
 
-                if (!sala || !idsValidosSet.has(salaId)) {
-                    console.warn(`[Cenas] Sala ${salaId} fora do escopo. Ignorando.`);
-                    return;
-                }
+                if (!sala || !idsValidosSet.has(salaId)) return;
 
                 const titulo     = (cena.titulo || 'Evento Inesperado').trim();
-const textoFusao = expurgarViciosIA((cena.texto_sala_fundido || '').trim());
-if (!textoFusao) return;
+                const textoFusao = expurgarViciosIA((cena.texto_sala_fundido || '').trim());
+                if (!textoFusao) return;
 
-sala.texto_logico  = textoFusao;
-sala.cena_titulo   = titulo;
-sala.cena_aplicada = true;
+                sala.texto_logico  = textoFusao;
+                sala.cena_titulo   = titulo;
+                sala.cena_aplicada = true;
 
-                // Adiciona as opções de dilema à sala
                 if (!sala.opcoes) sala.opcoes = [];
                 const dilemas = Array.isArray(cena.dilemas) ? cena.dilemas : [];
 
                 const destinosValidos = new Set(
-    (sala.opcoes || [])
-        .filter(o => o.destino && !o.arquiteto)
-        .map(o => String(o.destino))
-);
+                    (sala.opcoes || [])
+                        .filter(o => o.destino && !o.arquiteto)
+                        .map(o => String(o.destino))
+                );
 
-dilemas.forEach(dilema => {
-    const opcaoTexto     = (dilema.opcao_texto    || 'Observar com cautela').trim();
-    const narrativaBruta = expurgarViciosIA((dilema.resultado_texto || '').trim());
-    if (!narrativaBruta) return;
+                dilemas.forEach(dilema => {
+                    const opcaoTexto     = (dilema.opcao_texto || 'Investigar anomalia').trim();
+                    const narrativaBruta = expurgarViciosIA((dilema.resultado_texto || '').trim());
+                    if (!narrativaBruta) return;
 
-    const dano = typeof dilema.dano === 'number'
-        ? Math.min(20, Math.max(0, Math.round(dilema.dano)))
-        : 0;
+                    const dano = typeof dilema.dano === 'number'
+                        ? Math.min(20, Math.max(0, Math.round(dilema.dano)))
+                        : 0;
 
-    const resultadoTexto = dano > 0
-        ? `${narrativaBruta.replace(/[.\s]+$/, '')}. Você perde ${dano} de energia.`
-        : narrativaBruta;
+                    const resultadoTexto = dano > 0
+                        ? `${narrativaBruta.replace(/[.\s]+$/, '')}. Você perde ${dano} de energia.`
+                        : narrativaBruta;
 
-    const destinoRaw     = dilema.destino_id ? String(dilema.destino_id) : null;
-    const destinoValidado = (destinoRaw && destinosValidos.has(destinoRaw))
-        ? parseInt(destinoRaw)
-        : null;
+                    const destinoRaw     = dilema.destino_id ? String(dilema.destino_id) : null;
+                    const destinoValidado = (destinoRaw && destinosValidos.has(destinoRaw))
+                        ? parseInt(destinoRaw)
+                        : null;
 
-    // Valida e prepara ramificações
-const ramsRaw = Array.isArray(dilema.ramificacoes) ? dilema.ramificacoes : [];
-const ramificacoes = ramsRaw
-    .filter(r => r.opcao_texto && r.resultado_texto)
-    .map(r => {
-        const rDano = typeof r.dano === 'number'
-            ? Math.min(20, Math.max(0, Math.round(r.dano)))
-            : 0;
-        const rDestinoRaw = r.destino_id ? String(r.destino_id) : null;
-        const rDestino = (rDestinoRaw && destinosValidos.has(rDestinoRaw))
-            ? parseInt(rDestinoRaw)
-            : null;
+                    const ramsRaw = Array.isArray(dilema.ramificacoes) ? dilema.ramificacoes : [];
+                    const ramificacoes = ramsRaw
+                        .filter(r => r.opcao_texto && r.resultado_texto)
+                        .map(r => {
+                            const rDano = typeof r.dano === 'number'
+                                ? Math.min(20, Math.max(0, Math.round(r.dano)))
+                                : 0;
+                            const rDestinoRaw = r.destino_id ? String(r.destino_id) : null;
+                            const rDestino = (rDestinoRaw && destinosValidos.has(rDestinoRaw))
+                                ? parseInt(rDestinoRaw)
+                                : null;
 
-// 👇 Declare a variável aqui, fora do objeto
-        const rNarrativaLimpa = expurgarViciosIA((r.resultado_texto || '').trim());
-        
-        return {
-            opcao_texto: r.opcao_texto.trim(),
-            resultado_texto: rDano > 0
-                ? `${rNarrativaLimpa.replace(/[.\s]+$/, '')}. Você perde ${rDano} de energia.`
-                : rNarrativaLimpa,
-            dano: rDano,
-            destino: rDestino
-        };
-    });
+                            const rNarrativaLimpa = expurgarViciosIA((r.resultado_texto || '').trim());
+                            
+                            return {
+                                opcao_texto: r.opcao_texto.trim(),
+                                resultado_texto: rDano > 0
+                                    ? `${rNarrativaLimpa.replace(/[.\s]+$/, '')}. Você perde ${rDano} de energia.`
+                                    : rNarrativaLimpa,
+                                dano: rDano,
+                                destino: rDestino
+                            };
+                        });
 
-sala.opcoes.push({
-    texto:           opcaoTexto,
-    arquiteto:       true,
-    dilema:          true,
-    resultado_texto: resultadoTexto,
-    dano,
-    destino:         destinoValidado,
-    disparado:       false,
-    ramificacoes:    ramificacoes.length > 0 ? ramificacoes : null
-});
-
-    // ─── LOG DE INJEÇÃO ───
-if (destinoValidado !== null) {
-    console.log(`[Cenas] Dilema com destino injetado: "${opcaoTexto}" → sala ${destinoValidado} (Sala ${salaId})`);
-}
-    
-});
-
-                console.log(`[Cenas] ✅ "${titulo}" → Sala ${salaId} | ${dilemas.length} dilemas injetados`);
+                    sala.opcoes.push({
+                        texto:           opcaoTexto,
+                        arquiteto:       true,
+                        dilema:          true,
+                        resultado_texto: resultadoTexto,
+                        dano,
+                        destino:         destinoValidado,
+                        disparado:       false,
+                        ramificacoes:    ramificacoes.length > 0 ? ramificacoes : null
+                    });
+                });
             });
         }
 
