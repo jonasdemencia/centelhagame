@@ -1212,6 +1212,7 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
     messages: messages,
     temperature: temperatura,
     max_tokens: 4096,
+    ...(modeloPadrao.includes("gpt-oss") ? { reasoning_effort: "low" } : {}),
     ...(formato ? { response_format: formato } : {}),
 }),
         });
@@ -1654,6 +1655,7 @@ Calibre o dano:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 PROIBIDO:
 ✗ Linguagem obscura e obtusa, o texto deve estar absolutamente claro para quem lê.
+✗ Verbo que mistura dois fenômenos físicos incompatíveis (ex: "começa a se mover, gota a gota" — mover não é pingar). Escolha UM fenômeno físico e descreva só ele: se derrete, "escorre em filetes grossos pelo queixo"; se algo se solta, "desliza e cai com um baque seco".
 ✗ Opções sem destino_id com verbos de locomoção (sair, subir, descer, seguir, atravessar)
 ✗ Criaturas sem motivação ou lógica interna
 ✗ Resultados que mencionam perda de energia diretamente
