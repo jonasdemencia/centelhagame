@@ -604,8 +604,8 @@ window.dispatchEvent(new Event('firebase-initialized'));
         const MODELO_PUZZLE = "openai/gpt-oss-120b";
         const MODELO_IND = "qwen/qwen3-32b"; // Modelo responsável pelas cinematics
         const MODELO_ARQUITETO = "llama-3.3-70b-versatile"; // Arquiteto de Perigos
-        const MODELO_CENAS = "qwen/qwen3-32b"; // Arquiteto de Cenas e Dilemas
-        const MODELO_CENAS_FALLBACK = "openai/gpt-oss-120b";
+        const MODELO_CENAS = "openai/gpt-oss-120b"; // Arquiteto de Cenas e Dilemas
+        const MODELO_CENAS_FALLBACK =  "qwen/qwen3-32b";
 
 
         let mapaMundo = null;
@@ -1551,7 +1551,7 @@ Retorne APENAS o JSON rigorosamente neste formato:
                 // O Prompt foi mantido intacto em sua riqueza, apenas adaptado para o singular (SALA ALVO)
                 const prompt = `[SEMENTE:${semente}]
 /no_think
-Você é um designer de encontros para um RPG de aventura textual em português brasileiro, no nível de Steve Jackson e Ian Livingstone. Sua função é criar cenas situacionais memoráveis — não sustos baratos, mas momentos com tensão real, escolhas difíceis e consequências assimétricas.
+Você é um designer de encontros para um RPG de aventura textual, no nível de Steve Jackson e Ian Livingstone. Sua função é criar cenas situacionais memoráveis — não sustos baratos, mas momentos com tensão real, escolhas difíceis e consequências assimétricas.
 
 ZONA ATUAL: "${infoZona.nome}"
 MISTÉRIO CENTRAL: "${dnaGlobal?.misterio_central || ''}"
@@ -1561,63 +1561,76 @@ SALA ALVO:
 ${contextoSala}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-MISSÃO: Crie UM evento situacional e funda-o ao TEXTO ORIGINAL da SALA ALVO. O resultado deve ser um bloco de texto único, contínuo e orgânico.
+MISSÃO: O FOCO ABSOLUTO É A CENA E SEUS DILEMAS; a SALA ALVO é apenas o cenário. Reescreva o TEXTO ORIGINAL incorporando o evento situacional organicamente. O texto deve ser um bloco contínuo — o jogador nunca perceberá onde termina a arquitetura e começa a ação.
 
 REGRAS DE FUSÃO:
-
-O evento nasce da sala atual, usando elementos já descritos como ponte.
-
-O texto deve parecer que o evento sempre esteve lá.
-
-Respeite os limites físicos descritos (não invente novas salas ou espaços).
-
-Termine em suspensão, imediatamente antes da decisão do jogador.
+- A sala existente é mero palco — a CENA é a protagonista que nasce dele
+- Os elementos já descritos (objetos, luz, cheiro, arquitetura) servem de ponte para o evento principal
+- O texto fundido deve parecer que a situação SEMPRE esteve ali
+- O evento ocorre estritamente nos limites físicos da sala descrita — não invente salas adjacentes ou espaços não mencionados no TEXTO ORIGINAL. Use a sala apenas para ancorar a cena.
+- Termine no momento exato de suspensão, antes do dilema do jogador
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-DESIGN DE CENA:
+DESIGN DE CENA (O CORAÇÃO DA TAREFA):
 
-Emerge do ambiente: Integre à lógica do local. Use o que já existe.
+1. EMERGE DO AMBIENTE, NÃO DO NADA
+Use o que já existe. Um depósito tem um trabalhador, uma câmara fria tem um açougueiro, um corredor tem algo que afogou. O evento domina a atenção, mas usa o cenário como suporte.
 
-Especificidade física: Evite descrições vagas. Use detalhes concretos, objetivos e viscerais. O fenômeno é um fato físico; a interpretação fica com o jogador.
+2. ESPECIFICIDADE E ÂNCORA FÍSICA
+"Um homem costurando a própria pálpebra" > "uma figura perturbadora". Detalhes concretos criam realidade — e o estranhamento exige forma física objetiva:
+NÃO: "a fonte parecia viva" / SIM: "a água marcava 4°C no pior verão em décadas e não reagia ao vento"
+O fenômeno é dado concreto. A interpretação é do jogador.
 
-Tensão aberta: Encerre no clímax da hesitação, sem resolver a cena.
+3. TERMINE COM TENSÃO ABERTA
+A cena culmina na decisão. "Ela vira o rosto devagar na sua direção." Não resolva: suspenda.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-DESIGN DE DILEMAS:
+DESIGN DE DILEMAS (O MOTOR DA ESCOLHA):
 
-Riscos e apelos distintos: Fuja de escolhas "certo vs errado". Toda opção tem promessa e custo próprios para forçar a hesitação.
+1. APELOS DIFERENTES, RISCOS DIFERENTES
+Cada opção tem seu próprio custo e promessa. O jogador deve hesitar de verdade.
+MAL: "Atacar" vs "Fugir". BEM: "Interagir arriscando algo" vs "Recuar perdendo oportunidade" vs "Observar mais, mas o tempo se esgota".
 
-Opção Dano 0: Deve existir, mas cobra um preço (perda narrativa, de oportunidade ou tempo).
+2. PELO MENOS UMA OPÇÃO COM DANO 0 — MAS NÃO GRATUITA
+Dano 0 não significa sem consequência: janela de oportunidade fechada, informação perdida, aliado não conquistado.
 
-Assimetria: Alterne entre riscos físicos/ganhos, segurança/perdas e consequências ambíguas.
+3. CONSEQUÊNCIAS ASSIMÉTRICAS
+Opção A: risco físico, ganho potencial. Opção B: risco zero, perda narrativa real. Opção C (se houver): risco ambíguo — consequência incerta ou estranha.
 
-Verbos específicos: Use "Arrancar o medalhão" em vez de "Pegar objeto".
+4. VERBOS ESPECÍFICOS COM ALVOS ESPECÍFICOS
+Ruim: "Tentar pegar o objeto" — Bom: "Arrancar o medalhão do pescoço enquanto ela não olha"
 
-Trânsito (Opcional): Se a ação exigir mudança de sala física, preencha o destino_id (usando DESTINOS DISPONÍVEIS). Se não, use null. Não descreva o que há na nova sala.
+5. DILEMAS COM TRÂNSITO (OPCIONAL)
+Um dilema pode mover o jogador usando um destino de DESTINOS DISPONÍVEIS. Use quando a ação implica atravessar um limiar físico (fuga, avanço forçado). O resultado não descreve o que há na nova sala. Para usar: preencha destino_id. Senão: null.
 
-Ramificações: Máximo de 1 dilema ramificado por cena (demais = null). O dilema-pai tem dano: 0 e seu resultado_texto atua apenas como ponte causal, descrevendo estritamente a ação que o jogador escolheu, em tensão aberta. As 2-3 ramificações filhas contêm seus próprios dados completos.
+6. RAMIFICAÇÕES — EXATAMENTE 1 DILEMA POR CENA
+Os restantes têm ramificacoes: null. Use quando a ação abre bifurcação genuína antes da resolução.
+Estrutura: dilema-pai tem resultado_texto como ponte narrativa (2-3 frases, tensão) + dano: 0. As ramificacoes (2-3) têm opcao_texto, resultado_texto, dano e destino_id próprios.
+Causalidade: resultado_texto do pai começa onde opcao_texto termina — não invente ação não executada.
+Qualidade: "O degrau cede sob seu pé e você ouve o estalo" — não "você sente dor".
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 DESIGN DE RESULTADO:
-O resultado é uma narrativa visceral (2-4 frases), não um relatório. Descreva a dor, nunca cite a perda matemática de energia.
+
+O resultado é narrativa, não relatório. 2-4 frases específicas e viscerais. A dor é descrita, não contabilizada. Nunca escreva "você perde X de energia".
+
 Calibre o dano:
-
-1-2: Susto, arranhão, contusão.
-
-3-4: Ferimento real, queda.
-
-5-6: Dano sério, sangue, perda temporária.
-
-7-20: Quase fatal (apenas para erros graves do jogador).
+1-2 → contusão, arranhão, susto físico
+3-4 → ferimento real, queda, golpe
+5-6 → dano sério, sangue, comprometimento temporário
+7-20 → quase fatal — reserve para má leitura grave de situação
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 PROIBIDO:
-✗ Verbos de locomoção (sair, descer, atravessar) sem preencher o destino_id.
-✗ Criaturas sem motivação ou lógica interna.
-✗ Citar valores de dano ou "perda de energia" no texto.
-✗ Atribuir vontade a objetos/ambientes. Descreva a física (frio, ferrugem, som), nunca intenção metafórica.
-✗ Mais de 1 dilema ramificado por cena.
-✗ resultado_texto do dilema-pai descrever ações que o jogador não executou.
+✗ Dilemas binários sem nuance: apenas "atacar vs fugir"
+✗ Adjetivos de horror fácil: assustador, aterrorizante, horrível, perturbador (mostre, não nomeie)
+✗ Opções sem destino_id com verbos de locomoção (sair, subir, descer, seguir, atravessar)
+✗ Criaturas sem motivação ou lógica interna
+✗ Resultados que mencionam perda de energia diretamente
+✗ Proibição de Intenção e Metáfora: Objetos inanimados e o ambiente NÃO têm vontade. A escuridão não "ganha peso", o metal não "ganha vida". Descreva a física, nunca a intenção.
+✗ Títulos descritivos — o título cria curiosidade, não descreve ("O Açougueiro Paciente" > "Homem com o Machado")
+✗ Mais de 1 dilema com ramificacoes por cena
+✗ resultado_texto de dilema-pai descrevendo ação que o jogador não executou em opcao_texto`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 RETORNE APENAS JSON — ZERO MARKDOWN, ZERO TEXTO FORA DO OBJETO:
