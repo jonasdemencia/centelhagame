@@ -1544,54 +1544,55 @@ Retorne APENAS o JSON rigorosamente neste formato:
         // ============================================================
 
         async function gerarArquitetoDeCenas(mapaFinalMesclado, infoZona, salaFim) {
-            // Seleciona 2-3 salas elegíveis mantendo suas regras originais
-            const idsElegiveis = Object.keys(mapaFinalMesclado)
-                .map(Number)
-                .filter(id => {
-                    const sala = mapaFinalMesclado[String(id)];
-                    return id < 10000
-                        && !sala.ind_disponivel
-                        && !sala.puzzle_status
-                        && Array.isArray(sala.opcoes)
-                        && sala.opcoes.length > 0
-                        && !sala.opcoes.some(o => o.interceptor_arquiteto)
-                        && !sala.opcoes.some(o => o.arquiteto === true && !o.dilema); 
-                })
-                .sort(() => Math.random() - 0.5)
-                .slice(0, 3);
+    // Seleciona 2-3 salas elegíveis mantendo suas regras originais
+    const idsElegiveis = Object.keys(mapaFinalMesclado)
+        .map(Number)
+        .filter(id => {
+            const sala = mapaFinalMesclado[String(id)];
+            return id < 10000
+                && !sala.ind_disponivel
+                && !sala.puzzle_status
+                && Array.isArray(sala.opcoes)
+                && sala.opcoes.length > 0
+                && !sala.opcoes.some(o => o.interceptor_arquiteto)
+                && !sala.opcoes.some(o => o.arquiteto === true && !o.dilema); 
+        })
+        .sort(() => Math.random() - 0.5)
+        .slice(0, 3);
 
-            if (idsElegiveis.length === 0) return;
+    if (idsElegiveis.length === 0) return;
 
-            const cenasGeradas = [];
+    const cenasGeradas = [];
 
-            // ESTRUTURA NOVA: Laço sequencial para Isolamento de Contexto
-            // Isso impede que o LLM misture o açougueiro da Sala 1 com a arquitetura da Sala 3
-            for (const id of idsElegiveis) {
-                const sala = mapaFinalMesclado[String(id)];
-                const textoOriginal = (sala.texto_logico || '').substring(0, 700);
-                const destinosSala = (sala.opcoes || [])
-                    .filter(o => o.destino && !o.arquiteto)
-                    .map(o => `  • [${o.destino}] "${o.texto}"`).join('\n');
-                
-                // O contexto agora foca puramente em UMA sala
-                const contextoSala = `SALA_ID:${id} — "${sala.nome}"\nTEXTO ORIGINAL DA SALA:\n${textoOriginal}\nDESTINOS DISPONÍVEIS:\n${destinosSala || '  (nenhum)'}`;
+    // ESTRUTURA NOVA: Laço sequencial para Isolamento de Contexto
+    // Isso impede que o LLM misture o açougueiro da Sala 1 com a arquitetura da Sala 3
+    for (const id of idsElegiveis) {
+        const sala = mapaFinalMesclado[String(id)];
 
-                const semente = Math.random().toString(36).substring(2, 8);
+        // ─── GUILHOTINA DE CONTEXTO: pega as últimas frases, não o prefixo ───
+        // O final do texto_logico tende a descrever o estado físico imediato
+        // diante do jogador; o início costuma ser transição/chegada já superada.
+        const textoCompleto = (sala.texto_logico || '').trim();
+        const frases = textoCompleto.match(/[^.!?]+[.!?]+/g) || [textoCompleto];
+        let textoOriginal = frases.slice(-4).join(' ').trim();
+        if (textoOriginal.length < 200 && frases.length > 4) {
+            textoOriginal = frases.slice(-7).join(' ').trim();
+        }
+        if (!textoOriginal) textoOriginal = textoCompleto.substring(0, 700);
 
-                // O Prompt foi mantido intacto em sua riqueza, apenas adaptado para o singular (SALA ALVO)
-                const prompt = `[SEMENTE:${semente}]
-/no_think
-Você é um designer de encontros para um RPG de aventura textual em Português brasileiro, no nível de Steve Jackson e Ian Livingstone. Sua função é criar cenas situacionais memoráveis E CONSISTENTES — não sustos baratos, mas momentos com tensão real, escolhas difíceis e consequências assimétricas.
+        const destinosSala = (sala.opcoes || [])
+            .filter(o => o.destino && !o.arquiteto)
+            .map(o => `  • [${o.destino}] "${o.texto}"`).join('\n');
+        
+        // O contexto agora foca puramente em UMA sala
+        const contextoSala = `SALA_ID:${id} — "${sala.nome}"\nTEXTO ORIGINAL DA SALA:\n${textoOriginal}\nDESTINOS DISPONÍVEIS:\n${destinosSala || '  (nenhum)'}`;
 
-ZONA ATUAL: "${infoZona.nome}"
-MISTÉRIO CENTRAL: "${dnaGlobal?.misterio_central || ''}"
+        const semente = Math.random().toString(36).substring(2, 8);
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-SALA ALVO:
-${contextoSala}
+        // ─── SYSTEM PROMPT: carrega TODAS as regras estáticas, sem cortes ───
+        const systemPrompt = `Você é o Arquiteto de Cenas de um RPG de aventura textual em Português brasileiro, no nível de Steve Jackson e Ian Livingstone. Sua função é criar cenas situacionais memoráveis E CONSISTENTES — não sustos baratos, mas momentos com tensão real, escolhas difíceis e consequências assimétricas.
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-MISSÃO: Para a SALA ALVO, crie UM evento situacional. Escreva APENAS a cena que acontecerá neste ambiente. NÃO REESCREVA a descrição original da sala — seu texto será acoplado no final da descrição que já existe. Concentre todo o seu esforço na qualidade, coerência e tensão do evento em si.
+Você recebe o contexto de UMA sala por vez. NÃO REESCREVA a descrição original da sala — seu texto_cena será acoplado no final da descrição que já existe. Concentre todo o seu esforço na qualidade, coerência e tensão do evento em si.
 
 REGRAS DE INSERÇÃO:
 - A cena surge do ambiente — use os elementos físicos já descritos no TEXTO ORIGINAL DA SALA como ponte narrativa.
@@ -1599,7 +1600,6 @@ REGRAS DE INSERÇÃO:
 - O evento ocorre dentro dos limites físicos da sala descrita.
 - Termine no momento de suspensão, antes da decisão do jogador.
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 DESIGN DE CENA:
 
 1. EMERGE DO AMBIENTE, NÃO DO NADA
@@ -1614,7 +1614,6 @@ O fenômeno é dado concreto. A interpretação pertence ao jogador.
 3. TERMINE COM TENSÃO ABERTA
 A cena termina no momento de decisão. "Ela vira o rosto devagar na sua direção." Não resolva: suspenda.
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 DESIGN DE DILEMAS:
 
 1. APELOS DIFERENTES, RISCOS DIFERENTES — NUNCA "CERTO VS ERRADO"
@@ -1641,7 +1640,6 @@ Qualidade das ramificações — mesma exigência do DESIGN DE RESULTADO:
 "O degrau cede sob seu pé esquerdo e você ouve o estalo antes de sentir" — não "você sente dor"
 "A porta entreaberta está agora fechada por dentro" — não "você se sente observado"
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 DESIGN DE RESULTADO:
 
 O resultado é narrativa, não relatório. 2-4 frases específicas e viscerais. A dor é descrita, não contabilizada. Nunca escreva "você perde X de energia".
@@ -1652,7 +1650,6 @@ Calibre o dano:
 5-6 → dano sério, sangue, comprometimento temporário
 7-20 → quase fatal — reserve para má leitura grave de situação
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 PROIBIÇÕES (FALHA CRÍTICA SE VIOLADAS):
 ✗ Linguagem obscura e obtusa, o texto deve estar absolutamente claro para quem lê.
 ✗ Verbo que mistura dois fenômenos físicos incompatíveis (ex: "começa a se mover, gota a gota" — mover não é pingar). Escolha UM fenômeno físico e descreva só ele: se derrete, "escorre em filetes grossos pelo queixo"; se algo se solta, "desliza e cai com um baque seco".
@@ -1664,10 +1661,17 @@ PROIBIÇÕES (FALHA CRÍTICA SE VIOLADAS):
 ✗ Mais de 1 dilema com ramificações por cena
 ✗ resultado_texto de dilema-pai descrevendo ação que o jogador não executou em opcao_texto
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-RETORNE APENAS JSON — ZERO MARKDOWN, ZERO TEXTO FORA DO OBJETO:
+Retorne APENAS JSON válido, zero markdown, zero texto fora do objeto. O campo "dano" deve ser um integer entre 0 e 20.`;
 
-Retorne APENAS JSON neste formato exato (zero markdown, zero texto fora do JSON):
+        // ─── USER PROMPT: só a tarefa dinâmica + schema, com SALA ALVO no final absoluto ───
+        const prompt = `[SEMENTE:${semente}]
+/no_think
+ZONA ATUAL: "${infoZona.nome}"
+MISTÉRIO CENTRAL: "${dnaGlobal?.misterio_central || ''}"
+
+MISSÃO: crie UM evento situacional para a SALA ALVO que virá ao final deste prompt, seguindo todas as regras do seu system prompt.
+
+RETORNE APENAS JSON neste formato exato (zero markdown, zero texto fora do JSON):
 {
   "titulo": "Título do Evento",
   "texto_cena": "A descrição exclusiva do evento/cena. 3-5 frases. O texto termina no momento de tensão — o jogador ainda não agiu.",
@@ -1700,69 +1704,71 @@ Retorne APENAS JSON neste formato exato (zero markdown, zero texto fora do JSON)
       ]
     }
   ]
-}`;
+}
 
-                const systemPrompt = 'Você é o Arquiteto de Cenas de um RPG de aventura textual em Português brasileiro. Retorne APENAS JSON válido. Zero markdown. O campo "dano" deve ser um integer entre 0 e 20.';
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SALA ALVO (ancore a cena EXCLUSIVAMENTE no texto abaixo):
+${contextoSala}`;
 
-                let data;
-                let modeloUsado = MODELO_CENAS;
+        let data;
+        let modeloUsado = MODELO_CENAS;
+
+        try {
+            data = await chamarGroq([
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: prompt }
+            ], 0.75, { type: 'json_object' }, MODELO_CENAS, 2);
+        } catch (e) {
+            console.warn(`[Cenas] Falha com ${MODELO_CENAS}:`, e.message);
+            console.log(`[Cenas] Tentando fallback com ${MODELO_CENAS_FALLBACK}...`);
+            
+            try {
+                data = await chamarGroq([
+                    { role: 'system', content: systemPrompt },
+                    { role: 'user', content: prompt }
+                ], 0.75, { type: 'json_object' }, MODELO_CENAS_FALLBACK, 1);
+                modeloUsado = MODELO_CENAS_FALLBACK;
+            } catch (fallbackError) {
+                console.warn(`[Cenas] Falha também com ${MODELO_CENAS_FALLBACK}, tentando Cerebras:`, fallbackError.message);
 
                 try {
-                    data = await chamarGroq([
+                    data = await chamarCerebras([
                         { role: 'system', content: systemPrompt },
                         { role: 'user', content: prompt }
-                    ], 0.75, { type: 'json_object' }, MODELO_CENAS, 2);
-                } catch (e) {
-                    console.warn(`[Cenas] Falha com ${MODELO_CENAS}:`, e.message);
-                    console.log(`[Cenas] Tentando fallback com ${MODELO_CENAS_FALLBACK}...`);
-                    
-                    try {
-                        data = await chamarGroq([
-                            { role: 'system', content: systemPrompt },
-                            { role: 'user', content: prompt }
-                        ], 0.75, { type: 'json_object' }, MODELO_CENAS_FALLBACK, 1);
-                        modeloUsado = MODELO_CENAS_FALLBACK;
-                    } catch (fallbackError) {
-                        console.warn(`[Cenas] Falha também com ${MODELO_CENAS_FALLBACK}, tentando Cerebras:`, fallbackError.message);
-
-                        try {
-                            data = await chamarCerebras([
-                                { role: 'system', content: systemPrompt },
-                                { role: 'user', content: prompt }
-                            ], 0.75, { type: 'json_object' }, MODELO_CEREBRAS, 2);
-                            modeloUsado = `cerebras/${MODELO_CEREBRAS}`;
-                        } catch (cerebrasError) {
-                            console.error(`[Cenas] Falha também com Cerebras:`, cerebrasError.message);
-                            continue; // Pula esta sala se os três modelos falharem, continua a próxima
-                        }
-                    }
+                    ], 0.75, { type: 'json_object' }, MODELO_CEREBRAS, 2);
+                    modeloUsado = `cerebras/${MODELO_CEREBRAS}`;
+                } catch (cerebrasError) {
+                    console.error(`[Cenas] Falha também com Cerebras:`, cerebrasError.message);
+                    continue; // Pula esta sala se os três modelos falharem, continua a próxima
                 }
-
-                console.log(`[Cenas] Modelo usado para Sala ${id}: ${modeloUsado}`);
-
-                let parsed;
-                try {
-                    const raw = data.choices[0].message.content;
-                    const match = raw.match(/{[\s\S]*}/);
-                    parsed = JSON.parse(match ? match[0] : raw);
-                    
-                    // Empacota o JSON limpo no formato esperado pela função aplicarArquitetoDeCenas
-                    cenasGeradas.push({
-                        sala_id: id,
-                        titulo: parsed.titulo,
-                        texto_cena: parsed.texto_cena,   // <-- chave alterada
-                        dilemas: parsed.dilemas
-                    });
-                } catch (e) {
-                    console.error(`[Cenas] Falha no parse JSON para Sala ${id}:`, e);
-                }
-            } // Fim do Loop
-
-            console.log(`[Cenas] ✅ ${cenasGeradas.length} cenas geradas para zona "${infoZona.nome}".`, cenasGeradas);
-            
-            // Passa o array montado manualmente para a função original de aplicação
-            aplicarArquitetoDeCenas(cenasGeradas, mapaFinalMesclado, idsElegiveis);
+            }
         }
+
+        console.log(`[Cenas] Modelo usado para Sala ${id}: ${modeloUsado}`);
+
+        let parsed;
+        try {
+            const raw = data.choices[0].message.content;
+            const match = raw.match(/{[\s\S]*}/);
+            parsed = JSON.parse(match ? match[0] : raw);
+            
+            // Empacota o JSON limpo no formato esperado pela função aplicarArquitetoDeCenas
+            cenasGeradas.push({
+                sala_id: id,
+                titulo: parsed.titulo,
+                texto_cena: parsed.texto_cena,   // <-- chave alterada
+                dilemas: parsed.dilemas
+            });
+        } catch (e) {
+            console.error(`[Cenas] Falha no parse JSON para Sala ${id}:`, e);
+        }
+    } // Fim do Loop
+
+    console.log(`[Cenas] ✅ ${cenasGeradas.length} cenas geradas para zona "${infoZona.nome}".`, cenasGeradas);
+    
+    // Passa o array montado manualmente para a função original de aplicação
+    aplicarArquitetoDeCenas(cenasGeradas, mapaFinalMesclado, idsElegiveis);
+}
 
         function aplicarArquitetoDeCenas(cenas, mapaFinalMesclado, idsValidos) {
     const idsValidosSet = new Set(idsValidos.map(String));
