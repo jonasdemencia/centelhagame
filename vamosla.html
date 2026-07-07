@@ -604,8 +604,8 @@ window.dispatchEvent(new Event('firebase-initialized'));
         const MODELO_PUZZLE = "openai/gpt-oss-120b";
         const MODELO_IND = "qwen/qwen3-32b"; // Modelo responsável pelas cinematics
         const MODELO_ARQUITETO = "llama-3.3-70b-versatile"; // Arquiteto de Perigos
-        const MODELO_CENAS = "qwen/qwen3-32b"; // Arquiteto de Cenas e Dilemas
-        const MODELO_CENAS_FALLBACK = "openai/gpt-oss-120b";
+        const MODELO_CENAS_PRINCIPAL = "gpt-oss-120b";        // Cerebras
+        const MODELO_CENAS_FALLBACK = "qwen/qwen3-32b";       // Groq
 
         // ── FALLBACK CEREBRAS (segundo provedor, usado quando a Groq estoura o teto) ──
         // Troque pela URL do SEU worker dedicado à Cerebras depois de fazer o deploy (ver instruções).
@@ -1714,61 +1714,61 @@ Retorne APENAS JSON neste formato exato (zero markdown, zero texto fora do JSON)
         const systemPrompt = 'Você é o Arquiteto de Cenas de um RPG de aventura textual em Português brasileiro. Retorne APENAS JSON válido. Zero markdown. Nunca escreva um campo "dano" — use "risco" com valores "ZERO", "ALTO" ou "AMBIGUO".';
 
         let data;
-        let modeloUsado = MODELO_CENAS;
+let modeloUsado = MODELO_CENAS_PRINCIPAL; // agora o principal é Cerebras
 
-        try {
-            data = await chamarGroq([
+try {
+    // PRIMEIRA TENTATIVA: Cerebras (gpt-oss-120b)
+    data = await chamarCerebras(
+        [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: prompt }
+        ],
+        0.75,
+        { type: 'json_object' },
+        MODELO_CENAS_PRINCIPAL,
+        2  // tentativas
+    );
+    modeloUsado = `cerebras/${MODELO_CENAS_PRINCIPAL}`;
+} catch (e) {
+    console.warn(`[Cenas] Falha com Cerebras (${MODELO_CENAS_PRINCIPAL}):`, e.message);
+    console.log(`[Cenas] Tentando fallback com Groq (${MODELO_CENAS_FALLBACK})...`);
+
+    try {
+        data = await chamarGroq(
+            [
                 { role: 'system', content: systemPrompt },
                 { role: 'user', content: prompt }
-            ], 0.75, { type: 'json_object' }, MODELO_CENAS, 2);
-        } catch (e) {
-            console.warn(`[Cenas] Falha com ${MODELO_CENAS}:`, e.message);
-            console.log(`[Cenas] Tentando fallback com ${MODELO_CENAS_FALLBACK}...`);
-            
-            try {
-                data = await chamarGroq([
-                    { role: 'system', content: systemPrompt },
-                    { role: 'user', content: prompt }
-                ], 0.75, { type: 'json_object' }, MODELO_CENAS_FALLBACK, 1);
-                modeloUsado = MODELO_CENAS_FALLBACK;
-            } catch (fallbackError) {
-                console.warn(`[Cenas] Falha também com ${MODELO_CENAS_FALLBACK}, tentando Cerebras:`, fallbackError.message);
-
-                try {
-                    data = await chamarCerebras([
-                        { role: 'system', content: systemPrompt },
-                        { role: 'user', content: prompt }
-                    ], 0.75, { type: 'json_object' }, MODELO_CEREBRAS, 2);
-                    modeloUsado = `cerebras/${MODELO_CEREBRAS}`;
-                } catch (cerebrasError) {
-                    console.error(`[Cenas] Falha também com Cerebras:`, cerebrasError.message);
-                    continue;
-                }
-            }
-        }
-
-        console.log(`[Cenas] Modelo usado para Sala ${id}: ${modeloUsado}`);
-
-        let parsed;
-        try {
-            const raw = data.choices[0].message.content;
-            const match = raw.match(/{[\s\S]*}/);
-            parsed = JSON.parse(match ? match[0] : raw);
-            
-            cenasGeradas.push({
-                sala_id: id,
-                titulo: parsed.titulo,
-                texto_cena: parsed.texto_cena,
-                dilemas: parsed.dilemas
-            });
-        } catch (e) {
-            console.error(`[Cenas] Falha no parse JSON para Sala ${id}:`, e);
-        }
+            ],
+            0.75,
+            { type: 'json_object' },
+            MODELO_CENAS_FALLBACK,
+            2  // tentativas
+        );
+        modeloUsado = `groq/${MODELO_CENAS_FALLBACK}`;
+    } catch (fallbackError) {
+        console.error(`[Cenas] Falha também com Groq:`, fallbackError.message);
+        // (Opcional) Último fallback: tente com o antigo modelo via Groq (ex: openai/gpt-oss-120b)
+        // ou simplesmente lance o erro para interromper.
+        throw fallbackError;
     }
+}
 
-    console.log(`[Cenas] ✅ ${cenasGeradas.length} cenas geradas para zona "${infoZona.nome}".`, cenasGeradas);
+console.log(`[Cenas] Modelo usado para Sala ${id}: ${modeloUsado}`);
+
+let parsed;
+try {
+    const raw = data.choices[0].message.content;
+    const match = raw.match(/{[\s\S]*}/);
+    parsed = JSON.parse(match ? match[0] : raw);
     
-    aplicarArquitetoDeCenas(cenasGeradas, mapaFinalMesclado, idsElegiveis);
+    cenasGeradas.push({
+        sala_id: id,
+        titulo: parsed.titulo,
+        texto_cena: parsed.texto_cena,
+        dilemas: parsed.dilemas
+    });
+} catch (e) {
+    console.error(`[Cenas] Falha no parse JSON para Sala ${id}:`, e);
 }
 
     
