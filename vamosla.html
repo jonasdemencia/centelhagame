@@ -1645,11 +1645,11 @@ Opção A: risco físico, ganho potencial. Opção B: risco zero, perda narrativ
 Ruim: "Tentar pegar o objeto" — Bom: "Arrancar o medalhão do pescoço enquanto ela não olha"
 
 5. DILEMAS COM TRÂNSITO (OPCIONAL)
-Um dilema pode mover o jogador para outra sala usando um destino de DESTINOS DISPONÍVEIS. Use quando a ação implica atravessar um limiar físico (fuga, avanço forçado, entrada). O resultado não descreve o que há na nova sala. Quando usar: preencha destino_id. Quando não: null.
+Um dilema pode mover o jogador para outra sala usando um destino de DESTINOS DISPONÍVEIS. Use quando a ação implica atravessar um limiar físico (fuga, avanço forçado, entrada). O resultado não descreve o que há na nova sala. Quando usar: inclua o campo "destino_id" com o ID da sala. Quando não houver trânsito, NÃO inclua o campo "destino_id" no objeto — simplesmente omita.
 
 6. RAMIFICAÇÕES — exatamente 1 dilema por cena; os restantes têm ramificacoes: null.
 Quando usar: a ação do jogador abre um momento de bifurcação genuína antes da resolução.
-Estrutura: dilema-pai tem resultado_texto como ponte narrativa (2-3 frases, tensão aberta) + risco: "ZERO". As ramificacoes (2-3) têm opcao_texto, resultado_texto, risco ("ZERO" ou "ALTO") e destino_id próprios.
+Estrutura: dilema-pai tem resultado_texto como ponte narrativa (2-3 frases, tensão aberta) + risco: "ZERO". As ramificacoes (2-3) têm opcao_texto, resultado_texto, risco ("ZERO" ou "ALTO") e destino_id próprios. Inclua o campo "ramificacoes" APENAS no único dilema que se desdobra. Nos demais dilemas, NÃO inclua o campo "ramificacoes" — omita.
 Causalidade: resultado_texto do pai começa exatamente onde opcao_texto termina — não invente ação que o jogador não executou.
 Qualidade das ramificações — mesma exigência do DESIGN DE RESULTADO:
 "O degrau cede sob seu pé esquerdo e você ouve o estalo antes de sentir" — não "você sente dor"
@@ -1684,27 +1684,23 @@ Retorne APENAS JSON neste formato exato (zero markdown, zero texto fora do JSON)
     {
       "opcao_texto": "Ação que resolve na hora",
       "resultado_texto": "2-4 frases narrando a consequência direta.",
-      "risco": "ZERO",
-      "destino_id": null,
-      "ramificacoes": null
+      "risco": "ZERO"
     },
     {
       "opcao_texto": "Ação que se desdobra numa segunda decisão",
       "resultado_texto": "2-3 frases de transição — a situação se complicou. Termina em tensão aberta.",
       "risco": "ZERO",
-      "destino_id": null,
       "ramificacoes": [
         {
           "opcao_texto": "Como reagir — desdobramento A",
           "resultado_texto": "2-3 frases narrando a consequência de A.",
-          "risco": "ALTO",
-          "destino_id": null
+          "risco": "AMBIGUO"
         },
         {
           "opcao_texto": "Como reagir — desdobramento B",
           "resultado_texto": "2-3 frases narrando a consequência de B.",
           "risco": "ZERO",
-          "destino_id": null
+          "destino_id": 142
         }
       ]
     }
