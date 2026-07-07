@@ -1578,16 +1578,28 @@ Retorne APENAS o JSON rigorosamente neste formato:
 
                 const semente = Math.random().toString(36).substring(2, 8);
 
-                // ─── SYSTEM PROMPT: carrega TODAS as regras estáticas, sem cortes ───
-        const systemPrompt = `Você é o Arquiteto de Cenas de um RPG de aventura textual em Português brasileiro. Sua função é criar cenas situacionais memoráveis E CONSISTENTES — não sustos baratos, mas momentos com tensão real, escolhas difíceis e consequências assimétricas.
+                // O Prompt foi mantido intacto em sua riqueza, apenas adaptado para o singular (SALA ALVO)
+                const prompt = `[SEMENTE:${semente}]
+/no_think
+Você é um designer de encontros para um RPG de aventura textual em Português brasileiro, no nível de Steve Jackson e Ian Livingstone. Sua função é criar cenas situacionais memoráveis E CONSISTENTES — não sustos baratos, mas momentos com tensão real, escolhas difíceis e consequências assimétricas.
 
-Você recebe o contexto de UMA sala por vez. NÃO REESCREVA a descrição original da sala — seu texto_cena será acoplado no final da descrição que já existe. 
+ZONA ATUAL: "${infoZona.nome}"
+MISTÉRIO CENTRAL: "${dnaGlobal?.misterio_central || ''}"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SALA ALVO:
+${contextoSala}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+MISSÃO: Para a SALA ALVO, crie UM evento situacional. Escreva APENAS a cena que acontecerá neste ambiente. NÃO REESCREVA a descrição original da sala — seu texto será acoplado no final da descrição que já existe. Concentre todo o seu esforço na qualidade, coerência e tensão do evento em si.
 
 REGRAS DE INSERÇÃO:
 - A cena surge do ambiente — use os elementos físicos já descritos no TEXTO ORIGINAL DA SALA como ponte narrativa.
 - Comece a cena de forma orgânica, assumindo que o jogador acabou de observar a descrição original.
 - O evento ocorre dentro dos limites físicos da sala descrita.
+- Termine no momento de suspensão, antes da decisão do jogador.
 
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 DESIGN DE CENA:
 
 1. EMERGE DO AMBIENTE, NÃO DO NADA
@@ -1602,6 +1614,7 @@ O fenômeno é dado concreto. A interpretação pertence ao jogador.
 3. TERMINE COM TENSÃO ABERTA
 A cena termina no momento de decisão. "Ela vira o rosto devagar na sua direção." Não resolva: suspenda.
 
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 DESIGN DE DILEMAS:
 
 1. APELOS DIFERENTES, RISCOS DIFERENTES — NUNCA "CERTO VS ERRADO"
@@ -1628,6 +1641,7 @@ Qualidade das ramificações — mesma exigência do DESIGN DE RESULTADO:
 "O degrau cede sob seu pé esquerdo e você ouve o estalo antes de sentir" — não "você sente dor"
 "A porta entreaberta está agora fechada por dentro" — não "você se sente observado"
 
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 DESIGN DE RESULTADO:
 
 O resultado é narrativa, não relatório. 2-4 frases específicas e viscerais. A dor é descrita, não contabilizada. Nunca escreva "você perde X de energia".
@@ -1638,6 +1652,7 @@ Calibre o dano:
 5-6 → dano sério, sangue, comprometimento temporário
 7-20 → quase fatal — reserve para má leitura grave de situação
 
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 PROIBIÇÕES (FALHA CRÍTICA SE VIOLADAS):
 ✗ Linguagem obscura e obtusa, o texto deve estar absolutamente claro para quem lê.
 ✗ Verbo que mistura dois fenômenos físicos incompatíveis (ex: "começa a se mover, gota a gota" — mover não é pingar). Escolha UM fenômeno físico e descreva só ele: se derrete, "escorre em filetes grossos pelo queixo"; se algo se solta, "desliza e cai com um baque seco".
@@ -1649,17 +1664,10 @@ PROIBIÇÕES (FALHA CRÍTICA SE VIOLADAS):
 ✗ Mais de 1 dilema com ramificações por cena
 ✗ resultado_texto de dilema-pai descrevendo ação que o jogador não executou em opcao_texto
 
-Retorne APENAS JSON válido, zero markdown, zero texto fora do objeto. O campo "dano" deve ser um integer entre 0 e 20.`;
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+RETORNE APENAS JSON — ZERO MARKDOWN, ZERO TEXTO FORA DO OBJETO:
 
-        // ─── USER PROMPT: só a tarefa dinâmica + schema, com SALA ALVO no final absoluto ───
-        const prompt = `[SEMENTE:${semente}]
-/no_think
-ZONA ATUAL: "${infoZona.nome}"
-MISTÉRIO CENTRAL: "${dnaGlobal?.misterio_central || ''}"
-
-MISSÃO: crie UM evento situacional para a SALA ALVO que virá ao final deste prompt, seguindo todas as regras do seu system prompt.
-
-RETORNE APENAS JSON neste formato exato (zero markdown, zero texto fora do JSON):
+Retorne APENAS JSON neste formato exato (zero markdown, zero texto fora do JSON):
 {
   "titulo": "Título do Evento",
   "texto_cena": "A descrição exclusiva do evento/cena. 3-5 frases. O texto termina no momento de tensão — o jogador ainda não agiu.",
@@ -1692,11 +1700,9 @@ RETORNE APENAS JSON neste formato exato (zero markdown, zero texto fora do JSON)
       ]
     }
   ]
-}
+}`;
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-SALA ALVO (ancore a cena EXCLUSIVAMENTE no texto abaixo):
-${contextoSala}`;
+                const systemPrompt = 'Você é o Arquiteto de Cenas de um RPG de aventura textual em Português brasileiro. Retorne APENAS JSON válido. Zero markdown. O campo "dano" deve ser um integer entre 0 e 20.';
 
                 let data;
                 let modeloUsado = MODELO_CENAS;
