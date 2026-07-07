@@ -1658,20 +1658,20 @@ Qualidade das ramificações — mesma exigência do DESIGN DE RESULTADO:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 DESIGN DE RESULTADO:
 
-O resultado é narrativa, não relatório. 2-4 frases específicas e viscerais. A dor é descrita, não contabilizada. Nunca escreva "você perde X de energia" e nunca escreva um número — isso é calculado fora do seu JSON, a partir do campo "risco".
+O resultado é narrativa, não relatório. 2-4 frases específicas e viscerais. A dor é descrita, não contabilizada. Nunca escreva "você perde X de energia" e nunca escreva um número — isso é calculado fora do seu JSON, a partir do campo "risco"
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 PROIBIÇÕES (FALHA CRÍTICA SE VIOLADAS):
-✗ Linguagem obscura e obtusa, o texto deve estar absolutamente claro para quem lê.
-✗ Verbo que mistura dois fenômenos físicos incompatíveis (ex: "começa a se mover, gota a gota" — mover não é pingar). Escolha UM fenômeno físico e descreva só ele: se derrete, "escorre em filetes grossos pelo queixo"; se algo se solta, "desliza e cai com um baque seco".
-✗ FANTASIA: É expressamente PROIBIDO o uso de "símbolos brilhantes", "cristais", "almas", "luzes mágicas" ou "mudanças de dimensão". A gravidade existe.
+✗ Linguagem obscura e obtusa, o texto deve estar absolutamente claro para quem lê
+✗ Verbo que mistura dois fenômenos físicos incompatíveis (ex: "começa a se mover, gota a gota" — mover não é pingar). Escolha UM fenômeno físico e descreva só ele: se derrete, "escorre em filetes grossos pelo queixo"
+✗ FANTASIA: É expressamente PROIBIDO o uso de "símbolos brilhantes", "cristais", "mãos invisíveis", "luzes mágicas" ou "mudanças de dimensão". A gravidade existe
 ✗ Opções sem destino_id com verbos de locomoção (sair, subir, descer, seguir, atravessar)
 ✗ Criaturas sem motivação ou lógica interna
 ✗ Resultados que mencionam perda de energia diretamente
 ✗ Intenção e Metáfora: Objetos inanimados e o ambiente NÃO têm vontade. A escuridão não "ganha peso", o metal não "ganha vida" e coisas não "esperam por alguém". Descreva a física (o rangido, a ferrugem, o frio, o movimento), nunca a intenção
 ✗ Mais de 1 dilema com ramificações por cena
-✗ resultado_texto de dilema-pai descrevendo ação que o jogador não executou em opcao_texto
-✗ Nunca use um campo "dano" no JSON — use "risco" (exatamente "ZERO", "ALTO" ou "AMBIGUO").
+✗ Resultado_texto de dilema-pai descrevendo ação que o jogador não executou em opcao_texto
+✗ Usar um campo "dano" no JSON — use "risco" (exatamente "ZERO", "ALTO" ou "AMBIGUO")
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 RETORNE APENAS JSON — ZERO MARKDOWN, ZERO TEXTO FORA DO OBJETO:
