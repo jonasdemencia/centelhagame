@@ -2771,7 +2771,8 @@ document.getElementById(idMsgPuzzle)?.remove();
 const historicoItensZona = [];
                 
                 Object.entries(planoData.plano).forEach(([idSala, dadosEstruturais]) => {
-                    let prosa = zonaData.salas[idSala]?.texto_logico || "Uma sala escura onde as paredes parecem respirar.";
+                    let prosa = zonaData.salas[idSala]?.texto_logico || "Uma sala escura onde as paredes respiram.";
+                    prosa = expurgarViciosIA(prosa); 
                     
                     const acoesChegadaLocal = {};
                     const idPrimeiraSalaLocal = Math.min(...Object.keys(planoData.plano).map(Number));
