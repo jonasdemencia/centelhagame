@@ -1785,16 +1785,13 @@ Retorne APENAS JSON neste formato exato (zero markdown, zero texto fora do JSON)
         }
 
         const titulo     = (cena.titulo || 'Evento Inesperado').trim();
-        const textoCena  = expurgarViciosIA((cena.texto_cena || '').trim()); // ← CHAVE ALTERADA
+        const textoCena  = expurgarViciosIA((cena.texto_cena || '').trim());
         if (!textoCena) return;
 
-        // ─── INJEÇÃO: PRESERVA O TEXTO ORIGINAL E CONCATENA A CENA ───
         sala.texto_logico = (sala.texto_logico || '').trim() + '\n\n' + textoCena;
-
         sala.cena_titulo   = titulo;
         sala.cena_aplicada = true;
 
-        // Adiciona as opções de dilema à sala
         if (!sala.opcoes) sala.opcoes = [];
         const dilemas = Array.isArray(cena.dilemas) ? cena.dilemas : [];
 
@@ -1809,9 +1806,8 @@ Retorne APENAS JSON neste formato exato (zero markdown, zero texto fora do JSON)
             const narrativaBruta = expurgarViciosIA((dilema.resultado_texto || '').trim());
             if (!narrativaBruta) return;
 
-            const dano = typeof dilema.dano === 'number'
-                ? Math.min(20, Math.max(0, Math.round(dilema.dano)))
-                : 0;
+            // 🔥 ALTERAÇÃO AQUI: usa risco em vez de dano
+            const dano = calcularDano(dilema.risco, dilema.dano);
 
             const resultadoTexto = dano > 0
                 ? `${narrativaBruta.replace(/[.\s]+$/, '')}. Você perde ${dano} de energia.`
@@ -1822,14 +1818,12 @@ Retorne APENAS JSON neste formato exato (zero markdown, zero texto fora do JSON)
                 ? parseInt(destinoRaw)
                 : null;
 
-            // Valida e prepara ramificações
             const ramsRaw = Array.isArray(dilema.ramificacoes) ? dilema.ramificacoes : [];
             const ramificacoes = ramsRaw
                 .filter(r => r.opcao_texto && r.resultado_texto)
                 .map(r => {
-                    const rDano = typeof r.dano === 'number'
-                        ? Math.min(20, Math.max(0, Math.round(r.dano)))
-                        : 0;
+                    // 🔥 ALTERAÇÃO AQUI TAMBÉM
+                    const rDano = calcularDano(r.risco, r.dano);
                     const rDestinoRaw = r.destino_id ? String(r.destino_id) : null;
                     const rDestino = (rDestinoRaw && destinosValidos.has(rDestinoRaw))
                         ? parseInt(rDestinoRaw)
@@ -1852,13 +1846,12 @@ Retorne APENAS JSON neste formato exato (zero markdown, zero texto fora do JSON)
                 arquiteto:       true,
                 dilema:          true,
                 resultado_texto: resultadoTexto,
-                dano,
+                dano,                      // valor numérico já calculado
                 destino:         destinoValidado,
                 disparado:       false,
                 ramificacoes:    ramificacoes.length > 0 ? ramificacoes : null
             });
 
-            // ─── LOG DE INJEÇÃO ───
             if (destinoValidado !== null) {
                 console.log(`[Cenas] Dilema com destino injetado: "${opcaoTexto}" → sala ${destinoValidado} (Sala ${salaId})`);
             }
@@ -1867,7 +1860,6 @@ Retorne APENAS JSON neste formato exato (zero markdown, zero texto fora do JSON)
         console.log(`[Cenas] ✅ "${titulo}" → Sala ${salaId} | ${dilemas.length} dilemas injetados`);
     });
 }
-
 
         // ============================================================
         // PUZZLES & GERAÇÃO PROCEDURAL
