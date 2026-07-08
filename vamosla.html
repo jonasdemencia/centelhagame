@@ -1595,7 +1595,7 @@ function calcularDano(risco, danoLegado) {
 
         const prompt = `[SEMENTE:${semente}]
 /no_think
-Você é um designer de encontros para um RPG de aventura textual em Português brasileiro, no nível de Steve Jackson e Ian Livingstone. Sua função é criar cenas situacionais memoráveis E CONSISTENTES — não sustos baratos, mas momentos com tensão real, escolhas difíceis e consequências assimétricas.
+Você é um designer de encontros para um RPG de aventura textual em Português brasileiro. Sua função é criar cenas situacionais memoráveis — não sustos baratos, mas momentos com tensão real, escolhas difíceis e consequências assimétricas.
 
 ZONA ATUAL: "${infoZona.nome}"
 MISTÉRIO CENTRAL: "${dnaGlobal?.misterio_central || ''}"
@@ -1605,28 +1605,8 @@ SALA ALVO:
 ${contextoSala}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-MISSÃO: Para a SALA ALVO, crie UM evento situacional. Escreva APENAS a cena que acontecerá neste ambiente. NÃO REESCREVA a descrição original da sala — seu texto será acoplado no final da descrição que já existe. Concentre todo o seu esforço na qualidade, coerência e tensão do evento em si.
-
-REGRAS DE INSERÇÃO:
-- A cena surge do ambiente — use os elementos físicos já descritos no TEXTO ORIGINAL DA SALA como ponte narrativa.
-- Comece a cena de forma orgânica, assumindo que o jogador acabou de observar a descrição original.
-- O evento ocorre dentro dos limites físicos da sala descrita.
-- Termine no momento de suspensão, antes da decisão do jogador.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-DESIGN DE CENA:
-
-1. EMERGE DO AMBIENTE, NÃO DO NADA
-Use o que já existe na sala. Um depósito tem um trabalhador, uma câmara fria tem um açougueiro, um corredor inundado tem algo que afogou. A situação deve parecer que SEMPRE esteve ali, esperando.
-
-2. ESPECIFICIDADE E ÂNCORA FÍSICA
-"Um homem costurando a própria pálpebra com linha de pesca" > "uma figura perturbadora". Detalhes concretos criam realidade — e todo estranhamento exige forma física objetiva:
-NÃO: "a fonte parecia viva" / SIM: "a água marcava 4°C no pior verão em décadas e sua superfície não reagia ao vento"
-NÃO: "o corredor queria algo" / SIM: "a bússola girava ao contrário apenas dentro deste quarto"
-O fenômeno é dado concreto. A interpretação pertence ao jogador.
-
-3. TERMINE COM TENSÃO ABERTA
-A cena termina no momento de decisão. "Ela vira o rosto devagar na sua direção." Não resolva: suspenda.
+MISSÃO E DESIGN DA CENA (DIRETRIZ ÚNICA):
+Para a SALA ALVO, crie UM evento situacional escrevendo APENAS a nova cena (NÃO reescreva a descrição original; seu texto será acoplado ao final dela). O evento deve emergir de forma orgânica dos elementos físicos já descritos no ambiente e ocorrer dentro de seus limites, como se sempre estivesse ali esperando. Ancore o evento em detalhes materiais, concretos e específicos ("um homem costurando a pálpebra" em vez de "uma figura perturbadora"), tratando o fenômeno como um dado físico objetivo cuja interpretação cabe exclusivamente ao jogador. Por fim, encerre o texto interrompendo a ação com uma tensão aberta, suspendendo a cena no exato momento de decisão.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 DESIGN DE DILEMAS:
@@ -1647,7 +1627,7 @@ Ruim: "Tentar pegar o objeto" — Bom: "Arrancar o medalhão do pescoço enquant
 5. DILEMAS COM TRÂNSITO (OPCIONAL)
 Um dilema pode mover o jogador para outra sala usando um destino de DESTINOS DISPONÍVEIS. Use quando a ação implica atravessar um limiar físico (fuga, avanço forçado, entrada). O resultado não descreve o que há na nova sala. Quando usar: preencha destino_id. Quando não: null.
 
-6. RAMIFICAÇÕES — exatamente 1 dilema por cena pode ter ramificações; os demais simplesmente não incluem o campo.
+6. RAMIFICAÇÕES — exatamente 1 dilema por cena; os restantes têm ramificacoes: null.
 Quando usar: a ação do jogador abre um momento de bifurcação genuína antes da resolução.
 Estrutura: dilema-pai tem resultado_texto como ponte narrativa (2-3 frases, tensão aberta) + risco: "ZERO". As ramificacoes (2-3) têm opcao_texto, resultado_texto, risco ("ZERO" ou "ALTO") e destino_id próprios.
 Causalidade: resultado_texto do pai começa exatamente onde opcao_texto termina — não invente ação que o jogador não executou.
@@ -1656,25 +1636,18 @@ Qualidade das ramificações — mesma exigência do DESIGN DE RESULTADO:
 "A porta entreaberta está agora fechada por dentro" — não "você se sente observado"
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-DESIGN DE RESULTADO:
-
-O resultado é narrativa, não relatório. 2-4 frases específicas e viscerais. A dor é descrita, não contabilizada. Nunca escreva "você perde X de energia" e nunca escreva um número — isso é calculado fora do seu JSON, a partir do campo "risco".
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 PROIBIÇÕES (FALHA CRÍTICA SE VIOLADAS):
+
 ✗ Linguagem obscura e obtusa, o texto deve estar absolutamente claro para quem lê.
-✗ Verbo que mistura dois fenômenos físicos incompatíveis (ex: "começa a se mover, gota a gota" — mover não é pingar). Escolha UM fenômeno físico e descreva só ele: se derrete, "escorre em filetes grossos pelo queixo"; se algo se solta, "desliza e cai com um baque seco".
-✗ FANTASIA: É expressamente PROIBIDO o uso de "símbolos brilhantes", "cristais", "almas", "luzes mágicas" ou "mudanças de dimensão". A gravidade existe.
 ✗ Opções sem destino_id com verbos de locomoção (sair, subir, descer, seguir, atravessar)
 ✗ Criaturas sem motivação ou lógica interna
 ✗ Resultados que mencionam perda de energia diretamente
-✗ Intenção e Metáfora: Objetos inanimados e o ambiente NÃO têm vontade. A escuridão não "ganha peso", o metal não "ganha vida" e coisas não "esperam por alguém". Descreva a física (o rangido, a ferrugem, o frio, o movimento), nunca a intenção
+✗ Intenção e Metáfora: Objetos inanimados e o ambiente NÃO têm vontade. A escuridão não "ganha peso", o metal não "ganha vida" e coisas não "esperam por alguém".
 ✗ Mais de 1 dilema com ramificações por cena
 ✗ resultado_texto de dilema-pai descrevendo ação que o jogador não executou em opcao_texto
 ✗ Nunca use um campo "dano" no JSON — use "risco" (exatamente "ZERO", "ALTO" ou "AMBIGUO").
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-RETORNE APENAS JSON — ZERO MARKDOWN, ZERO TEXTO FORA DO OBJETO:
 
 Retorne APENAS JSON neste formato exato (zero markdown, zero texto fora do JSON):
 {
