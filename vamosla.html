@@ -603,9 +603,9 @@ window.dispatchEvent(new Event('firebase-initialized'));
         const MODELO_GROQ = "llama-3.3-70b-versatile";
         const MODELO_PUZZLE = "openai/gpt-oss-120b";
         const MODELO_IND = "qwen/qwen3-32b"; // Modelo responsável pelas cinematics
-        const MODELO_ARQUITETO = "llama-3.3-70b-versatile"; // Arquiteto de Perigos
-        const MODELO_CENAS = "qwen/qwen3-32b"; // Arquiteto de Cenas e Dilemas
-        const MODELO_CENAS_FALLBACK = "openai/gpt-oss-120b";
+        const MODELO_ARQUITETO = "gemma-4-31b"; // Arquiteto de Perigos
+        const MODELO_CENAS = "llama-3.3-70b-versatile";  // Arquiteto de Cenas e Dilemas
+        const MODELO_CENAS_FALLBACK = "qwen/qwen3-32b";
 
         // ── FALLBACK CEREBRAS (segundo provedor, usado quando a Groq estoura o teto) ──
         // Troque pela URL do SEU worker dedicado à Cerebras depois de fazer o deploy (ver instruções).
