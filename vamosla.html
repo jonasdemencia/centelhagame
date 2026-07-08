@@ -1514,7 +1514,7 @@ Retorne APENAS o JSON rigorosamente neste formato:
         // ============================================================
 
         async function gerarArquitetoDeCenas(mapaFinalMesclado, infoZona, salaFim) {
-            // Seleciona 2-3 salas elegíveis:
+            // Seleciona 1-2 salas elegíveis:
             // • id < 10000  (não puzzle)
             // • id !== salaFim  (não fronteira)
             // • sem ind_disponivel  (sem IND)
@@ -1534,7 +1534,7 @@ Retorne APENAS o JSON rigorosamente neste formato:
                         && !sala.opcoes.some(o => o.arquiteto === true && !o.dilema); // exclui salas com nova_opcao do Perigos
                 })
                 .sort(() => Math.random() - 0.5)
-                .slice(0, 3);
+                .slice(0, 2);
 
             if (idsElegiveis.length === 0) return;
 
@@ -1609,7 +1609,6 @@ Estrutura: dilema-pai tem resultado_texto como ponte narrativa (2-3 frases, tens
 Causalidade: resultado_texto do pai começa exatamente onde opcao_texto termina — não invente ação que o jogador não executou.
 Qualidade das ramificações — mesma exigência do DESIGN DE RESULTADO:
 "O degrau cede sob seu pé esquerdo e você ouve o estalo antes de sentir" — não "você sente dor"
-"A porta entreaberta está agora fechada por dentro" — não "você se sente observado"
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 DESIGN DE RESULTADO:
