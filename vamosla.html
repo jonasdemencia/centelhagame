@@ -1561,12 +1561,11 @@ SALAS:
 ${contextSalas}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-MISSÃO: Para cada SALA ALVO, crie UM evento situacional. Escreva APENAS a cena que acontecerá neste ambiente. NÃO REESCREVA a descrição original da sala — seu texto será acoplado no final da descrição que já existe. 
+MISSÃO: Para a SALA ALVO, crie UM evento situacional. Escreva APENAS a cena que acontecerá neste ambiente. NÃO REESCREVA a descrição original da sala — seu texto será acoplado no final da descrição que já existe. Concentre todo o seu esforço na qualidade, coerência e tensão do evento em si.
 
 REGRAS DE INSERÇÃO:
 - Comece a cena de forma orgânica, assumindo que o jogador acabou de observar a descrição original.
 - O evento ocorre dentro dos limites físicos da sala descrita.
-- Termine no momento de suspensão, antes da decisão do jogador.
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -1639,7 +1638,7 @@ Retorne APENAS JSON neste formato exato (zero markdown, zero texto fora do JSON)
     {
       "sala_id": "ID_NUMÉRICO",
       "titulo": "Título do Evento",
-      "texto_sala_fundido": "Reescrita completa da sala com o evento embutido organicamente. 5-8 frases. O texto termina no momento de tensão — o jogador ainda não agiu.",
+      "texto_cena": "A descrição exclusiva do evento/cena. 3-5 frases. O texto termina no momento de tensão — o jogador ainda não agiu.",
       "dilemas": [
   {
     "opcao_texto": "Ação que resolve na hora",
@@ -1727,10 +1726,10 @@ console.log(`[Cenas] Modelo usado: ${modeloUsado}`);
                 }
 
                 const titulo     = (cena.titulo || 'Evento Inesperado').trim();
-const textoFusao = expurgarViciosIA((cena.texto_sala_fundido || '').trim());
-if (!textoFusao) return;
+const textoCena = expurgarViciosIA((cena.texto_cena || '').trim()); // usar o campo novo
+if (!textoCena) return;
 
-sala.texto_logico  = textoFusao;
+sala.texto_logico = (sala.texto_logico || '').trim() + '\n\n' + textoCena;
 sala.cena_titulo   = titulo;
 sala.cena_aplicada = true;
 
