@@ -603,9 +603,9 @@ window.dispatchEvent(new Event('firebase-initialized'));
         const MODELO_GROQ = "llama-3.3-70b-versatile";
         const MODELO_PUZZLE = "openai/gpt-oss-120b";
         const MODELO_IND = "qwen/qwen3-32b"; // Modelo responsável pelas cinematics
-        const MODELO_ARQUITETO = "gemma-4-31b"; // Arquiteto de Perigos
-        const MODELO_CENAS = "llama-3.3-70b-versatile";  // Arquiteto de Cenas e Dilemas
-        const MODELO_CENAS_FALLBACK = "qwen/qwen3-32b";
+        const MODELO_ARQUITETO = "llama-3.3-70b-versatile"; // Arquiteto de Perigos
+        const MODELO_CENAS = "qwen/qwen3-32b"; // Arquiteto de Cenas e Dilemas
+        const MODELO_CENAS_FALLBACK = "openai/gpt-oss-120b";
 
         // ── FALLBACK CEREBRAS (segundo provedor, usado quando a Groq estoura o teto) ──
         // Troque pela URL do SEU worker dedicado à Cerebras depois de fazer o deploy (ver instruções).
@@ -613,7 +613,7 @@ window.dispatchEvent(new Event('firebase-initialized'));
         // Modelo de produção público da Cerebras hoje. É o mesmo "peso" do gpt-oss-120b que
         // vocês já usa na Groq (MODELO_PUZZLE / MODELO_CENAS_FALLBACK), então o comportamento
         // do texto tende a ser familiar. Confira modelos disponíveis em cloud.cerebras.ai antes de trocar.
-        const MODELO_CEREBRAS = "gemma-4-31b";
+        const MODELO_CEREBRAS = "gpt-oss-120b";
 
 
         let mapaMundo = null;
@@ -1645,11 +1645,11 @@ Opção A: risco físico, ganho potencial. Opção B: risco zero, perda narrativ
 Ruim: "Tentar pegar o objeto" — Bom: "Arrancar o medalhão do pescoço enquanto ela não olha"
 
 5. DILEMAS COM TRÂNSITO (OPCIONAL)
-Um dilema pode mover o jogador para outra sala usando um destino de DESTINOS DISPONÍVEIS. Use quando a ação implica atravessar um limiar físico (fuga, avanço forçado, entrada). O resultado não descreve o que há na nova sala. Quando usar: inclua o campo "destino_id" com o ID da sala. Quando não houver trânsito, NÃO inclua o campo "destino_id" no objeto — simplesmente omita.
+Um dilema pode mover o jogador para outra sala usando um destino de DESTINOS DISPONÍVEIS. Use quando a ação implica atravessar um limiar físico (fuga, avanço forçado, entrada). O resultado não descreve o que há na nova sala. Quando usar: preencha destino_id. Quando não: null.
 
 6. RAMIFICAÇÕES — exatamente 1 dilema por cena pode ter ramificações; os demais simplesmente não incluem o campo.
 Quando usar: a ação do jogador abre um momento de bifurcação genuína antes da resolução.
-Estrutura: dilema-pai tem resultado_texto como ponte narrativa (2-3 frases, tensão aberta) + risco: "ZERO". As ramificacoes (2-3) têm opcao_texto, resultado_texto, risco ("ZERO" ou "ALTO") e destino_id próprios. Inclua o campo "ramificacoes" APENAS no único dilema que se desdobra. Nos demais dilemas, NÃO inclua o campo "ramificacoes" — omita.
+Estrutura: dilema-pai tem resultado_texto como ponte narrativa (2-3 frases, tensão aberta) + risco: "ZERO". As ramificacoes (2-3) têm opcao_texto, resultado_texto, risco ("ZERO" ou "ALTO") e destino_id próprios.
 Causalidade: resultado_texto do pai começa exatamente onde opcao_texto termina — não invente ação que o jogador não executou.
 Qualidade das ramificações — mesma exigência do DESIGN DE RESULTADO:
 "O degrau cede sob seu pé esquerdo e você ouve o estalo antes de sentir" — não "você sente dor"
@@ -1658,20 +1658,20 @@ Qualidade das ramificações — mesma exigência do DESIGN DE RESULTADO:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 DESIGN DE RESULTADO:
 
-O resultado é narrativa, não relatório. 2-4 frases específicas e viscerais. A dor é descrita, não contabilizada. Nunca escreva "você perde X de energia" e nunca escreva um número — isso é calculado fora do seu JSON, a partir do campo "risco"
+O resultado é narrativa, não relatório. 2-4 frases específicas e viscerais. A dor é descrita, não contabilizada. Nunca escreva "você perde X de energia" e nunca escreva um número — isso é calculado fora do seu JSON, a partir do campo "risco".
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 PROIBIÇÕES (FALHA CRÍTICA SE VIOLADAS):
-✗ Linguagem obscura e obtusa, o texto deve estar absolutamente claro para quem lê
-✗ Verbo que mistura dois fenômenos físicos incompatíveis (ex: "começa a se mover, gota a gota" — mover não é pingar). Escolha UM fenômeno físico e descreva só ele: se derrete, "escorre em filetes grossos pelo queixo"
-✗ FANTASIA: É expressamente PROIBIDO o uso de "símbolos brilhantes", "cristais", "mãos invisíveis", "luzes mágicas" ou "mudanças de dimensão". A gravidade existe
+✗ Linguagem obscura e obtusa, o texto deve estar absolutamente claro para quem lê.
+✗ Verbo que mistura dois fenômenos físicos incompatíveis (ex: "começa a se mover, gota a gota" — mover não é pingar). Escolha UM fenômeno físico e descreva só ele: se derrete, "escorre em filetes grossos pelo queixo"; se algo se solta, "desliza e cai com um baque seco".
+✗ FANTASIA: É expressamente PROIBIDO o uso de "símbolos brilhantes", "cristais", "almas", "luzes mágicas" ou "mudanças de dimensão". A gravidade existe.
 ✗ Opções sem destino_id com verbos de locomoção (sair, subir, descer, seguir, atravessar)
 ✗ Criaturas sem motivação ou lógica interna
 ✗ Resultados que mencionam perda de energia diretamente
-✗ Intenção e Causa Invisível: nada no ambiente tem vontade, nem age por uma força/mão/presença invisível nomeada no texto. A cadeira desliza; a escuridão não "espera"; a causa é do jogador interpretar, nunca do texto explicar. Descreva só o efeito físico: o rangido, o movimento, o frio.
+✗ Intenção e Metáfora: Objetos inanimados e o ambiente NÃO têm vontade. A escuridão não "ganha peso", o metal não "ganha vida" e coisas não "esperam por alguém". Descreva a física (o rangido, a ferrugem, o frio, o movimento), nunca a intenção
 ✗ Mais de 1 dilema com ramificações por cena
-✗ Resultado_texto de dilema-pai descrevendo ação que o jogador não executou em opcao_texto
-✗ Usar um campo "dano" no JSON — use "risco" (exatamente "ZERO", "ALTO" ou "AMBIGUO")
+✗ resultado_texto de dilema-pai descrevendo ação que o jogador não executou em opcao_texto
+✗ Nunca use um campo "dano" no JSON — use "risco" (exatamente "ZERO", "ALTO" ou "AMBIGUO").
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 RETORNE APENAS JSON — ZERO MARKDOWN, ZERO TEXTO FORA DO OBJETO:
@@ -1684,23 +1684,27 @@ Retorne APENAS JSON neste formato exato (zero markdown, zero texto fora do JSON)
     {
       "opcao_texto": "Ação que resolve na hora",
       "resultado_texto": "2-4 frases narrando a consequência direta.",
-      "risco": "ZERO"
+      "risco": "ZERO",
+      "destino_id": null,
+      "ramificacoes": null
     },
     {
       "opcao_texto": "Ação que se desdobra numa segunda decisão",
       "resultado_texto": "2-3 frases de transição — a situação se complicou. Termina em tensão aberta.",
       "risco": "ZERO",
+      "destino_id": null,
       "ramificacoes": [
         {
           "opcao_texto": "Como reagir — desdobramento A",
           "resultado_texto": "2-3 frases narrando a consequência de A.",
-          "risco": "AMBIGUO"
+          "risco": "ALTO",
+          "destino_id": null
         },
         {
           "opcao_texto": "Como reagir — desdobramento B",
           "resultado_texto": "2-3 frases narrando a consequência de B.",
           "risco": "ZERO",
-          "destino_id": 14
+          "destino_id": null
         }
       ]
     }
