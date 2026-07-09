@@ -1513,8 +1513,12 @@ Retorne APENAS o JSON rigorosamente neste formato:
         // ARQUITETO DE CENAS E DILEMAS
         // ============================================================
 
+       // ============================================================
+        // ARQUITETO DE CENAS E DILEMAS
+        // ============================================================
+
         async function gerarArquitetoDeCenas(mapaFinalMesclado, infoZona, salaFim) {
-            // Seleciona 2 salas elegíveis:
+            // Seleciona 2-3 salas elegíveis:
             // • id < 10000  (não puzzle)
             // • id !== salaFim  (não fronteira)
             // • sem ind_disponivel  (sem IND)
@@ -1560,11 +1564,14 @@ SALAS:
 ${contextSalas}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-MISSÃO: Crie UM evento situacional. Escreva APENAS a cena que acontecerá nesta sala. NÃO REESCREVA a descrição original da sala — seu texto será acoplado no final da descrição que já existe. 
+MISSÃO: Para cada sala, crie UM evento situacional e reescreva o TEXTO ORIGINAL DA SALA incorporando o evento como parte orgânica. O texto deve ser um bloco único e contínuo — o jogador nunca perceberá onde termina a sala e começa o evento.
 
-REGRAS DE INSERÇÃO:
-- Comece a cena de forma orgânica, assumindo que o jogador acabou de observar a descrição original.
-- O evento ocorre dentro dos limites físicos da sala descrita.
+REGRAS DE FUSÃO:
+- A sala existente é o solo — o evento surge dele, não cai sobre ele
+- Os elementos já descritos (objetos, luz, cheiro, arquitetura) devem servir de ponte para o evento
+- O texto fundido deve parecer que SEMPRE foi assim
+- O evento ocorre dentro dos limites físicos da sala descrita — não invente salas adjacentes, quartos atrás de portas ou espaços não mencionados no TEXTO ORIGINAL. Se a cena exige um espaço, use o que já está descrito.
+- Termine no momento de suspensão, antes da decisão do jogador
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 DESIGN DE CENA:
@@ -1574,6 +1581,7 @@ Use o que já existe na sala. Um depósito tem um trabalhador, uma câmara fria 
 
 2. ESPECIFICIDADE E ÂNCORA FÍSICA
 "Um homem costurando a própria pálpebra com linha de pesca" > "uma figura perturbadora". Detalhes concretos criam realidade — e todo estranhamento exige forma física objetiva:
+NÃO: "a fonte parecia viva" / SIM: "a água marcava 4°C no pior verão em décadas e sua superfície não reagia ao vento"
 NÃO: "o corredor queria algo" / SIM: "a bússola girava ao contrário apenas dentro deste quarto"
 O fenômeno é dado concreto. A interpretação pertence ao jogador.
 
@@ -1605,6 +1613,7 @@ Estrutura: dilema-pai tem resultado_texto como ponte narrativa (2-3 frases, tens
 Causalidade: resultado_texto do pai começa exatamente onde opcao_texto termina — não invente ação que o jogador não executou.
 Qualidade das ramificações — mesma exigência do DESIGN DE RESULTADO:
 "O degrau cede sob seu pé esquerdo e você ouve o estalo antes de sentir" — não "você sente dor"
+"A porta entreaberta está agora fechada por dentro" — não "você se sente observado"
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 DESIGN DE RESULTADO:
@@ -1635,7 +1644,7 @@ Retorne APENAS JSON neste formato exato (zero markdown, zero texto fora do JSON)
     {
       "sala_id": "ID_NUMÉRICO",
       "titulo": "Título do Evento",
-      "texto_cena": "A descrição exclusiva do evento/cena. 3-5 frases. O texto termina no momento de tensão — o jogador ainda não agiu.",
+      "texto_sala_fundido": "Reescrita completa da sala com o evento embutido organicamente. 5-8 frases. O texto termina no momento de tensão — o jogador ainda não agiu.",
       "dilemas": [
   {
     "opcao_texto": "Ação que resolve na hora",
@@ -1723,10 +1732,10 @@ console.log(`[Cenas] Modelo usado: ${modeloUsado}`);
                 }
 
                 const titulo     = (cena.titulo || 'Evento Inesperado').trim();
-const textoCena = expurgarViciosIA((cena.texto_cena || '').trim()); // usar o campo novo
-if (!textoCena) return;
+const textoFusao = expurgarViciosIA((cena.texto_sala_fundido || '').trim());
+if (!textoFusao) return;
 
-sala.texto_logico = (sala.texto_logico || '').trim() + '\n\n' + textoCena;
+sala.texto_logico  = textoFusao;
 sala.cena_titulo   = titulo;
 sala.cena_aplicada = true;
 
@@ -1805,6 +1814,7 @@ if (destinoValidado !== null) {
                 console.log(`[Cenas] ✅ "${titulo}" → Sala ${salaId} | ${dilemas.length} dilemas injetados`);
             });
         }
+
 
 
         // ============================================================
