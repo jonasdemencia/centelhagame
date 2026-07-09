@@ -1649,6 +1649,7 @@ PROIBIDO:
 ✗ Mais de 1 dilema com ramificacoes por cena
 ✗ resultado_texto de dilema-pai descrevendo ação que o jogador não executou em opcao_texto
 ✗ Palavras inventadas, neologismos ou traduções literais do inglês (ex: evite frases que soem não-naturais em português).
+✗ Fantasia, fantasmas, forças invisíveis, almas, espíritos, objetos falantes, salas que respiram. 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -1701,7 +1702,7 @@ try {
     data = await chamarGroq([
         { role: 'system', content: systemPrompt },
         { role: 'user', content: prompt }
-    ], 0.8, { type: 'json_object' }, MODELO_CENAS, 2);
+    ], 0.7, { type: 'json_object' }, MODELO_CENAS, 2);
 } catch (e) {
     console.warn(`[Cenas] Falha com ${MODELO_CENAS}:`, e.message);
     console.log(`[Cenas] Tentando fallback com ${MODELO_CENAS_FALLBACK}...`);
@@ -1710,7 +1711,7 @@ try {
         data = await chamarGroq([
             { role: 'system', content: systemPrompt },
             { role: 'user', content: prompt }
-        ], 0.8, { type: 'json_object' }, MODELO_CENAS_FALLBACK, 1);
+        ], 0.7, { type: 'json_object' }, MODELO_CENAS_FALLBACK, 1);
         modeloUsado = MODELO_CENAS_FALLBACK;
     } catch (fallbackError) {
         console.error(`[Cenas] Falha também com ${MODELO_CENAS_FALLBACK}:`, fallbackError.message);
