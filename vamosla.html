@@ -1195,6 +1195,7 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
         
         async function chamarGroq(messages, temperatura = 0.7, formato = { type: "json_object" }, modeloPadrao = MODELO_GROQ, tentativas = 3) {
     for (let i = 0; i < tentativas; i++) {
+        const isReasoningModel = modeloPadrao.includes("gpt-oss");
         const response = await fetch(WORKER_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -1203,6 +1204,7 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
     messages: messages,
     temperature: temperatura,
     max_tokens: 4096,
+    ...(isReasoningModel ? { reasoning_effort: "low" } : {}),
     ...(formato ? { response_format: formato } : {}),
 }),
         });
