@@ -1547,12 +1547,8 @@ Retorne APENAS o JSON rigorosamente neste formato:
     return `SALA_ID:${id} — "${sala.nome}"\nTEXTO ORIGINAL DA SALA:\n${textoOriginal}\nDESTINOS DISPONÍVEIS:\n${destinosSala || '  (nenhum)'}`;
 }).join('\n\n');
 
-           // Geração da semente temática (substitui o Math.random().toString)
-const temasSemente = ["ferrugem", "ecos", "umidade", "sombras", "cheiros", "frio", "poeira", "marcas de garras", "silêncio", "vento"];
-const semente = temasSemente[Math.floor(Math.random() * temasSemente.length)];
-
-// Montagem do prompt (exatamente como antes, só que com a nova semente)
-const prompt = `[SEMENTE:${semente}]
+            const semente = Math.random().toString(36).substring(2, 8);
+            const prompt = `[SEMENTE:${semente}]
             
 /no_think
 Você é um designer de encontros para um RPG de aventura textual em português brasileiro, no nível de Steve Jackson e Ian Livingstone. Sua função é criar cenas situacionais memoráveis — não sustos baratos, mas momentos com tensão real, escolhas difíceis e consequências assimétricas.
@@ -1564,7 +1560,7 @@ SALAS:
 ${contextSalas}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-MISSÃO: Para cada sala, crie UM evento situacional e reescreva o TEXTO ORIGINAL DA SALA incorporando o evento como parte orgânica. O texto deve ser um bloco único e contínuo — o jogador nunca perceberá onde termina a sala e começa o evento.
+MISSÃO: Para cada sala, crie UM evento situacional e reescreva o TEXTO ORIGINAL DA SALA incorporando o evento como parte orgânica. O texto deve ser um bloco único e contínuo — o jogador nunca perceberá onde termina a descrição da sala e começa o evento.
 
 REGRAS DE FUSÃO:
 
