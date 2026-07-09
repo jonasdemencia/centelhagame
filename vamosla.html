@@ -1513,10 +1513,6 @@ Retorne APENAS o JSON rigorosamente neste formato:
         // ARQUITETO DE CENAS E DILEMAS
         // ============================================================
 
-       // ============================================================
-        // ARQUITETO DE CENAS E DILEMAS
-        // ============================================================
-
         async function gerarArquitetoDeCenas(mapaFinalMesclado, infoZona, salaFim) {
             // Seleciona 2-3 salas elegíveis:
             // • id < 10000  (não puzzle)
@@ -1551,9 +1547,10 @@ Retorne APENAS o JSON rigorosamente neste formato:
     return `SALA_ID:${id} — "${sala.nome}"\nTEXTO ORIGINAL DA SALA:\n${textoOriginal}\nDESTINOS DISPONÍVEIS:\n${destinosSala || '  (nenhum)'}`;
 }).join('\n\n');
 
-            const semente = Math.random().toString(36).substring(2, 8);
-
-            const prompt = `[SEMENTE:${semente}]
+            // Remova o Math.random().toString(...)
+const temasSemente = ["ferrugem", "ecos", "umidade", "sombras", "cheiros", "frio", "poeira", "marcas de garras", "silêncio", "vento"];
+const semente = temasSemente[Math.floor(Math.random() * temasSemente.length)];
+            
 /no_think
 Você é um designer de encontros para um RPG de aventura textual em português brasileiro, no nível de Steve Jackson e Ian Livingstone. Sua função é criar cenas situacionais memoráveis — não sustos baratos, mas momentos com tensão real, escolhas difíceis e consequências assimétricas.
 
@@ -1567,6 +1564,7 @@ ${contextSalas}
 MISSÃO: Para cada sala, crie UM evento situacional e reescreva o TEXTO ORIGINAL DA SALA incorporando o evento como parte orgânica. O texto deve ser um bloco único e contínuo — o jogador nunca perceberá onde termina a sala e começa o evento.
 
 REGRAS DE FUSÃO:
+
 - A sala existente é o solo — o evento surge dele, não cai sobre ele
 - Os elementos já descritos (objetos, luz, cheiro, arquitetura) devem servir de ponte para o evento
 - O texto fundido deve parecer que SEMPRE foi assim
@@ -1613,7 +1611,6 @@ Estrutura: dilema-pai tem resultado_texto como ponte narrativa (2-3 frases, tens
 Causalidade: resultado_texto do pai começa exatamente onde opcao_texto termina — não invente ação que o jogador não executou.
 Qualidade das ramificações — mesma exigência do DESIGN DE RESULTADO:
 "O degrau cede sob seu pé esquerdo e você ouve o estalo antes de sentir" — não "você sente dor"
-"A porta entreaberta está agora fechada por dentro" — não "você se sente observado"
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 DESIGN DE RESULTADO:
@@ -1634,6 +1631,7 @@ PROIBIDO:
 ✗ Proibição de Intenção e Metáfora: Objetos inanimados e o ambiente NÃO têm vontade. A escuridão não "ganha peso", o metal não "ganha vida" e coisas não "esperam por alguém". Descreva a física (o rangido, a ferrugem, o frio, o movimento), nunca a intenção
 ✗ Mais de 1 dilema com ramificacoes por cena
 ✗ resultado_texto de dilema-pai descrevendo ação que o jogador não executou em opcao_texto
+✗ Palavras inventadas, neologismos ou traduções literais do inglês (ex: evite frases que soem não-naturais em português).
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 RETORNE APENAS JSON — ZERO MARKDOWN, ZERO TEXTO FORA DO OBJETO:
@@ -1676,7 +1674,7 @@ Retorne APENAS JSON neste formato exato (zero markdown, zero texto fora do JSON)
 ]
 }`;
 
-            const systemPrompt = 'Você é o Arquiteto de Cenas de um RPG de aventura textual em Português brasileiro. Retorne APENAS JSON válido. Zero markdown. O campo "dano" deve ser um integer entre 0 e 20.';
+            const systemPrompt = 'Você é o Arquiteto de Cenas de um RPG textual. O texto deve ter gramática impecável em Português do Brasil, vocabulário rico e nativo. Zero estrangeirismos ou palavras inventadas. Retorne APENAS JSON válido. Zero markdown. Dano: integer (0 a 20).';
 
             let data;
 let modeloUsado = MODELO_CENAS;
