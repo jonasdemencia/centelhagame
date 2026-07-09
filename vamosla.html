@@ -2588,7 +2588,22 @@ Retorne APENAS o JSON abaixo. NÃO gere arrays de opções ou destinos, apenas o
                 const MAX_TENTATIVAS_PLANO = 3;
 
                 for (let tentativa = 1; tentativa <= MAX_TENTATIVAS_PLANO; tentativa++) {
-                    const dataPlano = await chamarGroq([{ role: "user", content: promptPlano }], 0.6, { type: "json_object" });
+                    let dataPlano;
+try {
+    // Tenta com o modelo principal
+    dataPlano = await chamarGroq([{ role: "user", content: promptPlano }], 0.6, { type: "json_object" }, "llama-3.3-70b-versatile", 3);
+} catch (e) {
+    const erroMsg = e.message || "";
+    const isRateLimit = /rate[_ ]limit/i.test(erroMsg) || /429/.test(erroMsg) || erroMsg.includes("tokens per day");
+    if (isRateLimit) {
+        console.warn("⏳ Rate limit no modelo principal. Usando fallback 'openai/gpt-oss-120b'...");
+        // Tenta com o fallback
+        dataPlano = await chamarGroq([{ role: "user", content: promptPlano }], 0.6, { type: "json_object" }, "openai/gpt-oss-120b", 3);
+    } else {
+        // Se não for rate limit, relança o erro
+        throw e;
+    }
+}
                     const candidato = JSON.parse(dataPlano.choices[0].message.content);
 
 if (candidato.plano) {
