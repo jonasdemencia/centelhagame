@@ -1680,7 +1680,7 @@ try {
     data = await chamarGroq([
         { role: 'system', content: systemPrompt },
         { role: 'user', content: prompt }
-    ], 0.7, { type: 'json_object' }, MODELO_CENAS, 2);
+    ], 0.8, { type: 'json_object' }, MODELO_CENAS, 2);
 } catch (e) {
     console.warn(`[Cenas] Falha com ${MODELO_CENAS}:`, e.message);
     console.log(`[Cenas] Tentando fallback com ${MODELO_CENAS_FALLBACK}...`);
@@ -1689,7 +1689,7 @@ try {
         data = await chamarGroq([
             { role: 'system', content: systemPrompt },
             { role: 'user', content: prompt }
-        ], 0.7, { type: 'json_object' }, MODELO_CENAS_FALLBACK, 1);
+        ], 0.8, { type: 'json_object' }, MODELO_CENAS_FALLBACK, 1);
         modeloUsado = MODELO_CENAS_FALLBACK;
     } catch (fallbackError) {
         console.error(`[Cenas] Falha também com ${MODELO_CENAS_FALLBACK}:`, fallbackError.message);
