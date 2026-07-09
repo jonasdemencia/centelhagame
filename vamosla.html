@@ -1209,38 +1209,44 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
 }),
         });
 
-                const data = await response.json();
+        const data = await response.json();
 
-                const isRateLimit = (!response.ok && response.status === 429) || 
-                                    (data.error && data.error.message && data.error.message.includes("Rate limit"));
+        const errMsgRaw = data.error?.message || "";
+        const errCode = data.error?.code || "";
 
-                if (isRateLimit && i < tentativas - 1) {
-                    const errMsg = data.error?.message || "";
-                    const match = errMsg.match(/try again in ([\d\.]+)s/);
-                    const waitTime = match ? (parseFloat(match[1]) * 1000) + 2000 : 15000;
-                    
-                    console.warn(`⏳ [Groq] Limite de tokens atingido. Pausando ${(waitTime/1000).toFixed(1)}s antes da tentativa ${i+2}/${tentativas}...`);
-                    await new Promise(resolve => setTimeout(resolve, waitTime));
-                    continue; 
-                }
+        const isRateLimit = (!response.ok && response.status === 429) || 
+                            errMsgRaw.includes("Rate limit");
+        const isFalhaJsonTransitoria = errCode === "json_validate_failed";
 
-                console.log('[Groq] Resposta raw do Worker:', JSON.stringify(data).slice(0, 400));
-
-                if (!response.ok) {
-                    throw new Error(`Erro no Worker [${response.status}]: ${JSON.stringify(data)}`);
-                }
-
-                if (data.error) {
-                    throw new Error(`Erro da Groq API: ${data.error.message ?? JSON.stringify(data.error)}`);
-                }
-
-                if (!data.choices || !Array.isArray(data.choices) || data.choices.length === 0) {
-                    throw new Error(`Resposta da Groq sem 'choices': ${JSON.stringify(data).slice(0, 300)}`);
-                }
-
-                return data;
+        if ((isRateLimit || isFalhaJsonTransitoria) && i < tentativas - 1) {
+            if (isRateLimit) {
+                const match = errMsgRaw.match(/try again in ([\d\.]+)s/);
+                const waitTime = match ? (parseFloat(match[1]) * 1000) + 2000 : 15000;
+                console.warn(`⏳ [Groq] Limite de tokens atingido. Pausando ${(waitTime/1000).toFixed(1)}s antes da tentativa ${i+2}/${tentativas}...`);
+                await new Promise(resolve => setTimeout(resolve, waitTime));
+            } else {
+                console.warn(`⚠️ [Groq] Falha de validação JSON (bug conhecido do ${modeloPadrao}). Tentativa ${i+2}/${tentativas}...`);
+                await new Promise(resolve => setTimeout(resolve, 1500));
             }
+            continue; 
         }
+
+        console.log('[Groq] Resposta raw do Worker:', JSON.stringify(data).slice(0, 400));
+
+        if (!response.ok) {
+            throw new Error(`Erro no Worker [${response.status}]: ${JSON.stringify(data)}`);
+        }
+
+        if (data.error) {
+            throw new Error(`Erro da Groq API: ${data.error.message ?? JSON.stringify(data.error)}`);
+        }
+
+        if (!data.choices || !Array.isArray(data.choices) || data.choices.length === 0) {
+            throw new Error(`Resposta da Groq sem 'choices': ${JSON.stringify(data).slice(0, 300)}`);
+        }
+
+        return data;
+    }
 
         async function gerarIND(idSala) {
     const sala = mapaMundo[idSala];
