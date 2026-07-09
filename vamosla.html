@@ -1193,7 +1193,7 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
         // SISTEMA IND (CINEMATICS) E API
         // ============================================================
         
-        async function chamarGroq(messages, temperatura = 0.7, formato = { type: "json_object" }, modeloPadrao = MODELO_GROQ, tentativas = 3) {
+        async function chamarGroq(messages, temperatura = 0.7, formato = { type: "json_object" }, modeloPadrao = MODELO_GROQ, tentativas = 3, maxTokens = 4096) {
     for (let i = 0; i < tentativas; i++) {
         const isReasoningModel = modeloPadrao.includes("gpt-oss");
         const response = await fetch(WORKER_URL, {
@@ -1203,7 +1203,7 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
     model: modeloPadrao,
     messages: messages,
     temperature: temperatura,
-    max_tokens: 4096,
+    max_tokens: maxTokens,
     ...(isReasoningModel ? { reasoning_effort: "low" } : {}),
     ...(formato ? { response_format: formato } : {}),
 }),
@@ -2728,12 +2728,13 @@ try {
     if (isRateLimit) {
         console.warn("⏳ [Zona] Rate limit no modelo principal ao escrever as salas. Usando fallback 'openai/gpt-oss-120b'...");
         dataSalas = await chamarGroq(
-            [{ role: "user", content: promptSalas(planoData.plano, planoData.conexoes_narrativas || []) }],
-            0.75,
-            { type: "json_object" },
-            "openai/gpt-oss-120b",
-            3
-        );
+    [{ role: "user", content: promptSalas(planoData.plano, planoData.conexoes_narrativas || []) }],
+    0.85,
+    { type: "json_object" },
+    "openai/gpt-oss-120b",
+    3,
+    8000   // <-- teto maior só pro fallback, que precisa de mais espaço pra terminar as 10 salas
+);
     } else {
         throw e;
     }
