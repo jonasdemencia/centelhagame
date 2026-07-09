@@ -1398,10 +1398,10 @@ Retorne APENAS o JSON rigorosamente neste formato:
 
     const systemPrompt = "Você é um arquiteto de horror brutal. Retorne APENAS um JSON válido. Zero markdown. O dano deve ser um valor numérico (integer) coerente com a gravidade da descrição.";
 
-    // --- INÍCIO DA MODIFICAÇÃO: fallback com openai/gpt-oss-120b ---
+    // ─── CHAMADA COM FALLBACK EMBUTIDO ───
     let data;
     try {
-        // Tentativa principal com o modelo original
+        // Tenta com o modelo original (llama-3.3-70b)
         data = await chamarGroq([
             { role: "system", content: systemPrompt },
             { role: "user", content: prompt }
@@ -1410,25 +1410,24 @@ Retorne APENAS o JSON rigorosamente neste formato:
         const erroMsg = e.message || "";
         const isRateLimit = /rate[_ ]limit/i.test(erroMsg) || /429/.test(erroMsg) || erroMsg.includes("tokens per day");
 
-        if (isRateLimit && typeof FALLBACK_MODELO_ARQUITETO !== "undefined") {
-            console.warn(`[Arquiteto] ⚠️ Rate limit no ${MODELO_ARQUITETO}. Usando fallback ${FALLBACK_MODELO_ARQUITETO}...`);
-
+        if (isRateLimit) {
+            console.warn(`[Arquiteto] ⚠️ Rate limit no ${MODELO_ARQUITETO}. Usando fallback 'openai/gpt-oss-120b'...`);
             try {
                 data = await chamarGroq([
                     { role: "system", content: systemPrompt },
                     { role: "user", content: prompt }
-                ], 0.8, { type: "json_object" }, FALLBACK_MODELO_ARQUITETO, 3);
-                console.log(`[Arquiteto] ✅ Fallback ${FALLBACK_MODELO_ARQUITETO} executado com sucesso.`);
+                ], 0.8, { type: "json_object" }, "openai/gpt-oss-120b", 3);
+                console.log(`[Arquiteto] ✅ Fallback 'openai/gpt-oss-120b' executado com sucesso.`);
             } catch (fallbackError) {
                 console.error("[Arquiteto] Fallback também falhou:", fallbackError);
-                return;
+                return; // aborta
             }
         } else {
             console.error("[Arquiteto] Falha na chamada Groq (não é rate limit):", e);
             return;
         }
     }
-    // --- FIM DA MODIFICAÇÃO ---
+    // ─── FIM DO FALLBACK ───
 
     let parsed;
     try {
