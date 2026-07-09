@@ -1572,7 +1572,6 @@ REGRAS DE FUSÃO:
 - Os elementos já descritos (objetos, luz, cheiro, arquitetura) devem servir de ponte para o evento
 - O texto fundido deve parecer que SEMPRE foi assim
 - O evento ocorre dentro dos limites físicos da sala descrita — não invente salas adjacentes, quartos atrás de portas ou espaços não mencionados no TEXTO ORIGINAL. Se a cena exige um espaço, use o que já está descrito.
-- Termine no momento de suspensão, antes da decisão do jogador
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 DESIGN DE CENA:
@@ -1686,7 +1685,7 @@ try {
     data = await chamarGroq([
         { role: 'system', content: systemPrompt },
         { role: 'user', content: prompt }
-    ], 0.8, { type: 'json_object' }, MODELO_CENAS, 2);
+    ], 0.7, { type: 'json_object' }, MODELO_CENAS, 2);
 } catch (e) {
     console.warn(`[Cenas] Falha com ${MODELO_CENAS}:`, e.message);
     console.log(`[Cenas] Tentando fallback com ${MODELO_CENAS_FALLBACK}...`);
@@ -1695,7 +1694,7 @@ try {
         data = await chamarGroq([
             { role: 'system', content: systemPrompt },
             { role: 'user', content: prompt }
-        ], 0.8, { type: 'json_object' }, MODELO_CENAS_FALLBACK, 1);
+        ], 0.7, { type: 'json_object' }, MODELO_CENAS_FALLBACK, 1);
         modeloUsado = MODELO_CENAS_FALLBACK;
     } catch (fallbackError) {
         console.error(`[Cenas] Falha também com ${MODELO_CENAS_FALLBACK}:`, fallbackError.message);
