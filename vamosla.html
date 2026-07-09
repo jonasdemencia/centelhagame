@@ -1583,7 +1583,6 @@ Use o que já existe na sala. Um depósito tem um trabalhador, uma câmara fria 
 2. ESPECIFICIDADE E ÂNCORA FÍSICA
 "Um homem costurando a própria pálpebra com linha de pesca" > "uma figura perturbadora". Detalhes concretos criam realidade — e todo estranhamento exige forma física objetiva:
 NÃO: "a fonte parecia viva" / SIM: "a água marcava 4°C no pior verão em décadas e sua superfície não reagia ao vento"
-NÃO: "o corredor queria algo" / SIM: "a bússola girava ao contrário apenas dentro deste quarto"
 O fenômeno é dado concreto. A interpretação pertence ao jogador.
 
 3. TERMINE COM TENSÃO ABERTA
@@ -1637,40 +1636,41 @@ PROIBIDO:
 ✗ Palavras inventadas, neologismos ou traduções literais do inglês (ex: evite frases que soem não-naturais em português).
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-RETORNE APENAS JSON — ZERO MARKDOWN, ZERO TEXTO FORA DO OBJETO:
 
 Retorne APENAS JSON neste formato exato (zero markdown, zero texto fora do JSON):
+Siga o tom literário e a estrutura do Exemplo abaixo:
+
 {
   "cenas": [
     {
-      "sala_id": "ID_NUMÉRICO",
-      "titulo": "Título do Evento",
-      "texto_sala_fundido": "Reescrita completa da sala com o evento embutido organicamente. 5-8 frases. O texto termina no momento de tensão — o jogador ainda não agiu.",
+      "sala_id": 1045,
+      "titulo": "O Eco Metálico",
+      "texto_sala_fundido": "Depois de caminhar pelo corredor, você chega a um necrotério desativado. Azulejos encardidos cobrem as paredes e as gavetas de aço estão cobertas por uma fina camada de gelo. O cheiro de produtos químicos envelhecidos se mistura a um odor metálico persistente. Na segunda fileira, uma das portas está entreaberta, e uma linha fina de sangue escuro escorregiu até o ralo no chão. Antes que você decida recuar, o som de unhas arranhando o interior do metal ecoa pela sala.",
       "dilemas": [
-  {
-    "opcao_texto": "Ação que resolve na hora",
-    "resultado_texto": "2-4 frases narrando a consequência direta.",
-    "dano": 0,
-    "destino_id": null,
-    "ramificacoes": null
-  },
-  {
-    "opcao_texto": "Ação que se desdobra numa segunda decisão",
-    "resultado_texto": "2-3 frases de transição — a situação se complicou. Termina em tensão aberta.",
-    "dano": 0,
-    "destino_id": null,
-    "ramificacoes": [
-      {
-        "opcao_texto": "Como reagir — desdobramento A",
-        "resultado_texto": "2-3 frases narrando a consequência de A.",
-        "dano": 3,
-        "destino_id": null
-      },
-      {
-        "opcao_texto": "Como reagir — desdobramento B",
-        "resultado_texto": "2-3 frases narrando a consequência de B.",
-        "dano": 0,
-        "destino_id": null
+        {
+          "opcao_texto": "Chutar a gaveta para fechá-la de uma vez",
+          "resultado_texto": "O impacto amassa a chapa enferrujada, travando o trilho. O som de arranhões para abruptamente, substituído por um silêncio pesado e o barulho da sua própria respiração.",
+          "dano": 0,
+          "destino_id": null,
+          "ramificacoes": null
+        },
+        {
+          "opcao_texto": "Puxar a gaveta para encarar o que está dentro",
+          "resultado_texto": "O trilho range violentamente. O cheiro de cobre atinge seu rosto antes que você veja um corpo se contorcendo. Você hesita por um segundo a mais do que deveria.",
+          "dano": 0,
+          "destino_id": null,
+          "ramificacoes": [
+            {
+              "opcao_texto": "Tentar golpear o corpo com o que tiver em mãos",
+              "resultado_texto": "Seu golpe desvia no aço escorregadio. Algo pontiagudo rasga a manga do seu casaco e corta a pele do seu braço antes que você consiga saltar para trás.",
+              "dano": 3,
+              "destino_id": null
+            },
+            {
+              "opcao_texto": "Bater em retirada imediata pelo corredor",
+              "resultado_texto": "Você não espera para ver a criatura se erguer. Seus calcanhares derrapam no lodo do chão, mas você consegue cruzar a porta principal, trancando-a atrás de si.",
+              "dano": 0,
+              "destino_id": 9
       }
     ]
   }
