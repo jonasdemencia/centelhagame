@@ -1547,9 +1547,12 @@ Retorne APENAS o JSON rigorosamente neste formato:
     return `SALA_ID:${id} — "${sala.nome}"\nTEXTO ORIGINAL DA SALA:\n${textoOriginal}\nDESTINOS DISPONÍVEIS:\n${destinosSala || '  (nenhum)'}`;
 }).join('\n\n');
 
-            // Remova o Math.random().toString(...)
+           // Geração da semente temática (substitui o Math.random().toString)
 const temasSemente = ["ferrugem", "ecos", "umidade", "sombras", "cheiros", "frio", "poeira", "marcas de garras", "silêncio", "vento"];
 const semente = temasSemente[Math.floor(Math.random() * temasSemente.length)];
+
+// Montagem do prompt (exatamente como antes, só que com a nova semente)
+const prompt = `[SEMENTE:${semente}]
             
 /no_think
 Você é um designer de encontros para um RPG de aventura textual em português brasileiro, no nível de Steve Jackson e Ian Livingstone. Sua função é criar cenas situacionais memoráveis — não sustos baratos, mas momentos com tensão real, escolhas difíceis e consequências assimétricas.
