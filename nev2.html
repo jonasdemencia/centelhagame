@@ -263,6 +263,35 @@ snowParticles.frustumCulled = false;
         
         scene.add(snowParticles);
 
+        // ==========================================
+        // SISTEMA DE PEGADAS (OBJECT POOL)
+        // ==========================================
+        const MAX_FOOTPRINTS = 80; // Limite fixo de pegadas no mundo
+        const footprints = [];
+        let currentFootprint = 0;
+        let lastStepPos = new THREE.Vector3();
+        let isLeftFoot = true;
+
+        // Material da pegada: Um tom escuro e transparente para simular o "fundo" da neve pisada
+        const footprintMat = new THREE.MeshBasicMaterial({ 
+            color: 0x4a5c69, 
+            transparent: true, 
+            opacity: 0.6, 
+            depthWrite: false // Evita conflitos de renderização (Z-fighting) com a neve
+        });
+        
+        // Um plano retangular pequeno simulando a bota
+        const footprintGeo = new THREE.PlaneGeometry(0.3, 0.6);
+
+        for (let i = 0; i < MAX_FOOTPRINTS; i++) {
+            const mesh = new THREE.Mesh(footprintGeo, footprintMat);
+            mesh.rotation.x = -Math.PI / 2; // Deita o plano no chão
+            mesh.visible = false;
+            scene.add(mesh);
+            footprints.push(mesh);
+        }
+        const camDirection = new THREE.Vector3(); // Vetor auxiliar para calcular o ângulo
+
         const controls = new PointerLockControls(perspectiveCamera, document.body);
         const blocker = document.getElementById('blocker');
         const instructions = document.getElementById('instructions');
@@ -393,6 +422,42 @@ snowParticles.frustumCulled = false;
                 
                 perspectiveCamera.position.y = groundHeight + 1.7 + headBob;
 
+
+
+// --- Lógica das Pegadas ---
+                if (isMoving && controls.isLocked) {
+                    const distSinceLastStep = Math.hypot(px - lastStepPos.x, pz - lastStepPos.z);
+                    
+                    // A cada 1.5 metros percorridos, carimba um passo no chão
+                    if (distSinceLastStep > 1.5) {
+                        const fp = footprints[currentFootprint];
+                        
+                        // Pega a direção para onde o jogador está olhando
+                        perspectiveCamera.getWorldDirection(camDirection);
+                        const yaw = Math.atan2(camDirection.x, camDirection.z);
+                        
+                        // Alterna o deslocamento lateral para simular pé esquerdo (-0.25) e direito (+0.25)
+                        const offset = isLeftFoot ? 0.25 : -0.25;
+                        
+                        // Calcula a coordenada exata com o deslocamento lateral
+                        const fpX = px + Math.cos(yaw) * offset;
+                        const fpZ = pz - Math.sin(yaw) * offset;
+                        
+                        // Posiciona a pegada na altura exata do terreno procedural + um milímetro para não sumir no chão
+                        fp.position.set(fpX, getElevation(fpX, fpZ) + 0.02, fpZ);
+                        
+                        // Gira a pegada para apontar na direção da caminhada
+                        fp.rotation.z = yaw + Math.PI; 
+                        fp.visible = true;
+                        
+                        // Atualiza as referências para o próximo passo
+                        lastStepPos.set(px, groundHeight, pz);
+                        currentFootprint = (currentFootprint + 1) % MAX_FOOTPRINTS; // Recicla o array
+                        isLeftFoot = !isLeftFoot;
+                    }
+                }
+
+                
                 terrain.position.x = Math.floor(px / 10) * 10;
                 terrain.position.z = Math.floor(pz / 10) * 10;
                 
