@@ -3,13 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nevasca Infinita - Biomas Textuais</title>
+    <title>Nevasca Infinita - Biomas Textuais (Retro‑Realista)</title>
     <style>
         body {
             margin: 0;
             overflow: hidden;
             background-color: #000;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        /* Canvas com pixelização forçada */
+        canvas {
+            display: block;
+            width: 100vw !important;
+            height: 100vh !important;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+            touch-action: none;
         }
         #blocker {
             position: absolute;
@@ -30,7 +39,6 @@
         h1 { font-size: 2.5rem; font-weight: 300; letter-spacing: 2px; }
         p { color: #aaaaaa; font-size: 1.1rem; }
         
-        /* Nova UI para mostrar o artigo atual */
         #hud {
             position: absolute;
             bottom: 20px;
@@ -75,10 +83,13 @@
         import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 
         // ==========================================
+        // CONFIGURAÇÃO PIXELIZAÇÃO
+        // ==========================================
+        const FATOR_PIXEL = 3; // quanto maior, mais pixelado
+
+        // ==========================================
         // 1. SISTEMA DETERMINÍSTICO E ANÁLISE DE TEXTO
         // ==========================================
-        
-        // Hashing de string para gerar uma semente numérica
         function cyrb53(str, seed = 0) {
             let h1 = 0xdeadbeef ^ seed, h2 = 0x41c6ce57 ^ seed;
             for (let i = 0, ch; i < str.length; i++) {
@@ -91,7 +102,6 @@
             return 4294967296 * (2097151 & h2) + (h1 >>> 0);
         }
 
-        // PRNG (Mulberry32) para decisões consistentes baseadas na semente
         function mulberry32(a) {
             return function() {
                 var t = a += 0x6D2B79F5;
@@ -101,7 +111,6 @@
             }
         }
 
-        // Calcula Entropia de Shannon (caos do texto)
         function calculateEntropy(text) {
             const len = text.length;
             const frequencies = {};
@@ -132,7 +141,7 @@
 
         let currentArticleCenter = new THREE.Vector2(0, 0);
         let currentLinks = [];
-        const BIOME_RADIUS = 200; // Distância para cruzar para a próxima página
+        const BIOME_RADIUS = 200;
 
         // ==========================================
         // 3. INTEGRAÇÃO WIKIPEDIA API
@@ -149,30 +158,20 @@
                 const pageId = Object.keys(pages)[0];
                 const page = pages[pageId];
 
-                if (!page || pageId == -1) return fetchWikiArticle("Frio"); // Fallback
+                if (!page || pageId == -1) return fetchWikiArticle("Frio");
 
                 const text = page.extract || page.title;
                 currentLinks = page.links ? page.links.map(l => l.title) : ["Gelo"];
 
-                // Extração de dados
                 const length = text.length;
                 const entropy = calculateEntropy(text);
-                const wordFreq = text.split(/\s+/).length / length; // Palavras por caractere
+                const wordFreq = text.split(/\s+/).length / length;
 
-                // Mapeamento Textual -> Procedural
-                // Tamanho -> Altura das colinas (entre 0.5 e 4.0)
                 biomeParams.targetAmplitute = 0.5 + ((length % 1000) / 1000) * 3.5;
-                
-                // Entropia -> Aspereza/Frequência do ruído (entre 0.02 e 0.15)
                 biomeParams.targetRoughness = 0.02 + ((entropy % 5) / 5) * 0.13;
-                
-                // Frequência de palavras -> Densidade da Nevasca (entre 0.01 e 0.08)
                 biomeParams.targetFogDensity = 0.01 + (wordFreq * 0.5);
-                
-                // Nova semente baseada no título
                 biomeParams.seed = cyrb53(page.title);
 
-                // Atualiza UI
                 document.getElementById('wiki-title').innerText = page.title;
                 document.getElementById('wiki-stats').innerText = `Entropia (Aspereza): ${entropy.toFixed(2)}\nTamanho (Elevação): ${length} bytes\nFronteiras disponíveis: ${currentLinks.length}`;
                 
@@ -184,30 +183,40 @@
         }
 
         // ==========================================
-        // CÓDIGO ORIGINAL EXPANDIDO
+        // CENA E RENDERIZADOR (PIXELIZADOS)
         // ==========================================
         const scene = new THREE.Scene();
         const fogColor = new THREE.Color(0x9caebb);
         scene.background = fogColor;
         scene.fog = new THREE.FogExp2(fogColor, biomeParams.currentFogDensity);
 
-        const perspectiveCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
         
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(window.devicePixelRatio);
+        // Renderizador SEM antialiasing
+        const renderer = new THREE.WebGLRenderer({ antialias: false });
+        // Resolução reduzida
+        renderer.setSize(window.innerWidth / FATOR_PIXEL, window.innerHeight / FATOR_PIXEL, false);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFShadowMap;
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
         renderer.toneMappingExposure = 1.2;
+        renderer.outputColorSpace = THREE.SRGBColorSpace;
         document.body.appendChild(renderer.domElement);
 
+        // Iluminação
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
         scene.add(ambientLight);
         
         const directionalLight = new THREE.DirectionalLight(0xdfe9f5, 1.5);
         directionalLight.position.set(10, 20, 10);
+        directionalLight.castShadow = true;
+        directionalLight.shadow.mapSize.set(512, 512);
         scene.add(directionalLight);
 
-        const terrainSize = 150; // Aumentado um pouco para esconder bordas no fog
+        // ==========================================
+        // TERRENO (com flat shading, sem bump)
+        // ==========================================
+        const terrainSize = 150;
         const terrainSegments = 100;
         const terrainGeometry = new THREE.PlaneGeometry(terrainSize, terrainSize, terrainSegments, terrainSegments);
         terrainGeometry.rotateX(-Math.PI / 2);
@@ -219,18 +228,36 @@
             flatShading: true 
         });
         const terrain = new THREE.Mesh(terrainGeometry, terrainMaterial);
+        terrain.receiveShadow = true;
         scene.add(terrain);
 
-        // NOVA Função de ruído baseada nos parâmetros dinâmicos da Wiki
         function getElevation(x, z) {
             const r = biomeParams.currentRoughness;
             const a = biomeParams.currentAmplitude;
-            // Usa a semente para deslocar o mapa, garantindo que o mesmo artigo gere a mesma topografia
             const sOffset = (biomeParams.seed % 1000); 
             
             return (Math.sin((x + sOffset) * r) * a) + 
                    (Math.cos((z + sOffset) * r) * a) + 
                    (Math.sin((x + sOffset) * (r*0.3) + (z + sOffset) * (r*0.4)) * (a * 1.5));
+        }
+
+        // ==========================================
+        // NEVE (partículas com textura pixelada)
+        // ==========================================
+        function criarTexturaFlocoPixelada() {
+            const t = 16; // textura bem pequena
+            const canvas = document.createElement('canvas');
+            canvas.width = canvas.height = t;
+            const ctx = canvas.getContext('2d');
+            // Desenha um círculo branco simples com bordas duras
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(t/2, t/2, t/2 - 1, 0, Math.PI*2);
+            ctx.fill();
+            const textura = new THREE.CanvasTexture(canvas);
+            textura.magFilter = THREE.NearestFilter;
+            textura.minFilter = THREE.NearestFilter;
+            return textura;
         }
 
         const particleCount = 20000;
@@ -253,46 +280,92 @@
         const snowMaterial = new THREE.PointsMaterial({
             color: 0xffffff,
             size: 0.15,
+            map: criarTexturaFlocoPixelada(),
             transparent: true,
             opacity: 0.8,
             depthWrite: false
         });
         const snowParticles = new THREE.Points(snowGeometry, snowMaterial);
-        
-snowParticles.frustumCulled = false;
-        
+        snowParticles.frustumCulled = false;
         scene.add(snowParticles);
 
         // ==========================================
-        // SISTEMA DE PEGADAS (OBJECT POOL)
+        // SISTEMA DE PEGADAS (sprites pixelados)
         // ==========================================
-        const MAX_FOOTPRINTS = 80; // Limite fixo de pegadas no mundo
-        const footprints = [];
-        let currentFootprint = 0;
-        let lastStepPos = new THREE.Vector3();
-        let isLeftFoot = true;
-
-        // Material da pegada: Um tom escuro e transparente para simular o "fundo" da neve pisada
-        const footprintMat = new THREE.MeshBasicMaterial({ 
-            color: 0x4a5c69, 
-            transparent: true, 
-            opacity: 0.6, 
-            depthWrite: false // Evita conflitos de renderização (Z-fighting) com a neve
-        });
-        
-        // Um plano retangular pequeno simulando a bota
-        const footprintGeo = new THREE.PlaneGeometry(0.3, 0.6);
-
-        for (let i = 0; i < MAX_FOOTPRINTS; i++) {
-            const mesh = new THREE.Mesh(footprintGeo, footprintMat);
-            mesh.rotation.x = -Math.PI / 2; // Deita o plano no chão
-            mesh.visible = false;
-            scene.add(mesh);
-            footprints.push(mesh);
+        function criarTexturaPegada() {
+            const t = 16;
+            const canvas = document.createElement('canvas');
+            canvas.width = canvas.height = t;
+            const ctx = canvas.getContext('2d');
+            // Mancha alongada simulando pegada na neve (cor um pouco mais escura)
+            ctx.fillStyle = '#d0dbe5'; // cinza claro azulado
+            ctx.beginPath();
+            ctx.ellipse(t/2, t/2, t/3, t/4, 0, 0, Math.PI*2);
+            ctx.fill();
+            const textura = new THREE.CanvasTexture(canvas);
+            textura.magFilter = THREE.NearestFilter;
+            textura.minFilter = THREE.NearestFilter;
+            return textura;
         }
-        const camDirection = new THREE.Vector3(); // Vetor auxiliar para calcular o ângulo
 
-        const controls = new PointerLockControls(perspectiveCamera, document.body);
+        const pegadas = [];
+        const MAX_PEGADAS = 100;
+        const PEGADA_DURACAO = 8; // segundos
+        const DISTANCIA_ENTRE_PEGADAS = 0.8;
+
+        let ultimaPosicaoPegada = new THREE.Vector3();
+        let distanciaAcumulada = 0;
+
+        function adicionarPegada(posicao) {
+            // Cria sprite com textura pixelada
+            const material = new THREE.SpriteMaterial({
+                map: criarTexturaPegada(),
+                transparent: true,
+                opacity: 0.7,
+                depthWrite: false,
+                depthTest: true
+            });
+            const sprite = new THREE.Sprite(material);
+            sprite.position.copy(posicao);
+            sprite.position.y += 0.02; // ligeiramente acima do chão
+            sprite.scale.set(0.25, 0.25, 1);
+            scene.add(sprite);
+            
+            pegadas.push({
+                sprite: sprite,
+                tempo: PEGADA_DURACAO
+            });
+            
+            // Remove as mais antigas se exceder o limite
+            while (pegadas.length > MAX_PEGADAS) {
+                const velha = pegadas.shift();
+                scene.remove(velha.sprite);
+                velha.sprite.material.dispose();
+            }
+        }
+
+        function atualizarPegadas(delta) {
+            // Envelhece e remove as que expiraram
+            for (let i = pegadas.length - 1; i >= 0; i--) {
+                pegadas[i].tempo -= delta;
+                const progresso = 1 - (pegadas[i].tempo / PEGADA_DURACAO);
+                // Encolhe e some gradualmente
+                const escala = 0.25 * (1 - progresso * 0.5);
+                pegadas[i].sprite.scale.set(escala, escala, 1);
+                pegadas[i].sprite.material.opacity = 0.7 * (1 - progresso);
+                
+                if (pegadas[i].tempo <= 0) {
+                    scene.remove(pegadas[i].sprite);
+                    pegadas[i].sprite.material.dispose();
+                    pegadas.splice(i, 1);
+                }
+            }
+        }
+
+        // ==========================================
+        // CONTROLES
+        // ==========================================
+        const controls = new PointerLockControls(camera, document.body);
         const blocker = document.getElementById('blocker');
         const instructions = document.getElementById('instructions');
         
@@ -303,13 +376,13 @@ snowParticles.frustumCulled = false;
             controls.lock();
             if (!isAudioStarted) {
                 startProceduralWind();
-                fetchWikiArticle("Neve"); // Inicia o mundo no artigo "Neve"
+                fetchWikiArticle("Neve");
                 isAudioStarted = true;
             }
         });
 
-        controls.addEventListener('lock', function () { blocker.style.display = 'none'; });
-        controls.addEventListener('unlock', function () { blocker.style.display = 'flex'; });
+        controls.addEventListener('lock', () => { blocker.style.display = 'none'; });
+        controls.addEventListener('unlock', () => { blocker.style.display = 'flex'; });
 
         const moveState = { forward: false, backward: false, left: false, right: false };
         const velocity = new THREE.Vector3();
@@ -368,16 +441,12 @@ snowParticles.frustumCulled = false;
         let walkTime = 0; 
         const windDirection = new THREE.Vector3(-0.1, 0, -0.05);
 
-        // Função de verificação de transição de região
         function checkBiomeTransition(px, pz) {
             const dist = Math.hypot(px - currentArticleCenter.x, pz - currentArticleCenter.y);
             if (dist > BIOME_RADIUS && currentLinks.length > 0) {
-                // Instancia o PRNG com a posição para escolha determinística
                 const prng = mulberry32(cyrb53(`${Math.floor(px)}_${Math.floor(pz)}`, biomeParams.seed));
                 const randomIndex = Math.floor(prng() * currentLinks.length);
                 const nextArticle = currentLinks[randomIndex];
-                
-                // Define o novo centro da região
                 currentArticleCenter.set(px, pz);
                 fetchWikiArticle(nextArticle);
             }
@@ -386,10 +455,9 @@ snowParticles.frustumCulled = false;
         function animate() {
             requestAnimationFrame(animate);
             const time = performance.now();
-            const delta = (time - prevTime) / 1000;
+            const delta = Math.min((time - prevTime) / 1000, 0.1);
 
-            if (controls.isLocked === true) {
-                // Transição suave de parâmetros (Interpolação Linear)
+            if (controls.isLocked) {
                 biomeParams.currentAmplitude += (biomeParams.targetAmplitute - biomeParams.currentAmplitude) * delta * 0.5;
                 biomeParams.currentRoughness += (biomeParams.targetRoughness - biomeParams.currentRoughness) * delta * 0.5;
                 biomeParams.currentFogDensity += (biomeParams.targetFogDensity - biomeParams.currentFogDensity) * delta * 0.5;
@@ -402,106 +470,82 @@ snowParticles.frustumCulled = false;
                 direction.x = Number(moveState.right) - Number(moveState.left);
                 direction.normalize();
 
-                const speed = 15.0; 
+                const speed = 15.0;
                 if (moveState.forward || moveState.backward) velocity.z -= direction.z * speed * delta;
                 if (moveState.left || moveState.right) velocity.x -= direction.x * speed * delta;
 
                 controls.moveRight(-velocity.x * delta);
                 controls.moveForward(-velocity.z * delta);
 
-                const px = perspectiveCamera.position.x;
-                const pz = perspectiveCamera.position.z;
+                const px = camera.position.x;
+                const pz = camera.position.z;
 
                 checkBiomeTransition(px, pz);
 
                 const groundHeight = getElevation(px, pz);
                 const isMoving = Math.abs(velocity.x) > 0.1 || Math.abs(velocity.z) > 0.1;
                 
-                if (isMoving) walkTime += delta * 5;
-                const headBob = isMoving ? Math.sin(walkTime) * 0.1 : 0;
-                
-                perspectiveCamera.position.y = groundHeight + 1.7 + headBob;
-
-
-
-// --- Lógica das Pegadas ---
-                if (isMoving && controls.isLocked) {
-                    const distSinceLastStep = Math.hypot(px - lastStepPos.x, pz - lastStepPos.z);
-                    
-                    // A cada 1.5 metros percorridos, carimba um passo no chão
-                    if (distSinceLastStep > 1.5) {
-                        const fp = footprints[currentFootprint];
-                        
-                        // Pega a direção para onde o jogador está olhando
-                        perspectiveCamera.getWorldDirection(camDirection);
-                        const yaw = Math.atan2(camDirection.x, camDirection.z);
-                        
-                        // Alterna o deslocamento lateral para simular pé esquerdo (-0.25) e direito (+0.25)
-                        const offset = isLeftFoot ? 0.25 : -0.25;
-                        
-                        // Calcula a coordenada exata com o deslocamento lateral
-                        const fpX = px + Math.cos(yaw) * offset;
-                        const fpZ = pz - Math.sin(yaw) * offset;
-                        
-                        // Posiciona a pegada na altura exata do terreno procedural + um milímetro para não sumir no chão
-                        fp.position.set(fpX, getElevation(fpX, fpZ) + 0.02, fpZ);
-                        
-                        // Gira a pegada para apontar na direção da caminhada
-                        fp.rotation.z = yaw + Math.PI; 
-                        fp.visible = true;
-                        
-                        // Atualiza as referências para o próximo passo
-                        lastStepPos.set(px, groundHeight, pz);
-                        currentFootprint = (currentFootprint + 1) % MAX_FOOTPRINTS; // Recicla o array
-                        isLeftFoot = !isLeftFoot;
+                if (isMoving) {
+                    walkTime += delta * 5;
+                    // Sistema de pegadas
+                    const posAtual = new THREE.Vector3(px, groundHeight, pz);
+                    if (ultimaPosicaoPegada.length() === 0) {
+                        ultimaPosicaoPegada.copy(posAtual);
                     }
+                    const distancia = posAtual.distanceTo(ultimaPosicaoPegada);
+                    if (distancia >= DISTANCIA_ENTRE_PEGADAS) {
+                        adicionarPegada(posAtual);
+                        ultimaPosicaoPegada.copy(posAtual);
+                    }
+                } else {
+                    ultimaPosicaoPegada.set(0,0,0); // reseta ao parar
                 }
-
                 
+                const headBob = isMoving ? Math.sin(walkTime) * 0.1 : 0;
+                camera.position.y = groundHeight + 1.7 + headBob;
+
+                // Atualiza terreno
                 terrain.position.x = Math.floor(px / 10) * 10;
                 terrain.position.z = Math.floor(pz / 10) * 10;
-                
                 const positions = terrainGeometry.attributes.position.array;
                 for (let i = 0; i < positions.length; i += 3) {
                     const globalX = terrain.position.x + positions[i];
-                    const globalZ = terrain.position.z + positions[i + 2]; 
+                    const globalZ = terrain.position.z + positions[i + 2];
                     positions[i + 1] = getElevation(globalX, globalZ) - terrain.position.y;
                 }
                 terrainGeometry.attributes.position.needsUpdate = true;
                 terrainGeometry.computeVertexNormals();
 
-                // --- Animação da Neve (CORRIGIDA) ---
-const snowPos = snowGeometry.attributes.position.array;
-const range = 60; // metade do tamanho da caixa (agora 120x120)
-for (let i = 0; i < particleCount; i++) {
-    // Aplica velocidade e vento
-    snowPos[i * 3] += windDirection.x + snowVelocities[i].x;
-    snowPos[i * 3 + 1] -= snowVelocities[i].y;
-    snowPos[i * 3 + 2] += windDirection.z + snowVelocities[i].z;
+                // Atualiza neve (floating origin)
+                const snowPos = snowGeometry.attributes.position.array;
+                const range = 60;
+                for (let i = 0; i < particleCount; i++) {
+                    snowPos[i * 3] += windDirection.x + snowVelocities[i].x;
+                    snowPos[i * 3 + 1] -= snowVelocities[i].y;
+                    snowPos[i * 3 + 2] += windDirection.z + snowVelocities[i].z;
 
-    // Reposiciona com floating origin (mod) em vez de saltos bruscos
-    // Eixo X
-    while (snowPos[i * 3] < px - range) snowPos[i * 3] += range * 2;
-    while (snowPos[i * 3] > px + range) snowPos[i * 3] -= range * 2;
-    // Eixo Z
-    while (snowPos[i * 3 + 2] < pz - range) snowPos[i * 3 + 2] += range * 2;
-    while (snowPos[i * 3 + 2] > pz + range) snowPos[i * 3 + 2] -= range * 2;
-    // Eixo Y (queda)
-    if (snowPos[i * 3 + 1] < groundHeight - 1) {
-        snowPos[i * 3 + 1] = perspectiveCamera.position.y + 30;
-    }
-}
-snowGeometry.attributes.position.needsUpdate = true;
+                    while (snowPos[i * 3] < px - range) snowPos[i * 3] += range * 2;
+                    while (snowPos[i * 3] > px + range) snowPos[i * 3] -= range * 2;
+                    while (snowPos[i * 3 + 2] < pz - range) snowPos[i * 3 + 2] += range * 2;
+                    while (snowPos[i * 3 + 2] > pz + range) snowPos[i * 3 + 2] -= range * 2;
+                    if (snowPos[i * 3 + 1] < groundHeight - 1) {
+                        snowPos[i * 3 + 1] = camera.position.y + 30;
+                    }
+                }
+                snowGeometry.attributes.position.needsUpdate = true;
+
+                // Atualiza envelhecimento das pegadas
+                atualizarPegadas(delta);
             }
 
-            renderer.render(scene, perspectiveCamera);
+            renderer.render(scene, camera);
             prevTime = time;
         }
 
         window.addEventListener('resize', () => {
-            perspectiveCamera.aspect = window.innerWidth / window.innerHeight;
-            perspectiveCamera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth / FATOR_PIXEL, window.innerHeight / FATOR_PIXEL, false);
         });
 
         animate();
