@@ -224,17 +224,31 @@
     const terrain = new THREE.Mesh(terrainGeometry, terrainMaterial);
     scene.add(terrain);
 
-    // NOVA Função de ruído baseada nos parâmetros dinâmicos da Wiki
     function getElevation(x, z) {
-        const r = biomeParams.currentRoughness;
-        const a = biomeParams.currentAmplitude;
-        // Usa a semente para deslocar o mapa, garantindo que o mesmo artigo gere a mesma topografia
-        const sOffset = (biomeParams.seed % 1000); 
-        
-        return (Math.sin((x + sOffset) * r) * a) + 
-               (Math.cos((z + sOffset) * r) * a) + 
-               (Math.sin((x + sOffset) * (r*0.3) + (z + sOffset) * (r*0.4)) * (a * 1.5));
-    }
+    const r = biomeParams.currentRoughness;
+    const a = biomeParams.currentAmplitude;
+    const sOffset = (biomeParams.seed % 1000);
+
+    const nx = x + sOffset;
+    const nz = z + sOffset;
+
+    // Camada BASE: define a forma grande (vales x platôs). Frequência baixa,
+    // e o produto sin*cos (em vez de soma) evita o padrão "canelado" —
+    // cria bacias/colinas localizadas com selas realmente planas entre elas.
+    const base = Math.sin(nx * r * 0.5) * Math.cos(nz * r * 0.5);
+
+    // Detalhe: textura fina por cima, com peso bem menor que a base.
+    const detail = Math.sin(nx * r * 2.2 + nz * r * 1.7) * 0.25;
+
+    let h = base + detail; // aprox. entre -1.25 e 1.25
+
+    // Redistribuição: achata os vales (perto de 0) e preserva os picos,
+    // gerando planícies de verdade em vez de inclinação constante.
+    const flattenPower = 1.6;
+    h = Math.sign(h) * Math.pow(Math.abs(h), flattenPower);
+
+    return h * a;
+}
 
 
        // Retorna a altura exata que a MALHA está desenhando naquele ponto global (x, z),
