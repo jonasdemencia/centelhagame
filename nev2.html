@@ -70,376 +70,426 @@
         }
     </script>
 
-    <script type="module">
-        import * as THREE from 'three';
-        import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
+   <script type="module">
+    import * as THREE from 'three';
+    import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 
-        // ==========================================
-        // 1. SISTEMA DETERMINÍSTICO E ANÁLISE DE TEXTO
-        // ==========================================
-        
-        // Hashing de string para gerar uma semente numérica
-        function cyrb53(str, seed = 0) {
-            let h1 = 0xdeadbeef ^ seed, h2 = 0x41c6ce57 ^ seed;
-            for (let i = 0, ch; i < str.length; i++) {
-                ch = str.charCodeAt(i);
-                h1 = Math.imul(h1 ^ ch, 2654435761);
-                h2 = Math.imul(h2 ^ ch, 1597334677);
-            }
-            h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
-            h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
-            return 4294967296 * (2097151 & h2) + (h1 >>> 0);
+    // ==========================================
+    // 1. SISTEMA DETERMINÍSTICO E ANÁLISE DE TEXTO
+    // ==========================================
+    
+    // Hashing de string para gerar uma semente numérica
+    function cyrb53(str, seed = 0) {
+        let h1 = 0xdeadbeef ^ seed, h2 = 0x41c6ce57 ^ seed;
+        for (let i = 0, ch; i < str.length; i++) {
+            ch = str.charCodeAt(i);
+            h1 = Math.imul(h1 ^ ch, 2654435761);
+            h2 = Math.imul(h2 ^ ch, 1597334677);
         }
-
-        // PRNG (Mulberry32) para decisões consistentes baseadas na semente
-        function mulberry32(a) {
-            return function() {
-                var t = a += 0x6D2B79F5;
-                t = Math.imul(t ^ t >>> 15, t | 1);
-                t ^= t + Math.imul(t ^ t >>> 7, t | 61);
-                return ((t ^ t >>> 14) >>> 0) / 4294967296;
-            }
-        }
-
-        // Calcula Entropia de Shannon (caos do texto)
-        function calculateEntropy(text) {
-            const len = text.length;
-            const frequencies = {};
-            for (let i = 0; i < len; i++) {
-                const char = text[i];
-                frequencies[char] = (frequencies[char] || 0) + 1;
-            }
-            let entropy = 0;
-            for (const char in frequencies) {
-                const p = frequencies[char] / len;
-                entropy -= p * Math.log2(p);
-            }
-            return entropy;
-        }
-
-        // ==========================================
-        // 2. PARÂMETROS DO BIOMA
-        // ==========================================
-        const biomeParams = {
-            targetAmplitute: 1.5,
-            currentAmplitude: 1.5,
-            targetRoughness: 0.1,
-            currentRoughness: 0.1,
-            targetFogDensity: 0.04,
-            currentFogDensity: 0.04,
-            seed: 12345
-        };
-
-        let currentArticleCenter = new THREE.Vector2(0, 0);
-        let currentLinks = [];
-        const BIOME_RADIUS = 200; // Distância para cruzar para a próxima página
-
-        // ==========================================
-        // 3. INTEGRAÇÃO WIKIPEDIA API
-        // ==========================================
-        async function fetchWikiArticle(title = "Inverno") {
-            document.getElementById('loading').style.display = 'block';
-            
-            const url = `https://pt.wikipedia.org/w/api.php?action=query&prop=extracts|links&exintro=true&explaintext=true&pllimit=50&format=json&origin=*&titles=${encodeURIComponent(title)}`;
-            
-            try {
-                const response = await fetch(url);
-                const data = await response.json();
-                const pages = data.query.pages;
-                const pageId = Object.keys(pages)[0];
-                const page = pages[pageId];
-
-                if (!page || pageId == -1) return fetchWikiArticle("Frio"); // Fallback
-
-                const text = page.extract || page.title;
-                currentLinks = page.links ? page.links.map(l => l.title) : ["Gelo"];
-
-                // Extração de dados
-                const length = text.length;
-                const entropy = calculateEntropy(text);
-                const wordFreq = text.split(/\s+/).length / length; // Palavras por caractere
-
-                // Mapeamento Textual -> Procedural
-                // Tamanho -> Altura das colinas (entre 0.5 e 4.0)
-                biomeParams.targetAmplitute = 0.5 + ((length % 1000) / 1000) * 3.5;
-                
-                // Entropia -> Aspereza/Frequência do ruído (entre 0.02 e 0.15)
-                biomeParams.targetRoughness = 0.02 + ((entropy % 5) / 5) * 0.13;
-                
-                // Frequência de palavras -> Densidade da Nevasca (entre 0.01 e 0.08)
-                biomeParams.targetFogDensity = 0.01 + (wordFreq * 0.5);
-                
-                // Nova semente baseada no título
-                biomeParams.seed = cyrb53(page.title);
-
-                // Atualiza UI
-                document.getElementById('wiki-title').innerText = page.title;
-                document.getElementById('wiki-stats').innerText = `Entropia (Aspereza): ${entropy.toFixed(2)}\nTamanho (Elevação): ${length} bytes\nFronteiras disponíveis: ${currentLinks.length}`;
-                
-            } catch (e) {
-                console.error("Erro ao buscar Wiki:", e);
-            } finally {
-                document.getElementById('loading').style.display = 'none';
-            }
-        }
-
-        // ==========================================
-        // CÓDIGO ORIGINAL EXPANDIDO
-        // ==========================================
-        const scene = new THREE.Scene();
-        const fogColor = new THREE.Color(0x9caebb);
-        scene.background = fogColor;
-        scene.fog = new THREE.FogExp2(fogColor, biomeParams.currentFogDensity);
-
-        const perspectiveCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
-        
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(window.devicePixelRatio);
-        renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        renderer.toneMappingExposure = 1.2;
-        document.body.appendChild(renderer.domElement);
-
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
-        scene.add(ambientLight);
-        
-        const directionalLight = new THREE.DirectionalLight(0xdfe9f5, 1.5);
-        directionalLight.position.set(10, 20, 10);
-        scene.add(directionalLight);
-
-        const terrainSize = 150; // Aumentado um pouco para esconder bordas no fog
-        const terrainSegments = 100;
-        const terrainGeometry = new THREE.PlaneGeometry(terrainSize, terrainSize, terrainSegments, terrainSegments);
-        terrainGeometry.rotateX(-Math.PI / 2);
-        
-        const terrainMaterial = new THREE.MeshStandardMaterial({
-            color: 0xffffff,
-            roughness: 0.8,
-            metalness: 0.1,
-            flatShading: true 
-        });
-        const terrain = new THREE.Mesh(terrainGeometry, terrainMaterial);
-        scene.add(terrain);
-
-        // NOVA Função de ruído baseada nos parâmetros dinâmicos da Wiki
-        function getElevation(x, z) {
-            const r = biomeParams.currentRoughness;
-            const a = biomeParams.currentAmplitude;
-            // Usa a semente para deslocar o mapa, garantindo que o mesmo artigo gere a mesma topografia
-            const sOffset = (biomeParams.seed % 1000); 
-            
-            return (Math.sin((x + sOffset) * r) * a) + 
-                   (Math.cos((z + sOffset) * r) * a) + 
-                   (Math.sin((x + sOffset) * (r*0.3) + (z + sOffset) * (r*0.4)) * (a * 1.5));
-        }
-
-        const particleCount = 20000;
-        const snowGeometry = new THREE.BufferGeometry();
-        const snowPositions = new Float32Array(particleCount * 3);
-        const snowVelocities = [];
-
-        for (let i = 0; i < particleCount; i++) {
-            snowPositions[i * 3] = (Math.random() - 0.5) * 50;    
-            snowPositions[i * 3 + 1] = Math.random() * 40;        
-            snowPositions[i * 3 + 2] = (Math.random() - 0.5) * 50; 
-            snowVelocities.push({
-                x: (Math.random() - 0.5) * 0.05,
-                y: (Math.random() * 0.05) + 0.1,
-                z: (Math.random() - 0.5) * 0.05
-            });
-        }
-        snowGeometry.setAttribute('position', new THREE.BufferAttribute(snowPositions, 3));
-
-        const snowMaterial = new THREE.PointsMaterial({
-            color: 0xffffff,
-            size: 0.15,
-            transparent: true,
-            opacity: 0.8,
-            depthWrite: false
-        });
-        const snowParticles = new THREE.Points(snowGeometry, snowMaterial);
-        
-snowParticles.frustumCulled = false;
-        
-        scene.add(snowParticles);
-
-        const controls = new PointerLockControls(perspectiveCamera, document.body);
-        const blocker = document.getElementById('blocker');
-        const instructions = document.getElementById('instructions');
-        
-        let audioContext;
-        let isAudioStarted = false;
-
-        instructions.addEventListener('click', function () {
-            controls.lock();
-            if (!isAudioStarted) {
-                startProceduralWind();
-                fetchWikiArticle("Neve"); // Inicia o mundo no artigo "Neve"
-                isAudioStarted = true;
-            }
-        });
-
-        controls.addEventListener('lock', function () { blocker.style.display = 'none'; });
-        controls.addEventListener('unlock', function () { blocker.style.display = 'flex'; });
-
-        const moveState = { forward: false, backward: false, left: false, right: false };
-        const velocity = new THREE.Vector3();
-        const direction = new THREE.Vector3();
-
-        document.addEventListener('keydown', (event) => {
-            switch (event.code) {
-                case 'KeyW': moveState.forward = true; break;
-                case 'KeyA': moveState.left = true; break;
-                case 'KeyS': moveState.backward = true; break;
-                case 'KeyD': moveState.right = true; break;
-            }
-        });
-
-        document.addEventListener('keyup', (event) => {
-            switch (event.code) {
-                case 'KeyW': moveState.forward = false; break;
-                case 'KeyA': moveState.left = false; break;
-                case 'KeyS': moveState.backward = false; break;
-                case 'KeyD': moveState.right = false; break;
-            }
-        });
-
-        function startProceduralWind() {
-            audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            const bufferSize = 2 * audioContext.sampleRate;
-            const noiseBuffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
-            const output = noiseBuffer.getChannelData(0);
-            for (let i = 0; i < bufferSize; i++) output[i] = Math.random() * 2 - 1;
-            
-            const whiteNoise = audioContext.createBufferSource();
-            whiteNoise.buffer = noiseBuffer;
-            whiteNoise.loop = true;
-
-            const filter = audioContext.createBiquadFilter();
-            filter.type = 'lowpass';
-            filter.frequency.value = 400;
-
-            const gainNode = audioContext.createGain();
-            gainNode.gain.value = 0.5;
-
-            whiteNoise.connect(filter);
-            filter.connect(gainNode);
-            gainNode.connect(audioContext.destination);
-            whiteNoise.start(0);
-
-            setInterval(() => {
-                const targetFreq = 200 + Math.random() * 600;
-                const targetVol = 0.3 + Math.random() * 0.5;
-                filter.frequency.setTargetAtTime(targetFreq, audioContext.currentTime, 2);
-                gainNode.gain.setTargetAtTime(targetVol, audioContext.currentTime, 2);
-            }, 3000);
-        }
-
-        let prevTime = performance.now();
-        let walkTime = 0; 
-        const windDirection = new THREE.Vector3(-0.1, 0, -0.05);
-
-        // Função de verificação de transição de região
-        function checkBiomeTransition(px, pz) {
-            const dist = Math.hypot(px - currentArticleCenter.x, pz - currentArticleCenter.y);
-            if (dist > BIOME_RADIUS && currentLinks.length > 0) {
-                // Instancia o PRNG com a posição para escolha determinística
-                const prng = mulberry32(cyrb53(`${Math.floor(px)}_${Math.floor(pz)}`, biomeParams.seed));
-                const randomIndex = Math.floor(prng() * currentLinks.length);
-                const nextArticle = currentLinks[randomIndex];
-                
-                // Define o novo centro da região
-                currentArticleCenter.set(px, pz);
-                fetchWikiArticle(nextArticle);
-            }
-        }
-
-        function animate() {
-            requestAnimationFrame(animate);
-            const time = performance.now();
-            const delta = (time - prevTime) / 1000;
-
-            if (controls.isLocked === true) {
-                // Transição suave de parâmetros (Interpolação Linear)
-                biomeParams.currentAmplitude += (biomeParams.targetAmplitute - biomeParams.currentAmplitude) * delta * 0.5;
-                biomeParams.currentRoughness += (biomeParams.targetRoughness - biomeParams.currentRoughness) * delta * 0.5;
-                biomeParams.currentFogDensity += (biomeParams.targetFogDensity - biomeParams.currentFogDensity) * delta * 0.5;
-                scene.fog.density = biomeParams.currentFogDensity;
-
-                velocity.x -= velocity.x * 10.0 * delta;
-                velocity.z -= velocity.z * 10.0 * delta;
-
-                direction.z = Number(moveState.forward) - Number(moveState.backward);
-                direction.x = Number(moveState.right) - Number(moveState.left);
-                direction.normalize();
-
-                const speed = 15.0; 
-                if (moveState.forward || moveState.backward) velocity.z -= direction.z * speed * delta;
-                if (moveState.left || moveState.right) velocity.x -= direction.x * speed * delta;
-
-                controls.moveRight(-velocity.x * delta);
-                controls.moveForward(-velocity.z * delta);
-
-                const px = perspectiveCamera.position.x;
-                const pz = perspectiveCamera.position.z;
-
-                checkBiomeTransition(px, pz);
-
-                const groundHeight = getElevation(px, pz);
-                const isMoving = Math.abs(velocity.x) > 0.1 || Math.abs(velocity.z) > 0.1;
-                
-                if (isMoving) walkTime += delta * 5;
-                const headBob = isMoving ? Math.sin(walkTime) * 0.1 : 0;
-                
-                perspectiveCamera.position.y = groundHeight + 1.7 + headBob;
-
-                terrain.position.x = Math.floor(px / 10) * 10;
-                terrain.position.z = Math.floor(pz / 10) * 10;
-                
-                const positions = terrainGeometry.attributes.position.array;
-                for (let i = 0; i < positions.length; i += 3) {
-                    const globalX = terrain.position.x + positions[i];
-                    const globalZ = terrain.position.z + positions[i + 2]; 
-                    positions[i + 1] = getElevation(globalX, globalZ) - terrain.position.y;
-                }
-                terrainGeometry.attributes.position.needsUpdate = true;
-                terrainGeometry.computeVertexNormals();
-
-                // --- Animação da Neve (CORRIGIDA) ---
-const snowPos = snowGeometry.attributes.position.array;
-const range = 60; // metade do tamanho da caixa (agora 120x120)
-for (let i = 0; i < particleCount; i++) {
-    // Aplica velocidade e vento
-    snowPos[i * 3] += windDirection.x + snowVelocities[i].x;
-    snowPos[i * 3 + 1] -= snowVelocities[i].y;
-    snowPos[i * 3 + 2] += windDirection.z + snowVelocities[i].z;
-
-    // Reposiciona com floating origin (mod) em vez de saltos bruscos
-    // Eixo X
-    while (snowPos[i * 3] < px - range) snowPos[i * 3] += range * 2;
-    while (snowPos[i * 3] > px + range) snowPos[i * 3] -= range * 2;
-    // Eixo Z
-    while (snowPos[i * 3 + 2] < pz - range) snowPos[i * 3 + 2] += range * 2;
-    while (snowPos[i * 3 + 2] > pz + range) snowPos[i * 3 + 2] -= range * 2;
-    // Eixo Y (queda)
-    if (snowPos[i * 3 + 1] < groundHeight - 1) {
-        snowPos[i * 3 + 1] = perspectiveCamera.position.y + 30;
+        h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+        h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+        return 4294967296 * (2097151 & h2) + (h1 >>> 0);
     }
-}
-snowGeometry.attributes.position.needsUpdate = true;
-            }
 
-            renderer.render(scene, perspectiveCamera);
-            prevTime = time;
+    // PRNG (Mulberry32) para decisões consistentes baseadas na semente
+    function mulberry32(a) {
+        return function() {
+            var t = a += 0x6D2B79F5;
+            t = Math.imul(t ^ t >>> 15, t | 1);
+            t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+            return ((t ^ t >>> 14) >>> 0) / 4294967296;
+        }
+    }
+
+    // Calcula Entropia de Shannon (caos do texto)
+    function calculateEntropy(text) {
+        const len = text.length;
+        const frequencies = {};
+        for (let i = 0; i < len; i++) {
+            const char = text[i];
+            frequencies[char] = (frequencies[char] || 0) + 1;
+        }
+        let entropy = 0;
+        for (const char in frequencies) {
+            const p = frequencies[char] / len;
+            entropy -= p * Math.log2(p);
+        }
+        return entropy;
+    }
+
+    // ==========================================
+    // 2. PARÂMETROS DO BIOMA
+    // ==========================================
+    const biomeParams = {
+        targetAmplitute: 1.5,
+        currentAmplitude: 1.5,
+        targetRoughness: 0.1,
+        currentRoughness: 0.1,
+        targetFogDensity: 0.04,
+        currentFogDensity: 0.04,
+        seed: 12345
+    };
+
+    let currentArticleCenter = new THREE.Vector2(0, 0);
+    let currentLinks = [];
+    const BIOME_RADIUS = 200; // Distância para cruzar para a próxima página
+
+    // ==========================================
+    // 3. INTEGRAÇÃO WIKIPEDIA API
+    // ==========================================
+    async function fetchWikiArticle(title = "Inverno") {
+        document.getElementById('loading').style.display = 'block';
+        
+        const url = `https://pt.wikipedia.org/w/api.php?action=query&prop=extracts|links&exintro=true&explaintext=true&pllimit=50&format=json&origin=*&titles=${encodeURIComponent(title)}`;
+        
+        try {
+            const response = await fetch(url);
+            const data = await response.json();
+            const pages = data.query.pages;
+            const pageId = Object.keys(pages)[0];
+            const page = pages[pageId];
+
+            if (!page || pageId == -1) return fetchWikiArticle("Frio"); // Fallback
+
+            const text = page.extract || page.title;
+            currentLinks = page.links ? page.links.map(l => l.title) : ["Gelo"];
+
+            // Extração de dados
+            const length = text.length;
+            const entropy = calculateEntropy(text);
+            const wordFreq = text.split(/\s+/).length / length; // Palavras por caractere
+
+            // Mapeamento Textual -> Procedural
+            // Tamanho -> Altura das colinas (entre 0.5 e 4.0)
+            biomeParams.targetAmplitute = 0.5 + ((length % 1000) / 1000) * 3.5;
+            
+            // Entropia -> Aspereza/Frequência do ruído (entre 0.02 e 0.15)
+            biomeParams.targetRoughness = 0.02 + ((entropy % 5) / 5) * 0.13;
+            
+            // Frequência de palavras -> Densidade da Nevasca (entre 0.01 e 0.08)
+            biomeParams.targetFogDensity = 0.01 + (wordFreq * 0.5);
+            
+            // Nova semente baseada no título
+            biomeParams.seed = cyrb53(page.title);
+
+            // Atualiza UI
+            document.getElementById('wiki-title').innerText = page.title;
+            document.getElementById('wiki-stats').innerText = `Entropia (Aspereza): ${entropy.toFixed(2)}\nTamanho (Elevação): ${length} bytes\nFronteiras disponíveis: ${currentLinks.length}`;
+            
+            // Gera novas árvores para o novo bioma
+            generateTrees();
+            
+        } catch (e) {
+            console.error("Erro ao buscar Wiki:", e);
+        } finally {
+            document.getElementById('loading').style.display = 'none';
+        }
+    }
+
+    // ==========================================
+    // CÓDIGO ORIGINAL EXPANDIDO E AJUSTADO
+    // ==========================================
+    const scene = new THREE.Scene();
+    const fogColor = new THREE.Color(0x9caebb);
+    scene.background = fogColor;
+    scene.fog = new THREE.FogExp2(fogColor, biomeParams.currentFogDensity);
+
+    const perspectiveCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
+    
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.2;
+    document.body.appendChild(renderer.domElement);
+
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+    scene.add(ambientLight);
+    
+    const directionalLight = new THREE.DirectionalLight(0xdfe9f5, 1.5);
+    directionalLight.position.set(10, 20, 10);
+    scene.add(directionalLight);
+
+    const terrainSize = 150; // Aumentado um pouco para esconder bordas no fog
+    const terrainSegments = 100;
+    const terrainGeometry = new THREE.PlaneGeometry(terrainSize, terrainSize, terrainSegments, terrainSegments);
+    terrainGeometry.rotateX(-Math.PI / 2);
+    
+    const terrainMaterial = new THREE.MeshStandardMaterial({
+        color: 0xffffff,
+        roughness: 0.8,
+        metalness: 0.1,
+        flatShading: true 
+    });
+    const terrain = new THREE.Mesh(terrainGeometry, terrainMaterial);
+    scene.add(terrain);
+
+    // NOVA Função de ruído baseada nos parâmetros dinâmicos da Wiki
+    function getElevation(x, z) {
+        const r = biomeParams.currentRoughness;
+        const a = biomeParams.currentAmplitude;
+        // Usa a semente para deslocar o mapa, garantindo que o mesmo artigo gere a mesma topografia
+        const sOffset = (biomeParams.seed % 1000); 
+        
+        return (Math.sin((x + sOffset) * r) * a) + 
+               (Math.cos((z + sOffset) * r) * a) + 
+               (Math.sin((x + sOffset) * (r*0.3) + (z + sOffset) * (r*0.4)) * (a * 1.5));
+    }
+
+    // ==========================================
+    // SISTEMA DE ÁRVORES PS1 (BILLBOARDING)
+    // ==========================================
+    const treeCount = 50; // Número de árvores por região
+    const treeGroup = new THREE.Group();
+    scene.add(treeGroup);
+
+    // Carrega a textura da árvore (Certifique-se de ter a imagem PNG transparente)
+    const textureLoader = new THREE.TextureLoader();
+    // Substitua pelo caminho correto da sua imagem PNG transparente
+    const treeTexture = textureLoader.load('images-removebg-preview.png'); 
+    
+    // Configurações para estética PS1 (sem filtro, pixelado)
+    treeTexture.magFilter = THREE.NearestFilter;
+    treeTexture.minFilter = THREE.NearestFilter;
+
+    // Material do Sprite
+    const treeMaterial = new THREE.SpriteMaterial({ 
+        map: treeTexture,
+        fog: true,
+        transparent: true // Habilita transparência da imagem
+    });
+
+    function generateTrees() {
+        // Limpa árvores antigas
+        while(treeGroup.children.length > 0){ 
+            treeGroup.remove(treeGroup.children[0]); 
         }
 
-        window.addEventListener('resize', () => {
-            perspectiveCamera.aspect = window.innerWidth / window.innerHeight;
-            perspectiveCamera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
+        const prng = mulberry32(biomeParams.seed); // PRNG determinístico para árvores
+        const range = BIOME_RADIUS * 0.8; // Área de spawn
 
-        animate();
-    </script>
+        for (let i = 0; i < treeCount; i++) {
+            const sprite = new THREE.Sprite(treeMaterial);
+            
+            // Define a escala: "bem maior que o jogador" (Jogador tem ~1.7m)
+            const treeHeight = 10 + prng() * 10; // Altura entre 10m e 20m
+            const treeWidth = treeHeight * 0.8; // Mantém proporção
+            sprite.scale.set(treeWidth, treeHeight, 1);
+
+            // Posição X e Z aleatória ao redor do centro do bioma
+            const x = currentArticleCenter.x + (prng() - 0.5) * range * 2;
+            const z = currentArticleCenter.y + (prng() - 0.5) * range * 2;
+            
+            // Ajusta a altura Y baseada no terreno
+            const y = getElevation(x, z) + treeHeight / 2; // Centraliza a base no chão
+
+            sprite.position.set(x, y, z);
+            treeGroup.add(sprite);
+        }
+    }
+
+    const particleCount = 20000;
+    const snowGeometry = new THREE.BufferGeometry();
+    const snowPositions = new Float32Array(particleCount * 3);
+    const snowVelocities = [];
+
+    for (let i = 0; i < particleCount; i++) {
+        snowPositions[i * 3] = (Math.random() - 0.5) * 50;    
+        snowPositions[i * 3 + 1] = Math.random() * 40;        
+        snowPositions[i * 3 + 2] = (Math.random() - 0.5) * 50; 
+        snowVelocities.push({
+            x: (Math.random() - 0.5) * 0.05,
+            y: (Math.random() * 0.05) + 0.1,
+            z: (Math.random() - 0.5) * 0.05
+        });
+    }
+    snowGeometry.setAttribute('position', new THREE.BufferAttribute(snowPositions, 3));
+
+    const snowMaterial = new THREE.PointsMaterial({
+        color: 0xffffff,
+        size: 0.15,
+        transparent: true,
+        opacity: 0.8,
+        depthWrite: false
+    });
+    const snowParticles = new THREE.Points(snowGeometry, snowMaterial);
+    
+    snowParticles.frustumCulled = false;
+    
+    scene.add(snowParticles);
+
+    const controls = new PointerLockControls(perspectiveCamera, document.body);
+    const blocker = document.getElementById('blocker');
+    const instructions = document.getElementById('instructions');
+    
+    let audioContext;
+    let isAudioStarted = false;
+
+    instructions.addEventListener('click', function () {
+        controls.lock();
+        if (!isAudioStarted) {
+            startProceduralWind();
+            fetchWikiArticle("Neve"); // Inicia o mundo no artigo "Neve"
+            isAudioStarted = true;
+        }
+    });
+
+    controls.addEventListener('lock', function () { blocker.style.display = 'none'; });
+    controls.addEventListener('unlock', function () { blocker.style.display = 'flex'; });
+
+    const moveState = { forward: false, backward: false, left: false, right: false };
+    const velocity = new THREE.Vector3();
+    const direction = new THREE.Vector3();
+
+    document.addEventListener('keydown', (event) => {
+        switch (event.code) {
+            case 'KeyW': moveState.forward = true; break;
+            case 'KeyA': moveState.left = true; break;
+            case 'KeyS': moveState.backward = true; break;
+            case 'KeyD': moveState.right = true; break;
+        }
+    });
+
+    document.addEventListener('keyup', (event) => {
+        switch (event.code) {
+            case 'KeyW': moveState.forward = false; break;
+            case 'KeyA': moveState.left = false; break;
+            case 'KeyS': moveState.backward = false; break;
+            case 'KeyD': moveState.right = false; break;
+        }
+    });
+
+    function startProceduralWind() {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const bufferSize = 2 * audioContext.sampleRate;
+        const noiseBuffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
+        const output = noiseBuffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) output[i] = Math.random() * 2 - 1;
+        
+        const whiteNoise = audioContext.createBufferSource();
+        whiteNoise.buffer = noiseBuffer;
+        whiteNoise.loop = true;
+
+        const filter = audioContext.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.value = 400;
+
+        const gainNode = audioContext.createGain();
+        gainNode.gain.value = 0.5;
+
+        whiteNoise.connect(filter);
+        filter.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        whiteNoise.start(0);
+
+        setInterval(() => {
+            const targetFreq = 200 + Math.random() * 600;
+            const targetVol = 0.3 + Math.random() * 0.5;
+            filter.frequency.setTargetAtTime(targetFreq, audioContext.currentTime, 2);
+            gainNode.gain.setTargetAtTime(targetVol, audioContext.currentTime, 2);
+        }, 3000);
+    }
+
+    let prevTime = performance.now();
+    let walkTime = 0; 
+    const windDirection = new THREE.Vector3(-0.1, 0, -0.05);
+
+    // Função de verificação de transição de região
+    function checkBiomeTransition(px, pz) {
+        const dist = Math.hypot(px - currentArticleCenter.x, pz - currentArticleCenter.y);
+        if (dist > BIOME_RADIUS && currentLinks.length > 0) {
+            // Instancia o PRNG com a posição para escolha determinística
+            const prng = mulberry32(cyrb53(`${Math.floor(px)}_${Math.floor(pz)}`, biomeParams.seed));
+            const randomIndex = Math.floor(prng() * currentLinks.length);
+            const nextArticle = currentLinks[randomIndex];
+            
+            // Define o novo centro da região
+            currentArticleCenter.set(px, pz);
+            fetchWikiArticle(nextArticle);
+        }
+    }
+
+    function animate() {
+        requestAnimationFrame(animate);
+        const time = performance.now();
+        const delta = (time - prevTime) / 1000;
+
+        if (controls.isLocked === true) {
+            // Transição suave de parâmetros (Interpolação Linear)
+            biomeParams.currentAmplitude += (biomeParams.targetAmplitute - biomeParams.currentAmplitude) * delta * 0.5;
+            biomeParams.currentRoughness += (biomeParams.targetRoughness - biomeParams.currentRoughness) * delta * 0.5;
+            biomeParams.currentFogDensity += (biomeParams.targetFogDensity - biomeParams.currentFogDensity) * delta * 0.5;
+            scene.fog.density = biomeParams.currentFogDensity;
+
+            velocity.x -= velocity.x * 10.0 * delta;
+            velocity.z -= velocity.z * 10.0 * delta;
+
+            direction.z = Number(moveState.forward) - Number(moveState.backward);
+            direction.x = Number(moveState.right) - Number(moveState.left);
+            direction.normalize();
+
+            const speed = 15.0; 
+            if (moveState.forward || moveState.backward) velocity.z -= direction.z * speed * delta;
+            if (moveState.left || moveState.right) velocity.x -= direction.x * speed * delta;
+
+            controls.moveRight(-velocity.x * delta);
+            controls.moveForward(-velocity.z * delta);
+
+            const px = perspectiveCamera.position.x;
+            const pz = perspectiveCamera.position.z;
+
+            checkBiomeTransition(px, pz);
+
+            const groundHeight = getElevation(px, pz);
+            const isMoving = Math.abs(velocity.x) > 0.1 || Math.abs(velocity.z) > 0.1;
+            
+            if (isMoving) walkTime += delta * 5;
+            const headBob = isMoving ? Math.sin(walkTime) * 0.1 : 0;
+            
+            perspectiveCamera.position.y = groundHeight + 1.7 + headBob;
+
+            terrain.position.x = Math.floor(px / 10) * 10;
+            terrain.position.z = Math.floor(pz / 10) * 10;
+            
+            const positions = terrainGeometry.attributes.position.array;
+            for (let i = 0; i < positions.length; i += 3) {
+                const globalX = terrain.position.x + positions[i];
+                const globalZ = terrain.position.z + positions[i + 2]; 
+                positions[i + 1] = getElevation(globalX, globalZ) - terrain.position.y;
+            }
+            terrainGeometry.attributes.position.needsUpdate = true;
+            terrainGeometry.computeVertexNormals();
+
+            // --- Animação da Neve ---
+            const snowPos = snowGeometry.attributes.position.array;
+            const range = 60; // metade do tamanho da caixa
+            for (let i = 0; i < particleCount; i++) {
+                snowPos[i * 3] += windDirection.x + snowVelocities[i].x;
+                snowPos[i * 3 + 1] -= snowVelocities[i].y;
+                snowPos[i * 3 + 2] += windDirection.z + snowVelocities[i].z;
+
+                while (snowPos[i * 3] < px - range) snowPos[i * 3] += range * 2;
+                while (snowPos[i * 3] > px + range) snowPos[i * 3] -= range * 2;
+                while (snowPos[i * 3 + 2] < pz - range) snowPos[i * 3 + 2] += range * 2;
+                while (snowPos[i * 3 + 2] > pz + range) snowPos[i * 3 + 2] -= range * 2;
+                if (snowPos[i * 3 + 1] < groundHeight - 1) {
+                    snowPos[i * 3 + 1] = perspectiveCamera.position.y + 30;
+                }
+            }
+            snowGeometry.attributes.position.needsUpdate = true;
+        }
+
+        renderer.render(scene, perspectiveCamera);
+        prevTime = time;
+    }
+
+    window.addEventListener('resize', () => {
+        perspectiveCamera.aspect = window.innerWidth / window.innerHeight;
+        perspectiveCamera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    animate();
+</script>
 </body>
 </html>
