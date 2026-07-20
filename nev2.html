@@ -463,9 +463,11 @@
             // então o pitch da câmera é ignorado e a árvore não "deita"/aproxima
             // quando você olha pra cima ou pra baixo.
             for (let i = 0; i < treeGroup.children.length; i++) {
-                const tree = treeGroup.children[i];
-                tree.lookAt(perspectiveCamera.position.x, tree.position.y, perspectiveCamera.position.z);
-            }
+    const tree = treeGroup.children[i];
+    // Acompanha a altura real do terreno a cada frame
+    tree.position.y = getElevation(tree.position.x, tree.position.z);
+    tree.lookAt(perspectiveCamera.position.x, tree.position.y, perspectiveCamera.position.z);
+}
 
             terrain.position.x = Math.floor(px / 10) * 10;
             terrain.position.z = Math.floor(pz / 10) * 10;
