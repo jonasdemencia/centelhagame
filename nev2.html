@@ -252,11 +252,21 @@
     treeTexture.magFilter = THREE.NearestFilter;
     treeTexture.minFilter = THREE.NearestFilter;
 
-    // Material do Sprite
-    const treeMaterial = new THREE.SpriteMaterial({ 
+    // Geometria do "billboard": plano com pivô na BASE (não no centro).
+    // Isso mantém a árvore presa no chão em vez de flutuar quando ela gira.
+    const treeGeometry = new THREE.PlaneGeometry(1, 1);
+    treeGeometry.translate(0, 0.5, 0);
+
+    // Mesh comum (não Sprite). Sprite gira em qualquer eixo pra sempre encarar
+    // a câmera — inclusive no pitch — o que faz a árvore "deitar" na sua direção
+    // quando você olha pra cima. Com Mesh, controlamos a rotação manualmente
+    // (só no eixo Y) no loop de animação.
+    const treeMaterial = new THREE.MeshBasicMaterial({
         map: treeTexture,
         fog: true,
-        transparent: true // Habilita transparência da imagem
+        transparent: true,
+        alphaTest: 0.5, // evita problemas de z-order/bordas translúcidas entre árvores
+        side: THREE.DoubleSide
     });
 
     function generateTrees() {
@@ -269,27 +279,22 @@
         const range = BIOME_RADIUS * 0.8; // Área de spawn
 
         for (let i = 0; i < treeCount; i++) {
-            const sprite = new THREE.Sprite(treeMaterial);
+            const tree = new THREE.Mesh(treeGeometry, treeMaterial);
             
-            // --- AJUSTE MANUAL 1: Define o pivot no fundo ---
-            // (0.5, 0) coloca a base do sprite exatamente no ponto de ancoragem
-            sprite.center.set(0.5, 0); 
-
             // Define a escala: "bem maior que o jogador" (Jogador tem ~1.7m)
             const treeHeight = 10 + prng() * 10; // Altura entre 10m e 20m
             const treeWidth = treeHeight * 0.8; // Mantém proporção
-            sprite.scale.set(treeWidth, treeHeight, 1);
+            tree.scale.set(treeWidth, treeHeight, 1);
 
             // Posição X e Z aleatória ao redor do centro do bioma
             const x = currentArticleCenter.x + (prng() - 0.5) * range * 2;
             const z = currentArticleCenter.y + (prng() - 0.5) * range * 2;
             
-            // --- AJUSTE MANUAL 2: Ajusta a altura Y baseada no terreno ---
-            // Usamos diretamente a elevação do solo, agora que o pivot é a base
-            const y = getElevation(x, z); 
+            // Base da árvore encostada no chão (o pivô já está na base da geometria)
+            const y = getElevation(x, z);
 
-            sprite.position.set(x, y, z);
-            treeGroup.add(sprite);
+            tree.position.set(x, y, z);
+            treeGroup.add(tree);
         }
     }
 
@@ -452,6 +457,15 @@
             const headBob = isMoving ? Math.sin(walkTime) * 0.1 : 0;
             
             perspectiveCamera.position.y = groundHeight + 1.7 + headBob;
+
+            // Billboard das árvores: gira SÓ no eixo Y pra encarar a câmera.
+            // O alvo do lookAt usa a MESMA altura da própria árvore (tree.position.y),
+            // então o pitch da câmera é ignorado e a árvore não "deita"/aproxima
+            // quando você olha pra cima ou pra baixo.
+            for (let i = 0; i < treeGroup.children.length; i++) {
+                const tree = treeGroup.children[i];
+                tree.lookAt(perspectiveCamera.position.x, tree.position.y, perspectiveCamera.position.z);
+            }
 
             terrain.position.x = Math.floor(px / 10) * 10;
             terrain.position.z = Math.floor(pz / 10) * 10;
