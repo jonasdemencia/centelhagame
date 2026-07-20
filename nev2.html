@@ -271,6 +271,10 @@
         for (let i = 0; i < treeCount; i++) {
             const sprite = new THREE.Sprite(treeMaterial);
             
+            // --- AJUSTE MANUAL 1: Define o pivot no fundo ---
+            // (0.5, 0) coloca a base do sprite exatamente no ponto de ancoragem
+            sprite.center.set(0.5, 0); 
+
             // Define a escala: "bem maior que o jogador" (Jogador tem ~1.7m)
             const treeHeight = 10 + prng() * 10; // Altura entre 10m e 20m
             const treeWidth = treeHeight * 0.8; // Mantém proporção
@@ -280,8 +284,9 @@
             const x = currentArticleCenter.x + (prng() - 0.5) * range * 2;
             const z = currentArticleCenter.y + (prng() - 0.5) * range * 2;
             
-            // Ajusta a altura Y baseada no terreno
-            const y = getElevation(x, z) + treeHeight / 2; // Centraliza a base no chão
+            // --- AJUSTE MANUAL 2: Ajusta a altura Y baseada no terreno ---
+            // Usamos diretamente a elevação do solo, agora que o pivot é a base
+            const y = getElevation(x, z); 
 
             sprite.position.set(x, y, z);
             treeGroup.add(sprite);
