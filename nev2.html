@@ -236,6 +236,46 @@
                (Math.sin((x + sOffset) * (r*0.3) + (z + sOffset) * (r*0.4)) * (a * 1.5));
     }
 
+
+       // Retorna a altura exata que a MALHA está desenhando naquele ponto global (x, z),
+// interpolando entre os vértices da grade, em vez do valor contínuo do ruído.
+function getGroundHeightAt(x, z) {
+    const cell = terrainSize / terrainSegments; // 150/100 = 1.5
+    const half = terrainSize / 2;                // 75
+
+    // Coordenadas no espaço local do terreno (que se move com o jogador)
+    const lx = x - terrain.position.x;
+    const lz = z - terrain.position.z;
+
+    // Índices da célula
+    let i = Math.floor((lx + half) / cell);
+    let j = Math.floor((lz + half) / cell);
+    i = Math.min(Math.max(i, 0), terrainSegments - 1);
+    j = Math.min(Math.max(j, 0), terrainSegments - 1);
+
+    // Cantos da célula (no espaço local)
+    const x0 = -half + i * cell, x1 = x0 + cell;
+    const z0 = -half + j * cell, z1 = z0 + cell;
+
+    // Altura exata nos 4 cantos (usando a função de ruído)
+    const h00 = getElevation(terrain.position.x + x0, terrain.position.z + z0);
+    const h10 = getElevation(terrain.position.x + x1, terrain.position.z + z0);
+    const h01 = getElevation(terrain.position.x + x0, terrain.position.z + z1);
+    const h11 = getElevation(terrain.position.x + x1, terrain.position.z + z1);
+
+    // Fatores de interpolação (0 a 1)
+    const fx = (lx - x0) / cell;
+    const fz = (lz - z0) / cell;
+
+    // Interpolação bilinear (mesma que a malha renderiza)
+    return (
+        h00 * (1 - fx) * (1 - fz) +
+        h10 * fx * (1 - fz) +
+        h01 * (1 - fx) * fz +
+        h11 * fx * fz
+    );
+}
+
     // ==========================================
     // SISTEMA DE ÁRVORES PS1 (BILLBOARDING)
     // ==========================================
@@ -291,7 +331,7 @@
             const z = currentArticleCenter.y + (prng() - 0.5) * range * 2;
             
             // Base da árvore encostada no chão (o pivô já está na base da geometria)
-            const y = getElevation(x, z);
+            const y = getGroundHeightAt(x, z);
 
             tree.position.set(x, y, z);
             treeGroup.add(tree);
@@ -465,7 +505,7 @@
             for (let i = 0; i < treeGroup.children.length; i++) {
     const tree = treeGroup.children[i];
     // Acompanha a altura real do terreno a cada frame
-    tree.position.y = getElevation(tree.position.x, tree.position.z);
+    tree.position.y = getGroundHeightAt(tree.position.x, tree.position.z);
     tree.lookAt(perspectiveCamera.position.x, tree.position.y, perspectiveCamera.position.z);
 }
 
