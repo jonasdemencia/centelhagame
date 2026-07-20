@@ -403,24 +403,34 @@
                 terrainGeometry.computeVertexNormals();
 
                 // --- Animação da Neve (CORRIGIDA) ---
+// --- Animação da Neve (CORREÇÃO DEFINITIVA) ---
 const snowPos = snowGeometry.attributes.position.array;
-const range = 60; // metade do tamanho da caixa (agora 120x120)
+const halfRangeXZ = 60;  // raio da caixa em X e Z (120x120)
+const heightAbove = 35;  // altura máxima acima da câmera
+const heightBelow = 2;   // margem abaixo do chão
+
 for (let i = 0; i < particleCount; i++) {
-    // Aplica velocidade e vento
+    // Aplica movimento
     snowPos[i * 3] += windDirection.x + snowVelocities[i].x;
     snowPos[i * 3 + 1] -= snowVelocities[i].y;
     snowPos[i * 3 + 2] += windDirection.z + snowVelocities[i].z;
 
-    // Reposiciona com floating origin (mod) em vez de saltos bruscos
-    // Eixo X
-    while (snowPos[i * 3] < px - range) snowPos[i * 3] += range * 2;
-    while (snowPos[i * 3] > px + range) snowPos[i * 3] -= range * 2;
-    // Eixo Z
-    while (snowPos[i * 3 + 2] < pz - range) snowPos[i * 3 + 2] += range * 2;
-    while (snowPos[i * 3 + 2] > pz + range) snowPos[i * 3 + 2] -= range * 2;
-    // Eixo Y (queda)
-    if (snowPos[i * 3 + 1] < groundHeight - 1) {
-        snowPos[i * 3 + 1] = perspectiveCamera.position.y + 30;
+    // --- Reposicionamento modular (floating origin) ---
+    // Eixo X: mantém entre px - halfRangeXZ e px + halfRangeXZ
+    while (snowPos[i * 3] < px - halfRangeXZ) snowPos[i * 3] += halfRangeXZ * 2;
+    while (snowPos[i * 3] > px + halfRangeXZ) snowPos[i * 3] -= halfRangeXZ * 2;
+
+    // Eixo Z: idêntico ao X
+    while (snowPos[i * 3 + 2] < pz - halfRangeXZ) snowPos[i * 3 + 2] += halfRangeXZ * 2;
+    while (snowPos[i * 3 + 2] > pz + halfRangeXZ) snowPos[i * 3 + 2] -= halfRangeXZ * 2;
+
+    // Eixo Y: se cair abaixo do chão, reaparece no topo
+    if (snowPos[i * 3 + 1] < groundHeight - heightBelow) {
+        snowPos[i * 3 + 1] = perspectiveCamera.position.y + heightAbove;
+    }
+    // Opcional: se subir demais, trazer para baixo (raro, mas evita acúmulo no topo)
+    if (snowPos[i * 3 + 1] > perspectiveCamera.position.y + heightAbove + 10) {
+        snowPos[i * 3 + 1] = groundHeight + Math.random() * heightAbove;
     }
 }
 snowGeometry.attributes.position.needsUpdate = true;
