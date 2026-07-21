@@ -1581,7 +1581,7 @@ Retorne APENAS o JSON rigorosamente neste formato:
             const prompt = `[SEMENTE:${semente}]
             
 /no_think
-Você é um designer de encontros para um RPG de horror textual em português brasileiro. Sua função é criar cenas situacionais memoráveis — não sustos baratos, mas momentos com tensão real, perigos, escolhas difíceis e consequências assimétricas.
+Você é um designer de encontros para um RPG de horror textual em português brasileiro. Sua função é criar cenas situacionais memoráveis — não sustos baratos, mas momentos com tensão real, perigos implacáveis, escolhas difíceis e consequências assimétricas.
 
 ZONA ATUAL: "${infoZona.nome}"
 
@@ -1622,13 +1622,10 @@ Dano 0 não significa sem consequência: janela de oportunidade fechada, informa
 3. CONSEQUÊNCIAS ASSIMÉTRICAS
 Opção A: risco físico, ganho potencial. Opção B: risco zero, perda narrativa real. Opção C (se houver): risco ambíguo — consequência incerta ou estranha.
 
-4. VERBOS ESPECÍFICOS COM ALVOS ESPECÍFICOS
-Ruim: "Tentar pegar o objeto" — Bom: "Arrancar o medalhão do pescoço enquanto ela não olha"
-
-5. DILEMAS COM TRÂNSITO (OPCIONAL)
+4. DILEMAS COM TRÂNSITO (OPCIONAL)
 Um dilema pode mover o jogador para outra sala usando um destino de DESTINOS DISPONÍVEIS. Use quando a ação implica atravessar um limiar físico (fuga, avanço forçado, entrada). O resultado não descreve o que há na nova sala. Quando usar: preencha destino_id. Quando não: null.
 
-6. RAMIFICAÇÕES — exatamente 1 dilema por cena; os restantes têm ramificacoes: null.
+5. RAMIFICAÇÕES — exatamente 1 dilema por cena; os restantes têm ramificacoes: null.
 Quando usar: a ação do jogador abre um momento de bifurcação genuína antes da resolução.
 Estrutura: dilema-pai tem resultado_texto como ponte narrativa (2-3 frases, tensão aberta) + dano: 0. As ramificacoes (2-3) têm opcao_texto, resultado_texto, dano e destino_id próprios.
 Causalidade: resultado_texto do pai começa exatamente onde opcao_texto termina — não invente ação que o jogador não executou.
@@ -1638,13 +1635,13 @@ Qualidade das ramificações — mesma exigência do DESIGN DE RESULTADO:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 DESIGN DE RESULTADO:
 
-O resultado é narrativa, não relatório. 1 frase específica e visceral. O ferimento, lesão na carne é descrito, não contabilizado. Nunca escreva "você perde X de energia".
+O resultado é narrativa, não relatório. 1 frase específica e visceral sobre o ferimento, lesão na carne. Nunca escreva "você perde X de energia", a lesão é descrita, não contabilizada.
 
 (SEJA IMPLACÁVEL, o horror exige isso):
 1-4 → ferimento leve, contusão, arranhão, susto físico
 5-9 → dano severo, sangue, fratura. Use sem hesitar em erros táticos.
 10-20 → brutal, quase letal. Exija esse custo para riscos extremos.
-*OBRIGATÓRIO: Ao menos uma consequência ou ramificação negativa DEVE causar dano Alto (8 a 20).*
+*OBRIGATÓRIO: ao menos uma consequência ou ramificação negativa DEVE causar dano Alto (8 a 20).*
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 PROIBIDO:
