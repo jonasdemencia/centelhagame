@@ -1564,7 +1564,7 @@ Retorne APENAS o JSON rigorosamente neste formato:
                         && !sala.opcoes.some(o => o.arquiteto === true && !o.dilema); // exclui salas com nova_opcao do Perigos
                 })
                 .sort(() => Math.random() - 0.5)
-                .slice(0, 2);
+                .slice(0, 3);
 
             if (idsElegiveis.length === 0) return;
 
