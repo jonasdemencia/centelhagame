@@ -1684,7 +1684,7 @@ Siga o tom literário e a estrutura do Exemplo abaixo:
             {
               "opcao_texto": "Tentar golpear o corpo com o que tiver em mãos",
               "resultado_texto": "Seu golpe desvia no aço escorregadio. Algo pontiagudo rasga a manga do seu casaco e corta a pele do seu braço antes que você consiga saltar para trás.",
-              "dano": 3,
+              "dano": 6,
               "destino_id": null
             },
             {
@@ -1692,10 +1692,13 @@ Siga o tom literário e a estrutura do Exemplo abaixo:
               "resultado_texto": "Você não espera para ver a criatura se erguer. Seus calcanhares derrapam no lodo do chão, mas você consegue cruzar a porta principal, trancando-a atrás de si.",
               "dano": 0,
               "destino_id": 9
-      }
-    ]
-  }
-]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
 }`;
 
             const systemPrompt = 'Você é o Arquiteto de Cenas de um RPG textual. O texto deve ter gramática impecável em Português do Brasil, vocabulário rico e nativo. Zero estrangeirismos ou palavras inventadas. Retorne APENAS JSON válido. Zero markdown. Dano: integer (0 a 20).';
