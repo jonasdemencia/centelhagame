@@ -605,8 +605,8 @@ window.dispatchEvent(new Event('firebase-initialized'));
         const MODELO_IND = "qwen/qwen3-32b"; // Modelo responsável pelas cinematics
         const MODELO_ARQUITETO = "llama-3.3-70b-versatile"; // Arquiteto de Perigos
         const FALLBACK_MODELO_ARQUITETO = "openai/gpt-oss-120b"; // <-- NOVA LINHA
-        const MODELO_CENAS = "Qwen/Qwen3.6-27B"; // Arquiteto de Cenas e Dilemas
-        const MODELO_CENAS_FALLBACK = "llama-3.3-70b-versatile";
+        const MODELO_CENAS = "llama-3.3-70b-versatile"; // Arquiteto de Cenas e Dilemas
+        const MODELO_CENAS_FALLBACK = "openai/gpt-oss-120b";
 
 
         let mapaMundo = null;
@@ -1639,13 +1639,13 @@ Qualidade das ramificações — mesma exigência do DESIGN DE RESULTADO:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 DESIGN DE RESULTADO:
 
-O resultado é narrativa, não relatório. 2-4 frases específicas e viscerais. A dor é descrita, não contabilizada. Nunca escreva "você perde X de energia".
+O resultado é narrativa, não relatório. 1 frase específica e visceral. A dor é descrita, não contabilizada. Nunca escreva "você perde X de energia".
 
-Calibre o dano:
-1-2 → contusão, arranhão, susto físico
-3-4 → ferimento real, queda, golpe
-5-6 → dano sério, sangue, comprometimento temporário
-7-20 → quase fatal — reserve para má leitura grave de situação
+Calibre o dano (SEJA IMPLACÁVEL, o horror exige sacrifícios):
+1-4 → ferimento leve, contusão, arranhão, susto físico
+5-9 → dano severo, sangue, fratura. Use sem hesitar em erros táticos.
+10-20 → brutal, quase letal. Exija esse custo para riscos extremos.
+*OBRIGATÓRIO: Ao menos uma consequência ou ramificação negativa DEVE causar dano Alto (8 a 20).*
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 PROIBIDO:
@@ -1683,8 +1683,8 @@ Siga o tom literário e a estrutura do Exemplo abaixo:
           "ramificacoes": [
             {
               "opcao_texto": "Tentar golpear o corpo com o que tiver em mãos",
-              "resultado_texto": "Seu golpe desvia no aço escorregadio. Algo pontiagudo rasga a manga do seu casaco e corta a pele do seu braço antes que você consiga saltar para trás.",
-              "dano": 6,
+              "resultado_texto": "Seu golpe desvia no aço escorregadio. Algo pontiagudo rasga a manga do seu casaco, rasgando carne e músculo até o osso do seu braço antes que você consiga saltar para trás.",
+              "dano": 14,
               "destino_id": null
             },
             {
@@ -1701,7 +1701,7 @@ Siga o tom literário e a estrutura do Exemplo abaixo:
 }
 }`;
 
-            const systemPrompt = 'Você é o Arquiteto de Cenas de um RPG textual. O texto deve ter gramática impecável em Português do Brasil, vocabulário rico e nativo. Zero estrangeirismos ou palavras inventadas. Retorne APENAS JSON válido. Zero markdown. Dano: integer (0 a 20).';
+            const systemPrompt = 'Você é o Arquiteto de Cenas de um RPG de horror textual visceral. O texto deve ter gramática impecável em Português do Brasil, vocabulário rico e nativo. Zero estrangeirismos ou palavras inventadas. Retorne APENAS JSON válido. Zero markdown. Dano: integer (0 a 20).';
 
             let data;
 let modeloUsado = MODELO_CENAS;
