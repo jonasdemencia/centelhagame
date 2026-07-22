@@ -1564,8 +1564,9 @@ Retorne APENAS o JSON rigorosamente neste formato:
                         && !sala.opcoes.some(o => o.arquiteto === true && !o.dilema); // exclui salas com nova_opcao do Perigos
                 })
                 .sort(() => Math.random() - 0.5)
-                console.log('[Cenas] Salas elegíveis (antes do slice):', idsElegiveis);
                 .slice(0, 3);
+
+            console.log('[Cenas] Salas elegíveis (antes do slice):', idsElegiveis);
 
             if (idsElegiveis.length === 0) return;
 
