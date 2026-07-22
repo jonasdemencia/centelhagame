@@ -1572,7 +1572,10 @@ Retorne APENAS o JSON rigorosamente neste formato:
 
             const contextSalas = idsElegiveis.map(id => {
     const sala = mapaFinalMesclado[String(id)];
-    const textoOriginal = (sala.texto_logico || '').substring(0, 700);
+    const textoCompleto = sala.texto_logico || '';
+  const textoOriginal = textoCompleto.length > 900
+     ? '(...) ' + textoCompleto.slice(-900)
+     : textoCompleto;
     const destinosSala = (sala.opcoes || [])
         .filter(o => o.destino && !o.arquiteto)
         .map(o => `  • [${o.destino}] "${o.texto}"`).join('\n');
@@ -1592,12 +1595,12 @@ SALAS:
 ${contextSalas}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-MISSÃO: Para cada uma das salas listadas, crie UM evento situacional e reescreva o TEXTO ORIGINAL DA SALA incorporando o evento como parte orgânica. O texto deve ser um bloco único e contínuo — o jogador nunca perceberá onde termina a descrição da sala e começa o evento.
+MISSÃO: Para cada uma das salas listadas, crie UM evento situacional que se manifesta LOGO APÓS o TEXTO ORIGINAL DA SALA. Você NÃO deve reescrever, resumir ou parafrasear o texto original — ele permanece intocado e será concatenado automaticamente antes do seu texto. Escreva apenas o trecho que vem DEPOIS.
 
-REGRAS DE FUSÃO:
-
-- A sala existente é o solo — o evento surge nele, não cai sobre ele
-- O evento ocorre dentro dos limites físicos da sala descrita — não invente salas adjacentes, quartos atrás de portas ou espaços não mencionados no TEXTO ORIGINAL. Se a cena exige um espaço, use o que já está descrito.
+REGRAS DE CONTINUAÇÃO:
+- Comece exatamente de onde o TEXTO ORIGINAL termina — nunca redescreva algo que já foi estabelecido (cheiro, iluminação, paredes, temperatura), a menos que o evento o altere fisicamente
+- O evento ocorre dentro dos limites físicos da sala já descrita — não invente cômodos, portas ou espaços não mencionados no TEXTO ORIGINAL
+- A primeira frase precisa ser uma transição causal ou sensorial (um som, um movimento periférico, uma mudança de foco do jogador) — nunca um corte abrupto de cena
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 DESIGN DE CENA:
@@ -1664,7 +1667,7 @@ Siga o tom literário e a estrutura do Exemplo abaixo:
     {
       "sala_id": 1045,
       "titulo": "O Eco Metálico",
-      "texto_sala_fundido": "Depois de caminhar pelo corredor, você chega a um necrotério desativado. Azulejos encardidos cobrem as paredes e as gavetas de aço estão cobertas por uma fina camada de gelo. O cheiro de produtos químicos envelhecidos se mistura a um odor metálico persistente. Na segunda fileira, uma das portas está entreaberta, e uma linha fina de sangue escuro escorregiu até o ralo no chão. Antes que você decida recuar, o som de unhas arranhando o interior do metal ecoa pela sala.",
+      "texto_evento": "Depois de caminhar pelo corredor, você chega a um necrotério desativado. Azulejos encardidos cobrem as paredes e as gavetas de aço estão cobertas por uma fina camada de gelo. O cheiro de produtos químicos envelhecidos se mistura a um odor metálico persistente. Na segunda fileira, uma das portas está entreaberta, e uma linha fina de sangue escuro escorregiu até o ralo no chão. Antes que você decida recuar, o som de unhas arranhando o interior do metal ecoa pela sala.",
       "dilemas": [
         {
           "opcao_texto": "Chutar a gaveta para fechá-la de uma vez",
@@ -1755,10 +1758,11 @@ console.log(`[Cenas] Modelo usado: ${modeloUsado}`);
                 }
 
                 const titulo     = (cena.titulo || 'Evento Inesperado').trim();
-const textoFusao = expurgarViciosIA((cena.texto_sala_fundido || '').trim());
-if (!textoFusao) return;
+const textoEvento = expurgarViciosIA((cena.texto_evento || '').trim());
+if (!textoEvento) return;
 
-sala.texto_logico  = textoFusao;
+const textoBase = (sala.texto_logico || '').trim();
+sala.texto_logico = `${textoBase.replace(/[.\s]+$/, '')}. ${textoEvento}`;
 sala.cena_titulo   = titulo;
 sala.cena_aplicada = true;
 
