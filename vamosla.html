@@ -1564,6 +1564,7 @@ Retorne APENAS o JSON rigorosamente neste formato:
                         && !sala.opcoes.some(o => o.arquiteto === true && !o.dilema); // exclui salas com nova_opcao do Perigos
                 })
                 .sort(() => Math.random() - 0.5)
+                console.log('[Cenas] Salas elegíveis (antes do slice):', idsElegiveis);
                 .slice(0, 3);
 
             if (idsElegiveis.length === 0) return;
@@ -1581,7 +1582,7 @@ Retorne APENAS o JSON rigorosamente neste formato:
             const prompt = `[SEMENTE:${semente}]
             
 /no_think
-Você é um designer de encontros para um RPG de horror textual em português brasileiro. Sua função é criar cenas situacionais memoráveis e dilemas perigosos — não sustos baratos, mas momentos com tensão real, perigos implacáveis, escolhas difíceis e consequências assimétricas.
+Você é um designer de encontros para um RPG textual em português brasileiro. Sua função é criar cenas situacionais memoráveis e dilemas perigosos — não sustos baratos, mas momentos com tensão real, perigos implacáveis, escolhas difíceis e consequências assimétricas.
 
 ZONA ATUAL: "${infoZona.nome}"
 
@@ -1590,7 +1591,7 @@ SALAS:
 ${contextSalas}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-MISSÃO: Para cada sala, crie UM evento situacional e reescreva o TEXTO ORIGINAL DA SALA incorporando o evento como parte orgânica. O texto deve ser um bloco único e contínuo — o jogador nunca perceberá onde termina a descrição da sala e começa o evento.
+MISSÃO: Para cada uma das salas listadas, crie UM evento situacional e reescreva o TEXTO ORIGINAL DA SALA incorporando o evento como parte orgânica. O texto deve ser um bloco único e contínuo — o jogador nunca perceberá onde termina a descrição da sala e começa o evento.
 
 REGRAS DE FUSÃO:
 
@@ -1602,7 +1603,7 @@ REGRAS DE FUSÃO:
 DESIGN DE CENA:
 
 1. OCORRE NO AMBIENTE
-Um depósito tem um trabalhador, uma câmara fria tem um açougueiro, um corredor inundado tem uma criatura que afogou. A situação TENSA deve parecer que SEMPRE esteve ali, esperando.
+Um depósito tem um trabalhador, uma câmara fria tem um açougueiro, um corredor inundado tem uma criatura que afogou. A situação TENSA deve parecer que SEMPRE esteve ali, esperando. 
 
 2. ESPECIFICIDADE E ÂNCORA FÍSICA
 "Um homem costurando a própria pálpebra com linha de pesca" > "uma figura perturbadora". Detalhes concretos criam realidade — e todo estranhamento exige forma física objetiva:
@@ -1610,7 +1611,7 @@ NÃO: "a fonte parecia viva" / SIM: "a água marcava 4°C no pior verão em déc
 O fenômeno é dado concreto. A interpretação pertence ao jogador.
 
 3. ENVOLVE UMA SITUAÇÃO MEMORÁVEL OU ENCONTRO COM SERES QUE PRODUZ TENSÃO E PERIGO. 
-"Um homem sem pele está ajoelhado no centro da sala, mastigando algo." / "Uma criança de olhos vermelhos segura uma tesoura, encarando você." / "O cadáver na maca senta-se devagar, virando o pescoço para seu lado."
+"Um homem sem pele está ajoelhado no centro da sala, mastigando algo." / "Uma criança de olhos vermelhos segura uma tesoura, encarando você." / proíbido: "de repente, uma mão está visível, com dedos fechados em torno de um frasco quebrado."
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 DESIGN DE DILEMAS:
@@ -1635,7 +1636,7 @@ Qualidade das ramificações — mesma exigência do DESIGN DE RESULTADO:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 DESIGN DE RESULTADO:
 
-O resultado é narrativa, não relatório. 1 frase específica e visceral sobre o ferimento, lesão na carne. Nunca escreva "você perde X de energia", a lesão é descrita, não contabilizada.
+1 frase específica e visceral sobre o ferimento, lesão na carne. Nunca escreva "você perde X de energia", a lesão é descrita, não contabilizada.
 
 (SEJA IMPLACÁVEL, o horror exige isso):
 1-4 → ferimento leve, contusão, arranhão, susto físico
