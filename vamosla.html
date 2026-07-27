@@ -1572,14 +1572,10 @@ Retorne APENAS o JSON rigorosamente neste formato:
 
             const contextSalas = idsElegiveis.map(id => {
     const sala = mapaFinalMesclado[String(id)];
-    const textoCompleto = sala.texto_logico || '';
-  const textoOriginal = textoCompleto.length > 300
-     ? '(...) ' + textoCompleto.slice(-300)
-     : textoCompleto;
     const destinosSala = (sala.opcoes || [])
         .filter(o => o.destino && !o.arquiteto)
         .map(o => `  • [${o.destino}] "${o.texto}"`).join('\n');
-    return `SALA_ID:${id} — "${sala.nome}"\nTEXTO ORIGINAL DA SALA:\n${textoOriginal}\nDESTINOS DISPONÍVEIS:\n${destinosSala || '  (nenhum)'}`;
+    return `SALA_ID:${id} — "${sala.nome}"\nDESTINOS DISPONÍVEIS:\n${destinosSala || '  (nenhum)'}`;
 }).join('\n\n');
 
             const semente = Math.random().toString(36).substring(2, 8);
@@ -1595,7 +1591,7 @@ SALAS:
 ${contextSalas}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-MISSÃO: Para cada uma das salas listadas, crie UM evento situacional que ocorre no interior do aposento. 80% descrição da cena, 20% ambiente. 
+MISSÃO: Para cada uma das salas listadas, crie UM evento situacional que ocorre no interior do aposento. 
 
 REGRAS
 1. Você NÃO pode inventar cômodos, portas ou passagens novas — mas PODE (e DEVE) introduzir uma entidade, pessoa ou criatura que não foi mencionada antes. Ela sempre esteve ali, só não tinha sido notada.
