@@ -1573,8 +1573,8 @@ Retorne APENAS o JSON rigorosamente neste formato:
             const contextSalas = idsElegiveis.map(id => {
     const sala = mapaFinalMesclado[String(id)];
     const textoCompleto = sala.texto_logico || '';
-  const textoOriginal = textoCompleto.length > 900
-     ? '(...) ' + textoCompleto.slice(-900)
+  const textoOriginal = textoCompleto.length > 500
+     ? '(...) ' + textoCompleto.slice(-500)
      : textoCompleto;
     const destinosSala = (sala.opcoes || [])
         .filter(o => o.destino && !o.arquiteto)
@@ -1595,11 +1595,10 @@ SALAS:
 ${contextSalas}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-MISSÃO: Para cada uma das salas listadas, crie UM evento situacional que se manifesta LOGO APÓS o TEXTO ORIGINAL DA SALA. Escreva apenas o trecho que vem DEPOIS do texto original.
+MISSÃO: Para cada uma das salas listadas, crie UM evento situacional que ocorre no interior do aposento. Não há necessidade de reescrever o texto da sala. Foque-se na cena. 
 
-REGRAS DE CONTINUAÇÃO:
-- Comece exatamente de onde o TEXTO ORIGINAL termina...
-- Você NÃO pode inventar cômodos, portas ou passagens novas — mas PODE (e DEVE) introduzir uma entidade, pessoa ou criatura que não foi mencionada antes. Ela sempre esteve ali, só não tinha sido notada.
+REGRAS
+1. Você NÃO pode inventar cômodos, portas ou passagens novas — mas PODE (e DEVE) introduzir uma entidade, pessoa ou criatura que não foi mencionada antes. Ela sempre esteve ali, só não tinha sido notada.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 DESIGN DE CENA:
@@ -1666,7 +1665,7 @@ Siga o tom literário e a estrutura do Exemplo abaixo:
     {
       "sala_id": 1045,
       "titulo": "O Eco Metálico",
-      "texto_evento": "Depois de caminhar pelo corredor, você chega a um necrotério desativado. Azulejos encardidos cobrem as paredes e as gavetas de aço estão cobertas por uma fina camada de gelo. O cheiro de produtos químicos envelhecidos se mistura a um odor metálico persistente. Na segunda fileira, uma das portas está entreaberta, e uma linha fina de sangue escuro escorregiu até o ralo no chão. Antes que você decida recuar, o som de unhas arranhando o interior do metal ecoa pela sala.",
+      "texto_evento": "Depois de caminhar pelo corredor, você chega a um necrotério desativado. Azulejos encardidos cobrem as paredes e as gavetas de aço estão cobertas por uma fina camada de gelo. Na segunda fileira, uma das portas está entreaberta, e uma linha fina de sangue escuro escorregiu até o ralo no chão. Antes que você decida recuar, o som de unhas arranhando o interior do metal ecoa pela sala.",
       "dilemas": [
         {
           "opcao_texto": "Chutar a gaveta para fechá-la de uma vez",
