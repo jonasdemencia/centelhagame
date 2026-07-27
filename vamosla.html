@@ -1249,6 +1249,49 @@ function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historic
             }
         }
 
+
+async function chamarSambanova(messages, temperatura = 0.7, formato = { type: "json_object" }, modeloPadrao = "Meta-Llama-3.1-70B-Instruct", tentativas = 3, maxTokens = 4096) {
+    
+    // COLOQUE AQUI A URL DO SEU WORKER (ex: https://seu-worker.seu-subdominio.workers.dev)
+    const URL = "https://fancy-grass-43d6.fabiorainersilva.workers.dev"; 
+
+    for (let i = 0; i < tentativas; i++) {
+        try {
+            const response = await fetch(URL, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                    // A linha "Authorization" foi removida, o Worker fará isso.
+                },
+                body: JSON.stringify({
+                    model: modeloPadrao,
+                    messages: messages,
+                    temperature: temperatura,
+                    max_tokens: maxTokens,
+                    ...(formato ? { response_format: formato } : {})
+                })
+            });
+
+            const data = await response.json();
+
+            // MANTENHA O RESTANTE DO CÓDIGO INTEGRO A PARTIR DAQUI...
+            if (!response.ok) {
+                throw new Error(`Erro Sambanova [${response.status}]: ${JSON.stringify(data)}`);
+            }
+            if (!data.choices || !Array.isArray(data.choices) || data.choices.length === 0) {
+                throw new Error(`Resposta da Sambanova sem 'choices': ${JSON.stringify(data).slice(0, 300)}`);
+            }
+            return data;
+            
+        } catch (error) {
+            console.warn(`⚠️ [Sambanova] Tentativa ${i + 1}/${tentativas} falhou:`, error.message);
+            if (i === tentativas - 1) throw error;
+            await new Promise(resolve => setTimeout(resolve, 2000));
+        }
+    }
+}
+    
+
         async function gerarIND(idSala) {
     const sala = mapaMundo[idSala];
     
