@@ -1573,8 +1573,8 @@ Retorne APENAS o JSON rigorosamente neste formato:
             const contextSalas = idsElegiveis.map(id => {
     const sala = mapaFinalMesclado[String(id)];
     const textoCompleto = sala.texto_logico || '';
-  const textoOriginal = textoCompleto.length > 500
-     ? '(...) ' + textoCompleto.slice(-500)
+  const textoOriginal = textoCompleto.length > 300
+     ? '(...) ' + textoCompleto.slice(-300)
      : textoCompleto;
     const destinosSala = (sala.opcoes || [])
         .filter(o => o.destino && !o.arquiteto)
@@ -1595,7 +1595,7 @@ SALAS:
 ${contextSalas}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-MISSÃO: Para cada uma das salas listadas, crie UM evento situacional que ocorre no interior do aposento. Não há necessidade de reescrever o texto da sala. Foque-se na cena. 
+MISSÃO: Para cada uma das salas listadas, crie UM evento situacional que ocorre no interior do aposento. 80% descrição da cena, 20% ambiente. 
 
 REGRAS
 1. Você NÃO pode inventar cômodos, portas ou passagens novas — mas PODE (e DEVE) introduzir uma entidade, pessoa ou criatura que não foi mencionada antes. Ela sempre esteve ali, só não tinha sido notada.
