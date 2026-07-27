@@ -1753,7 +1753,10 @@ console.log(`[Cenas] Modelo usado: ${modeloUsado}`);
 const textoEvento = expurgarViciosIA((cena.texto_evento || '').trim());
 if (!textoEvento) return;
 
-const textoBase = (sala.texto_logico || '').trim();
+// Passa a guilhotina no texto antigo da sala ANTES de juntar com o evento novo
+let textoBase = (sala.texto_logico || '').trim();
+textoBase = expurgarViciosIA(textoBase); 
+
 sala.texto_logico = `${textoBase.replace(/[.\s]+$/, '')}. ${textoEvento}`;
 sala.cena_titulo   = titulo;
 sala.cena_aplicada = true;
