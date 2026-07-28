@@ -1574,16 +1574,12 @@ Retorne APENAS o JSON rigorosamente neste formato:
     function expurgarViciosIA(texto) {
     if (!texto) return texto;
 
-    // 1. Guilhotina para "como se" e "quase como se"
-    // Captura a vírgula/espaço anterior, a expressão, e todo o texto até a pontuação final,
-    // substituindo tudo apenas pela pontuação encontrada (ponto, exclamação, etc).
     let limpo = texto.replace(/(?:,\s*|\s+)\b(?:quase\s+)?como se\b[^.!?]*([.!?]|$)/gi, '$1');
-
-    // 2. Guilhotina para comparações diretas no fim da frase (Ex: "como uma memória congelada.")
-    // Remove "como um", "como uma", "como se fosse" no final das frases.
     limpo = limpo.replace(/(?:,\s*|\s+)\b(?:quase\s+)?como (?:um|uma)\b[^.!?]*([.!?]|$)/gi, '$1');
 
-    // Remove espaços duplos acidentais que possam sobrar
+    // 3. Guilhotina para "de repente" — clichê banido, remove o advérbio e mantém a frase
+    limpo = limpo.replace(/\b[Dd]e repente,?\s*/g, '');
+
     return limpo.replace(/\s{2,}/g, ' ').trim();
 }
 
@@ -1639,7 +1635,8 @@ SALAS:
 ${contextSalas}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-MISSÃO: Para cada sala, crie UM evento SITUACIONAL conciso que introduz uma entidade, pessoa ou criatura. O evento deve ser descrito em apenas 3-4 frases, SEM detalhar o ambiente (móveis, objetos, decoração). Apenas a ação e a presença do elemento de tensão.
+
+MISSÃO: Para cada sala, crie UM evento SITUACIONAL conciso envolvendo uma entidade, pessoa ou criatura. Descreva o aposento de forma suscinta e já inicie a apresentação da entidade: "Ao chegar na biblioteca, ao lado da pequena estante de vidro, um homem vestido com farrapos e aspecto decrépito está agachado lambendo as páginas de um livro antigo.."
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 DESIGN DE CENA:
@@ -1707,7 +1704,7 @@ Siga o tom literário e a estrutura do Exemplo abaixo. O exemplo abaixo mostra a
     {
       "sala_id": 1045,
       "titulo": "O Eco Metálico",
-      "texto_evento": "Depois de caminhar pelo corredor, você chega a um necrotério desativado. Azulejos encardidos cobrem as paredes e as gavetas de aço estão cobertas por uma fina camada de gelo. Na segunda fileira, uma das portas está entreaberta, e uma linha fina de sangue escuro escorregiu até o ralo no chão. Antes que você decida recuar, o som de unhas arranhando o interior do metal ecoa pela sala.",
+      "texto_evento": "Depois de caminhar pelo corredor, você chega a um necrotério desativado. As gavetas de aço estão cobertas por uma fina camada de gelo. Na segunda fileira, uma das portas está entreaberta, e uma linha fina de sangue escuro escorregiu até o ralo no chão. Antes que você decida recuar, o som de unhas arranhando o interior do metal ecoa pela sala.",
       "dilemas": [
         {
           "opcao_texto": "Chutar a gaveta para fechá-la de uma vez",
