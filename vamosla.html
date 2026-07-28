@@ -3656,6 +3656,7 @@ Retorne EXATAMENTE o JSON abaixo. Nenhuma palavra extra.`
                                 if (textoAlvo) {
                                     const vetorAcao = await window.extratorSemantico(textoAlvo, { pooling: 'mean', normalize: true });
                                     const similaridade = cos_sim(vetorJogador.data, vetorAcao.data);
+                                    console.log(`Comparando: "${pergunta}" com "${textoAlvo}" -> similaridade: ${similaridade}`);
                                     if (similaridade > maiorSimilaridade) {
                                         maiorSimilaridade = similaridade;
                                         melhorMatch = acao;
@@ -3700,10 +3701,12 @@ Retorne EXATAMENTE o JSON abaixo. Nenhuma palavra extra.`
                     let classificacao;
 
                     if (classificacaoRaw === null) {
-                        const tempJuizId = adicionarMensagem('⚖️ Árbitro avaliando a ação...', 'system', true);
-                        classificacao = await classificarComArbitro(pergunta, entidadeEmFoco);
-                        const msgJuiz = document.getElementById(tempJuizId);
-                        if (msgJuiz) msgJuiz.remove();
+                        // const tempJuizId = adicionarMensagem('⚖️ Árbitro avaliando a ação...', 'system', true);
+// classificacao = await classificarComArbitro(pergunta, entidadeEmFoco);
+// const msgJuiz = document.getElementById(tempJuizId);
+// if (msgJuiz) msgJuiz.remove();
+                        // Fallback: trata tudo como LIVRE
+classificacao = { tipo: 'LIVRE', atributo: 'NENHUM', fonte: 'teste' };
                     } else {
                         classificacao = classificacaoRaw;
                     }
