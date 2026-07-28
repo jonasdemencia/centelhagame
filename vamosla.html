@@ -3694,7 +3694,7 @@ async function executarDilemaComRamificacao(pai, ram) {
                     const salaAtual = mapaMundo[secaoAtualId];
                     let melhorMatch = null;
                     let maiorSimilaridade = 0;
-                    const limiteAceitacao = 0.65;
+                    const limiteAceitacao = 0.60;
 
                     if (window.extratorSemantico && salaAtual) {
     // Monta uma lista de "opções de busca" que inclui ramificações, sem modificar os originais
