@@ -3408,6 +3408,128 @@ Retorne EXATAMENTE o JSON abaixo. Nenhuma palavra extra.`
             }
         }
 
+
+
+    function atualizarBotoesNavegacao() {
+    const container = document.getElementById('map-controls');
+    const salaDesc = document.getElementById('sala-desc');
+    container.innerHTML = '';
+    
+    const sala = mapaMundo?.[secaoAtualId];
+    if (!sala) return;
+
+    if (salaDesc.innerHTML === '') {
+        salaDesc.innerHTML = sala.texto_logico || "A escuridão domina este lugar...";
+    }
+
+    if (!sala.opcoes) return;
+
+    let _dilemaHeaderAdded = false;
+
+    const destinosSequestrados = new Set(
+        sala.opcoes
+            .filter(o => o.dilema === true && !o.disparado && o.destino)
+            .map(o => String(o.destino))
+    );
+
+    sala.opcoes.forEach(opcao => {
+        if (opcao.arquiteto === true && (!opcao.destino || opcao.dilema === true)) {
+            if (opcao.disparado) return;
+
+            if (opcao.dilema === true) {
+                if (!_dilemaHeaderAdded) {
+                    const sep = document.createElement('div');
+                    sep.className = 'dilema-separator';
+                    container.appendChild(sep);
+                    _dilemaHeaderAdded = true;
+                }
+                const btnDilema = document.createElement('button');
+                btnDilema.className = 'nav-btn nav-btn--dilema';
+                btnDilema.innerText = `> ${opcao.texto}`;
+                btnDilema.onclick = () => executarDilema(opcao);
+                container.appendChild(btnDilema);
+                return;
+            }
+
+            const btnArq = document.createElement('button');
+            btnArq.className = 'nav-btn';
+            btnArq.innerText = `> ${opcao.texto}`;
+            btnArq.onclick = async () => {
+                if (window._transicaoEmAndamento) return;
+                window._transicaoEmAndamento = true;
+
+                opcao.disparado = true;
+                adicionarMensagem(`> ${opcao.texto}`, 'user');
+
+                let perigoBloqueado = false;
+                if (opcao.dano > 10) {
+                    const resultadoTeste = await realizarTestePerigo();
+                    if (resultadoTeste === 'SUCESSO') {
+                        perigoBloqueado = true;
+                    }
+                }
+
+                if (!perigoBloqueado) {
+                    const resultDiv = document.createElement('div');
+                    resultDiv.className = 'result-message';
+                    resultDiv.innerText = opcao.resultado_texto;
+                    chatBox.appendChild(resultDiv);
+                    chatBox.scrollTop = chatBox.scrollHeight;
+
+                    if (opcao.dano > 0) {
+                        energia = Math.max(0, energia - opcao.dano);
+                        document.getElementById('energia-span').innerText = `🩸 ${energia}/10`;
+                        await salvarEstadoJogador();
+                    }
+                }
+
+                atualizarBotoesNavegacao();
+                atualizarLootRoom();
+
+                window._transicaoEmAndamento = false;
+            };
+            container.appendChild(btnArq);
+            return;
+        }
+
+        if (!opcao.arquiteto && opcao.destino && destinosSequestrados.has(String(opcao.destino))) {
+            return;
+        }
+        
+        const destinoSala = mapaMundo?.[String(opcao.destino)];
+        if (destinoSala?.bloqueio?.ativo) {
+            const btnBloqueado = document.createElement('button');
+            btnBloqueado.className = 'nav-btn';
+            btnBloqueado.disabled = false;
+            btnBloqueado.style.cursor = "pointer";
+            btnBloqueado.innerText = `> ${opcao.texto}`;
+            btnBloqueado.onclick = () => {
+                if (window._transicaoEmAndamento) return;
+                adicionarMensagem(`A porta não cede: ${destinoSala.bloqueio.descricao}`, 'system');
+            };
+            container.appendChild(btnBloqueado);
+            return;
+        }
+        
+        const btn = document.createElement('button');
+        btn.className = 'nav-btn';
+        
+        const saltoLongo = Math.abs(opcao.destino - parseInt(secaoAtualId)) > SALAS_POR_ZONA;
+        const ehPuzzle = opcao.destino >= 10000;
+
+        btn.innerText = saltoLongo ? `>> ${opcao.texto}` : `> ${opcao.texto}`;
+
+        if (saltoLongo && !ehPuzzle) {
+            btn.style.color = "#a13d3d";
+            btn.style.borderColor = "#a13d3d";
+        }
+
+        btn.onclick = () => navegarPara(opcao.destino, opcao.texto, opcao);
+        container.appendChild(btn);
+    });
+}
+    
+
         // ============================================================
         // FUNÇÃO PRINCIPAL window.enviar (com interceptação semântica)
         // ============================================================
@@ -3921,6 +4043,10 @@ REGRA DE FIDELIDADE: Se o botão cita uma porta, janela ou item, certifique-se d
             }
         };
 
+
+
+
+    
         // ============================================================
         // RECALCULAR COORDENADAS PARA MAPA
         // ============================================================
