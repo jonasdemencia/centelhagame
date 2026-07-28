@@ -3412,7 +3412,7 @@ async function executarDilemaComRamificacao(pai, ram) {
     if (window._transicaoEmAndamento) return;
     window._transicaoEmAndamento = true;
 
-    // 1. Marca o pai e todos os dilemas da sala como disparados
+    // Marca o pai como disparado
     pai.disparado = true;
     const salaAtual = mapaMundo[secaoAtualId];
     if (salaAtual && salaAtual.opcoes) {
@@ -3421,7 +3421,7 @@ async function executarDilemaComRamificacao(pai, ram) {
             .forEach(o => { o.disparado = true; });
     }
 
-    // 2. Exibe o resultado do pai (se houver)
+    // 1. Exibe o resultado do pai (se houver)
     if (pai.resultado_texto) {
         const bridgeDiv = document.createElement('div');
         bridgeDiv.className = 'result-message';
@@ -3435,8 +3435,11 @@ async function executarDilemaComRamificacao(pai, ram) {
         await salvarEstadoJogador();
     }
 
+    // 2. Exibe a ação da ramificação (já foi exibida em ">> Ação executada", mas mostramos de novo como se fosse a escolha)
+    // Não adicionamos novamente a mensagem para evitar duplicação, pois já foi exibida no match.
+    // Mas se quiser, pode adicionar.
+
     // 3. Exibe o resultado da ramificação
-    adicionarMensagem(`> ${ram.opcao_texto}`, 'user');
     const resultDiv = document.createElement('div');
     resultDiv.className = 'result-message';
     resultDiv.innerText = ram.resultado_texto;
@@ -3449,7 +3452,7 @@ async function executarDilemaComRamificacao(pai, ram) {
         await salvarEstadoJogador();
     }
 
-    // 4. Navega ou atualiza a sala
+    // 4. Navega ou atualiza
     if (ram.destino) {
         await navegarPara(ram.destino, ram.opcao_texto, { texto: ram.opcao_texto });
     } else {
@@ -3694,68 +3697,76 @@ async function executarDilemaComRamificacao(pai, ram) {
                     const limiteAceitacao = 0.65;
 
                     if (window.extratorSemantico && salaAtual) {
-    let acoesOcultas = [];
+    // Monta uma lista de "opções de busca" que inclui ramificações, sem modificar os originais
+    const opcoesBusca = [];
     if (salaAtual.opcoes) {
         for (const opcao of salaAtual.opcoes) {
-            // Adiciona a opção principal
-            acoesOcultas.push(opcao);
-            // Se for um dilema com ramificações, adiciona cada ramificação também
+            // Opção principal
+            opcoesBusca.push({
+                tipo: 'opcao',
+                opcaoOriginal: opcao,
+                textoBusca: opcao.texto || opcao.opcao_texto || '',
+                paiDilema: null, // não é ramificação
+                isRamificacao: false
+            });
+            // Se tem ramificações, adiciona cada uma
             if (opcao.dilema && opcao.ramificacoes && opcao.ramificacoes.length > 0) {
                 for (const ram of opcao.ramificacoes) {
-                    // Marca que esta é uma ramificação e guarda referência ao pai
-                    ram._isRamificacao = true;
-                    ram._paiDilema = opcao;
-                    acoesOcultas.push(ram);
+                    opcoesBusca.push({
+                        tipo: 'ramificacao',
+                        opcaoOriginal: ram,
+                        textoBusca: ram.opcao_texto || '',
+                        paiDilema: opcao,
+                        isRamificacao: true
+                    });
                 }
             }
         }
     }
 
-    if (acoesOcultas.length > 0) {
-        // Vetor da ação digitada pelo jogador
+    if (opcoesBusca.length > 0) {
         const vetorJogador = await window.extratorSemantico(pergunta, { pooling: 'mean', normalize: true });
-
-        // Compara com cada opção oculta (incluindo ramificações)
-        for (const acao of acoesOcultas) {
-            const textoAlvo = acao.texto || acao.opcao_texto || acao.descricao;
+        for (const item of opcoesBusca) {
+            const textoAlvo = item.textoBusca;
             if (textoAlvo) {
                 const vetorAcao = await window.extratorSemantico(textoAlvo, { pooling: 'mean', normalize: true });
                 const similaridade = cos_sim(vetorJogador.data, vetorAcao.data);
                 console.log(`🔍 Comparando: "${pergunta}" com "${textoAlvo}" -> similaridade: ${similaridade.toFixed(4)}`);
                 if (similaridade > maiorSimilaridade) {
                     maiorSimilaridade = similaridade;
-                    melhorMatch = acao;
+                    melhorMatch = item; // Agora melhorMatch é um objeto de busca, não a opção original
                 }
             }
         }
     }
 }
 
-                    if (maiorSimilaridade >= limiteAceitacao && melhorMatch) {
+                   if (maiorSimilaridade >= limiteAceitacao && melhorMatch) {
     console.log("🔥 MATCH SEMÂNTICO ENCONTRADO! 🔥");
     console.log("Jogador digitou:", pergunta);
     console.log("Opção oculta equivalente:", melhorMatch);
     console.log("Grau de Similaridade:", maiorSimilaridade);
 
-    // Limpa a mensagem de "pensando" e reabilita os controles
     clearInterval(intervaloAnimacao);
     const tempElement = document.getElementById(tempId);
     if (tempElement) tempElement.remove();
 
-    adicionarMensagem(">> Ação executada: " + (melhorMatch.texto || melhorMatch.opcao_texto || "Prosseguir"), "system");
+    // Exibe a ação executada
+    const textoExibido = melhorMatch.tipo === 'ramificacao' 
+        ? melhorMatch.opcaoOriginal.opcao_texto 
+        : (melhorMatch.opcaoOriginal.texto || melhorMatch.opcaoOriginal.opcao_texto || "Prosseguir");
+    adicionarMensagem(">> Ação executada: " + textoExibido, "system");
 
-    // ===== NOVA LÓGICA DE EXECUÇÃO =====
-    if (melhorMatch._isRamificacao) {
-        // É uma ramificação: executa o pai primeiro (resultado/dano) e depois a ramificação
-        await executarDilemaComRamificacao(melhorMatch._paiDilema, melhorMatch);
-    } else if (melhorMatch.destino !== undefined && !melhorMatch.dilema) {
-        await navegarPara(melhorMatch.destino, melhorMatch.texto, melhorMatch);
+    // Executa conforme o tipo
+    if (melhorMatch.isRamificacao) {
+        // Ramificação: precisa executar o pai primeiro (resultado/dano) e depois a ramificação
+        await executarDilemaComRamificacao(melhorMatch.paiDilema, melhorMatch.opcaoOriginal);
+    } else if (melhorMatch.opcaoOriginal.destino !== undefined && !melhorMatch.opcaoOriginal.dilema) {
+        await navegarPara(melhorMatch.opcaoOriginal.destino, melhorMatch.opcaoOriginal.texto, melhorMatch.opcaoOriginal);
     } else {
-        await executarDilema(melhorMatch);
+        await executarDilema(melhorMatch.opcaoOriginal);
     }
-    // ====================================
 
-    // Reativa a interface
     sendBtn.disabled = false;
     userInput.disabled = false;
     userInput.focus();
