@@ -843,22 +843,35 @@ window.dispatchEvent(new Event('firebase-initialized'));
 };
 
 
-// VARIÁVEL GLOBAL PARA O MOTOR SEMÂNTICO
+// ============================================================
+// MOTOR SEMÂNTICO (Mantendo seu modelo original)
+// ============================================================
 window.extratorSemantico = null;
 
-// FUNÇÃO EXCLUSIVA PARA CARREGAR O MODELO EM SEGUNDO PLANO
 async function iniciarMotorSemantico() {
     try {
-        window.extratorSemantico = await pipeline('feature-extraction', 'Xenova/paraphrase-multilingual-MiniLM-L12-v2', {
-            quantized: true // Mantém o modelo leve
+        // Força o download do Hugging Face, NÃO do GitHub
+        const modelId = 'Xenova/paraphrase-multilingual-MiniLM-L12-v2';
+        
+        // Define explicitamente a URL base para o Hugging Face (evita redirecionamento)
+        window.extratorSemantico = await pipeline('feature-extraction', modelId, {
+            quantized: true,
+            use_fp16: false,
+            // 🔥 LINHA CRUCIAL: força o cache a usar o Hugging Face
+            model_file_name: 'model_quantized.onnx',
+            // Remove qualquer customização de caminho
+            base_url: 'https://huggingface.co/'
         });
-        console.log("Motor semântico carregado. Jogo pronto para inputs de texto.");
+
+        console.log("✅ Motor semântico carregado (modelo original). Jogo pronto.");
     } catch (erro) {
-        console.error("Erro ao carregar o motor semântico:", erro);
+        console.error("❌ Erro ao carregar o motor semântico:", erro);
+        console.warn("⚠️ Motor semântico desabilitado. O jogo continua normal.");
+        window.extratorSemantico = null;
     }
 }
 
-// EXECUTA A INICIALIZAÇÃO IMEDIATAMENTE
+// Inicia o carregamento sem bloquear
 iniciarMotorSemantico();
     
 
