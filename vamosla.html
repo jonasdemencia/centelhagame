@@ -3166,253 +3166,240 @@ Retorne EXATAMENTE o JSON abaixo. Nenhuma palavra extra.`
         // FUNÇÕES DE NAVEGAÇÃO E DILEMA (extraídas dos onclick)
         // ============================================================
 
-        async function navegarPara(destino, textoAcao, opcao) {
-            if (window._transicaoEmAndamento) return;
-            window._transicaoEmAndamento = true;
-
-            const container = document.getElementById('map-controls');
-            const salaDesc = document.getElementById('sala-desc');
-
-            document.getElementById('controls').style.pointerEvents = 'none';
-            container.style.pointerEvents = 'none';
-
-            const interceptor = opcao.interceptor_arquiteto;
-            if (interceptor && !interceptor.disparado) {
-                interceptor.disparado = true;
-                adicionarMensagem(`> ${textoAcao || opcao.texto}`, 'user');
-
-                let perigoBloqueadoInterceptor = false;
-                if (interceptor.dano > 10) {
-                    const resultadoTeste = await realizarTestePerigo();
-                    if (resultadoTeste === 'SUCESSO') perigoBloqueadoInterceptor = true;
-                }
-                if (!perigoBloqueadoInterceptor) {
-                    const resultDiv = document.createElement('div');
-                    resultDiv.className = 'result-message';
-                    resultDiv.innerText = interceptor.resultado_texto;
-                    chatBox.appendChild(resultDiv);
-                    chatBox.scrollTop = chatBox.scrollHeight;
-                    if (interceptor.dano > 0) {
-                        energia = Math.max(0, energia - interceptor.dano);
-                        document.getElementById('energia-span').innerText = `🩸 ${energia}/10`;
-                        await salvarEstadoJogador();
-                    }
-                }
-
-                const botoesAtuais = document.querySelectorAll('#map-controls .nav-btn');
-                botoesAtuais.forEach(btn => { btn.disabled = true; });
-                const btnContinuar = document.createElement('button');
-                btnContinuar.className = 'nav-btn';
-                btnContinuar.innerText = '> CONTINUAR';
-                btnContinuar.style.background = '#1a2a1a';
-                btnContinuar.style.borderColor = '#4caf50';
-                btnContinuar.style.color = '#4caf50';
-                container.appendChild(btnContinuar);
-                container.style.pointerEvents = 'auto';
-                await new Promise(resolve => {
-                    btnContinuar.onclick = () => {
-                        btnContinuar.remove();
-                        botoesAtuais.forEach(btn => { btn.disabled = false; });
-                        container.style.pointerEvents = 'none';
-                        resolve();
-                    };
-                });
-            }
-
-            const overlay = document.createElement('div');
-            overlay.className = 'fade-overlay';
-            document.body.appendChild(overlay);
-            setTimeout(() => overlay.classList.add('active'), 10);
-            await new Promise(resolve => setTimeout(resolve, 500));
-
-            try {
-                const audio = new Audio(opcao.som || 'https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/passos.mp3');
-                await audio.play();
-                await new Promise(resolve => setTimeout(resolve, 1500));
-            } catch (error) {}
-
-            container.innerHTML = '';
-            document.getElementById('chat-box').innerHTML = '';
-
-            const destinoStr = destino.toString();
-
-            if (!mapaMundo[destinoStr]) {
-                const zonaAlvo = Math.ceil(destino / SALAS_POR_ZONA);
-                const idLoading = adicionarMensagem(`[SISTEMA] Processando dados da Zona ${zonaAlvo}...`, "system", true);
-                window._expansaoEmAndamento = true;
-                await gerarZona(zonaAlvo, null);
-                window._expansaoEmAndamento = false;
-                document.getElementById(idLoading)?.remove();
-            }
-
-            secaoAtualId = destinoStr;
-            salasVisitadas.add(destinoStr);
-            if (parseInt(secaoAtualId) < 10000) {
-                zonaAtual = Math.ceil(parseInt(secaoAtualId) / SALAS_POR_ZONA);
-            }
-            await salvarEstadoJogador();
-
-            const novaSala = mapaMundo[secaoAtualId];
-
-            if (novaSala && novaSala.opcoes) {
-                novaSala.opcoes.forEach(o => { if (o.dilema) o.disparado = false; });
-            }
-
-            if (novaSala && novaSala.ind_disponivel) {
-                novaSala.ind_disponivel = false;
-                await salvarEstadoJogador();
-                const idLoadingIND = adicionarMensagem(`[SISTEMA] Anomalia detectada...`, "system", true);
-                try {
-                    const textoIND = await gerarIND(secaoAtualId);
-                    document.getElementById(idLoadingIND)?.remove();
-                    historicoIND.push(textoIND);
-                    await salvarEstadoJogador();
-                    await exibirModalIND(textoIND);
-                } catch (error) {
-                    document.getElementById(idLoadingIND)?.remove();
-                }
-            }
-
-            verificarEExpandirMundo();
-
-            if (novaSala?.texto_logico) {
-                const textoFinal = prepararTextoChegada(novaSala.texto_logico, textoAcao || opcao.texto, parseInt(secaoAtualId), destino);
-                salaDesc.innerHTML = textoFinal;
-                historicoConversa.push({ role: 'user', content: `[Navegou para: ${textoAcao || opcao.texto}]` });
-                historicoConversa.push({ role: 'assistant', content: novaSala.texto_logico });
-                if (historicoConversa.length > 10) historicoConversa.splice(0, 2);
-            }
-
-            atualizarBotoesNavegacao();
-            atualizarLootRoom();
-
-            overlay.classList.remove('active');
-            setTimeout(() => {
-                overlay.remove();
-                window._transicaoEmAndamento = false;
-                document.getElementById('controls').style.pointerEvents = 'auto';
-                const novoContainer = document.getElementById('map-controls');
-                if (novoContainer) novoContainer.style.pointerEvents = 'auto';
-            }, 1200);
-        }
-
-        async function executarDilema(opcao) {
-            if (window._transicaoEmAndamento) return;
-            window._transicaoEmAndamento = true;
-
-            opcao.disparado = true;
-            const salaAtual = mapaMundo[secaoAtualId];
-            if (salaAtual && salaAtual.opcoes) {
-                salaAtual.opcoes
-                    .filter(o => o.dilema === true && !o.disparado)
-                    .forEach(o => { o.disparado = true; });
-            }
-
-            adicionarMensagem(`> ${opcao.texto}`, 'user');
-
-            if (opcao.ramificacoes && opcao.ramificacoes.length > 0) {
-                if (opcao.resultado_texto) {
-                    const bridgeDiv = document.createElement('div');
-                    bridgeDiv.className = 'result-message';
-                    bridgeDiv.innerText = opcao.resultado_texto;
-                    chatBox.appendChild(bridgeDiv);
-                    chatBox.scrollTop = chatBox.scrollHeight;
-                }
-                if (opcao.dano > 0) {
-                    energia = Math.max(0, energia - opcao.dano);
-                    document.getElementById('energia-span').innerText = `🩸 ${energia}/10`;
-                    await salvarEstadoJogador();
-                }
-
-                const container = document.getElementById('map-controls');
-                container.innerHTML = '';
-                const ramSep = document.createElement('div');
-                ramSep.className = 'ramificacao-separator';
-                ramSep.innerHTML = `<span>— desdobramento —</span>`;
-                container.appendChild(ramSep);
-
-                opcao.ramificacoes.forEach(ram => {
-                    const btnRam = document.createElement('button');
-                    btnRam.className = 'nav-btn nav-btn--ramificacao';
-                    btnRam.innerText = `↳ ${ram.opcao_texto}`;
-                    btnRam.onclick = async () => {
-                        if (window._transicaoEmAndamento) return;
-                        window._transicaoEmAndamento = true;
-
-                        adicionarMensagem(`> ${ram.opcao_texto}`, 'user');
-
-                        const resultDiv = document.createElement('div');
-                        resultDiv.className = 'result-message';
-                        resultDiv.innerText = ram.resultado_texto;
-                        chatBox.appendChild(resultDiv);
-                        chatBox.scrollTop = chatBox.scrollHeight;
-
-                        if (ram.dano > 0) {
-                            energia = Math.max(0, energia - ram.dano);
-                            document.getElementById('energia-span').innerText = `🩸 ${energia}/10`;
-                            await salvarEstadoJogador();
-                        }
-
-                        if (ram.destino) {
-                            await navegarPara(ram.destino, ram.opcao_texto, { texto: ram.opcao_texto });
-                        } else {
-                            atualizarBotoesNavegacao();
-                            atualizarLootRoom();
-                            window._transicaoEmAndamento = false;
-                        }
-                    };
-                    container.appendChild(btnRam);
-                });
-
-                window._transicaoEmAndamento = false;
-                return;
-            }
-
-            const resultDiv = document.createElement('div');
-            resultDiv.className = 'result-message';
-            resultDiv.innerText = opcao.resultado_texto;
-            chatBox.appendChild(resultDiv);
-            chatBox.scrollTop = chatBox.scrollHeight;
-
-            if (opcao.dano > 0) {
-                energia = Math.max(0, energia - opcao.dano);
-                document.getElementById('energia-span').innerText = `🩸 ${energia}/10`;
-                await salvarEstadoJogador();
-            }
-
-            if (opcao.destino) {
-                const container = document.getElementById('map-controls');
-                container.innerHTML = '';
-                const btnContinuar = document.createElement('button');
-                btnContinuar.className = 'nav-btn';
-                btnContinuar.innerText = '> CONTINUAR';
-                btnContinuar.style.background = '#1a2a1a';
-                btnContinuar.style.borderColor = '#4caf50';
-                btnContinuar.style.color = '#4caf50';
-                container.appendChild(btnContinuar);
-                container.style.pointerEvents = 'auto';
-                const mainScroll = document.getElementById('main-scroll-area');
-                mainScroll.scrollTop = mainScroll.scrollHeight;
-                await new Promise(resolve => {
-                    btnContinuar.onclick = () => {
-                        container.style.pointerEvents = 'none';
-                        resolve();
-                    };
-                });
-
-                await navegarPara(opcao.destino, opcao.texto, opcao);
-            } else {
-                atualizarBotoesNavegacao();
-                atualizarLootRoom();
-                window._transicaoEmAndamento = false;
-            }
-        }
-
-async function executarDilemaComRamificacao(pai, ram) {
+        async function navegarPara(destino, textoAcao, opcao, silent = false) {
     if (window._transicaoEmAndamento) return;
     window._transicaoEmAndamento = true;
 
-    // Marca o pai como disparado
+    const container = document.getElementById('map-controls');
+    const salaDesc = document.getElementById('sala-desc');
+
+    document.getElementById('controls').style.pointerEvents = 'none';
+    container.style.pointerEvents = 'none';
+
+    const interceptor = opcao.interceptor_arquiteto;
+    if (interceptor && !interceptor.disparado) {
+        interceptor.disparado = true;
+        if (!silent) {
+            adicionarMensagem(`> ${textoAcao || opcao.texto}`, 'user');
+        }
+
+        let perigoBloqueadoInterceptor = false;
+        if (interceptor.dano > 10) {
+            const resultadoTeste = await realizarTestePerigo();
+            if (resultadoTeste === 'SUCESSO') perigoBloqueadoInterceptor = true;
+        }
+        if (!perigoBloqueadoInterceptor) {
+            const resultDiv = document.createElement('div');
+            resultDiv.className = 'result-message';
+            resultDiv.innerText = interceptor.resultado_texto;
+            chatBox.appendChild(resultDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+            if (interceptor.dano > 0) {
+                energia = Math.max(0, energia - interceptor.dano);
+                document.getElementById('energia-span').innerText = `🩸 ${energia}/10`;
+                await salvarEstadoJogador();
+            }
+        }
+
+        const botoesAtuais = document.querySelectorAll('#map-controls .nav-btn');
+        botoesAtuais.forEach(btn => { btn.disabled = true; });
+        const btnContinuar = document.createElement('button');
+        btnContinuar.className = 'nav-btn';
+        btnContinuar.innerText = '> CONTINUAR';
+        btnContinuar.style.background = '#1a2a1a';
+        btnContinuar.style.borderColor = '#4caf50';
+        btnContinuar.style.color = '#4caf50';
+        container.appendChild(btnContinuar);
+        container.style.pointerEvents = 'auto';
+        await new Promise(resolve => {
+            btnContinuar.onclick = () => {
+                btnContinuar.remove();
+                botoesAtuais.forEach(btn => { btn.disabled = false; });
+                container.style.pointerEvents = 'none';
+                resolve();
+            };
+        });
+    }
+
+    const overlay = document.createElement('div');
+    overlay.className = 'fade-overlay';
+    document.body.appendChild(overlay);
+    setTimeout(() => overlay.classList.add('active'), 10);
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    try {
+        const audio = new Audio(opcao.som || 'https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/passos.mp3');
+        await audio.play();
+        await new Promise(resolve => setTimeout(resolve, 1500));
+    } catch (error) {}
+
+    container.innerHTML = '';
+    document.getElementById('chat-box').innerHTML = '';
+
+    const destinoStr = destino.toString();
+
+    if (!mapaMundo[destinoStr]) {
+        const zonaAlvo = Math.ceil(destino / SALAS_POR_ZONA);
+        const idLoading = adicionarMensagem(`[SISTEMA] Processando dados da Zona ${zonaAlvo}...`, "system", true);
+        window._expansaoEmAndamento = true;
+        await gerarZona(zonaAlvo, null);
+        window._expansaoEmAndamento = false;
+        document.getElementById(idLoading)?.remove();
+    }
+
+    secaoAtualId = destinoStr;
+    salasVisitadas.add(destinoStr);
+    if (parseInt(secaoAtualId) < 10000) {
+        zonaAtual = Math.ceil(parseInt(secaoAtualId) / SALAS_POR_ZONA);
+    }
+    await salvarEstadoJogador();
+
+    const novaSala = mapaMundo[secaoAtualId];
+
+    if (novaSala && novaSala.opcoes) {
+        novaSala.opcoes.forEach(o => { if (o.dilema) o.disparado = false; });
+    }
+
+    if (novaSala && novaSala.ind_disponivel) {
+        novaSala.ind_disponivel = false;
+        await salvarEstadoJogador();
+        const idLoadingIND = adicionarMensagem(`[SISTEMA] Anomalia detectada...`, "system", true);
+        try {
+            const textoIND = await gerarIND(secaoAtualId);
+            document.getElementById(idLoadingIND)?.remove();
+            historicoIND.push(textoIND);
+            await salvarEstadoJogador();
+            await exibirModalIND(textoIND);
+        } catch (error) {
+            document.getElementById(idLoadingIND)?.remove();
+        }
+    }
+
+    verificarEExpandirMundo();
+
+    if (novaSala?.texto_logico) {
+        const textoFinal = prepararTextoChegada(novaSala.texto_logico, textoAcao || opcao.texto, parseInt(secaoAtualId), destino);
+        salaDesc.innerHTML = textoFinal;
+        historicoConversa.push({ role: 'user', content: `[Navegou para: ${textoAcao || opcao.texto}]` });
+        historicoConversa.push({ role: 'assistant', content: novaSala.texto_logico });
+        if (historicoConversa.length > 10) historicoConversa.splice(0, 2);
+    }
+
+    atualizarBotoesNavegacao();
+    atualizarLootRoom();
+
+    overlay.classList.remove('active');
+    setTimeout(() => {
+        overlay.remove();
+        window._transicaoEmAndamento = false;
+        document.getElementById('controls').style.pointerEvents = 'auto';
+        const novoContainer = document.getElementById('map-controls');
+        if (novoContainer) novoContainer.style.pointerEvents = 'auto';
+    }, 1200);
+}
+
+        async function executarDilema(opcao, silent = false) {
+    if (window._transicaoEmAndamento) return;
+    window._transicaoEmAndamento = true;
+
+    opcao.disparado = true;
+    const salaAtual = mapaMundo[secaoAtualId];
+    if (salaAtual && salaAtual.opcoes) {
+        salaAtual.opcoes
+            .filter(o => o.dilema === true && !o.disparado)
+            .forEach(o => { o.disparado = true; });
+    }
+
+    if (!silent) {
+        adicionarMensagem(`> ${opcao.texto}`, 'user');
+    }
+
+    if (opcao.ramificacoes && opcao.ramificacoes.length > 0) {
+        if (opcao.resultado_texto) {
+            const bridgeDiv = document.createElement('div');
+            bridgeDiv.className = 'result-message';
+            bridgeDiv.innerText = opcao.resultado_texto;
+            chatBox.appendChild(bridgeDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+        if (opcao.dano > 0) {
+            energia = Math.max(0, energia - opcao.dano);
+            document.getElementById('energia-span').innerText = `🩸 ${energia}/10`;
+            await salvarEstadoJogador();
+        }
+
+        const container = document.getElementById('map-controls');
+        container.innerHTML = '';
+        const ramSep = document.createElement('div');
+        ramSep.className = 'ramificacao-separator';
+        ramSep.innerHTML = `<span>— desdobramento —</span>`;
+        container.appendChild(ramSep);
+
+        opcao.ramificacoes.forEach(ram => {
+            const btnRam = document.createElement('button');
+            btnRam.className = 'nav-btn nav-btn--ramificacao';
+            btnRam.innerText = `↳ ${ram.opcao_texto}`;
+            btnRam.onclick = async () => {
+                if (window._transicaoEmAndamento) return;
+                window._transicaoEmAndamento = true;
+
+                // A mensagem da ramificação será exibida como ">> Ação executada..." no bloco semântico, 
+                // mas aqui passamos silent=true para não duplicar.
+                // Porém, para manter consistência, chamamos executarDilemaComRamificacao com silent=true
+                await executarDilemaComRamificacao(opcao, ram, true);
+            };
+            container.appendChild(btnRam);
+        });
+
+        window._transicaoEmAndamento = false;
+        return;
+    }
+
+    const resultDiv = document.createElement('div');
+    resultDiv.className = 'result-message';
+    resultDiv.innerText = opcao.resultado_texto;
+    chatBox.appendChild(resultDiv);
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    if (opcao.dano > 0) {
+        energia = Math.max(0, energia - opcao.dano);
+        document.getElementById('energia-span').innerText = `🩸 ${energia}/10`;
+        await salvarEstadoJogador();
+    }
+
+    if (opcao.destino) {
+        const container = document.getElementById('map-controls');
+        container.innerHTML = '';
+        const btnContinuar = document.createElement('button');
+        btnContinuar.className = 'nav-btn';
+        btnContinuar.innerText = '> CONTINUAR';
+        btnContinuar.style.background = '#1a2a1a';
+        btnContinuar.style.borderColor = '#4caf50';
+        btnContinuar.style.color = '#4caf50';
+        container.appendChild(btnContinuar);
+        container.style.pointerEvents = 'auto';
+        const mainScroll = document.getElementById('main-scroll-area');
+        mainScroll.scrollTop = mainScroll.scrollHeight;
+        await new Promise(resolve => {
+            btnContinuar.onclick = () => {
+                container.style.pointerEvents = 'none';
+                resolve();
+            };
+        });
+
+        await navegarPara(opcao.destino, opcao.texto, opcao, true); // passamos silent=true
+    } else {
+        atualizarBotoesNavegacao();
+        atualizarLootRoom();
+        window._transicaoEmAndamento = false;
+    }
+}
+    
+
+async function executarDilemaComRamificacao(pai, ram, silent = false) {
+    if (window._transicaoEmAndamento) return;
+    window._transicaoEmAndamento = true;
+
     pai.disparado = true;
     const salaAtual = mapaMundo[secaoAtualId];
     if (salaAtual && salaAtual.opcoes) {
@@ -3421,7 +3408,11 @@ async function executarDilemaComRamificacao(pai, ram) {
             .forEach(o => { o.disparado = true; });
     }
 
-    // 1. Exibe o resultado do pai (se houver)
+    // Se não for silencioso, exibe a mensagem do pai (mas geralmente já foi exibida pela interceptação)
+    // Vamos pular a mensagem do pai, pois a ação já foi mostrada como ">> Ação executada".
+    // Se quiser manter a mensagem do pai em outros contextos, pode usar um parâmetro, mas aqui vamos suprimir.
+    // Para evitar duplicação, não adicionamos a mensagem do usuário.
+
     if (pai.resultado_texto) {
         const bridgeDiv = document.createElement('div');
         bridgeDiv.className = 'result-message';
@@ -3435,11 +3426,7 @@ async function executarDilemaComRamificacao(pai, ram) {
         await salvarEstadoJogador();
     }
 
-    // 2. Exibe a ação da ramificação (já foi exibida em ">> Ação executada", mas mostramos de novo como se fosse a escolha)
-    // Não adicionamos novamente a mensagem para evitar duplicação, pois já foi exibida no match.
-    // Mas se quiser, pode adicionar.
-
-    // 3. Exibe o resultado da ramificação
+    // Exibe o resultado da ramificação
     const resultDiv = document.createElement('div');
     resultDiv.className = 'result-message';
     resultDiv.innerText = ram.resultado_texto;
@@ -3452,9 +3439,8 @@ async function executarDilemaComRamificacao(pai, ram) {
         await salvarEstadoJogador();
     }
 
-    // 4. Navega ou atualiza
     if (ram.destino) {
-        await navegarPara(ram.destino, ram.opcao_texto, { texto: ram.opcao_texto });
+        await navegarPara(ram.destino, ram.opcao_texto, { texto: ram.opcao_texto }, true); // silent=true
     } else {
         atualizarBotoesNavegacao();
         atualizarLootRoom();
@@ -3741,7 +3727,7 @@ async function executarDilemaComRamificacao(pai, ram) {
     }
 }
 
-                   if (maiorSimilaridade >= limiteAceitacao && melhorMatch) {
+                  if (maiorSimilaridade >= limiteAceitacao && melhorMatch) {
     console.log("🔥 MATCH SEMÂNTICO ENCONTRADO! 🔥");
     console.log("Jogador digitou:", pergunta);
     console.log("Opção oculta equivalente:", melhorMatch);
@@ -3751,20 +3737,19 @@ async function executarDilemaComRamificacao(pai, ram) {
     const tempElement = document.getElementById(tempId);
     if (tempElement) tempElement.remove();
 
-    // Exibe a ação executada
+    // Exibe a ação executada (apenas uma vez)
     const textoExibido = melhorMatch.tipo === 'ramificacao' 
         ? melhorMatch.opcaoOriginal.opcao_texto 
         : (melhorMatch.opcaoOriginal.texto || melhorMatch.opcaoOriginal.opcao_texto || "Prosseguir");
     adicionarMensagem(">> Ação executada: " + textoExibido, "system");
 
-    // Executa conforme o tipo
+    // Executa conforme o tipo, passando silent=true
     if (melhorMatch.isRamificacao) {
-        // Ramificação: precisa executar o pai primeiro (resultado/dano) e depois a ramificação
-        await executarDilemaComRamificacao(melhorMatch.paiDilema, melhorMatch.opcaoOriginal);
+        await executarDilemaComRamificacao(melhorMatch.paiDilema, melhorMatch.opcaoOriginal, true);
     } else if (melhorMatch.opcaoOriginal.destino !== undefined && !melhorMatch.opcaoOriginal.dilema) {
-        await navegarPara(melhorMatch.opcaoOriginal.destino, melhorMatch.opcaoOriginal.texto, melhorMatch.opcaoOriginal);
+        await navegarPara(melhorMatch.opcaoOriginal.destino, melhorMatch.opcaoOriginal.texto, melhorMatch.opcaoOriginal, true);
     } else {
-        await executarDilema(melhorMatch.opcaoOriginal);
+        await executarDilema(melhorMatch.opcaoOriginal, true);
     }
 
     sendBtn.disabled = false;
