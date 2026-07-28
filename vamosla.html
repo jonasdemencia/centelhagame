@@ -3694,7 +3694,7 @@ async function executarDilemaComRamificacao(pai, ram) {
                     const salaAtual = mapaMundo[secaoAtualId];
                     let melhorMatch = null;
                     let maiorSimilaridade = 0;
-                    const limiteAceitacao = 0.60;
+                    const limiteAceitacao = 0.65;
 
                     if (window.extratorSemantico && salaAtual) {
     // Monta uma lista de "opções de busca" que inclui ramificações, sem modificar os originais
@@ -3743,15 +3743,23 @@ async function executarDilemaComRamificacao(pai, ram) {
 
                    if (maiorSimilaridade >= limiteAceitacao && melhorMatch) {
     console.log("🔥 MATCH SEMÂNTICO ENCONTRADO! 🔥");
-    // Limpa a mensagem de "pensando"
+    console.log("Jogador digitou:", pergunta);
+    console.log("Opção oculta equivalente:", melhorMatch);
+    console.log("Grau de Similaridade:", maiorSimilaridade);
+
     clearInterval(intervaloAnimacao);
     const tempElement = document.getElementById(tempId);
     if (tempElement) tempElement.remove();
 
-    // (Linha removida: adicionarMensagem(">> Ação executada: ...", "system"))
+    // Exibe a ação executada
+    const textoExibido = melhorMatch.tipo === 'ramificacao' 
+        ? melhorMatch.opcaoOriginal.opcao_texto 
+        : (melhorMatch.opcaoOriginal.texto || melhorMatch.opcaoOriginal.opcao_texto || "Prosseguir");
+    adicionarMensagem(">> Ação executada: " + textoExibido, "system");
 
     // Executa conforme o tipo
     if (melhorMatch.isRamificacao) {
+        // Ramificação: precisa executar o pai primeiro (resultado/dano) e depois a ramificação
         await executarDilemaComRamificacao(melhorMatch.paiDilema, melhorMatch.opcaoOriginal);
     } else if (melhorMatch.opcaoOriginal.destino !== undefined && !melhorMatch.opcaoOriginal.dilema) {
         await navegarPara(melhorMatch.opcaoOriginal.destino, melhorMatch.opcaoOriginal.texto, melhorMatch.opcaoOriginal);
@@ -3759,7 +3767,6 @@ async function executarDilemaComRamificacao(pai, ram) {
         await executarDilema(melhorMatch.opcaoOriginal);
     }
 
-    // Reativa a interface
     sendBtn.disabled = false;
     userInput.disabled = false;
     userInput.focus();
