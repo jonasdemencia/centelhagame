@@ -325,6 +325,16 @@
     .cinematic-bars { width: 100%; height: 12vh; background: black; position: absolute; left: 0; z-index: -1;}
     .bar-top { top: 0; border-bottom: 1px solid #1a1a14; }
     .bar-bottom { bottom: 0; border-top: 1px solid #1a1a14; }
+
+ /* ===== OCULTAR BOTÕES E OPÇÕES ===== */
+    #map-controls,
+    .nav-btn,
+    .nav-btn--dilema,
+    .nav-btn--ramificacao,
+    .item-coletavel {
+        display: none !important;
+    }
+        
     </style>
     <base target="_blank">
 </head>
@@ -559,6 +569,9 @@
 </div>
 
 <script type="module">
+
+        import { pipeline, cos_sim } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.16.0';
+
     
         // ============================================================
         // Importações Firebase (versão compatível com o inventário)
@@ -828,6 +841,26 @@ window.dispatchEvent(new Event('firebase-initialized'));
         'ferramenta multiúso', 'canivete suíço', 'frasco', 'filtro de água'
     ]
 };
+
+
+// VARIÁVEL GLOBAL PARA O MOTOR SEMÂNTICO
+window.extratorSemantico = null;
+
+// FUNÇÃO EXCLUSIVA PARA CARREGAR O MODELO EM SEGUNDO PLANO
+async function iniciarMotorSemantico() {
+    try {
+        window.extratorSemantico = await pipeline('feature-extraction', 'Xenova/paraphrase-multilingual-MiniLM-L12-v2', {
+            quantized: true // Mantém o modelo leve
+        });
+        console.log("Motor semântico carregado. Jogo pronto para inputs de texto.");
+    } catch (erro) {
+        console.error("Erro ao carregar o motor semântico:", erro);
+    }
+}
+
+// EXECUTA A INICIALIZAÇÃO IMEDIATAMENTE
+iniciarMotorSemantico();
+    
 
         function pseudoRandom(seed) {
             let x = Math.sin(seed++) * 10000;
@@ -4126,334 +4159,401 @@ if (interceptor && !interceptor.disparado) {
 
         
         
-        window.enviar = async function(mensagemUsuario = null) {
-            const isInitial = mensagemUsuario === null;
-            
-            if (!isInitial) {
-                turnosJogados++;
-            }
-
-            let pergunta;
-            
-            if (isInitial) {
-    // Aguarda o mapa ser carregado (caso ainda não esteja)
-    if (!mapaMundo || !mapaMundo[secaoAtualId]) {
-        setTimeout(() => window.enviar(), 500);
-        return;
+       window.enviar = async function(mensagemUsuario = null) {
+    const isInitial = mensagemUsuario === null;
+    
+    if (!isInitial) {
+        turnosJogados++;
     }
 
-    const salaAtual = mapaMundo[secaoAtualId];
-    if (salaAtual?.texto_logico) {
-        // 1. Atualiza o painel principal de descrição da sala
-        document.getElementById('sala-desc').innerHTML = salaAtual.texto_logico;
-        
-        // 2. Limpa o chat e adiciona uma mensagem discreta
-        document.getElementById('chat-box').innerHTML = '';
-        adicionarMensagem('⚔️ A escuridão recorda sua presença...', 'system');
-        
-        // 3. Atualiza os botões e itens do chão
-        atualizarBotoesNavegacao();
-        atualizarLootRoom();
-        
-        // 4. Habilita os controles
-        userInput.disabled = false;
-        sendBtn.disabled = false;
-        userInput.focus();
-        return;
-    } else {
-        // Fallback: gera introdução normal (caso não haja texto na sala atual)
-        if (!resumoAtual) {
-            pergunta = PROMPT_INTRO;
-        } else {
-            pergunta = 'O jogo foi recarregado. Com base no resumo da história, narre rapidamente a cena atual (usando a regra padrão de frases curtas) e pergunte o que eu faço agora.';
+    let pergunta;
+    
+    if (isInitial) {
+        // Aguarda o mapa ser carregado (caso ainda não esteja)
+        if (!mapaMundo || !mapaMundo[secaoAtualId]) {
+            setTimeout(() => window.enviar(), 500);
+            return;
         }
-    }
-} else {
-                pergunta = mensagemUsuario;
+
+        const salaAtual = mapaMundo[secaoAtualId];
+        if (salaAtual?.texto_logico) {
+            // 1. Atualiza o painel principal de descrição da sala
+            document.getElementById('sala-desc').innerHTML = salaAtual.texto_logico;
+            
+            // 2. Limpa o chat e adiciona uma mensagem discreta
+            document.getElementById('chat-box').innerHTML = '';
+            adicionarMensagem('⚔️ A escuridão recorda sua presença...', 'system');
+            
+            // 3. Atualiza os botões e itens do chão
+            atualizarBotoesNavegacao();
+            atualizarLootRoom();
+            
+            // 4. Habilita os controles
+            userInput.disabled = false;
+            sendBtn.disabled = false;
+            userInput.focus();
+            return;
+        } else {
+            // Fallback: gera introdução normal (caso não haja texto na sala atual)
+            if (!resumoAtual) {
+                pergunta = PROMPT_INTRO;
+            } else {
+                pergunta = 'O jogo foi recarregado. Com base no resumo da história, narre rapidamente a cena atual (usando a regra padrão de frases curtas) e pergunte o que eu faço agora.';
             }
-
-            if (!isInitial) {
-                adicionarMensagem(pergunta, 'user');
-                userInput.value = '';
-            }
-
-            sendBtn.disabled = true;
-            userInput.disabled = true;
-
-            const tempId = adicionarMensagem('', 'ai', true);
-            const elementoDisplay = document.getElementById(tempId);
-
-            let contadorAnim = 0;
-            let indicePalavra = Math.floor(Math.random() * PALAVRAS_SOMBRIAS.length);
-            let exibindoPensando = false;
-            let ciclosPensando = 0;
-            primeiroTokenRecebido = false;
-
-            intervaloAnimacao = setInterval(() => {
-                if (!primeiroTokenRecebido) {
-                    if (contadorAnim % 8 === 0) {
-                        exibindoPensando = true;
-                        ciclosPensando = 0;
-                    }
-                    
-                    let textoExibido = '';
-                    if (exibindoPensando && ciclosPensando < 4) {
-                        const pontos = '.'.repeat(ciclosPensando % 4);
-                        textoExibido = `pensando${pontos}`;
-                        ciclosPensando++;
-                        if (ciclosPensando >= 4) exibindoPensando = false;
-                    } else {
-                        const palavra = PALAVRAS_SOMBRIAS[indicePalavra % PALAVRAS_SOMBRIAS.length];
-                        const pontos = '.'.repeat((Math.floor(contadorAnim / 2) % 4));
-                        textoExibido = `${palavra}${pontos}`;
-                        indicePalavra++;
-                    }
-                    
-                    elementoDisplay.innerText = textoExibido;
-                    
-                    const opacidade = 0.4 + (Math.sin(Date.now() / 400) * 0.25);
-                    elementoDisplay.style.opacity = opacidade;
-                    elementoDisplay.style.letterSpacing = '2px';
-                    elementoDisplay.style.transition = 'opacity 0.1s ease';
-                    
-                    contadorAnim++;
-                } else {
-                    clearInterval(intervaloAnimacao);
-                    elementoDisplay.style.opacity = '1';
-                    elementoDisplay.style.letterSpacing = 'normal';
-                    elementoDisplay.style.transition = '';
-                    intervaloAnimacao = null;
-                }
-            }, 150);
-
-            try {
-                let mensagemFinal = pergunta;
-                let payloadAPI = []; 
-                let acaoSimplesUser = "";
-                if (!isInitial) {
-                    const classificacaoRaw = classificarAcao(pergunta);
-                    let classificacao;
-
-                    if (classificacaoRaw === null) {
-                        const tempJuizId = adicionarMensagem('⚖️ Árbitro avaliando a ação...', 'system', true);
-                        classificacao = await classificarComArbitro(pergunta, entidadeEmFoco);
-                        const msgJuiz = document.getElementById(tempJuizId);
-                        if (msgJuiz) msgJuiz.remove();
-                    } else {
-                        classificacao = classificacaoRaw;
-                    }
-
-                   if (classificacao.tipo === 'BLOQUEADA_MAGIA') {
-    clearInterval(intervaloAnimacao);
-    document.getElementById(tempId)?.remove();
-
-    adicionarMensagem('Você tenta conjurar algo que não habita seu grimório...', 'system');
-    sendBtn.disabled = false;
-    userInput.disabled = false;
-    userInput.focus();
-    return;
-}
-
-if (classificacao.tipo === 'MAGIA_INEXISTENTE') {
-    clearInterval(intervaloAnimacao);
-    document.getElementById(tempId)?.remove();
-
-    adicionarMensagem('Você pronuncia palavras que não correspondem a magia alguma...', 'system');
-    sendBtn.disabled = false;
-    userInput.disabled = false;
-    userInput.focus();
-    return;
-}
-
-if (classificacao.tipo === 'MAGIA_SUCESSO') {
-    const custo = classificacao.custo ?? 0;
-    if (magiaAtual < custo) {
-        clearInterval(intervaloAnimacao);
-        document.getElementById(tempId)?.remove();
-        adicionarMensagem(`Seus reservatórios arcanos estão esgotados. Custo: ${custo} — Disponível: ${magiaAtual}.`, 'system');
-        sendBtn.disabled = false;
-        userInput.disabled = false;
-        userInput.focus();
-        return;
+        }
+    } else {
+        pergunta = mensagemUsuario;
     }
-    magiaAtual -= custo;
-    document.getElementById('magia-span').innerText = `✨ Magia: ${magiaAtual}`;
-}
 
-                    _ultimoTipoAcao = classificacao.tipo;
-                    _ultimoAtributo = classificacao.atributo;
-                    const { tipo, atributo } = classificacao;
+    if (!isInitial) {
+        adicionarMensagem(pergunta, 'user');
+        userInput.value = '';
+    }
 
-let salaAtual = mapaMundo?.[secaoAtualId];
+    sendBtn.disabled = true;
+    userInput.disabled = true;
 
-const acaoMinuscula = pergunta.toLowerCase();
-const termosInvestigacao = ["examinar", "olhar", "investigar", "procurar", "checar", "inspecionar", "observar"];
-if (termosInvestigacao.some(t => acaoMinuscula.includes(t)) && salaAtual?.puzzle_status && !salaAtual.puzzle_status.resolvido) {
-    adicionarMensagem(`🔍 Você observa com mais atenção: ${salaAtual.puzzle_status.dica}`, "system");
-}
+    const tempId = adicionarMensagem('', 'ai', true);
+    const elementoDisplay = document.getElementById(tempId);
 
-if (salaAtual?.puzzle_status && !salaAtual.puzzle_status.resolvido) {
-    const promptPuzzle = `Ação do Jogador: "${pergunta}"\nSolução do Enigma: "${salaAtual.puzzle_status.solucao}"\nO jogador executou a ação correta para resolver o enigma? Responda apenas com um objeto JSON.\nFormato: {"resolvido": true} ou {"resolvido": false}`;
+    let contadorAnim = 0;
+    let indicePalavra = Math.floor(Math.random() * PALAVRAS_SOMBRIAS.length);
+    let exibindoPensando = false;
+    let ciclosPensando = 0;
+    primeiroTokenRecebido = false;
 
-    let puzzleResolvido = false;
+    intervaloAnimacao = setInterval(() => {
+        if (!primeiroTokenRecebido) {
+            if (contadorAnim % 8 === 0) {
+                exibindoPensando = true;
+                ciclosPensando = 0;
+            }
+            
+            let textoExibido = '';
+            if (exibindoPensando && ciclosPensando < 4) {
+                const pontos = '.'.repeat(ciclosPensando % 4);
+                textoExibido = `pensando${pontos}`;
+                ciclosPensando++;
+                if (ciclosPensando >= 4) exibindoPensando = false;
+            } else {
+                const palavra = PALAVRAS_SOMBRIAS[indicePalavra % PALAVRAS_SOMBRIAS.length];
+                const pontos = '.'.repeat((Math.floor(contadorAnim / 2) % 4));
+                textoExibido = `${palavra}${pontos}`;
+                indicePalavra++;
+            }
+            
+            elementoDisplay.innerText = textoExibido;
+            
+            const opacidade = 0.4 + (Math.sin(Date.now() / 400) * 0.25);
+            elementoDisplay.style.opacity = opacidade;
+            elementoDisplay.style.letterSpacing = '2px';
+            elementoDisplay.style.transition = 'opacity 0.1s ease';
+            
+            contadorAnim++;
+        } else {
+            clearInterval(intervaloAnimacao);
+            elementoDisplay.style.opacity = '1';
+            elementoDisplay.style.letterSpacing = 'normal';
+            elementoDisplay.style.transition = '';
+            intervaloAnimacao = null;
+        }
+    }, 150);
+
     try {
-        const resPuzzle = await fetch(LM_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                model: MODELO_JUIZ,
-                messages: [{ role: 'user', content: promptPuzzle }],
-                temperature: 0.0,
-                response_format: {
-                    type: "json_schema",
-                    json_schema: {
-                        name: "puzzle_check",
-                        strict: true,
-                        schema: {
-                            type: "object",
-                            properties: {
-                                resolvido: { type: "boolean" }
-                            },
-                            required: ["resolvido"],
-                            additionalProperties: false
+        // ================= INÍCIO DO BLOCO DE INTERCEPTAÇÃO SEMÂNTICA =================
+        // Função auxiliar de similaridade de cosseno (definida localmente)
+        function cos_sim(vecA, vecB) {
+            let dot = 0, normA = 0, normB = 0;
+            for (let i = 0; i < vecA.length; i++) {
+                dot += vecA[i] * vecB[i];
+                normA += vecA[i] * vecA[i];
+                normB += vecB[i] * vecB[i];
+            }
+            if (normA === 0 || normB === 0) return 0;
+            return dot / (Math.sqrt(normA) * Math.sqrt(normB));
+        }
+
+        // Só executa a interceptação se NÃO for a inicialização e se for uma ação do jogador
+        if (!isInitial) {
+            const salaAtual = mapaMundo[secaoAtualId];
+            let melhorMatch = null;
+            let maiorSimilaridade = 0;
+            const limiteAceitacao = 0.65; // Ajuste conforme testes
+
+            // Verifica se o motor semântico já foi carregado
+            if (window.extratorSemantico && salaAtual) {
+                // Reúne todas as opções de navegação da sala
+                let acoesOcultas = [];
+                if (salaAtual.opcoes) acoesOcultas = acoesOcultas.concat(salaAtual.opcoes);
+
+                if (acoesOcultas.length > 0) {
+                    // Vetor da ação digitada pelo jogador
+                    const vetorJogador = await window.extratorSemantico(pergunta, { pooling: 'mean', normalize: true });
+
+                    // Compara com cada opção oculta
+                    for (const acao of acoesOcultas) {
+                        const textoAlvo = acao.texto || acao.opcao_texto || acao.descricao;
+                        if (textoAlvo) {
+                            const vetorAcao = await window.extratorSemantico(textoAlvo, { pooling: 'mean', normalize: true });
+                            const similaridade = cos_sim(vetorJogador.data, vetorAcao.data);
+                            if (similaridade > maiorSimilaridade) {
+                                maiorSimilaridade = similaridade;
+                                melhorMatch = acao;
+                            }
                         }
                     }
                 }
-            })
-        });
+            }
 
-        if (!resPuzzle.ok) {
-            const errorText = await resPuzzle.text();
-            console.error('❌ Erro na verificação do puzzle:', errorText);
-        } else {
-            const puzzleData = await resPuzzle.json();
-            if (puzzleData.choices && puzzleData.choices[0]) {
-                const resultado = JSON.parse(puzzleData.choices[0].message.content);
-                puzzleResolvido = resultado.resolvido || false;
+            // Se a similaridade for alta o suficiente, interrompe o fluxo normal
+            if (maiorSimilaridade >= limiteAceitacao && melhorMatch) {
+                console.log("🔥 MATCH SEMÂNTICO ENCONTRADO! 🔥");
+                console.log("Jogador digitou:", pergunta);
+                console.log("Opção oculta equivalente:", melhorMatch);
+                console.log("Grau de Similaridade:", maiorSimilaridade);
+
+                // Limpa a mensagem de "pensando" e reabilita os controles
+                clearInterval(intervaloAnimacao);
+                const tempElement = document.getElementById(tempId);
+                if (tempElement) tempElement.remove();
+
+                sendBtn.disabled = false;
+                userInput.disabled = false;
+                userInput.focus();
+
+                // [EM BREVE: AQUI VAI A NAVEGAÇÃO REAL]
+                // Por enquanto, apenas mostra uma mensagem de sistema
+                adicionarMensagem(`[SISTEMA] Você quis dizer: "${melhorMatch.texto}" (similaridade: ${(maiorSimilaridade * 100).toFixed(1)}%)`, 'system');
+
+                return; // Impede a chamada ao classificador/LLM
             }
         }
-    } catch (e) {
-        console.error('❌ Exceção na verificação do puzzle:', e);
-    }
+        // ================= FIM DO BLOCO DE INTERCEPTAÇÃO SEMÂNTICA =================
 
-    if (puzzleResolvido) {
-    salaAtual.puzzle_status.resolvido = true;
+        let mensagemFinal = pergunta;
+        let payloadAPI = []; 
+        let acaoSimplesUser = "";
 
-    const efeitoRemoto   = salaAtual.puzzle_status.efeito_remoto;
-    const salaAfetadaId  = salaAtual.puzzle_status.sala_afetada_id;
+        if (!isInitial) {
+            const classificacaoRaw = classificarAcao(pergunta);
+            let classificacao;
 
-    adicionarMensagem(efeitoRemoto
-        ? `🔊 ${efeitoRemoto}`
-        : "🔓 Um ruído metálico ecoa: Uma nova passagem está acessível.",
-        "system");
-
-    if (salaAfetadaId && mapaMundo[String(salaAfetadaId)]?.bloqueio) {
-        const salaAlvo = mapaMundo[String(salaAfetadaId)];
-        salaAlvo.bloqueio.ativo = false;
-        salaAlvo.texto_logico += `\n\n${salaAlvo.bloqueio.texto_apos_limpar}`;
-        
-        if (salaAtual.puzzle_status.portal_destino) {
-            const destinoPortal = parseInt(salaAtual.puzzle_status.portal_destino);
-            const jaExiste = salaAlvo.opcoes.some(o => o.destino === destinoPortal);
-            if (!jaExiste) {
-                salaAlvo.opcoes.push({
-                    destino: destinoPortal,
-                    texto: "Seguir pelo caminho agora livre"
-                });
+            if (classificacaoRaw === null) {
+                const tempJuizId = adicionarMensagem('⚖️ Árbitro avaliando a ação...', 'system', true);
+                classificacao = await classificarComArbitro(pergunta, entidadeEmFoco);
+                const msgJuiz = document.getElementById(tempJuizId);
+                if (msgJuiz) msgJuiz.remove();
+            } else {
+                classificacao = classificacaoRaw;
             }
-        }
-        console.log(`[Metroidvania] Sala ${salaAfetadaId} desbloqueada remotamente e nova opção adicionada.`);
-    } else {
-        if (salaAtual.puzzle_status.portal_destino) {
-            const destinoPortal = parseInt(salaAtual.puzzle_status.portal_destino);
-            const jaExiste = salaAtual.opcoes.some(o => o.destino === destinoPortal);
-            if (!jaExiste) {
-                salaAtual.opcoes.push({
-                    destino: destinoPortal,
-                    texto: "Avançar pela passagem revelada"
-                });
+
+            if (classificacao.tipo === 'BLOQUEADA_MAGIA') {
+                clearInterval(intervaloAnimacao);
+                document.getElementById(tempId)?.remove();
+                adicionarMensagem('Você tenta conjurar algo que não habita seu grimório...', 'system');
+                sendBtn.disabled = false;
+                userInput.disabled = false;
+                userInput.focus();
+                return;
             }
-        }
-    }
 
-    await salvarEstadoJogador();
-    atualizarBotoesNavegacao();
-}
-    }   
+            if (classificacao.tipo === 'MAGIA_INEXISTENTE') {
+                clearInterval(intervaloAnimacao);
+                document.getElementById(tempId)?.remove();
+                adicionarMensagem('Você pronuncia palavras que não correspondem a magia alguma...', 'system');
+                sendBtn.disabled = false;
+                userInput.disabled = false;
+                userInput.focus();
+                return;
+            }
 
+            if (classificacao.tipo === 'MAGIA_SUCESSO') {
+                const custo = classificacao.custo ?? 0;
+                if (magiaAtual < custo) {
+                    clearInterval(intervaloAnimacao);
+                    document.getElementById(tempId)?.remove();
+                    adicionarMensagem(`Seus reservatórios arcanos estão esgotados. Custo: ${custo} — Disponível: ${magiaAtual}.`, 'system');
+                    sendBtn.disabled = false;
+                    userInput.disabled = false;
+                    userInput.focus();
+                    return;
+                }
+                magiaAtual -= custo;
+                document.getElementById('magia-span').innerText = `✨ Magia: ${magiaAtual}`;
+            }
 
-                    let resultado = null;
-                    let danoBase = 0;
+            _ultimoTipoAcao = classificacao.tipo;
+            _ultimoAtributo = classificacao.atributo;
+            const { tipo, atributo } = classificacao;
 
-                    if ((tipo === 'RISCO' || tipo === 'EXPRESSAO') && atributo !== 'NENHUM') {
-                        await animarTextoTeste(`TESTE DE ${atributo}`);
-                        await criarBotaoRolar();
-                        const semente = Math.floor(Math.random() * 20) + 1;
-                        const valorAtributo = jogadorStats[atributo] ?? 0;
-                        resultado = semente <= valorAtributo ? 'SUCESSO' : 'FALHA';
-                        
-                        if (resultado === 'FALHA') {
-                            danoBase = Math.max(1, Math.floor((semente - valorAtributo) / 2));
-                        }
+            let salaAtual = mapaMundo?.[secaoAtualId];
 
-                        mostrarResultadoDado(semente, atributo, valorAtributo, resultado);
-                        await new Promise(r => setTimeout(r, 300));
+            const acaoMinuscula = pergunta.toLowerCase();
+            const termosInvestigacao = ["examinar", "olhar", "investigar", "procurar", "checar", "inspecionar", "observar"];
+            if (termosInvestigacao.some(t => acaoMinuscula.includes(t)) && salaAtual?.puzzle_status && !salaAtual.puzzle_status.resolvido) {
+                adicionarMensagem(`🔍 Você observa com mais atenção: ${salaAtual.puzzle_status.dica}`, "system");
+            }
 
-                        if (resultado === 'SUCESSO') {
-                            danoBase = 0; 
-                        }
-                    }
+            if (salaAtual?.puzzle_status && !salaAtual.puzzle_status.resolvido) {
+                const promptPuzzle = `Ação do Jogador: "${pergunta}"\nSolução do Enigma: "${salaAtual.puzzle_status.solucao}"\nO jogador executou a ação correta para resolver o enigma? Responda apenas com um objeto JSON.\nFormato: {"resolvido": true} ou {"resolvido": false}`;
 
-                    const npcsMortos = Object.entries(entityIndex)
-                        .filter(([_, estado]) => estado === 'morto')
-                        .map(([nome]) => nome)
-                        .join(', ');
+                let puzzleResolvido = false;
+                try {
+                    const resPuzzle = await fetch(LM_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            model: MODELO_JUIZ,
+                            messages: [{ role: 'user', content: promptPuzzle }],
+                            temperature: 0.0,
+                            response_format: {
+                                type: "json_schema",
+                                json_schema: {
+                                    name: "puzzle_check",
+                                    strict: true,
+                                    schema: {
+                                        type: "object",
+                                        properties: {
+                                            resolvido: { type: "boolean" }
+                                        },
+                                        required: ["resolvido"],
+                                        additionalProperties: false
+                                    }
+                                }
+                            }
+                        })
+                    });
 
-                    const alertaMortos = npcsMortos
-                        ? `\n[MORTOS NO CENÁRIO: ${npcsMortos} — cadáveres NÃO reagem, NÃO respiram. São matéria inerte.]`
-                        : '';
-
-                    let instrucaoResultado = "";
-                    let danoFinal = 0;
-
-if (tipo === 'MAGIA_SUCESSO') {
-    instrucaoResultado = `Magia executada com plena potência. OBRIGATÓRIO: descreva o efeito acontecendo de forma concreta e visível. Nenhuma hesitação, nenhuma falha.`;
-    danoFinal = 0;
-} else if (tipo === 'LIVRE') {
-    instrucaoResultado = "Ação livre, sem teste. Narre o jogador executando sem falhas.";
-    danoFinal = 0;
-                    } else if (tipo === 'EXPRESSAO') {
-                        danoFinal = 0;
-                        if (resultado === 'SUCESSO') {
-                            instrucaoResultado = `O jogador testou ${atributo} e obteve SUCESSO. Descreva a ação executada com elegância, precisão ou carisma visível. Nenhum dano, nenhum risco.`;
-                        } else {
-                            instrucaoResultado = `O jogador testou ${atributo} e FALHOU. A ação foi executada de forma desajeitada, fora do ritmo ou pouco convincente. O resultado é ruim ou constrangedor, mas sem dano físico e sem reação hostil. Narre isso com brevidade.`;
-                        }
+                    if (!resPuzzle.ok) {
+                        const errorText = await resPuzzle.text();
+                        console.error('❌ Erro na verificação do puzzle:', errorText);
                     } else {
-                        if (resultado === 'SUCESSO') {
-                            instrucaoResultado = `O jogador testou ${atributo} e obteve SUCESSO ABSOLUTO. ESTRUTURA OBRIGATÓRIA: (1) inicia com intenção clara. (2) executa com precisão total. (3) conclui com êxito perceptível. Zero tropeços, zero dor.`;
-                            danoFinal = 0;
-                        } else {
-                            instrucaoResultado = `O jogador testou ${atributo} e FALHOU MISERAVELMENTE. A ação deu totalmente errado. Narre uma consequência brutal, dolorosa ou humilhante.`;
-                            danoFinal = danoBase;
+                        const puzzleData = await resPuzzle.json();
+                        if (puzzleData.choices && puzzleData.choices[0]) {
+                            const resultado = JSON.parse(puzzleData.choices[0].message.content);
+                            puzzleResolvido = resultado.resolvido || false;
+                        }
+                    }
+                } catch (e) {
+                    console.error('❌ Exceção na verificação do puzzle:', e);
+                }
+
+                if (puzzleResolvido) {
+                    salaAtual.puzzle_status.resolvido = true;
+
+                    const efeitoRemoto   = salaAtual.puzzle_status.efeito_remoto;
+                    const salaAfetadaId  = salaAtual.puzzle_status.sala_afetada_id;
+
+                    adicionarMensagem(efeitoRemoto
+                        ? `🔊 ${efeitoRemoto}`
+                        : "🔓 Um ruído metálico ecoa: Uma nova passagem está acessível.",
+                        "system");
+
+                    if (salaAfetadaId && mapaMundo[String(salaAfetadaId)]?.bloqueio) {
+                        const salaAlvo = mapaMundo[String(salaAfetadaId)];
+                        salaAlvo.bloqueio.ativo = false;
+                        salaAlvo.texto_logico += `\n\n${salaAlvo.bloqueio.texto_apos_limpar}`;
+                        
+                        if (salaAtual.puzzle_status.portal_destino) {
+                            const destinoPortal = parseInt(salaAtual.puzzle_status.portal_destino);
+                            const jaExiste = salaAlvo.opcoes.some(o => o.destino === destinoPortal);
+                            if (!jaExiste) {
+                                salaAlvo.opcoes.push({
+                                    destino: destinoPortal,
+                                    texto: "Seguir pelo caminho agora livre"
+                                });
+                            }
+                        }
+                        console.log(`[Metroidvania] Sala ${salaAfetadaId} desbloqueada remotamente e nova opção adicionada.`);
+                    } else {
+                        if (salaAtual.puzzle_status.portal_destino) {
+                            const destinoPortal = parseInt(salaAtual.puzzle_status.portal_destino);
+                            const jaExiste = salaAtual.opcoes.some(o => o.destino === destinoPortal);
+                            if (!jaExiste) {
+                                salaAtual.opcoes.push({
+                                    destino: destinoPortal,
+                                    texto: "Avançar pela passagem revelada"
+                                });
+                            }
                         }
                     }
 
-                    
-const descricaoSala = salaAtual ? salaAtual.texto_logico : 'Cenário sombrio.';
+                    await salvarEstadoJogador();
+                    atualizarBotoesNavegacao();
+                }
+            }
 
-let elementosInterativos = "";
-if (salaAtual && salaAtual.opcoes) {
-    elementosInterativos = salaAtual.opcoes.map(opcao => `- "${opcao.texto}"`).join("\n");
-}
+            let resultado = null;
+            let danoBase = 0;
 
-let textoItensOculto = "";
-if (salaAtual && salaAtual.itens && salaAtual.itens.length > 0) {
-    const nomesLoot = salaAtual.itens.map(id => ITENS_DB[id].content).join(", ");
-    textoItensOculto = `\n[ITENS NO CHÃO]: Há loot físico (${nomesLoot}). Descreva-os sutilmente.`;
-}
+            if ((tipo === 'RISCO' || tipo === 'EXPRESSAO') && atributo !== 'NENHUM') {
+                await animarTextoTeste(`TESTE DE ${atributo}`);
+                await criarBotaoRolar();
+                const semente = Math.floor(Math.random() * 20) + 1;
+                const valorAtributo = jogadorStats[atributo] ?? 0;
+                resultado = semente <= valorAtributo ? 'SUCESSO' : 'FALHA';
+                
+                if (resultado === 'FALHA') {
+                    danoBase = Math.max(1, Math.floor((semente - valorAtributo) / 2));
+                }
 
-let systemPromptContent = `Você é um terminal de transcrição forense e narrador brutal. Responda APENAS em Português Brasileiro.
+                mostrarResultadoDado(semente, atributo, valorAtributo, resultado);
+                await new Promise(r => setTimeout(r, 300));
+
+                if (resultado === 'SUCESSO') {
+                    danoBase = 0; 
+                }
+            }
+
+            const npcsMortos = Object.entries(entityIndex)
+                .filter(([_, estado]) => estado === 'morto')
+                .map(([nome]) => nome)
+                .join(', ');
+
+            const alertaMortos = npcsMortos
+                ? `\n[MORTOS NO CENÁRIO: ${npcsMortos} — cadáveres NÃO reagem, NÃO respiram. São matéria inerte.]`
+                : '';
+
+            let instrucaoResultado = "";
+            let danoFinal = 0;
+
+            if (tipo === 'MAGIA_SUCESSO') {
+                instrucaoResultado = `Magia executada com plena potência. OBRIGATÓRIO: descreva o efeito acontecendo de forma concreta e visível. Nenhuma hesitação, nenhuma falha.`;
+                danoFinal = 0;
+            } else if (tipo === 'LIVRE') {
+                instrucaoResultado = "Ação livre, sem teste. Narre o jogador executando sem falhas.";
+                danoFinal = 0;
+            } else if (tipo === 'EXPRESSAO') {
+                danoFinal = 0;
+                if (resultado === 'SUCESSO') {
+                    instrucaoResultado = `O jogador testou ${atributo} e obteve SUCESSO. Descreva a ação executada com elegância, precisão ou carisma visível. Nenhum dano, nenhum risco.`;
+                } else {
+                    instrucaoResultado = `O jogador testou ${atributo} e FALHOU. A ação foi executada de forma desajeitada, fora do ritmo ou pouco convincente. O resultado é ruim ou constrangedor, mas sem dano físico e sem reação hostil. Narre isso com brevidade.`;
+                }
+            } else {
+                if (resultado === 'SUCESSO') {
+                    instrucaoResultado = `O jogador testou ${atributo} e obteve SUCESSO ABSOLUTO. ESTRUTURA OBRIGATÓRIA: (1) inicia com intenção clara. (2) executa com precisão total. (3) conclui com êxito perceptível. Zero tropeços, zero dor.`;
+                    danoFinal = 0;
+                } else {
+                    instrucaoResultado = `O jogador testou ${atributo} e FALHOU MISERAVELMENTE. A ação deu totalmente errado. Narre uma consequência brutal, dolorosa ou humilhante.`;
+                    danoFinal = danoBase;
+                }
+            }
+
+            const descricaoSala = salaAtual ? salaAtual.texto_logico : 'Cenário sombrio.';
+
+            let elementosInterativos = "";
+            if (salaAtual && salaAtual.opcoes) {
+                elementosInterativos = salaAtual.opcoes.map(opcao => `- "${opcao.texto}"`).join("\n");
+            }
+
+            let textoItensOculto = "";
+            if (salaAtual && salaAtual.itens && salaAtual.itens.length > 0) {
+                const nomesLoot = salaAtual.itens.map(id => ITENS_DB[id].content).join(", ");
+                textoItensOculto = `\n[ITENS NO CHÃO]: Há loot físico (${nomesLoot}). Descreva-os sutilmente.`;
+            }
+
+            let systemPromptContent = `Você é um terminal de transcrição forense e narrador brutal. Responda APENAS em Português Brasileiro.
 
 REGRAS ABSOLUTAS:
 1. FOCO: Narre em segunda pessoa ("Você..."). Máximo de 4 frases. Seja seco e clínico.
@@ -4468,122 +4568,119 @@ ${elementosInterativos || 'Nenhum'}
 REGRA DE FIDELIDADE: Se o botão cita uma porta, janela ou item, certifique-se de descrevê-los organicamente.
 4. VIOLÊNCIA: Em caso de falha física, descreva a destruição anatômica de forma direta.`;
 
-const salaPuzzle = mapaMundo?.[secaoAtualId];
-if (salaPuzzle?.puzzle_status) {
-    if (salaPuzzle.puzzle_status.resolvido) {
-        systemPromptContent += `\n[AMBIENTE]: O mecanismo do enigma desta câmara já foi ativado. O espaço permanece o mesmo, mas o mecanismo está em repouso — resolvido.`;
-    } else {
-        systemPromptContent += `\n[AMBIENTE]: Há um mecanismo oculto nesta sala que parece aguardar uma ação específica. Descreva os elementos do cenário como parte da paisagem, sem sugerir a solução.`;
-    }
-}
-
-const systemPrompt = { role: 'system', content: systemPromptContent };
-
-let conversaRecenteParaEnvio = [];
-
-if (pergunta.startsWith("[AÇÃO DE SISTEMA]")) {
-    acaoSimplesUser = `[AÇÃO DO SISTEMA]: Transcreva a chegada ao cenário ancorando os itens e botões visíveis.\n[DANO OBRIGATÓRIO NA TAG FINAL]: [DANO: 0]`;
-    conversaRecenteParaEnvio = [];
-} else {
-    acaoSimplesUser = `[AÇÃO DO JOGADOR]: "${pergunta}"\n[RESULTADO DEFINIDO PELO ÁRBITRO]: ${instrucaoResultado}\n[DANO OBRIGATÓRIO NA TAG FINAL]: [DANO: ${danoFinal}]`;
-    conversaRecenteParaEnvio = [...historicoConversa];
-}
-
-payloadAPI = [systemPrompt, ...conversaRecenteParaEnvio, { role: 'user', content: acaoSimplesUser }];
-
+            const salaPuzzle = mapaMundo?.[secaoAtualId];
+            if (salaPuzzle?.puzzle_status) {
+                if (salaPuzzle.puzzle_status.resolvido) {
+                    systemPromptContent += `\n[AMBIENTE]: O mecanismo do enigma desta câmara já foi ativado. O espaço permanece o mesmo, mas o mecanismo está em repouso — resolvido.`;
                 } else {
-                    payloadAPI = [
-                        { role: 'system', content: 'Você é um mestre de RPG brutal. Narre a introdução com tom opressivo e pergunte o que o jogador faz.' },
-                        { role: 'user', content: pergunta }
-                    ];
-                }
-
-                const isIntro = (isInitial && !resumoAtual);
-                const maxTokens       = isIntro ? 200 : 180;
-                const maxContinuacoes = 0; 
-
-                if (isIntro) window._introGenerating = true;
-
-                const respostaIA = await gerarRespostaComContinuacao(payloadAPI, maxTokens, elementoDisplay, maxContinuacoes);
-                console.log(`[PROMPT ENVIADO] ${mensagemFinal.substring(0, 500)}...`);
-
-                const danoMatch = respostaIA.match(/\[DANO:\s*(\d+)\]/i);
-
-                let respostaLimpa = respostaIA
-                    .replace(/\[TESTE:[^\]]+\]/g, '')
-                    .replace(/\[DANO:\s*\d+\]/gi, '')
-                    .replace(/\[NPCS:[^\]]+\]/gi, '')
-                    .trim();
-
-                if (!isInitial && danoMatch && parseInt(danoMatch[1]) > 0) {
-                    const div = document.createElement('div');
-                    div.className = 'system-message';
-                    div.innerHTML = `<em style="color:#e53935; font-weight:bold;">[FALHA NO TESTE: CONSEQUÊNCIA APLICADA]</em>`;
-                    chatBox.appendChild(div);
-                    chatBox.scrollTop = chatBox.scrollHeight;
-                }
-
-                elementoDisplay.innerText = respostaLimpa;
-
-                if (danoMatch && parseInt(danoMatch[1]) > 0) {
-                    const valorDano = parseInt(danoMatch[1]);
-                    energia -= valorDano;
-                    document.getElementById('energia-span').innerText = `🩸 Energia: ${Math.max(0, energia)}/10`;
-                    adicionarMensagem(`[O mundo cobra seu preço. Você perdeu ${valorDano} de Energia.]`, 'system');
-                    document.getElementById('magia-span').innerText = `✨ Magia: ${magiaAtual}`;
-
-
-                    if (energia <= 0) {
-                        adicionarMensagem("💀 SEU CORPO CEDE. A ESCURIDÃO O CONSOME. FIM DA JORNADA.", 'system');
-                        userInput.disabled = true;
-                        sendBtn.disabled = true;
-                        await salvarEstadoJogador();
-                        return;
-                    }
-                }
-
-                if (isIntro) window._introGenerating = false;
-
-                if (!isInitial) {
-    historicoConversa.push({ role: 'user', content: acaoSimplesUser });
-} else {
-    historicoConversa.push({ role: 'user', content: pergunta });
-}
-historicoConversa.push({ role: 'assistant', content: respostaLimpa });
-
-if (historicoConversa.length > 8) {
-    historicoConversa.splice(0, 2);
-}
-
-
-                setTimeout(() => {
-                    salvarEstadoJogador().catch(e => console.error('Erro no salvamento background:', e));
-                    verificarEExpandirMundo();
-                }, 0);
-
-                if (isInitial) {
-                    userInput.disabled = false;
-                    sendBtn.disabled = false;
-                    userInput.focus();
-                }
-
-                atualizarBotoesNavegacao();
-                atualizarLootRoom();
-            } catch (error) {
-                if (intervaloAnimacao) clearInterval(intervaloAnimacao);
-                elementoDisplay.innerText = `❌ Erro: ${error.message}`;
-                if (isInitial) {
-                    userInput.disabled = false;
-                    sendBtn.disabled = false;
-                }
-            } finally {
-                if (!isInitial) {
-                    sendBtn.disabled = false;
-                    userInput.disabled = false;
-                    userInput.focus();
+                    systemPromptContent += `\n[AMBIENTE]: Há um mecanismo oculto nesta sala que parece aguardar uma ação específica. Descreva os elementos do cenário como parte da paisagem, sem sugerir a solução.`;
                 }
             }
-        };
+
+            const systemPrompt = { role: 'system', content: systemPromptContent };
+
+            let conversaRecenteParaEnvio = [];
+
+            if (pergunta.startsWith("[AÇÃO DE SISTEMA]")) {
+                acaoSimplesUser = `[AÇÃO DO SISTEMA]: Transcreva a chegada ao cenário ancorando os itens e botões visíveis.\n[DANO OBRIGATÓRIO NA TAG FINAL]: [DANO: 0]`;
+                conversaRecenteParaEnvio = [];
+            } else {
+                acaoSimplesUser = `[AÇÃO DO JOGADOR]: "${pergunta}"\n[RESULTADO DEFINIDO PELO ÁRBITRO]: ${instrucaoResultado}\n[DANO OBRIGATÓRIO NA TAG FINAL]: [DANO: ${danoFinal}]`;
+                conversaRecenteParaEnvio = [...historicoConversa];
+            }
+
+            payloadAPI = [systemPrompt, ...conversaRecenteParaEnvio, { role: 'user', content: acaoSimplesUser }];
+        } else {
+            payloadAPI = [
+                { role: 'system', content: 'Você é um mestre de RPG brutal. Narre a introdução com tom opressivo e pergunte o que o jogador faz.' },
+                { role: 'user', content: pergunta }
+            ];
+        }
+
+        const isIntro = (isInitial && !resumoAtual);
+        const maxTokens = isIntro ? 200 : 180;
+        const maxContinuacoes = 0;
+
+        if (isIntro) window._introGenerating = true;
+
+        const respostaIA = await gerarRespostaComContinuacao(payloadAPI, maxTokens, elementoDisplay, maxContinuacoes);
+        console.log(`[PROMPT ENVIADO] ${mensagemFinal.substring(0, 500)}...`);
+
+        const danoMatch = respostaIA.match(/\[DANO:\s*(\d+)\]/i);
+
+        let respostaLimpa = respostaIA
+            .replace(/\[TESTE:[^\]]+\]/g, '')
+            .replace(/\[DANO:\s*\d+\]/gi, '')
+            .replace(/\[NPCS:[^\]]+\]/gi, '')
+            .trim();
+
+        if (!isInitial && danoMatch && parseInt(danoMatch[1]) > 0) {
+            const div = document.createElement('div');
+            div.className = 'system-message';
+            div.innerHTML = `<em style="color:#e53935; font-weight:bold;">[FALHA NO TESTE: CONSEQUÊNCIA APLICADA]</em>`;
+            chatBox.appendChild(div);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        elementoDisplay.innerText = respostaLimpa;
+
+        if (danoMatch && parseInt(danoMatch[1]) > 0) {
+            const valorDano = parseInt(danoMatch[1]);
+            energia -= valorDano;
+            document.getElementById('energia-span').innerText = `🩸 Energia: ${Math.max(0, energia)}/10`;
+            adicionarMensagem(`[O mundo cobra seu preço. Você perdeu ${valorDano} de Energia.]`, 'system');
+            document.getElementById('magia-span').innerText = `✨ Magia: ${magiaAtual}`;
+
+            if (energia <= 0) {
+                adicionarMensagem("💀 SEU CORPO CEDE. A ESCURIDÃO O CONSOME. FIM DA JORNADA.", 'system');
+                userInput.disabled = true;
+                sendBtn.disabled = true;
+                await salvarEstadoJogador();
+                return;
+            }
+        }
+
+        if (isIntro) window._introGenerating = false;
+
+        if (!isInitial) {
+            historicoConversa.push({ role: 'user', content: acaoSimplesUser });
+        } else {
+            historicoConversa.push({ role: 'user', content: pergunta });
+        }
+        historicoConversa.push({ role: 'assistant', content: respostaLimpa });
+
+        if (historicoConversa.length > 8) {
+            historicoConversa.splice(0, 2);
+        }
+
+        setTimeout(() => {
+            salvarEstadoJogador().catch(e => console.error('Erro no salvamento background:', e));
+            verificarEExpandirMundo();
+        }, 0);
+
+        if (isInitial) {
+            userInput.disabled = false;
+            sendBtn.disabled = false;
+            userInput.focus();
+        }
+
+        atualizarBotoesNavegacao();
+        atualizarLootRoom();
+    } catch (error) {
+        if (intervaloAnimacao) clearInterval(intervaloAnimacao);
+        elementoDisplay.innerText = `❌ Erro: ${error.message}`;
+        if (isInitial) {
+            userInput.disabled = false;
+            sendBtn.disabled = false;
+        }
+    } finally {
+        if (!isInitial) {
+            sendBtn.disabled = false;
+            userInput.disabled = false;
+            userInput.focus();
+        }
+    }
+};
 
 async function recalcularCoordenadasPenochao(mapaMundo) {
     if (!mapaMundo || !mapaMundo["1"]) return;
