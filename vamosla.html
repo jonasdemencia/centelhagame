@@ -3408,7 +3408,56 @@ Retorne EXATAMENTE o JSON abaixo. Nenhuma palavra extra.`
             }
         }
 
+async function executarDilemaComRamificacao(pai, ram) {
+    if (window._transicaoEmAndamento) return;
+    window._transicaoEmAndamento = true;
 
+    // 1. Marca o pai e todos os dilemas da sala como disparados
+    pai.disparado = true;
+    const salaAtual = mapaMundo[secaoAtualId];
+    if (salaAtual && salaAtual.opcoes) {
+        salaAtual.opcoes
+            .filter(o => o.dilema === true && !o.disparado)
+            .forEach(o => { o.disparado = true; });
+    }
+
+    // 2. Exibe o resultado do pai (se houver)
+    if (pai.resultado_texto) {
+        const bridgeDiv = document.createElement('div');
+        bridgeDiv.className = 'result-message';
+        bridgeDiv.innerText = pai.resultado_texto;
+        chatBox.appendChild(bridgeDiv);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+    if (pai.dano > 0) {
+        energia = Math.max(0, energia - pai.dano);
+        document.getElementById('energia-span').innerText = `🩸 ${energia}/10`;
+        await salvarEstadoJogador();
+    }
+
+    // 3. Exibe o resultado da ramificação
+    adicionarMensagem(`> ${ram.opcao_texto}`, 'user');
+    const resultDiv = document.createElement('div');
+    resultDiv.className = 'result-message';
+    resultDiv.innerText = ram.resultado_texto;
+    chatBox.appendChild(resultDiv);
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    if (ram.dano > 0) {
+        energia = Math.max(0, energia - ram.dano);
+        document.getElementById('energia-span').innerText = `🩸 ${energia}/10`;
+        await salvarEstadoJogador();
+    }
+
+    // 4. Navega ou atualiza a sala
+    if (ram.destino) {
+        await navegarPara(ram.destino, ram.opcao_texto, { texto: ram.opcao_texto });
+    } else {
+        atualizarBotoesNavegacao();
+        atualizarLootRoom();
+        window._transicaoEmAndamento = false;
+    }
+}
 
     function atualizarBotoesNavegacao() {
     const container = document.getElementById('map-controls');
@@ -3645,50 +3694,73 @@ Retorne EXATAMENTE o JSON abaixo. Nenhuma palavra extra.`
                     const limiteAceitacao = 0.65;
 
                     if (window.extratorSemantico && salaAtual) {
-                        let acoesOcultas = [];
-                        if (salaAtual.opcoes) acoesOcultas = acoesOcultas.concat(salaAtual.opcoes);
+    let acoesOcultas = [];
+    if (salaAtual.opcoes) {
+        for (const opcao of salaAtual.opcoes) {
+            // Adiciona a opção principal
+            acoesOcultas.push(opcao);
+            // Se for um dilema com ramificações, adiciona cada ramificação também
+            if (opcao.dilema && opcao.ramificacoes && opcao.ramificacoes.length > 0) {
+                for (const ram of opcao.ramificacoes) {
+                    // Marca que esta é uma ramificação e guarda referência ao pai
+                    ram._isRamificacao = true;
+                    ram._paiDilema = opcao;
+                    acoesOcultas.push(ram);
+                }
+            }
+        }
+    }
 
-                        if (acoesOcultas.length > 0) {
-                            const vetorJogador = await window.extratorSemantico(pergunta, { pooling: 'mean', normalize: true });
+    if (acoesOcultas.length > 0) {
+        // Vetor da ação digitada pelo jogador
+        const vetorJogador = await window.extratorSemantico(pergunta, { pooling: 'mean', normalize: true });
 
-                            for (const acao of acoesOcultas) {
-                                const textoAlvo = acao.texto || acao.opcao_texto || acao.descricao;
-                                if (textoAlvo) {
-                                    const vetorAcao = await window.extratorSemantico(textoAlvo, { pooling: 'mean', normalize: true });
-                                    const similaridade = cos_sim(vetorJogador.data, vetorAcao.data);
-                                    console.log(`Comparando: "${pergunta}" com "${textoAlvo}" -> similaridade: ${similaridade}`);
-                                    if (similaridade > maiorSimilaridade) {
-                                        maiorSimilaridade = similaridade;
-                                        melhorMatch = acao;
-                                    }
-                                }
-                            }
-                        }
-                    }
+        // Compara com cada opção oculta (incluindo ramificações)
+        for (const acao of acoesOcultas) {
+            const textoAlvo = acao.texto || acao.opcao_texto || acao.descricao;
+            if (textoAlvo) {
+                const vetorAcao = await window.extratorSemantico(textoAlvo, { pooling: 'mean', normalize: true });
+                const similaridade = cos_sim(vetorJogador.data, vetorAcao.data);
+                console.log(`🔍 Comparando: "${pergunta}" com "${textoAlvo}" -> similaridade: ${similaridade.toFixed(4)}`);
+                if (similaridade > maiorSimilaridade) {
+                    maiorSimilaridade = similaridade;
+                    melhorMatch = acao;
+                }
+            }
+        }
+    }
+}
 
                     if (maiorSimilaridade >= limiteAceitacao && melhorMatch) {
-                        console.log("🔥 MATCH SEMÂNTICO ENCONTRADO! 🔥");
-                        console.log("Jogador digitou:", pergunta);
-                        console.log("Opção oculta equivalente:", melhorMatch);
-                        console.log("Grau de Similaridade:", maiorSimilaridade);
+    console.log("🔥 MATCH SEMÂNTICO ENCONTRADO! 🔥");
+    console.log("Jogador digitou:", pergunta);
+    console.log("Opção oculta equivalente:", melhorMatch);
+    console.log("Grau de Similaridade:", maiorSimilaridade);
 
-                        clearInterval(intervaloAnimacao);
-                        const tempElement = document.getElementById(tempId);
-                        if (tempElement) tempElement.remove();
+    // Limpa a mensagem de "pensando" e reabilita os controles
+    clearInterval(intervaloAnimacao);
+    const tempElement = document.getElementById(tempId);
+    if (tempElement) tempElement.remove();
 
-                        adicionarMensagem(">> Ação executada: " + (melhorMatch.texto || melhorMatch.opcao_texto || "Prosseguir"), "system");
+    adicionarMensagem(">> Ação executada: " + (melhorMatch.texto || melhorMatch.opcao_texto || "Prosseguir"), "system");
 
-                        if (melhorMatch.destino !== undefined && !melhorMatch.dilema) {
-                            await navegarPara(melhorMatch.destino, melhorMatch.texto, melhorMatch);
-                        } else {
-                            await executarDilema(melhorMatch);
-                        }
+    // ===== NOVA LÓGICA DE EXECUÇÃO =====
+    if (melhorMatch._isRamificacao) {
+        // É uma ramificação: executa o pai primeiro (resultado/dano) e depois a ramificação
+        await executarDilemaComRamificacao(melhorMatch._paiDilema, melhorMatch);
+    } else if (melhorMatch.destino !== undefined && !melhorMatch.dilema) {
+        await navegarPara(melhorMatch.destino, melhorMatch.texto, melhorMatch);
+    } else {
+        await executarDilema(melhorMatch);
+    }
+    // ====================================
 
-                        sendBtn.disabled = false;
-                        userInput.disabled = false;
-                        userInput.focus();
-                        return;
-                    }
+    // Reativa a interface
+    sendBtn.disabled = false;
+    userInput.disabled = false;
+    userInput.focus();
+    return;
+}
                 }
                 // ================= FIM DO BLOCO DE INTERCEPTAÇÃO SEMÂNTICA =================
 
