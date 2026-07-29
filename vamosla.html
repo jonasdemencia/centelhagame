@@ -2112,42 +2112,9 @@ Retorne APENAS este JSON:
             return erros;
         }
 
-        function validarTextoLogico(textoLogico, acaoChegadaEsperada) {
-            const erros = [];
-            const ancoramentoGenerico = /^você (se encontra|está|fica|nota|percebe|avança|para diante)/i;
-            if (ancoramentoGenerico.test(textoLogico.trim())) {
-                erros.push('ancoragem genérica: texto começa sem verbo de chegada passado');
-            }
-            if (acaoChegadaEsperada && acaoChegadaEsperada !== "MULTIPLAS_ENTRADAS") {
-                const stopwords = ['para', 'pela', 'pelo', 'com', 'como', 'sobre', 'entre', 'trás', 'frente', 'lado'];
-                const palavrasChave = acaoChegadaEsperada
-                    .toLowerCase()
-                    .replace(/^(subir|descer|atravessar|rastejar|passar|entrar|avançar|cruzar)\s+/i, '')
-                    .split(/\s+/)
-                    .filter(p => p.length > 3 && !stopwords.includes(p));
-                const primeiraSentenca = textoLogico.split(/[.!?]/)[0];
-                const restoDoTexto = textoLogico.slice(primeiraSentenca.length);
-                for (const palavra of palavrasChave) {
-                    if (new RegExp(`\\b${palavra}`, 'i').test(restoDoTexto)) {
-                        erros.push(`entry-point leak: "${palavra}" (da ação de chegada) reaparece após a primeira frase`);
-                    }
-                }
-            }
-            return erros;
-        }
+        
 
-        function corrigirAncoragem(textoLogico, acaoChegada) {
-            const ancoramentoGenerico = /^você (se encontra|está|fica|nota|percebe)/i;
-            if (acaoChegada && ancoramentoGenerico.test(textoLogico.trim())) {
-                if (acaoChegada === "MULTIPLAS_ENTRADAS") {
-                    return textoLogico.replace(/^você (se encontra|está|fica|nota|percebe)\s*/i, `Ao avançar para este local, você `);
-                } else {
-                    const verboCorrido = acaoChegada.toLowerCase();
-                    return textoLogico.replace(/^você (se encontra|está|fica|nota|percebe)\s*/i, `Depois de ${verboCorrido}, você `);
-                }
-            }
-            return textoLogico;
-        }
+       
 
         async function gerarZona(numeroZona, ganchosPrevios = null) {
             const salaInicio = (numeroZona - 1) * SALAS_POR_ZONA + 1;
@@ -2539,7 +2506,6 @@ Retorne APENAS o JSON abaixo. NÃO gere arrays de opções ou destinos, apenas o
                     const errosNarrativa = validarTextoLogico(prosa, acaoEntrada);
                     if (errosNarrativa.length > 0) {
                         console.warn(`[ValidadorNarrativo] Sala ${idSala}:`, errosNarrativa);
-                        prosa = corrigirAncoragem(prosa, acaoEntrada);
                     }
                     const opcoesGeradas = dadosEstruturais.saidas.map(saida => ({
                         texto: saida.acao,
@@ -3152,7 +3118,7 @@ Retorne EXATAMENTE o JSON abaixo. Nenhuma palavra extra.`
         // FUNÇÕES DE NAVEGAÇÃO E DILEMA (extraídas dos onclick)
         // ============================================================
 
-        async function navegarPara(destino, textoAcao, opcao, silent = false) {
+       async function navegarPara(destino, textoAcao, opcao, silent = false) {
     if (window._transicaoEmAndamento) return;
     window._transicaoEmAndamento = true;
 
@@ -3264,19 +3230,28 @@ Retorne EXATAMENTE o JSON abaixo. Nenhuma palavra extra.`
     verificarEExpandirMundo();
 
     if (novaSala?.texto_logico) {
-    // Verifica se é retorno
-    const isRetorno = /(voltar|de volta|retornar)\b/i.test(textoAcao || opcao.texto) || (destino < parseInt(secaoAtualId));
-    const nomeSala = novaSala.nome || "este lugar";
-    const prefixo = isRetorno ? `De volta a ${nomeSala}.` : `Você chega a ${nomeSala}.`;
-    const descricaoFinal = `${prefixo} ${novaSala.texto_logico}`;
-    salaDesc.innerHTML = descricaoFinal;
+        // Verifica se é retorno
+        const isRetorno = /(voltar|de volta|retornar)\b/i.test(textoAcao || opcao.texto) || (destino < parseInt(secaoAtualId));
+        const nomeSala = novaSala.nome || "este lugar";
+        const prefixo = isRetorno ? `De volta a ${nomeSala}.` : `Você chega a ${nomeSala}.`;
+        const descricaoFinal = `${prefixo} ${novaSala.texto_logico}`;
 
+        // Adiciona lista de saídas (opcional, mas mantém clareza)
+        const saidas = (novaSala.opcoes || [])
+            .filter(o => o.destino && !o.dilema)
+            .map(o => o.texto)
+            .join(', ');
+        if (saidas) {
+            salaDesc.innerHTML = `${descricaoFinal}<br><span style="color:#888;font-style:italic;">Caminhos disponíveis: ${saidas}.</span>`;
+        } else {
+            salaDesc.innerHTML = descricaoFinal;
+        }
 
-    // Atualiza histórico (opcional)
-    historicoConversa.push({ role: 'user', content: `[Navegou para: ${textoAcao || opcao.texto}]` });
-    historicoConversa.push({ role: 'assistant', content: novaSala.texto_logico });
-    if (historicoConversa.length > 10) historicoConversa.splice(0, 2);
-}
+        // Atualiza histórico (opcional)
+        historicoConversa.push({ role: 'user', content: `[Navegou para: ${textoAcao || opcao.texto}]` });
+        historicoConversa.push({ role: 'assistant', content: novaSala.texto_logico });
+        if (historicoConversa.length > 10) historicoConversa.splice(0, 2);
+    }
 
     atualizarBotoesNavegacao();
     atualizarLootRoom();
@@ -3290,7 +3265,7 @@ Retorne EXATAMENTE o JSON abaixo. Nenhuma palavra extra.`
         if (novoContainer) novoContainer.style.pointerEvents = 'auto';
     }, 1200);
 }
-
+    
         async function executarDilema(opcao, silent = false) {
     if (window._transicaoEmAndamento) return;
     window._transicaoEmAndamento = true;
