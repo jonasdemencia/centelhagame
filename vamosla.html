@@ -3151,29 +3151,22 @@ Retorne EXATAMENTE o JSON abaixo. Nenhuma palavra extra.`
     const salaDestino = mapaMundo?.[String(idDestino)];
     const nomeSala = salaDestino?.nome || "este lugar";
 
-    // Remove apenas o prefixo de chegada, mantendo o resto
     let textoAjustado = textoLogico;
+
+    // Remove a oração introdutória até a primeira vírgula ou ponto final
     const padroes = [
-        /^Você (se encontra|está|fica|nota|percebe|avança|para diante)\s*[,.]?\s*/i,
-        /^Ao (entrar|chegar|avançar|passar|atravessar|subir|descer)\s*[,.]?\s*/i,
-        /^Depois de (entrar|chegar|avançar|passar|atravessar|subir|descer)\s*[,.]?\s*/i,
-        /^À frente\s*[,.]?\s*/i,
-        /^Adiante\s*[,.]?\s*/i,
-        /^Lá\s*[,.]?\s*/i,
-        /^Ali\s*[,.]?\s*/i,
+        /^[^,.]*[,.]\s*/ // remove tudo até a primeira vírgula ou ponto
     ];
 
-    let substituiu = false;
     for (let padrao of padroes) {
         if (padrao.test(textoAjustado)) {
             textoAjustado = textoAjustado.replace(padrao, '');
-            substituiu = true;
             break;
         }
     }
 
-    // Fallback: se nenhum padrão foi encontrado, remove apenas a primeira frase
-    if (!substituiu) {
+    // Fallback: se nenhum padrão foi removido, remove a primeira frase inteira
+    if (textoAjustado === textoLogico) {
         textoAjustado = textoAjustado.replace(/^[^.!?]+[.!?]\s*/, '').trim();
     }
 
