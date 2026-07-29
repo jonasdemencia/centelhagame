@@ -3327,6 +3327,7 @@ Retorne EXATAMENTE o JSON abaixo. Nenhuma palavra extra.`
             document.getElementById('energia-span').innerText = `🩸 ${energia}/10`;
             await salvarEstadoJogador();
         }
+        opcao._ponteExibida = true; // NOVO
 
         const container = document.getElementById('map-controls');
         container.innerHTML = '';
@@ -3413,6 +3414,7 @@ async function executarDilemaComRamificacao(pai, ram, silent = false) {
     // Se quiser manter a mensagem do pai em outros contextos, pode usar um parâmetro, mas aqui vamos suprimir.
     // Para evitar duplicação, não adicionamos a mensagem do usuário.
 
+    if (!pai._ponteExibida) {
     if (pai.resultado_texto) {
         const bridgeDiv = document.createElement('div');
         bridgeDiv.className = 'result-message';
@@ -3425,7 +3427,8 @@ async function executarDilemaComRamificacao(pai, ram, silent = false) {
         document.getElementById('energia-span').innerText = `🩸 ${energia}/10`;
         await salvarEstadoJogador();
     }
-
+    pai._ponteExibida = true;
+}
     // Exibe o resultado da ramificação
     const resultDiv = document.createElement('div');
     resultDiv.className = 'result-message';
