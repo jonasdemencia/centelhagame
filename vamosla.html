@@ -2305,9 +2305,11 @@ O esqueleto das salas já está definido. Sua única função é escrever o "tex
 ${resumoPlano}
 
 [REGRAS DE OURO DA ARQUITETURA NARRATIVA]
-1. ÂNCORA DE CHEGADA (REGRA ABSOLUTA):
-   - Inicie a primeira frase exatamente com a âncora fornecida.
-   - NÃO descreva o ponto de entrada como parte do cenário visual atual. Direcione toda a descrição para a frente, preparando as opções futuras listadas.
+1. DESCRIÇÃO ESTÁTICA E AUTÔNOMA (REGRA ABSOLUTA):
+   - Descreva a sala como um espaço fixo, independente da chegada.
+   - Inclua todos os elementos permanentes (escadas, portas, túneis) e saídas visíveis.
+   - A primeira frase deve ser uma visão geral do local, sem âncora de movimento (ex: "A Sala de Espera é ampla...").
+   - Proibido usar "Depois de", "Ao entrar", "À frente" como abertura.
 2. PREPARAÇÃO PROSPECTIVA (REGRA ABSOLUTA — FALHA CRÍTICA SE VIOLADA): Cada sala tem uma lista de ⚠️ ELEMENTOS FÍSICOS OBRIGATÓRIOS. Esses substantivos foram extraídos diretamente das ações disponíveis. O texto DEVE descrever cada um desses elementos de forma visualmente concreta — o jogador precisa VÊ-LOS antes de poder escolher a ação correspondente. Se o elemento não aparecer no texto, a ação é um "botão fantasma" e o jogo quebra a imersão. Exemplo: se a ação é "Rastejar pelo túnel baixo", o texto deve descrever "um túnel baixo" visível no ambiente.
 3. ESTILO: Apenas matéria sensorial – visão, som, cheiro. PROÍBIDO mencionar "história", "segredo", "destino" ou julgar o ambiente.
 4. DENSIDADE AMBIENTAL OBRIGATÓRIA: Além da Regra 2, adicione 1 ou 2 objetos físicos isolados por sala (detritos, móveis, ferramentas). Descreva apenas sua materialidade estática (ferrugem, umidade, poeira, textura). PROIBIDO sugerir que foram "recentemente usados" ou inferir presença recente. Varie os itens entre as salas.
@@ -3144,39 +3146,7 @@ Retorne EXATAMENTE o JSON abaixo. Nenhuma palavra extra.`
             console.log('[ENTIDADES] Index atualizado:', entityIndex, '| Foco:', entidadeEmFoco);
         }
 
-        function prepararTextoChegada(textoLogico, acaoUsada, idOrigem, idDestino) {
-    const isRetorno = /(voltar|de volta|retornar)\b/i.test(acaoUsada) || (idDestino < idOrigem);
-    if (!isRetorno) return textoLogico;
-
-    const salaDestino = mapaMundo?.[String(idDestino)];
-    const nomeSala = salaDestino?.nome || "este lugar";
-
-    let textoAjustado = textoLogico;
-
-    // Remove a oração introdutória até a primeira vírgula ou ponto final
-    const padroes = [
-        /^[^,.]*[,.]\s*/ // remove tudo até a primeira vírgula ou ponto
-    ];
-
-    for (let padrao of padroes) {
-        if (padrao.test(textoAjustado)) {
-            textoAjustado = textoAjustado.replace(padrao, '');
-            break;
-        }
-    }
-
-    // Fallback: se nenhum padrão foi removido, remove a primeira frase inteira
-    if (textoAjustado === textoLogico) {
-        textoAjustado = textoAjustado.replace(/^[^.!?]+[.!?]\s*/, '').trim();
-    }
-
-    // Capitaliza a primeira letra
-    if (textoAjustado.length > 0) {
-        textoAjustado = textoAjustado.charAt(0).toUpperCase() + textoAjustado.slice(1);
-    }
-
-    return `De volta a ${nomeSala}. ${textoAjustado}`;
-}
+        
 
             // ============================================================
         // FUNÇÕES DE NAVEGAÇÃO E DILEMA (extraídas dos onclick)
@@ -3294,12 +3264,19 @@ Retorne EXATAMENTE o JSON abaixo. Nenhuma palavra extra.`
     verificarEExpandirMundo();
 
     if (novaSala?.texto_logico) {
-        const textoFinal = prepararTextoChegada(novaSala.texto_logico, textoAcao || opcao.texto, parseInt(secaoAtualId), destino);
-        salaDesc.innerHTML = textoFinal;
-        historicoConversa.push({ role: 'user', content: `[Navegou para: ${textoAcao || opcao.texto}]` });
-        historicoConversa.push({ role: 'assistant', content: novaSala.texto_logico });
-        if (historicoConversa.length > 10) historicoConversa.splice(0, 2);
-    }
+    // Verifica se é retorno
+    const isRetorno = /(voltar|de volta|retornar)\b/i.test(textoAcao || opcao.texto) || (destino < parseInt(secaoAtualId));
+    const nomeSala = novaSala.nome || "este lugar";
+    const prefixo = isRetorno ? `De volta a ${nomeSala}.` : `Você chega a ${nomeSala}.`;
+    const descricaoFinal = `${prefixo} ${novaSala.texto_logico}`;
+    salaDesc.innerHTML = descricaoFinal;
+
+
+    // Atualiza histórico (opcional)
+    historicoConversa.push({ role: 'user', content: `[Navegou para: ${textoAcao || opcao.texto}]` });
+    historicoConversa.push({ role: 'assistant', content: novaSala.texto_logico });
+    if (historicoConversa.length > 10) historicoConversa.splice(0, 2);
+}
 
     atualizarBotoesNavegacao();
     atualizarLootRoom();
@@ -3608,7 +3585,9 @@ async function executarDilemaComRamificacao(pai, ram, silent = false) {
 
                 const salaAtual = mapaMundo[secaoAtualId];
                 if (salaAtual?.texto_logico) {
-                    document.getElementById('sala-desc').innerHTML = salaAtual.texto_logico;
+    const nomeSala = salaAtual.nome || "este lugar";
+    const descricaoFinal = `Você chega a ${nomeSala}. ${salaAtual.texto_logico}`;
+    document.getElementById('sala-desc').innerHTML = descricaoFinal;
                     document.getElementById('chat-box').innerHTML = '';
                     adicionarMensagem('⚔️ A escuridão recorda sua presença...', 'system');
                     atualizarBotoesNavegacao();
