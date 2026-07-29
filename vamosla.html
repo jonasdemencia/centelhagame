@@ -3145,22 +3145,45 @@ Retorne EXATAMENTE o JSON abaixo. Nenhuma palavra extra.`
         }
 
         function prepararTextoChegada(textoLogico, acaoUsada, idOrigem, idDestino) {
-            const isRetorno = /(voltar|de volta|retornar)\b/i.test(acaoUsada) || (idDestino < idOrigem);
-            if (!isRetorno) return textoLogico;
-            const semAncora = textoLogico.replace(/^[^.!?]+[.!?]\s*/, '').trim();
-            const complemento = acaoUsada
-                .replace(/^(voltar|de volta|retornar)\s+/i, '')
-                .trim();
-            if (!complemento) return `De volta. ${semAncora}`;
-            const nucleoLugar = complemento.replace(/^(pel[ao]s?|n[ao]s?|a|ao|às?|por|para)\s+/i, '').trim();
-            const nucleoEscapado = nucleoLugar.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            const inicioDoTexto = semAncora.substring(0, 60);
-            const temRepeticao = new RegExp(`\\b${nucleoEscapado}\\b`, 'i').test(inicioDoTexto);
-            if (temRepeticao) return `De volta. ${semAncora}`;
-            const ancora = `De volta ${complemento},`;
-            const resto = semAncora.charAt(0).toLowerCase() + semAncora.slice(1);
-            return `${ancora} ${resto}`;
+    const isRetorno = /(voltar|de volta|retornar)\b/i.test(acaoUsada) || (idDestino < idOrigem);
+    if (!isRetorno) return textoLogico;
+
+    const salaDestino = mapaMundo?.[String(idDestino)];
+    const nomeSala = salaDestino?.nome || "este lugar";
+
+    // Remove apenas o prefixo de chegada, mantendo o resto
+    let textoAjustado = textoLogico;
+    const padroes = [
+        /^Você (se encontra|está|fica|nota|percebe|avança|para diante)\s*[,.]?\s*/i,
+        /^Ao (entrar|chegar|avançar|passar|atravessar|subir|descer)\s*[,.]?\s*/i,
+        /^Depois de (entrar|chegar|avançar|passar|atravessar|subir|descer)\s*[,.]?\s*/i,
+        /^À frente\s*[,.]?\s*/i,
+        /^Adiante\s*[,.]?\s*/i,
+        /^Lá\s*[,.]?\s*/i,
+        /^Ali\s*[,.]?\s*/i,
+    ];
+
+    let substituiu = false;
+    for (let padrao of padroes) {
+        if (padrao.test(textoAjustado)) {
+            textoAjustado = textoAjustado.replace(padrao, '');
+            substituiu = true;
+            break;
         }
+    }
+
+    // Fallback: se nenhum padrão foi encontrado, remove apenas a primeira frase
+    if (!substituiu) {
+        textoAjustado = textoAjustado.replace(/^[^.!?]+[.!?]\s*/, '').trim();
+    }
+
+    // Capitaliza a primeira letra
+    if (textoAjustado.length > 0) {
+        textoAjustado = textoAjustado.charAt(0).toUpperCase() + textoAjustado.slice(1);
+    }
+
+    return `De volta a ${nomeSala}. ${textoAjustado}`;
+}
 
             // ============================================================
         // FUNÇÕES DE NAVEGAÇÃO E DILEMA (extraídas dos onclick)
