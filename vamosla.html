@@ -2220,7 +2220,7 @@ Retorne exclusivamente um objeto JSON válido.`;
                     const idMaximoDaZona = Math.max(...Object.keys(plano).map(Number));
                     const todasSaidasParaDescrever = (sala.saidas || []).filter(s => s.destino <= idMaximoDaZona);
                     const elementosObrigatorios = todasSaidasParaDescrever
-                        .map(s => `    • "${extrairElementoFisico(s.acao)}" — visível no ambiente, com o sentido físico de "${s.acao}" (não inverta a direção)`)
+                       .map(s => `    • "${extrairElementoFisico(s.acao)}" — visível no ambiente, com o sentido físico de "${s.acao}" (não inverta a direção; não nomeie o que há além dela, apenas a direção observável)`)
                         .join("\n");
                     const blocoElementos = elementosObrigatorios ? `\n⚠️  ELEMENTOS FÍSICOS OBRIGATÓRIOS (VIOLAÇÃO = FALHA CRÍTICA):\n${elementosObrigatorios}` : '';
                     const chegada = `[DESCRIÇÃO ESTÁTICA E AUTÔNOMA: Esta sala é um espaço fixo que existe independentemente de qualquer movimento do jogador. PROIBIDO ancorar a primeira frase em referências de entrada/chegada (ex: "Depois de...", "Ao avançar para...", "Ao entrar..."). Descreva o ambiente como uma cena parada no tempo, contemplando todos os elementos físicos permanentes e todas as saídas visíveis listadas acima.]`;
