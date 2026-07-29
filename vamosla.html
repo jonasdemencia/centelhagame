@@ -3199,22 +3199,21 @@ Retorne EXATAMENTE o JSON abaixo. Nenhuma palavra extra.`
     verificarEExpandirMundo();
 
     if (novaSala?.texto_logico) {
-        // Verifica se é retorno
-        const isRetorno = /(voltar|de volta|retornar)\b/i.test(textoAcao || opcao.texto) || (destino < parseInt(secaoAtualId));
-        const nomeSala = novaSala.nome || "este lugar";
-        const prefixo = isRetorno ? `De volta a ${nomeSala}.` : `Você chega a ${nomeSala}.`;
-        const descricaoFinal = `${prefixo} ${novaSala.texto_logico}`;
+    // (Opcional) adicione uma mensagem de sistema no chat se quiser registrar a chegada
+    // adicionarMensagem(`Você chega a ${novaSala.nome}.`, 'system');
+    
+    let descricaoFinal = novaSala.texto_logico;
 
-        // Adiciona lista de saídas (opcional, mas mantém clareza)
-        const saidas = (novaSala.opcoes || [])
-            .filter(o => o.destino && !o.dilema)
-            .map(o => o.texto)
-            .join(', ');
-        if (saidas) {
-            salaDesc.innerHTML = `${descricaoFinal}<br><span style="color:#888;font-style:italic;">Caminhos disponíveis: ${saidas}.</span>`;
-        } else {
-            salaDesc.innerHTML = descricaoFinal;
-        }
+    // Adiciona lista de saídas (mantém a clareza)
+    const saidas = (novaSala.opcoes || [])
+        .filter(o => o.destino && !o.dilema)
+        .map(o => o.texto)
+        .join(', ');
+    if (saidas) {
+        salaDesc.innerHTML = `${descricaoFinal}<br><span style="color:#888;font-style:italic;">Caminhos disponíveis: ${saidas}.</span>`;
+    } else {
+        salaDesc.innerHTML = descricaoFinal;
+    }
 
         // Atualiza histórico (opcional)
         historicoConversa.push({ role: 'user', content: `[Navegou para: ${textoAcao || opcao.texto}]` });
@@ -3528,10 +3527,8 @@ async function executarDilemaComRamificacao(pai, ram, silent = false) {
                 }
 
                 const salaAtual = mapaMundo[secaoAtualId];
-                if (salaAtual?.texto_logico) {
-    const nomeSala = salaAtual.nome || "este lugar";
-    const descricaoFinal = `Você chega a ${nomeSala}. ${salaAtual.texto_logico}`;
-    document.getElementById('sala-desc').innerHTML = descricaoFinal;
+if (salaAtual?.texto_logico) {
+    document.getElementById('sala-desc').innerHTML = salaAtual.texto_logico;
                     document.getElementById('chat-box').innerHTML = '';
                     adicionarMensagem('⚔️ A escuridão recorda sua presença...', 'system');
                     atualizarBotoesNavegacao();
