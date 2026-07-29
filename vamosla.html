@@ -2503,10 +2503,6 @@ Retorne APENAS o JSON abaixo. NÃO gere arrays de opções ou destinos, apenas o
                     delete acoesChegadaLocal[String(idPrimeiraSalaLocal)];
                     const rotasEntrada = acoesChegadaLocal[idSala] || [];
                     const acaoEntrada = rotasEntrada.length === 1 ? rotasEntrada[0] : (rotasEntrada.length > 1 ? "MULTIPLAS_ENTRADAS" : null);
-                    const errosNarrativa = validarTextoLogico(prosa, acaoEntrada);
-                    if (errosNarrativa.length > 0) {
-                        console.warn(`[ValidadorNarrativo] Sala ${idSala}:`, errosNarrativa);
-                    }
                     const opcoesGeradas = dadosEstruturais.saidas.map(saida => ({
                         texto: saida.acao,
                         destino: saida.destino
