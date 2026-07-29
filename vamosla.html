@@ -2184,7 +2184,6 @@ Retorne exclusivamente um objeto JSON válido.`;
             }
 
             const promptSalas = (plano, conexoes) => {
-                const acoesChegada = {};
                 const idPrimeiraSala = Math.min(...Object.keys(plano).map(Number));
                 const distancias = {};
                 Object.keys(plano).forEach(k => distancias[k] = Infinity);
@@ -2202,22 +2201,6 @@ Retorne exclusivamente um objeto JSON válido.`;
                         }
                     }
                 }
-                for (const [idStr, sala] of Object.entries(plano)) {
-                    const idAtual = parseInt(idStr);
-                    for (const saida of (sala.saidas || [])) {
-                        const dest = saida.destino;
-                        if (distancias[idAtual] <= distancias[dest]) {
-                            const destKey = String(dest);
-                            if (!acoesChegada[destKey]) {
-                                acoesChegada[destKey] = [];
-                            }
-                            if (!acoesChegada[destKey].includes(saida.acao)) {
-                                acoesChegada[destKey].push(saida.acao);
-                            }
-                        }
-                    }
-                }
-                delete acoesChegada[String(idPrimeiraSala)];
                 const origemPrimariaBloqueios = {};
                 for (const [idStr, sala] of Object.entries(plano)) {
                     const idAtual = parseInt(idStr);
@@ -2234,22 +2217,13 @@ Retorne exclusivamente um objeto JSON válido.`;
                     const idAtual = parseInt(id);
                     const saidasForward = sala.saidas.filter(s => distancias[idAtual] <= distancias[s.destino]);
                     const acoes = saidasForward.map(s => s.acao).join(" | ");
-                    const saidasParaDescrever = saidasForward.filter(s => s.destino <= Math.max(...Object.keys(plano).map(Number)));
-                    const elementosObrigatorios = saidasParaDescrever
+                    const idMaximoDaZona = Math.max(...Object.keys(plano).map(Number));
+                    const todasSaidasParaDescrever = (sala.saidas || []).filter(s => s.destino <= idMaximoDaZona);
+                    const elementosObrigatorios = todasSaidasParaDescrever
                         .map(s => `    • "${extrairElementoFisico(s.acao)}" — este elemento DEVE estar descrito visualmente no ambiente`)
                         .join("\n");
                     const blocoElementos = elementosObrigatorios ? `\n⚠️  ELEMENTOS FÍSICOS OBRIGATÓRIOS (VIOLAÇÃO = FALHA CRÍTICA):\n${elementosObrigatorios}` : '';
-                    let chegada;
-                    const acoesDestino = acoesChegada[id] || [];
-                    if (id == idPrimeiraSala) {
-                        chegada = `[SALA DE ENTRADA DA ZONA: sem âncora de chegada. Inicie descrevendo o que o jogador vê à frente.]`;
-                    } else if (acoesDestino.length > 1) {
-                        chegada = `[ÂNCORA NEUTRA OBRIGATÓRIA: Esta sala é um ponto de convergência. Inicie a primeira frase OBRIGATORIAMENTE com "Ao avançar para este local, você...". Imediatamente após isso, foque a visão exclusivamente no que está adiante. O caminho que ficou para trás desapareceu narrativamente.]`;
-                    } else if (acoesDestino.length === 1) {
-                        chegada = `[ÂNCORA OBRIGATÓRIA: Inicie a primeira frase OBRIGATORIAMENTE com "Depois de ${acoesDestino[0].toLowerCase()}, você...". Imediatamente após isso, foque a visão exclusivamente no que está adiante. O caminho que ficou para trás desapareceu narrativamente.]`;
-                    } else {
-                        chegada = `[SALA SEM ÂNCORA: Inicie descrevendo o ambiente à frente.]`;
-                    }
+                    const chegada = `[DESCRIÇÃO ESTÁTICA E AUTÔNOMA: Esta sala é um espaço fixo que existe independentemente de qualquer movimento do jogador. PROIBIDO ancorar a primeira frase em referências de entrada/chegada (ex: "Depois de...", "Ao avançar para...", "Ao entrar..."). Descreva o ambiente como uma cena parada no tempo, contemplando todos os elementos físicos permanentes e todas as saídas visíveis listadas acima.]`;
                     const bloqueiosNasSaidas = (sala.saidas || [])
                         .filter(saida => {
                             const destStr = String(saida.destino);
@@ -2291,7 +2265,7 @@ Retorne APENAS o JSON abaixo. NÃO gere arrays de opções ou destinos, apenas o
 {
   "salas": {
     "1": {
-      "texto_logico": "Texto denso e descritivo que ancora a chegada e descreve os caminhos disponíveis..."
+      "texto_logico": "Texto denso e descritivo, estático e autônomo, que descreve o ambiente e os caminhos disponíveis..."
     },
     "2": { ... },
     "3": { ... }
