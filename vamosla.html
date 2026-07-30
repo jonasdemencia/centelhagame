@@ -530,6 +530,9 @@
 <script type="module">
 
         import { pipeline, cos_sim } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.16.0';
+        // Import separado (versão mais nova da mesma lib, renomeada) só para o pipeline de geração de texto.
+        // Mantido isolado do import acima para não arriscar quebrar o motor de embeddings que já funciona.
+        import { pipeline as pipelineGeracao } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@4';
 
         // ============================================================
         // Importações Firebase
@@ -801,6 +804,7 @@
         // MOTOR SEMÂNTICO
         // ============================================================
         window.extratorSemantico = null;
+        window.geradorLocal = null;
 
         async function iniciarMotorSemantico() {
             try {
@@ -818,7 +822,105 @@
             }
         }
 
+        // ============================================================
+        // NARRADOR LOCAL MÍNIMO (Tier 3) — 100% no navegador, sem servidor
+        // externo (LM Studio, Ollama, etc). Roda via WebGPU se disponível,
+        // com fallback automático para WASM.
+        // ============================================================
+        async function iniciarGeradorLocal() {
+            try {
+                const modelId = 'onnx-community/Qwen3-0.6B-ONNX';
+                const dispositivo = (typeof navigator !== 'undefined' && navigator.gpu) ? 'webgpu' : 'wasm';
+                window.geradorLocal = await pipelineGeracao('text-generation', modelId, {
+                    device: dispositivo,
+                    dtype: 'q4'
+                });
+                console.log(`✅ Narrador local carregado (device: ${dispositivo}).`);
+            } catch (erro) {
+                console.error("❌ Erro ao carregar o narrador local:", erro);
+                window.geradorLocal = null;
+            }
+        }
+
+        // ============================================================
+        // TIER 2 — RAG local por sentença sobre o texto_logico já gerado.
+        // Não adiciona nada ao prompt do Arquiteto de Cenas: reaproveita
+        // o texto que já existe, cortado em frases e cacheado por sala.
+        // ============================================================
+        function dividirEmFrases(texto) {
+            if (!texto) return [];
+            return texto
+                .split(/(?<=[.!?])\s+/)
+                .map(f => f.trim())
+                .filter(f => f.length > 3);
+        }
+
+        async function obterFrasesEmbedadas(sala) {
+            if (!sala || !sala.texto_logico) return [];
+            if (sala._fraseEmbeds) return sala._fraseEmbeds; // cache: computa 1x por sala
+
+            if (!window.extratorSemantico) return [];
+
+            const frases = dividirEmFrases(sala.texto_logico);
+            const embeds = [];
+            for (const frase of frases) {
+                const vetor = await window.extratorSemantico(frase, { pooling: 'mean', normalize: true });
+                embeds.push({ texto: frase, vetor: vetor.data });
+            }
+            sala._fraseEmbeds = embeds;
+            return embeds;
+        }
+
+        async function buscarFraseRelevante(pergunta, sala) {
+            if (!window.extratorSemantico) return null;
+            const frases = await obterFrasesEmbedadas(sala);
+            if (frases.length === 0) return null;
+
+            const vetorPergunta = (await window.extratorSemantico(pergunta, { pooling: 'mean', normalize: true })).data;
+
+            let melhorFrase = null;
+            let melhorScore = 0;
+            for (const f of frases) {
+                const score = cos_sim(vetorPergunta, f.vetor);
+                if (score > melhorScore) {
+                    melhorScore = score;
+                    melhorFrase = f.texto;
+                }
+            }
+            return melhorFrase ? { frase: melhorFrase, score: melhorScore } : null;
+        }
+
+        // ============================================================
+        // TIER 3 — o narrador local só reformula a frase que o Tier 2
+        // encontrou. Ele nunca recebe o texto_logico inteiro nem tem
+        // liberdade de "world knowledge": só pode responder com base no
+        // trecho já validado como semanticamente relevante.
+        // ============================================================
+        async function responderExameLocal(pergunta, fraseContexto) {
+            if (!window.geradorLocal) return null;
+            try {
+                const mensagens = [
+                    {
+                        role: 'system',
+                        content: 'Você narra um RPG de horror em Português Brasileiro. Responda em NO MÁXIMO 1 frase curta, tom seco e sombrio, sem poesia. Use SOMENTE a informação do CONTEXTO abaixo — nunca invente nada além dela. Se o CONTEXTO não responder à pergunta, responda exatamente: "Nada digno de nota."'
+                    },
+                    {
+                        role: 'user',
+                        content: `CONTEXTO: "${fraseContexto}"\nPERGUNTA DO JOGADOR: "${pergunta}"`
+                    }
+                ];
+                const saida = await window.geradorLocal(mensagens, { max_new_tokens: 40, do_sample: false });
+                const texto = saida?.[0]?.generated_text?.at(-1)?.content?.trim();
+                if (!texto || /nada digno de nota/i.test(texto)) return null;
+                return texto;
+            } catch (erro) {
+                console.error("❌ Erro na geração local (Tier 3):", erro);
+                return null;
+            }
+        }
+
         iniciarMotorSemantico();
+        iniciarGeradorLocal();
 
         function pseudoRandom(seed) {
             let x = Math.sin(seed++) * 10000;
@@ -3746,90 +3848,116 @@ async function executarDilemaComRamificacao(pai, ram, silent = false) {
                 }
 
                 if (!isInitial) {
-    const salaAtual = mapaMundo[secaoAtualId];
-    let melhorMatch = null;
-    let segundoMelhorMatch = null;
-    let maiorSimilaridade = 0;
-    let segundaMaiorSimilaridade = 0;
-    const pisoMinimo = 0.45;
-    const margemMinima = 0.12;
+                    const salaAtual = mapaMundo[secaoAtualId];
+                    let melhorMatch = null;
+                    let maiorSimilaridade = 0;
+                    const limiteAceitacao = 0.65;
 
-    if (window.extratorSemantico && salaAtual) {
-        const opcoesBusca = [];
-        if (salaAtual.opcoes) {
-            for (const opcao of salaAtual.opcoes) {
-                opcoesBusca.push({
-                    tipo: 'opcao',
-                    opcaoOriginal: opcao,
-                    textoBusca: opcao.texto || opcao.opcao_texto || '',
-                    paiDilema: null,
-                    isRamificacao: false
-                });
-                if (opcao.dilema && opcao.ramificacoes && opcao.ramificacoes.length > 0) {
-                    for (const ram of opcao.ramificacoes) {
-                        opcoesBusca.push({
-                            tipo: 'ramificacao',
-                            opcaoOriginal: ram,
-                            textoBusca: ram.opcao_texto || '',
-                            paiDilema: opcao,
-                            isRamificacao: true
-                        });
-                    }
+                    if (window.extratorSemantico && salaAtual) {
+    // Monta uma lista de "opções de busca" que inclui ramificações, sem modificar os originais
+    const opcoesBusca = [];
+    if (salaAtual.opcoes) {
+        for (const opcao of salaAtual.opcoes) {
+            // Opção principal
+            opcoesBusca.push({
+                tipo: 'opcao',
+                opcaoOriginal: opcao,
+                textoBusca: opcao.texto || opcao.opcao_texto || '',
+                paiDilema: null, // não é ramificação
+                isRamificacao: false
+            });
+            // Se tem ramificações, adiciona cada uma
+            if (opcao.dilema && opcao.ramificacoes && opcao.ramificacoes.length > 0) {
+                for (const ram of opcao.ramificacoes) {
+                    opcoesBusca.push({
+                        tipo: 'ramificacao',
+                        opcaoOriginal: ram,
+                        textoBusca: ram.opcao_texto || '',
+                        paiDilema: opcao,
+                        isRamificacao: true
+                    });
                 }
             }
         }
+    }
 
-        if (opcoesBusca.length > 0) {
-            const vetorJogador = await window.extratorSemantico(pergunta, { pooling: 'mean', normalize: true });
-            for (const item of opcoesBusca) {
-                const textoAlvo = item.textoBusca;
-                if (!textoAlvo) continue;
+    if (opcoesBusca.length > 0) {
+        const vetorJogador = await window.extratorSemantico(pergunta, { pooling: 'mean', normalize: true });
+        for (const item of opcoesBusca) {
+            const textoAlvo = item.textoBusca;
+            if (textoAlvo) {
                 const vetorAcao = await window.extratorSemantico(textoAlvo, { pooling: 'mean', normalize: true });
                 const similaridade = cos_sim(vetorJogador.data, vetorAcao.data);
                 console.log(`🔍 Comparando: "${pergunta}" com "${textoAlvo}" -> similaridade: ${similaridade.toFixed(4)}`);
-
                 if (similaridade > maiorSimilaridade) {
-                    segundaMaiorSimilaridade = maiorSimilaridade;
                     maiorSimilaridade = similaridade;
-                    segundoMelhorMatch = melhorMatch;
-                    melhorMatch = item;
-                } else if (similaridade > segundaMaiorSimilaridade) {
-                    segundaMaiorSimilaridade = similaridade;
+                    melhorMatch = item; // Agora melhorMatch é um objeto de busca, não a opção original
                 }
             }
         }
     }
-
-    const margemAtual = maiorSimilaridade - segundaMaiorSimilaridade;
-    if (maiorSimilaridade >= pisoMinimo && margemAtual >= margemMinima && melhorMatch) {
-        console.log("🔥 MATCH SEMÂNTICO ENCONTRADO! 🔥");
-        console.log("Jogador digitou:", pergunta);
-        console.log("Opção escolhida:", melhorMatch);
-        console.log("Score:", maiorSimilaridade, " | Margem:", margemAtual);
-
-        clearInterval(intervaloAnimacao);
-        const tempElement = document.getElementById(tempId);
-        if (tempElement) tempElement.remove();
-
-        const textoExibido = melhorMatch.tipo === 'ramificacao'
-            ? melhorMatch.opcaoOriginal.opcao_texto
-            : (melhorMatch.opcaoOriginal.texto || melhorMatch.opcaoOriginal.opcao_texto || "Prosseguir");
-        adicionarMensagem(">> Ação executada: " + textoExibido, "system");
-
-        if (melhorMatch.isRamificacao) {
-            await executarDilemaComRamificacao(melhorMatch.paiDilema, melhorMatch.opcaoOriginal, true);
-        } else if (melhorMatch.opcaoOriginal.destino !== undefined && !melhorMatch.opcaoOriginal.dilema) {
-            await navegarPara(melhorMatch.opcaoOriginal.destino, melhorMatch.opcaoOriginal.texto, melhorMatch.opcaoOriginal, true);
-        } else {
-            await executarDilema(melhorMatch.opcaoOriginal, true);
-        }
-
-        sendBtn.disabled = false;
-        userInput.disabled = false;
-        userInput.focus();
-        return;
-    }
 }
+
+                  if (maiorSimilaridade >= limiteAceitacao && melhorMatch) {
+    console.log("🔥 MATCH SEMÂNTICO ENCONTRADO! 🔥");
+    console.log("Jogador digitou:", pergunta);
+    console.log("Opção oculta equivalente:", melhorMatch);
+    console.log("Grau de Similaridade:", maiorSimilaridade);
+
+    clearInterval(intervaloAnimacao);
+    const tempElement = document.getElementById(tempId);
+    if (tempElement) tempElement.remove();
+
+    // Exibe a ação executada (apenas uma vez)
+    const textoExibido = melhorMatch.tipo === 'ramificacao' 
+        ? melhorMatch.opcaoOriginal.opcao_texto 
+        : (melhorMatch.opcaoOriginal.texto || melhorMatch.opcaoOriginal.opcao_texto || "Prosseguir");
+    adicionarMensagem(">> Ação executada: " + textoExibido, "system");
+
+    // Executa conforme o tipo, passando silent=true
+    if (melhorMatch.isRamificacao) {
+        await executarDilemaComRamificacao(melhorMatch.paiDilema, melhorMatch.opcaoOriginal, true);
+    } else if (melhorMatch.opcaoOriginal.destino !== undefined && !melhorMatch.opcaoOriginal.dilema) {
+        await navegarPara(melhorMatch.opcaoOriginal.destino, melhorMatch.opcaoOriginal.texto, melhorMatch.opcaoOriginal, true);
+    } else {
+        await executarDilema(melhorMatch.opcaoOriginal, true);
+    }
+
+    sendBtn.disabled = false;
+    userInput.disabled = false;
+    userInput.focus();
+    return;
+}
+
+                // ================= TIER 2 + 3: RAG local por sentença + narrador local =================
+                // Só chega aqui se o Tier 1 (opções/dilemas/ramificações/navegação) não bateu.
+                // Falha em qualquer ponto aqui = cai no fluxo remoto normal (LIVRE → Groq), como já era.
+                try {
+                    const fraseRelevante = await buscarFraseRelevante(pergunta, salaAtual);
+                    const limiteAceitacaoFrase = 0.55; // calibrar com os logs, igual foi feito no Tier 1
+
+                    if (fraseRelevante && fraseRelevante.score >= limiteAceitacaoFrase) {
+                        console.log(`📖 [Tier 2] Frase mais próxima (${fraseRelevante.score.toFixed(4)}): "${fraseRelevante.frase}"`);
+
+                        const respostaLocal = await responderExameLocal(pergunta, fraseRelevante.frase);
+
+                        if (respostaLocal) {
+                            console.log("🧠 [Tier 3] Narrador local respondeu:", respostaLocal);
+                            clearInterval(intervaloAnimacao);
+                            const tempElementLocal = document.getElementById(tempId);
+                            if (tempElementLocal) tempElementLocal.remove();
+                            adicionarMensagem(respostaLocal, "system");
+                            sendBtn.disabled = false;
+                            userInput.disabled = false;
+                            userInput.focus();
+                            return;
+                        }
+                    }
+                } catch (erroRAGLocal) {
+                    console.error("❌ [Tier 2/3] Erro no fluxo local, seguindo para o fluxo remoto normal:", erroRAGLocal);
+                }
+                // ================= FIM TIER 2 + 3 =================
+                }
                 // ================= FIM DO BLOCO DE INTERCEPTAÇÃO SEMÂNTICA =================
 
                 let mensagemFinal = pergunta;
