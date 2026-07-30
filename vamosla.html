@@ -1102,7 +1102,8 @@
         // ============================================================
         async function chamarGroq(messages, temperatura = 0.7, formato = { type: "json_object" }, modeloPadrao = MODELO_GROQ, tentativas = 3, maxTokens = 4096) {
             for (let i = 0; i < tentativas; i++) {
-                const isReasoningModel = modeloPadrao.includes("gpt-oss");
+                const isGptOss = modeloPadrao.includes("gpt-oss");
+                const isQwen3 = modeloPadrao.includes("qwen3") || modeloPadrao.includes("qwen/qwen");
                 const response = await fetch(WORKER_URL, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -1111,7 +1112,8 @@
                         messages: messages,
                         temperature: temperatura,
                         max_tokens: maxTokens,
-                        ...(isReasoningModel ? { reasoning_effort: "low" } : {}),
+                        ...(isGptOss ? { reasoning_effort: "low" } : {}),
+                        ...(isQwen3 ? { reasoning_effort: "none" } : {}),
                         ...(formato ? { response_format: formato } : {}),
                     }),
                 });
