@@ -2310,19 +2310,19 @@ ${resumoPlano}
    - NÃO descreva o ponto de entrada como parte do cenário visual atual. Direcione toda a descrição para a frente, preparando as opções futuras listadas.
 2. PREPARAÇÃO PROSPECTIVA (REGRA ABSOLUTA — FALHA CRÍTICA SE VIOLADA): Cada sala tem uma lista de ⚠️ ELEMENTOS FÍSICOS OBRIGATÓRIOS. Esses substantivos foram extraídos diretamente das ações disponíveis. O texto DEVE descrever cada um desses elementos de forma visualmente concreta — o jogador precisa VÊ-LOS antes de poder escolher a ação correspondente. Se o elemento não aparecer no texto, a ação é um "botão fantasma" e o jogo quebra a imersão. Exemplo: se a ação é "Rastejar pelo túnel baixo", o texto deve descrever "um túnel baixo" visível no ambiente.
 3. ESTILO: Apenas matéria sensorial – visão, som, cheiro. PROÍBIDO mencionar "história", "segredo", "destino" ou julgar o ambiente.
-4. DENSIDADE AMBIENTAL OBRIGATÓRIA: Além da Regra 2, adicione 1 ou 2 objetos físicos isolados por sala (detritos, móveis, ferramentas). Descreva apenas sua materialidade estática (ferrugem, umidade, poeira, textura). PROIBIDO sugerir que foram "recentemente usados" ou inferir presença recente. Varie os itens entre as salas.
+4. DENSIDADE AMBIENTAL OBRIGATÓRIA: Além da Regra 2, adicione 1 objeto físico isolado por sala (detritos, móveis, ferramentas). Descreva apenas sua materialidade estática (ferrugem, umidade, poeira, textura). PROIBIDO sugerir que foram "recentemente usados" ou inferir presença recente. Varie os itens entre as salas.
 5. CEGUEIRA DE INTERFACE (REGRA ABSOLUTA): NUNCA escreva frases informativas como "Você pode escolher entre X ou Y" ou "Você tem a opção de...". NUNCA liste rotas. Apenas descreva a existência orgânica e visual dos elementos no ambiente.
 
 [SEGREDO LOCAL DA ZONA]
 ${infoZona.segredo_local || "Há algo oculto que destoa do ambiente."}
-IMPORTANTE: Esta zona tem 10 salas. Você DEVE incluir uma referência VISÍVEL ao segredo local em pelo menos 2 dessas salas.
+IMPORTANTE: Esta zona tem 10 salas. Você DEVE incluir uma referência VISÍVEL ao segredo local em pelo menos 5 dessas salas.
 
 [ESTRUTURA DO JSON]
 Retorne APENAS o JSON abaixo. NÃO gere arrays de opções ou destinos, apenas o texto bruto.
 {
   "salas": {
     "1": {
-      "texto_logico": "Texto denso e descritivo que ancora a chegada e descreve os caminhos disponíveis..."
+      "texto_logico": "Texto conciso (3-4 frases) que ancora a chegada e descreve os caminhos disponíveis..."
     },
     "2": { ... },
     "3": { ... }
