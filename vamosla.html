@@ -3746,87 +3746,90 @@ async function executarDilemaComRamificacao(pai, ram, silent = false) {
                 }
 
                 if (!isInitial) {
-                    const salaAtual = mapaMundo[secaoAtualId];
-                    let melhorMatch = null;
-                    let maiorSimilaridade = 0;
-                    const limiteAceitacao = 0.65;
+    const salaAtual = mapaMundo[secaoAtualId];
+    let melhorMatch = null;
+    let segundoMelhorMatch = null;
+    let maiorSimilaridade = 0;
+    let segundaMaiorSimilaridade = 0;
+    const pisoMinimo = 0.45;
+    const margemMinima = 0.12;
 
-                    if (window.extratorSemantico && salaAtual) {
-    // Monta uma lista de "opções de busca" que inclui ramificações, sem modificar os originais
-    const opcoesBusca = [];
-    if (salaAtual.opcoes) {
-        for (const opcao of salaAtual.opcoes) {
-            // Opção principal
-            opcoesBusca.push({
-                tipo: 'opcao',
-                opcaoOriginal: opcao,
-                textoBusca: opcao.texto || opcao.opcao_texto || '',
-                paiDilema: null, // não é ramificação
-                isRamificacao: false
-            });
-            // Se tem ramificações, adiciona cada uma
-            if (opcao.dilema && opcao.ramificacoes && opcao.ramificacoes.length > 0) {
-                for (const ram of opcao.ramificacoes) {
-                    opcoesBusca.push({
-                        tipo: 'ramificacao',
-                        opcaoOriginal: ram,
-                        textoBusca: ram.opcao_texto || '',
-                        paiDilema: opcao,
-                        isRamificacao: true
-                    });
+    if (window.extratorSemantico && salaAtual) {
+        const opcoesBusca = [];
+        if (salaAtual.opcoes) {
+            for (const opcao of salaAtual.opcoes) {
+                opcoesBusca.push({
+                    tipo: 'opcao',
+                    opcaoOriginal: opcao,
+                    textoBusca: opcao.texto || opcao.opcao_texto || '',
+                    paiDilema: null,
+                    isRamificacao: false
+                });
+                if (opcao.dilema && opcao.ramificacoes && opcao.ramificacoes.length > 0) {
+                    for (const ram of opcao.ramificacoes) {
+                        opcoesBusca.push({
+                            tipo: 'ramificacao',
+                            opcaoOriginal: ram,
+                            textoBusca: ram.opcao_texto || '',
+                            paiDilema: opcao,
+                            isRamificacao: true
+                        });
+                    }
                 }
             }
         }
-    }
 
-    if (opcoesBusca.length > 0) {
-        const vetorJogador = await window.extratorSemantico(pergunta, { pooling: 'mean', normalize: true });
-        for (const item of opcoesBusca) {
-            const textoAlvo = item.textoBusca;
-            if (textoAlvo) {
+        if (opcoesBusca.length > 0) {
+            const vetorJogador = await window.extratorSemantico(pergunta, { pooling: 'mean', normalize: true });
+            for (const item of opcoesBusca) {
+                const textoAlvo = item.textoBusca;
+                if (!textoAlvo) continue;
                 const vetorAcao = await window.extratorSemantico(textoAlvo, { pooling: 'mean', normalize: true });
                 const similaridade = cos_sim(vetorJogador.data, vetorAcao.data);
                 console.log(`🔍 Comparando: "${pergunta}" com "${textoAlvo}" -> similaridade: ${similaridade.toFixed(4)}`);
+
                 if (similaridade > maiorSimilaridade) {
+                    segundaMaiorSimilaridade = maiorSimilaridade;
                     maiorSimilaridade = similaridade;
-                    melhorMatch = item; // Agora melhorMatch é um objeto de busca, não a opção original
+                    segundoMelhorMatch = melhorMatch;
+                    melhorMatch = item;
+                } else if (similaridade > segundaMaiorSimilaridade) {
+                    segundaMaiorSimilaridade = similaridade;
                 }
             }
         }
     }
-}
 
-                  if (maiorSimilaridade >= limiteAceitacao && melhorMatch) {
-    console.log("🔥 MATCH SEMÂNTICO ENCONTRADO! 🔥");
-    console.log("Jogador digitou:", pergunta);
-    console.log("Opção oculta equivalente:", melhorMatch);
-    console.log("Grau de Similaridade:", maiorSimilaridade);
+    const margemAtual = maiorSimilaridade - segundaMaiorSimilaridade;
+    if (maiorSimilaridade >= pisoMinimo && margemAtual >= margemMinima && melhorMatch) {
+        console.log("🔥 MATCH SEMÂNTICO ENCONTRADO! 🔥");
+        console.log("Jogador digitou:", pergunta);
+        console.log("Opção escolhida:", melhorMatch);
+        console.log("Score:", maiorSimilaridade, " | Margem:", margemAtual);
 
-    clearInterval(intervaloAnimacao);
-    const tempElement = document.getElementById(tempId);
-    if (tempElement) tempElement.remove();
+        clearInterval(intervaloAnimacao);
+        const tempElement = document.getElementById(tempId);
+        if (tempElement) tempElement.remove();
 
-    // Exibe a ação executada (apenas uma vez)
-    const textoExibido = melhorMatch.tipo === 'ramificacao' 
-        ? melhorMatch.opcaoOriginal.opcao_texto 
-        : (melhorMatch.opcaoOriginal.texto || melhorMatch.opcaoOriginal.opcao_texto || "Prosseguir");
-    adicionarMensagem(">> Ação executada: " + textoExibido, "system");
+        const textoExibido = melhorMatch.tipo === 'ramificacao'
+            ? melhorMatch.opcaoOriginal.opcao_texto
+            : (melhorMatch.opcaoOriginal.texto || melhorMatch.opcaoOriginal.opcao_texto || "Prosseguir");
+        adicionarMensagem(">> Ação executada: " + textoExibido, "system");
 
-    // Executa conforme o tipo, passando silent=true
-    if (melhorMatch.isRamificacao) {
-        await executarDilemaComRamificacao(melhorMatch.paiDilema, melhorMatch.opcaoOriginal, true);
-    } else if (melhorMatch.opcaoOriginal.destino !== undefined && !melhorMatch.opcaoOriginal.dilema) {
-        await navegarPara(melhorMatch.opcaoOriginal.destino, melhorMatch.opcaoOriginal.texto, melhorMatch.opcaoOriginal, true);
-    } else {
-        await executarDilema(melhorMatch.opcaoOriginal, true);
+        if (melhorMatch.isRamificacao) {
+            await executarDilemaComRamificacao(melhorMatch.paiDilema, melhorMatch.opcaoOriginal, true);
+        } else if (melhorMatch.opcaoOriginal.destino !== undefined && !melhorMatch.opcaoOriginal.dilema) {
+            await navegarPara(melhorMatch.opcaoOriginal.destino, melhorMatch.opcaoOriginal.texto, melhorMatch.opcaoOriginal, true);
+        } else {
+            await executarDilema(melhorMatch.opcaoOriginal, true);
+        }
+
+        sendBtn.disabled = false;
+        userInput.disabled = false;
+        userInput.focus();
+        return;
     }
-
-    sendBtn.disabled = false;
-    userInput.disabled = false;
-    userInput.focus();
-    return;
 }
-                }
                 // ================= FIM DO BLOCO DE INTERCEPTAÇÃO SEMÂNTICA =================
 
                 let mensagemFinal = pergunta;
