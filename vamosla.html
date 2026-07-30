@@ -902,16 +902,27 @@
                 const mensagens = [
                     {
                         role: 'system',
-                        content: 'Você narra um RPG de horror em Português Brasileiro. Responda em NO MÁXIMO 1 frase curta, tom seco e sombrio, sem poesia. Use SOMENTE a informação do CONTEXTO abaixo — nunca invente nada além dela. Se o CONTEXTO não responder à pergunta, responda exatamente: "Nada digno de nota."'
+                        // /no_think: o Qwen3 é um modelo híbrido "thinking/non-thinking" — sem isso ele gasta
+                        // o max_new_tokens inteiro num bloco <think>...</think> e nunca chega na resposta.
+                        // Mesmo gatilho já usado no resto do projeto pro Qwen3-32b via Groq.
+                        content: 'Você narra um RPG de horror em Português Brasileiro. Responda em NO MÁXIMO 1 frase curta, tom seco e sombrio, sem poesia. Use SOMENTE a informação do CONTEXTO abaixo — nunca invente nada além dela. Se o CONTEXTO não responder à pergunta, responda exatamente: "Nada digno de nota." /no_think'
                     },
                     {
                         role: 'user',
-                        content: `CONTEXTO: "${fraseContexto}"\nPERGUNTA DO JOGADOR: "${pergunta}"`
+                        content: `CONTEXTO: "${fraseContexto}"\nPERGUNTA DO JOGADOR: "${pergunta}"\n/no_think`
                     }
                 ];
-                const saida = await window.geradorLocal(mensagens, { max_new_tokens: 40, do_sample: false });
-                const texto = saida?.[0]?.generated_text?.at(-1)?.content?.trim();
-                if (!texto || /nada digno de nota/i.test(texto)) return null;
+                const saida = await window.geradorLocal(mensagens, { max_new_tokens: 100, do_sample: false });
+                let texto = saida?.[0]?.generated_text?.at(-1)?.content ?? '';
+
+                // Rede de segurança: se algum bloco de raciocínio vazar (ou ficar truncado sem fechar),
+                // remove e trata como resposta inválida em vez de mostrar "pensamento" pro jogador.
+                texto = texto.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+                if (!texto || texto.includes('<think>')) {
+                    console.warn("⚠️ [Tier 3] Saída ainda continha <think> ou veio vazia — descartando.");
+                    return null;
+                }
+                if (/nada digno de nota/i.test(texto)) return null;
                 return texto;
             } catch (erro) {
                 console.error("❌ Erro na geração local (Tier 3):", erro);
