@@ -1102,8 +1102,7 @@
         // ============================================================
         async function chamarGroq(messages, temperatura = 0.7, formato = { type: "json_object" }, modeloPadrao = MODELO_GROQ, tentativas = 3, maxTokens = 4096) {
             for (let i = 0; i < tentativas; i++) {
-                const isGptOss = modeloPadrao.includes("gpt-oss");
-                const isQwen3 = modeloPadrao.includes("qwen3") || modeloPadrao.includes("qwen/qwen");
+                const isReasoningModel = modeloPadrao.includes("gpt-oss");
                 const response = await fetch(WORKER_URL, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -1112,8 +1111,7 @@
                         messages: messages,
                         temperature: temperatura,
                         max_tokens: maxTokens,
-                        ...(isGptOss ? { reasoning_effort: "low" } : {}),
-                        ...(isQwen3 ? { reasoning_effort: "none" } : {}),
+                        ...(isReasoningModel ? { reasoning_effort: "low" } : {}),
                         ...(formato ? { response_format: formato } : {}),
                     }),
                 });
@@ -2170,8 +2168,7 @@ FIOS DA ZONA ANTERIOR (devem aparecer fisicamente em salas desta zona):
 - Informação que o jogador carrega sem entender: ${ganchosPrevios.informacao_pendente || 'nenhuma'}
 - Salas de entrada: ${ganchosPrevios.salas_fronteira?.join(', ') || 'nenhuma'}
 ` : '';
-            const promptPlano = `/no_think
-[SEMENTE: ${semente}] [ZONA ${numeroZona}] [SALAS ${salaInicio} a ${salaFim}]
+            const promptPlano = `[SEMENTE: ${semente}] [ZONA ${numeroZona}] [SALAS ${salaInicio} a ${salaFim}]
 
 Você é um gerador de matrizes de adjacência para um motor de jogo. 
 Sua tarefa é mapear ${SALAS_POR_ZONA} nós interconectados.
@@ -2300,8 +2297,7 @@ Retorne exclusivamente um objeto JSON válido.`;
                         : '';
                     return `SALA ${id} (${sala.local_fisico}):\n${chegada}\nAções futuras disponíveis -> [${acoes || 'Foco apenas no ambiente'}]${blocoElementos}${notaBloqueio}`;
                 }).join("\n\n");
-                return `/no_think
-Você é o Arquiteto de Mundo de um RPG de horror visceral.
+                return `Você é o Arquiteto de Mundo de um RPG de horror visceral. 
 Seu objetivo é gerar a prosa (texto_logico) para uma zona do mapa chamada: "${infoZona.nome}".
 
 [O PLANO ESTRUTURAL]
@@ -2345,20 +2341,13 @@ Retorne APENAS o JSON abaixo. NÃO gere arrays de opções ou destinos, apenas o
                 for (let tentativa = 1; tentativa <= MAX_TENTATIVAS_PLANO; tentativa++) {
                     let dataPlano;
                     try {
-                        dataPlano = await chamarGroq(
-    [{ role: "user", content: promptPlano }],
-    0.6,
-    { type: "json_object" },
-    "qwen/qwen3.6-27b",
-    3,
-    8000
-);
+                        dataPlano = await chamarSambanova([{ role: "user", content: promptPlano }], 0.6, { type: "json_object" }, "Meta-Llama-3.3-70B-Instruct", 3);
                     } catch (e) {
                         const erroMsg = e.message || "";
                         const isRateLimit = /rate[_ ]limit/i.test(erroMsg) || /429/.test(erroMsg) || erroMsg.includes("tokens per day");
                         if (isRateLimit) {
-                            console.warn("⏳ Rate limit no modelo principal. Usando fallback 'qwen/qwen3.6-27b'...");
-                            dataPlano = await chamarGroq([{ role: "user", content: promptPlano }], 0.6, { type: "json_object" }, "qwen/qwen3.6-27b", 3);
+                            console.warn("⏳ Rate limit no modelo principal. Usando fallback 'openai/gpt-oss-120b'...");
+                            dataPlano = await chamarGroq([{ role: "user", content: promptPlano }], 0.6, { type: "json_object" }, "openai/gpt-oss-120b", 3);
                         } else {
                             throw e;
                         }
@@ -2455,21 +2444,21 @@ Retorne APENAS o JSON abaixo. NÃO gere arrays de opções ou destinos, apenas o
                 try {
                     dataSalas = await chamarSambanova(
                         [{ role: "user", content: promptSalas(planoData.plano, planoData.conexoes_narrativas || []) }],
-                        0.7,
+                        0.85,
                         { type: "json_object" },
-                        "qwen/qwen3.6-27b",
+                        "Meta-Llama-3.3-70B-Instruct",
                         3
                     );
                 } catch (e) {
                     const erroMsg = e.message || "";
                     const isRateLimit = /rate[_ ]limit/i.test(erroMsg) || /429/.test(erroMsg) || erroMsg.includes("tokens per day");
                     if (isRateLimit) {
-                        console.warn("⏳ [Zona] Rate limit no modelo principal ao escrever as salas. Usando fallback 'qwen/qwen3.6-27b'...");
+                        console.warn("⏳ [Zona] Rate limit no modelo principal ao escrever as salas. Usando fallback 'openai/gpt-oss-120b'...");
                         dataSalas = await chamarGroq(
                             [{ role: "user", content: promptSalas(planoData.plano, planoData.conexoes_narrativas || []) }],
-                            0.7,
+                            0.85,
                             { type: "json_object" },
-                            "qwen/qwen3.6-27b",
+                            "openai/gpt-oss-120b",
                             3,
                             8000
                         );
