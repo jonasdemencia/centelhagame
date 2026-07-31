@@ -956,7 +956,7 @@
                         // /no_think: o Qwen3 é um modelo híbrido "thinking/non-thinking" — sem isso ele gasta
                         // o max_new_tokens inteiro num bloco <think>...</think> e nunca chega na resposta.
                         // Mesmo gatilho já usado no resto do projeto pro Qwen3-32b via Groq.
-                        content: 'Você narra um RPG de horror em Português Brasileiro. Responda em 1 frase curta, tom seco, sem poesia. Responda DIRETAMENTE ao que foi perguntado. Baseie-se no CONTEXTO abaixo. Se o CONTEXTO não detalhar exatamente o que foi perguntado, deduza um detalhe pequeno, plausível e coerente com o cenário da cena — nunca recuse, nunca diga que não há nada, nunca mencione ser uma IA nem quebre o personagem. /no_think'
+                        content: 'Você narra um RPG de horror em Português Brasileiro. Responda em 1 frase curta, tom seco, sem poesia (máximo 8 palavras). Responda DIRETAMENTE ao que foi perguntado. Baseie-se no CONTEXTO abaixo. Se o CONTEXTO não detalhar exatamente o que foi perguntado, deduza um detalhe pequeno, plausível e coerente com o cenário da cena — nunca recuse, nunca diga que não há nada, nunca mencione ser uma IA nem quebre o personagem. /no_think'
                     },
                     {
                         role: 'user',
@@ -964,7 +964,7 @@
                     }
                 ];
                 const saida = await window.geradorLocal(mensagens, {
-                    max_new_tokens: 40,
+                    max_new_tokens: 25,
                     do_sample: false,
                     repetition_penalty: 1.3 // combate o loop de frases genéricas tipo "ele está sozinho"
                 });
