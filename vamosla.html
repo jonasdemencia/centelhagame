@@ -944,6 +944,14 @@
         // trecho já validado como semanticamente relevante.
         // ============================================================
         async function responderExameLocal(pergunta, fraseContexto) {
+
+// ===== BLOCO NOVO: INTERCEPTADOR NUMÉRICO =====
+    const perguntasNumericas = /\b(altura|distância|metro|centímetro|quilômetro|peso|quilo|ano|data|quantos|quantas|temperatura|graus|horas|minutos|segundos|milhas|pés|polegadas|km|m|cm)\b/i;
+    if (perguntasNumericas.test(pergunta)) {
+        return "Você não tem como saber esse número exato agora.";
+    }
+    // ===== FIM DO BLOCO =====
+            
             if (!window.geradorLocal && window.geradorLocalPromise) {
                 console.log("⏳ [Tier 3] Narrador local ainda carregando, aguardando...");
                 await window.geradorLocalPromise;
