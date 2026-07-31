@@ -943,46 +943,49 @@
         // liberdade de "world knowledge": só pode responder com base no
         // trecho já validado como semanticamente relevante.
         // ============================================================
-        async function responderExameLocal(pergunta, fraseContexto) {
-            if (!window.geradorLocal && window.geradorLocalPromise) {
-                console.log("⏳ [Tier 3] Narrador local ainda carregando, aguardando...");
-                await window.geradorLocalPromise;
-            }
-            if (!window.geradorLocal) return null;
-            try {
-                const mensagens = [
-                    {
-                        role: 'system',
-                        // /no_think: o Qwen3 é um modelo híbrido "thinking/non-thinking" — sem isso ele gasta
-                        // o max_new_tokens inteiro num bloco <think>...</think> e nunca chega na resposta.
-                        // Mesmo gatilho já usado no resto do projeto pro Qwen3-32b via Groq.
-                        content: 'Você narra um RPG de horror em Português Brasileiro, no estilo Resident Evil (PS1) e livros-jogo Fighting Fantasy. Responda em NO MÁXIMO 2 frases curtas, tom seco e sombrio, sem poesia. Responda DIRETAMENTE ao que foi perguntado — não repita frases genéricas como "ele está sozinho" ou "o olhar dele" se não forem o que foi perguntado. Baseie-se no CONTEXTO abaixo. Se o CONTEXTO não detalhar exatamente o que foi perguntado, IMPROVISE um detalhe pequeno, plausível e coerente com o tom e o cenário da cena — nunca recuse, nunca diga que não há nada, nunca mencione ser uma IA nem quebre o personagem. /no_think'
-                    },
-                    {
-                        role: 'user',
-                        content: `CONTEXTO: "${fraseContexto}"\nPERGUNTA DO JOGADOR: "${pergunta}"\n/no_think`
-                    }
-                ];
-                const saida = await window.geradorLocal(mensagens, {
-                    max_new_tokens: 100,
-                    do_sample: false,
-                    repetition_penalty: 1.3 // combate o loop de frases genéricas tipo "ele está sozinho"
-                });
-                let texto = saida?.[0]?.generated_text?.at(-1)?.content ?? '';
+       async function responderExameLocal(pergunta, fraseContexto) {
+    if (!window.geradorLocal && window.geradorLocalPromise) {
+        await window.geradorLocalPromise;
+    }
+    if (!window.geradorLocal) return null;
+    try {
+        // Completion crua (string, não array de mensagens) — sem chat template,
+        // sem modo <think>, sem precisar de /no_think. O modelo só continua a frase.
+        const prompt =
+`Você narra um RPG de horror psicológico, estilo Resident Evil (PS1) e livros-jogo Fighting Fantasy. Responda sempre com um detalhe concreto e sombrio, mesmo que precise inventar.
 
-                // Rede de segurança: se algum bloco de raciocínio vazar (ou ficar truncado sem fechar),
-                // remove e trata como falha técnica em vez de mostrar "pensamento" pro jogador.
-                texto = texto.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
-                if (!texto || texto.includes('<think>')) {
-                    console.warn("⚠️ [Tier 3] Saída ainda continha <think> ou veio vazia — descartando.");
-                    return null;
-                }
-                return texto;
-            } catch (erro) {
-                console.error("❌ Erro na geração local (Tier 3):", erro);
-                return null;
-            }
-        }
+Cena: Uma escada em ruínas range sob os pés, e um cheiro de mofo preenche o ar.
+Pergunta: qual o cheiro do lugar?
+Resposta: Um odor de mofo e umidade, misturado a algo adocicado e podre, como carne esquecida.
+
+Cena: Um homem de jaleco rasgado está encostado na parede, imóvel.
+Pergunta: o jaleco dele tem manchas?
+Resposta: Sim, manchas escuras e secas, concentradas perto do peito.
+
+Cena: ${fraseContexto}
+Pergunta: ${pergunta}
+Resposta:`;
+
+        const saida = await window.geradorLocal(prompt, {
+            max_new_tokens: 40,
+            do_sample: true,
+            temperature: 0.5,
+            top_p: 0.9,
+            repetition_penalty: 1.3,
+            no_repeat_ngram_size: 3 // se der erro nessa chave, é só remover — versão da lib pode não suportar
+        });
+
+        let texto = saida?.[0]?.generated_text ?? '';
+        texto = texto.slice(prompt.length); // completion crua devolve prompt + continuação junto
+        texto = texto.split(/\n|Cena:|Pergunta:/)[0].trim(); // corta antes que ele "invente" a próxima pergunta
+
+        if (!texto) return null;
+        return texto;
+    } catch (erro) {
+        console.error("❌ Erro na geração local (Tier 3):", erro);
+        return null;
+    }
+}
 
         iniciarMotorSemantico();
         iniciarGeradorLocal();
