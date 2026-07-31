@@ -961,10 +961,13 @@
                 const mensagens = [
                     {
                         role: 'system',
-                        // /no_think: o Qwen3 é um modelo híbrido "thinking/non-thinking" — sem isso ele gasta
-                        // o max_new_tokens inteiro num bloco <think>...</think> e nunca chega na resposta.
-                        // Mesmo gatilho já usado no resto do projeto pro Qwen3-32b via Groq.
-                        content: 'Você narra um RPG de horror em Português Brasileiro. Responda em 1 frase curta, tom seco, sem poesia (máximo 8 palavras). Responda DIRETAMENTE ao que foi perguntado. Baseie-se no CONTEXTO abaixo. Se o CONTEXTO não detalhar exatamente o que foi perguntado, deduza um detalhe pequeno, plausível e coerente com o cenário da cena — nunca recuse, nunca diga que não há nada, nunca mencione ser uma IA nem quebre o personagem. /no_think'
+                content: `Você narra um RPG de horror em Português Brasileiro. Responda em UMA frase curta e seca (máximo 8 palavras), sem poesia.
+
+REGRAS:
+- Se for uma AÇÃO (abrir, pegar, examinar, puxar): descreva o resultado físico imediato.
+- Se for uma PERGUNTA SIM/NÃO sobre um objeto: escolha UMA resposta plausível (ex: "Sim, está enferrujado" ou "Não, está vazio") — NUNCA recuse.
+- Se for uma PERGUNTA ABERTA: deduza um detalhe visual ou tátil.
+- BASEIE-SE no CONTEXTO fornecido. /no_think`
                     },
                     {
                         role: 'user',
