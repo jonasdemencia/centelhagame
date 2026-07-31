@@ -830,34 +830,35 @@
         // ============================================================
         async function iniciarGeradorLocal() {
             window.geradorLocalPromise = (async () => {
-                // Trocado de 0.6B pra 1.7B: o 0.6B seguia mal a instrução (respostas
-                // genéricas, repetitivas, às vezes contradizendo o tom da cena).
-                // 1.7B em q4 ainda roda tranquilo no navegador (cacheado depois do
-                // primeiro load) e segue instrução muito melhor.
-                const modelId = 'onnx-community/Qwen3-1.7B-ONNX';
-                const dispositivo = (typeof navigator !== 'undefined' && navigator.gpu) ? 'webgpu' : 'wasm';
+                // Voltamos pro 0.6B: o 1.7B deu std::bad_alloc na GPU dessa máquina
+                // (memória insuficiente pra sessão WebGPU, mesmo quantizado). O 0.6B
+                // sabidamente carrega aqui. As melhorias de prompt/repetition_penalty/
+                // cache continuam valendo independente do tamanho do modelo.
+                const modelId = 'onnx-community/Qwen3-0.6B-ONNX';
 
-                // Cadeia de fallback: nem todo repo onnx-community exporta todas as variantes
-                // de quantização pra todo device. q4f16 é o recomendado pra WebGPU; se não
-                // existir, tenta q4 puro, depois q8, antes de desistir.
-                const candidatos = dispositivo === 'webgpu'
-                    ? ['q4f16', 'q4', 'q8']
-                    : ['q4', 'q8'];
+                // Tenta WebGPU primeiro; se a GPU não tiver memória (bad_alloc) ou o
+                // device não existir, cai pra WASM (CPU) — mais lento, mas não trava.
+                const dispositivosCandidatos = (typeof navigator !== 'undefined' && navigator.gpu)
+                    ? ['webgpu', 'wasm']
+                    : ['wasm'];
 
-                for (const dtypeTentativa of candidatos) {
-                    try {
-                        window.geradorLocal = await pipelineGeracao('text-generation', modelId, {
-                            device: dispositivo,
-                            dtype: dtypeTentativa
-                        });
-                        console.log(`✅ Narrador local carregado (device: ${dispositivo}, dtype: ${dtypeTentativa}).`);
-                        return;
-                    } catch (erro) {
-                        console.warn(`⚠️ Falhou carregar com dtype '${dtypeTentativa}':`, erro.message);
+                for (const dispositivo of dispositivosCandidatos) {
+                    const dtypesCandidatos = dispositivo === 'webgpu' ? ['q4f16', 'q4', 'q8'] : ['q4', 'q8'];
+                    for (const dtypeTentativa of dtypesCandidatos) {
+                        try {
+                            window.geradorLocal = await pipelineGeracao('text-generation', modelId, {
+                                device: dispositivo,
+                                dtype: dtypeTentativa
+                            });
+                            console.log(`✅ Narrador local carregado (device: ${dispositivo}, dtype: ${dtypeTentativa}).`);
+                            return;
+                        } catch (erro) {
+                            console.warn(`⚠️ Falhou carregar com device '${dispositivo}' / dtype '${dtypeTentativa}':`, erro.message);
+                        }
                     }
                 }
 
-                console.error("❌ Não foi possível carregar o narrador local com nenhuma variante de dtype testada.");
+                console.error("❌ Não foi possível carregar o narrador local com nenhuma combinação testada.");
                 window.geradorLocal = null;
             })();
             return window.geradorLocalPromise;
