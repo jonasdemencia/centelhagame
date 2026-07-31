@@ -905,7 +905,7 @@
                         // /no_think: o Qwen3 é um modelo híbrido "thinking/non-thinking" — sem isso ele gasta
                         // o max_new_tokens inteiro num bloco <think>...</think> e nunca chega na resposta.
                         // Mesmo gatilho já usado no resto do projeto pro Qwen3-32b via Groq.
-                        content: 'Você narra um RPG de horror em Português Brasileiro. Responda em NO MÁXIMO 1 frase curta, tom seco e sombrio, sem poesia. Use SOMENTE a informação do CONTEXTO abaixo — nunca invente nada além dela. Se o CONTEXTO não responder à pergunta, responda exatamente: "Nada digno de nota." /no_think'
+                        content: 'Você narra um RPG de horror em Português Brasileiro, no estilo Resident Evil (PS1) e livros-jogo Fighting Fantasy. Responda em NO MÁXIMO 2 frases curtas, tom seco e sombrio, sem poesia. Baseie-se no CONTEXTO abaixo. Se o CONTEXTO não detalhar exatamente o que foi perguntado, IMPROVISE um detalhe pequeno, plausível e coerente com o tom da cena — nunca recuse, nunca diga que não há nada, nunca mencione ser uma IA nem quebre o personagem. /no_think'
                     },
                     {
                         role: 'user',
@@ -916,13 +916,12 @@
                 let texto = saida?.[0]?.generated_text?.at(-1)?.content ?? '';
 
                 // Rede de segurança: se algum bloco de raciocínio vazar (ou ficar truncado sem fechar),
-                // remove e trata como resposta inválida em vez de mostrar "pensamento" pro jogador.
+                // remove e trata como falha técnica em vez de mostrar "pensamento" pro jogador.
                 texto = texto.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
                 if (!texto || texto.includes('<think>')) {
                     console.warn("⚠️ [Tier 3] Saída ainda continha <think> ou veio vazia — descartando.");
                     return null;
                 }
-                if (/nada digno de nota/i.test(texto)) return null;
                 return texto;
             } catch (erro) {
                 console.error("❌ Erro na geração local (Tier 3):", erro);
@@ -3942,28 +3941,36 @@ async function executarDilemaComRamificacao(pai, ram, silent = false) {
 
                 // ================= TIER 2 + 3: RAG local por sentença + narrador local =================
                 // Só chega aqui se o Tier 1 (opções/dilemas/ramificações/navegação) não bateu.
-                // Falha em qualquer ponto aqui = cai no fluxo remoto normal (LIVRE → Groq), como já era.
+                // Agora o Tier 3 SEMPRE responde — se o Tier 2 achar uma frase forte, ele se baseia nela;
+                // se não achar nada forte, ele improvisa em cima do clima geral da cena (texto_logico inteiro).
+                // Só cai pro fluxo remoto (chamarLLMStream) se o narrador local falhar tecnicamente
+                // (modelo não carregou, erro de geração, etc.) — não mais por "não achei a resposta exata".
                 try {
                     const fraseRelevante = await buscarFraseRelevante(pergunta, salaAtual);
-                    const limiteAceitacaoFrase = 0.55; // calibrar com os logs, igual foi feito no Tier 1
-
-                    if (fraseRelevante && fraseRelevante.score >= limiteAceitacaoFrase) {
+                    if (fraseRelevante) {
                         console.log(`📖 [Tier 2] Frase mais próxima (${fraseRelevante.score.toFixed(4)}): "${fraseRelevante.frase}"`);
-
-                        const respostaLocal = await responderExameLocal(pergunta, fraseRelevante.frase);
-
-                        if (respostaLocal) {
-                            console.log("🧠 [Tier 3] Narrador local respondeu:", respostaLocal);
-                            clearInterval(intervaloAnimacao);
-                            const tempElementLocal = document.getElementById(tempId);
-                            if (tempElementLocal) tempElementLocal.remove();
-                            adicionarMensagem(respostaLocal, "system");
-                            sendBtn.disabled = false;
-                            userInput.disabled = false;
-                            userInput.focus();
-                            return;
-                        }
+                    } else {
+                        console.log("📖 [Tier 2] Nenhuma frase se destacou — usando a cena inteira como contexto/tom.");
                     }
+
+                    const contextoParaNarrador = fraseRelevante
+                        ? fraseRelevante.frase
+                        : (salaAtual?.texto_logico || 'Um ambiente sombrio e silencioso.');
+
+                    const respostaLocal = await responderExameLocal(pergunta, contextoParaNarrador);
+
+                    if (respostaLocal) {
+                        console.log("🧠 [Tier 3] Narrador local respondeu:", respostaLocal);
+                        clearInterval(intervaloAnimacao);
+                        const tempElementLocal = document.getElementById(tempId);
+                        if (tempElementLocal) tempElementLocal.remove();
+                        adicionarMensagem(respostaLocal, "system");
+                        sendBtn.disabled = false;
+                        userInput.disabled = false;
+                        userInput.focus();
+                        return;
+                    }
+                    console.warn("⚠️ [Tier 3] Narrador local não retornou nada válido — seguindo para o fluxo remoto normal.");
                 } catch (erroRAGLocal) {
                     console.error("❌ [Tier 2/3] Erro no fluxo local, seguindo para o fluxo remoto normal:", erroRAGLocal);
                 }
