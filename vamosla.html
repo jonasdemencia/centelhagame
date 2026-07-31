@@ -805,6 +805,7 @@
         // ============================================================
         window.extratorSemantico = null;
         window.geradorLocal = null;
+        window.geradorLocalPromise = null; // permite o Tier 3 aguardar o load em vez de desistir na hora
 
         async function iniciarMotorSemantico() {
             try {
@@ -828,22 +829,25 @@
         // com fallback automático para WASM.
         // ============================================================
         async function iniciarGeradorLocal() {
-            try {
-                // Trocado de 0.6B pra 1.7B: o 0.6B seguia mal a instrução (respostas
-                // genéricas, repetitivas, às vezes contradizendo o tom da cena).
-                // 1.7B em q4 ainda roda tranquilo no navegador (~1GB de download,
-                // cacheado depois do primeiro load) e segue instrução muito melhor.
-                const modelId = 'onnx-community/Qwen3-1.7B-ONNX';
-                const dispositivo = (typeof navigator !== 'undefined' && navigator.gpu) ? 'webgpu' : 'wasm';
-                window.geradorLocal = await pipelineGeracao('text-generation', modelId, {
-                    device: dispositivo,
-                    dtype: 'q4'
-                });
-                console.log(`✅ Narrador local carregado (device: ${dispositivo}).`);
-            } catch (erro) {
-                console.error("❌ Erro ao carregar o narrador local:", erro);
-                window.geradorLocal = null;
-            }
+            window.geradorLocalPromise = (async () => {
+                try {
+                    // Trocado de 0.6B pra 1.7B: o 0.6B seguia mal a instrução (respostas
+                    // genéricas, repetitivas, às vezes contradizendo o tom da cena).
+                    // 1.7B em q4 ainda roda tranquilo no navegador (~1GB de download,
+                    // cacheado depois do primeiro load) e segue instrução muito melhor.
+                    const modelId = 'onnx-community/Qwen3-1.7B-ONNX';
+                    const dispositivo = (typeof navigator !== 'undefined' && navigator.gpu) ? 'webgpu' : 'wasm';
+                    window.geradorLocal = await pipelineGeracao('text-generation', modelId, {
+                        device: dispositivo,
+                        dtype: 'q4'
+                    });
+                    console.log(`✅ Narrador local carregado (device: ${dispositivo}).`);
+                } catch (erro) {
+                    console.error("❌ Erro ao carregar o narrador local:", erro);
+                    window.geradorLocal = null;
+                }
+            })();
+            return window.geradorLocalPromise;
         }
 
         // ============================================================
@@ -926,6 +930,10 @@
         // trecho já validado como semanticamente relevante.
         // ============================================================
         async function responderExameLocal(pergunta, fraseContexto) {
+            if (!window.geradorLocal && window.geradorLocalPromise) {
+                console.log("⏳ [Tier 3] Narrador local ainda carregando, aguardando...");
+                await window.geradorLocalPromise;
+            }
             if (!window.geradorLocal) return null;
             try {
                 const mensagens = [
