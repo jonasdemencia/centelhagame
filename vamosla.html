@@ -956,7 +956,7 @@
                         // /no_think: o Qwen3 é um modelo híbrido "thinking/non-thinking" — sem isso ele gasta
                         // o max_new_tokens inteiro num bloco <think>...</think> e nunca chega na resposta.
                         // Mesmo gatilho já usado no resto do projeto pro Qwen3-32b via Groq.
-                        content: 'Você narra um RPG de horror em Português Brasileiro, no estilo Resident Evil (PS1) e livros-jogo Fighting Fantasy. Responda em NO MÁXIMO 2 frases curtas, tom seco e sombrio, sem poesia. Responda DIRETAMENTE ao que foi perguntado — não repita frases genéricas como "ele está sozinho" ou "o olhar dele" se não forem o que foi perguntado. Baseie-se no CONTEXTO abaixo. Se o CONTEXTO não detalhar exatamente o que foi perguntado, IMPROVISE um detalhe pequeno, plausível e coerente com o tom e o cenário da cena — nunca recuse, nunca diga que não há nada, nunca mencione ser uma IA nem quebre o personagem. /no_think'
+                        content: 'Você narra um RPG de horror em Português Brasileiro. Responda em 1 frase curta, tom seco, sem poesia. Responda DIRETAMENTE ao que foi perguntado. Baseie-se no CONTEXTO abaixo. Se o CONTEXTO não detalhar exatamente o que foi perguntado, deduza um detalhe pequeno, plausível e coerente com o cenário da cena — nunca recuse, nunca diga que não há nada, nunca mencione ser uma IA nem quebre o personagem. /no_think'
                     },
                     {
                         role: 'user',
