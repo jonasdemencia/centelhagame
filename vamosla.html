@@ -943,80 +943,114 @@
         // liberdade de "world knowledge": só pode responder com base no
         // trecho já validado como semanticamente relevante.
         // ============================================================
-       async function responderExameLocal(pergunta, fraseContexto) {
+       // Carregue este dicionário UMA VEZ ao iniciar a aplicação (async)
+let dicionarioPortugues = null;
+async function carregarDicionario() {
+    if (dicionarioPortugues) return;
+    try {
+        // Baixar lista de palavras do Portuguese (br-utf8) do LibreOffice ou similar.
+        // Exemplo: https://raw.githubusercontent.com/.../pt_BR.dic (ajuste o link real)
+        const resp = await fetch('pt_BR.dic'); // arquivo .dic UTF-8
+        const texto = await resp.text();
+        // O formato .dic começa com contagem; ignoramos a primeira linha
+        const palavras = texto.split('\n')
+            .slice(1)
+            .map(l => l.split('/')[0].trim().toLowerCase())
+            .filter(w => w.length > 1 && !w.includes(' ') && /^[a-záàâãéêíóôõúç]+$/i.test(w));
+        dicionarioPortugues = new Set(palavras);
+        console.log(`📚 Dicionário carregado: ${dicionarioPortugues.size} palavras.`);
+    } catch (e) {
+        console.error('Falha ao carregar dicionário:', e);
+        dicionarioPortugues = new Set(); // fallback vazio
+    }
+}
+
+function palavraExiste(palavra) {
+    if (!dicionarioPortugues) return true; // se dicionário não carregou, libera tudo
+    return dicionarioPortugues.has(palavra.toLowerCase());
+}
+
+async function responderExameLocal(pergunta, fraseContexto) {
     if (!window.geradorLocal && window.geradorLocalPromise) {
-        console.log("⏳ [Tier 3] Narrador local ainda carregando, aguardando...");
+        console.log("⏳ [Tier 3] Aguardando carregamento...");
         await window.geradorLocalPromise;
     }
     if (!window.geradorLocal) return null;
 
+    // 1) Focar o contexto: extrair só frases com palavras da pergunta
+    const palavrasPergunta = pergunta.toLowerCase().replace(/[?.,!]/g, '').split(/\s+/);
+    const substantivosRelevantes = palavrasPergunta.filter(p =>
+        !['qual', 'o', 'a', 'do', 'da', 'de', 'que', 'tem', 'há', 'é', 'cor', 'tipo', 'como', 'onde', 'por', 'para', 'um', 'uma'].includes(p)
+    );
+    const frases = fraseContexto.split(/[.;!?]/).filter(f => f.trim().length > 0);
+    let contextoFocalizado = fraseContexto; // fallback: tudo
+    if (substantivosRelevantes.length > 0) {
+        const frasesRelevantes = frases.filter(f =>
+            substantivosRelevantes.some(sub => f.toLowerCase().includes(sub))
+        );
+        if (frasesRelevantes.length > 0) {
+            contextoFocalizado = frasesRelevantes.join('. ') + '.';
+        }
+    }
+
     const ehPergunta = pergunta.trim().endsWith('?');
     const tipo = ehPergunta ? 'PERGUNTA' : 'ORDEM';
-    const instrucao = ehPergunta
-        ? 'Responda com a informação solicitada, usando APENAS português realista. Máximo 8 palavras.'
-        : 'Narre a execução com "Você" + verbo, APENAS português realista. Máximo 8 palavras.';
+
+    // 2) Montar prompt com instruções estritas e padrão de completar frase
+    let promptUsuario = '';
+    if (!ehPergunta) {
+        promptUsuario = `AÇÃO: ${pergunta}\nNarre a ação com "Você" + verbo. Exemplo: "Você abre a mala." No máximo 6 palavras.`;
+    } else {
+        // Para perguntas, usamos um template de completar frase que amarra o modelo
+        promptUsuario = `Responda completando a frase abaixo usando APENAS palavras do português brasileiro.
+CONTEXTO: "${contextoFocalizado}"
+Frase a completar: "${pergunta}" → "`;
+    }
+
+    const systemPrompt = `Você é um narrador de RPG de terror, idioma Português Brasileiro. 
+REGRAS:
+- Use SOMENTE palavras que existem no dicionário português. Jamais invente termos como "brancocrimê", "traveis", "risou".
+- Responda de forma direta e concisa (máximo 6 palavras).
+- Se for pergunta, complete a frase naturalmente (ex: "Qual a cor do travesseiro?" → "amarelo encardido").
+- Nunca diga que é IA, nunca recuse.`;
+
+    const mensagens = [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: promptUsuario + '\n/no_think' }
+    ];
 
     try {
-        const mensagens = [
-            {
-                role: 'system',
-                content: `Você narra um RPG de horror. Idioma: Português Brasileiro CORRETO.
-NUNCA invente palavras. Se não souber, use um termo comum (ex: "camisa cinza gasta", "sapatos pretos surrados").
-NUNCA gere "brancocrimê", "sapata-de-olho-malheta", "risou" ou qualquer palavra sem sentido.
-Responda de forma natural, sem poesia. Siga o padrão abaixo estritamente.
-
-Exemplos de respostas CORRETAS:
-CONTEXTO: "... homem sentado, olhos no chão, dedos se movem."
-PERGUNTA: "qual a cor da camisa do homem?"
-RESPOSTA: Camisa branca encardida.
-
-ORDEM: "Correr para ele."
-RESPOSTA: Você corre até o homem.
-
-PERGUNTA: "Qual o tipo de sapato do homem?"
-RESPOSTA: Sapatos pretos surrados.
-
-PERGUNTA: "O que ele responde?"
-RESPOSTA: Ele ri baixo.`
-            },
-            {
-                role: 'user',
-                content: `CONTEXTO: "${fraseContexto}"\n${tipo}: "${pergunta}"\n${instrucao}\nResponda exclusivamente em português compreensível.\n/no_think`
-            }
-        ];
-
         const saida = await window.geradorLocal(mensagens, {
-            max_new_tokens: 15,                     
+            max_new_tokens: 10,
             do_sample: false,
-            repetition_penalty: 1.4,                // evita repetições e sílabas soltas
-            no_repeat_ngram_size: 3                 // impede "branco branco" e similares
+            repetition_penalty: 1.5,
+            no_repeat_ngram_size: 2
         });
 
         let texto = saida?.[0]?.generated_text?.at(-1)?.content ?? '';
-
-        // Remove <think>
         texto = texto.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+        if (!texto || texto.includes('<think>')) return null;
 
-        // Descarta se ainda contiver bloco de pensamento ou estiver vazio
-        if (!texto || texto.includes('<think>')) {
-            console.warn("⚠️ [Tier 3] Saída com <think> ou vazia.");
-            return null;
-        }
-
-        // Rejeita se houver muitos caracteres não‑portugueses (sequências incomuns como ----, @@@ etc.)
-        // ou se for puro lixo (menos de 2 letras reais)
-        const soLetrasNumerosEspacos = texto.replace(/[a-zA-Zà-úÀ-Ú0-9 ]/g, '');
-        if (soLetrasNumerosEspacos.length > texto.length * 0.4 || texto.replace(/[^a-zA-Zà-úÀ-Ú]/g, '').length < 2) {
-            console.warn("⚠️ [Tier 3] Texto com alta proporção de símbolos ou ilegível:", texto);
-            return null;
+        // 3) Validação: todas as palavras devem existir no dicionário português
+        const tokens = texto.split(/[\s,.;!?]+/).filter(t => t.length > 1);
+        for (const token of tokens) {
+            // Ignora números e tokens com caracteres não alfabéticos
+            if (/^\d+$/.test(token)) continue;
+            if (!palavraExiste(token.replace(/[^a-záàâãéêíóôõúç]/gi, ''))) {
+                console.warn(`⚠️ [Tier 3] Palavra fora do dicionário: "${token}" na resposta "${texto}"`);
+                return null;
+            }
         }
 
         return texto;
     } catch (erro) {
-        console.error("❌ Erro na geração local (Tier 3):", erro);
+        console.error("❌ Erro no Tier 3:", erro);
         return null;
     }
 }
+
+// Inicialização (chame uma vez no setup):
+carregarDicionario();
 
         iniciarMotorSemantico();
         iniciarGeradorLocal();
