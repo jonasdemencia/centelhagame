@@ -937,98 +937,216 @@
             sala._fatosCache.push({ pergunta, vetor: vetorPergunta, resposta });
         }
 
-    
-      
         // ============================================================
-        // TIER 3 — NARRADOR LOCAL (100% no navegador, anti-eco e com fallback atmosférico)
+        // TIER 3 — o narrador local só reformula a frase que o Tier 2
+        // encontrou. Ele nunca recebe o texto_logico inteiro nem tem
+        // liberdade de "world knowledge": só pode responder com base no
+        // trecho já validado como semanticamente relevante.
         // ============================================================
+
+        // ============================================================
+        // MULETAS DO TIER 3 — o 0.6B é o menor elo da cadeia e comete
+        // 2 erros característicos: (1) vaza palavras/tokens em inglês
+        // do chat template, e (2) "inventa" palavras que não existem
+        // em português (sequências fonéticas improváveis). O bloco
+        // abaixo é só pós-processo determinístico e sem custo de
+        // token: valida a saída, tenta de novo 1x com amostragem leve
+        // se falhar, e só então recorre a um fallback extrativo (a
+        // própria frase de contexto, já em português correto) antes
+        // de desistir. NÃO é um dicionário de português — é heurística
+        // barata. Ajuste PALAVRAS_INGLES_SUSPEITAS e os limiares se
+        // aparecerem falsos positivos/negativos nos logs.
+        // ============================================================
+
+        // Se false, uma saída reprovada nas 2 tentativas volta a cair
+        // pro fluxo remoto (chamarLLMStream), como era antes dessas
+        // muletas existirem.
+        const USAR_FALLBACK_EXTRATIVO_TIER3 = true;
+
+        const PALAVRAS_INGLES_SUSPEITAS = /\b(the|and|is|was|were|be|to|of|in|on|at|this|that|with|from|but|or|an|it|its|i'm|you're|don't|can't|won't|please|sorry|well|okay|actually|basically|literally|answer|context|question|player)\b/i;
+
+        // Empréstimos/exceções que são português legítimo apesar de k/w/y.
+        const EXCECOES_PALAVRAS_ESTRANGEIRAS = new Set(['ok', 'kit', 'show', 'zumbi', 'nocaute', 'kg', 'km']);
+
+        function contemLetraRepetidaDemais(palavra) {
+            // "aaaa", "ffff" — 3+ da mesma letra seguida não ocorre em
+            // português fora de onomatopeia, que não nos interessa aqui.
+            return /(.)\1{2,}/.test(palavra);
+        }
+
+        function contemConsoantesImprovaveis(palavra) {
+            // 5+ consoantes seguidas é raríssimo em português nativo
+            // (mesmo "monstro"/"obstrução" têm só 4: "nstr"/"bstr").
+            // Pega gibberish tipo "kzprxvt" que o 0.6B ocasionalmente solta.
+            return /[bcdfgjklmnpqrstvwxzç]{5,}/i.test(palavra);
+        }
+
+        function palavraParecInventadaOuEstrangeira(palavraCrua) {
+            const palavra = palavraCrua.toLowerCase().replace(/[^a-zàáâãéêíóôõúüç]/gi, '');
+            if (palavra.length < 3) return false;
+            if (EXCECOES_PALAVRAS_ESTRANGEIRAS.has(palavra)) return false;
+            if (contemLetraRepetidaDemais(palavra)) return true;
+            if (contemConsoantesImprovaveis(palavra)) return true;
+            // k/w/y praticamente não existem em português nativo — fora
+            // das exceções acima, são um sinal forte de vazamento de
+            // idioma ou palavra inventada.
+            if (/[kwy]/.test(palavra)) return true;
+            return false;
+        }
+
+        function validarRespostaLocal(texto) {
+            if (!texto || texto.trim().length === 0) return { valido: false, motivo: 'vazio' };
+
+            if (/<\|.*?\|>|\bassistant\b|\bsystem\b|\buser\b/i.test(texto)) {
+                return { valido: false, motivo: 'vazamento de token de controle' };
+            }
+            if (PALAVRAS_INGLES_SUSPEITAS.test(texto)) {
+                return { valido: false, motivo: 'inglês detectado' };
+            }
+
+            const palavras = texto.split(/\s+/).filter(Boolean);
+            if (palavras.length === 0) return { valido: false, motivo: 'vazio' };
+
+            const suspeita = palavras.find(palavraParecInventadaOuEstrangeira);
+            if (suspeita) {
+                return { valido: false, motivo: `palavra suspeita: "${suspeita}"` };
+            }
+            return { valido: true };
+        }
+
+        function limparRespostaLocal(texto) {
+            let limpo = (texto || '')
+                .replace(/<\|.*?\|>/g, '')
+                .replace(/^(assistant|system|user)\s*[:\-]?\s*/i, '')
+                .trim();
+
+            // Se max_new_tokens cortou no meio de uma frase, mantém só
+            // até a última pontuação de fechamento (descarta o fragmento
+            // truncado em vez de mostrar uma frase pela metade).
+            const fechada = limpo.match(/^(.*[.!?])/s);
+            if (fechada) limpo = fechada[1];
+
+            limpo = limpo.trim();
+            if (limpo && !/[.!?]$/.test(limpo)) limpo += '.';
+            if (limpo) limpo = limpo.charAt(0).toUpperCase() + limpo.slice(1);
+            return limpo;
+        }
+
+        async function gerarComNarradorLocal(mensagens, opcoesGeracao) {
+            const saida = await window.geradorLocal(mensagens, opcoesGeracao);
+            let texto = saida?.[0]?.generated_text?.at(-1)?.content ?? '';
+            // Rede de segurança: se algum bloco de raciocínio vazar (ou ficar
+            // truncado sem fechar), remove e trata como falha técnica em vez
+            // de mostrar "pensamento" pro jogador.
+            texto = texto.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+            if (!texto || texto.includes('<think>')) return null;
+            return texto;
+        }
+        // ================= FIM DAS MULETAS DO TIER 3 =================
+
         async function responderExameLocal(pergunta, fraseContexto) {
             if (!window.geradorLocal && window.geradorLocalPromise) {
                 console.log("⏳ [Tier 3] Narrador local ainda carregando, aguardando...");
                 await window.geradorLocalPromise;
             }
-            if (!window.geradorLocal) {
-                return "O ambiente ao seu redor parece abafar qualquer som, exigindo que você espere um momento.";
-            }
-            
+            if (!window.geradorLocal) return null;
+
+            const mensagens = [
+                {
+                    role: 'system',
+                    // Instrução em inglês para o modelo de 0.6B processar a regra melhor,
+                    // mas exigindo estritamente a saída em Português Brasileiro. A frase
+                    // final foi adicionada especificamente contra o vício de "inventar
+                    // palavras" — é a única linha nova aqui, sem remoção correspondente,
+                    // porque ataca direto o sintoma relatado.
+                    content: 'You are a horror RPG narrator. You must answer ONLY in correct Brazilian Portuguese. Keep responses under 8 words. Be direct and immersive. Base your answer on the CONTEXT. If the CONTEXT lacks detail, deduce a plausible one. Never refuse to answer. Do not use English in your response. Never break character. Use only real Portuguese words that exist in the dictionary; never invent words. /no_think'
+                },
+                // Exemplo 1 (Few-Shot) - Mostra o tom, a língua e o limite de palavras
+                {
+                    role: 'user',
+                    content: 'CONTEXTO: "Um cheiro metálico e forte toma conta do ar."\nPERGUNTA DO JOGADOR: "O que tem nessa sala?"\n/no_think'
+                },
+                {
+                    role: 'assistant',
+                    content: 'O ar cheira fortemente a sangue fresco.'
+                },
+                // Exemplo 2 (Few-Shot) - Mostra como lidar com deduções ou negativas
+                {
+                    role: 'user',
+                    content: 'CONTEXTO: "O baú de madeira está trancado."\nPERGUNTA DO JOGADOR: "O baú está aberto?"\n/no_think'
+                },
+                {
+                    role: 'assistant',
+                    content: 'Não, o baú encontra-se firmemente trancado.'
+                },
+                // Interação Real com o Jogador
+                {
+                    role: 'user',
+                    content: `CONTEXTO: "${fraseContexto}"\nPERGUNTA DO JOGADOR: "${pergunta}"\n/no_think`
+                }
+            ];
+
             try {
-                const mensagens = [
-                    {
-                        role: 'system',
-                        content: 'You are a horror RPG narrator. Answer ONLY in natural Brazilian Portuguese. Use simple adjectives (e.g., use "branca", never "brancura"). NEVER repeat the player\'s action. If asked about details not in the CONTEXT, invent a normal, mundane answer (e.g., shoes are leather, not stone). If the player acts, narrate the consequence. Keep it under 15 words. /no_think'
-                    },
-                    // Exemplo 1 (Cura bizarrice visual/material: adjetivos simples e normais)
-                    {
-                        role: 'user',
-                        content: 'CONTEXTO: "Um homem sentado na cadeira."\nAÇÃO/PERGUNTA: "Qual a cor da pele dele e o que ele calça?"\n/no_think'
-                    },
-                    {
-                        role: 'assistant',
-                        content: 'Sua pele é pálida e ele calça sapatos de couro escuro.'
-                    },
-                    // Exemplo 2 (Cura o Efeito Papagaio: Reage à ação em vez de repeti-la)
-                    {
-                        role: 'user',
-                        content: 'CONTEXTO: "Um homem sussurra de olhos fechados."\nAÇÃO/PERGUNTA: "Vou me sentar do lado do homem."\n/no_think'
-                    },
-                    {
-                        role: 'assistant',
-                        content: 'Você se senta. Ele para de sussurrar e vira o rosto lentamente para você.'
-                    },
-                    // Exemplo 3 (Reforço para objetos de cenário com cores simples)
-                    {
-                        role: 'user',
-                        content: 'CONTEXTO: "Um travesseiro rasgado repousa no sofá."\nAÇÃO/PERGUNTA: "Qual a cor do travesseiro?"\n/no_think'
-                    },
-                    {
-                        role: 'assistant',
-                        content: 'O travesseiro é de um tom amarelo encardido.'
-                    },
-                    // Interação Real
-                    {
-                        role: 'user',
-                        content: `CONTEXTO: "${fraseContexto}"\nAÇÃO/PERGUNTA: "${pergunta}"\n/no_think`
-                    }
-                ];
-
-                const saida = await window.geradorLocal(mensagens, {
-                    max_new_tokens: 30,
+                // Tentativa 1 — determinística (rápida e reprodutível).
+                let bruta = await gerarComNarradorLocal(mensagens, {
+                    max_new_tokens: 15,
                     do_sample: false,
-                    repetition_penalty: 1.12, // Evita que o modelo entre em loop ou repita o jogador
+                    repetition_penalty: 1.15, // <-- Previne o modelo de entrar em loop de palavras
+                    no_repeat_ngram_size: 3,  // <-- Previne repetição de trigramas (loop mais sutil)
                 });
-                
-                // Raio-X de diagnóstico no console
-                console.log("🔍 [DEBUG TIER 3] Saída Bruta do Transformers.js:", saida);
 
-                let texto = saida?.[0]?.generated_text?.at(-1)?.content ?? '';
-                
-                console.log("🔍 [DEBUG TIER 3] Texto antes da limpeza:", texto === '' ? "[STRING VAZIA]" : texto);
+                let candidata = bruta ? limparRespostaLocal(bruta) : null;
+                let validacao = candidata ? validarRespostaLocal(candidata) : { valido: false, motivo: 'falha técnica / saída vazia' };
 
-                // Limpeza de tags de pensamento do Qwen
-                texto = texto.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
-                
-                // Se a string veio vazia ou corrompida, injeta o fallback atmosférico em vez de retornar null
-                if (!texto || texto.includes('<think>')) {
-                    console.warn("⚠️ [Tier 3] Saída inválida ou vazia. Injetando fallback atmosférico.");
-                    return "As sombras parecem engolir suas palavras, e apenas um silêncio perturbador responde.";
+                if (!validacao.valido) {
+                    console.warn(`⚠️ [Tier 3] Tentativa 1 reprovada (${validacao.motivo}):`, JSON.stringify(bruta));
+
+                    // Tentativa 2 — amostragem leve, pra fugir do mesmo caminho
+                    // de tokens que gerou a palavra inventada/o vazamento.
+                    const mensagensRetry = mensagens.slice(0, -1).concat({
+                        role: 'user',
+                        content: mensagens[mensagens.length - 1].content + '\n(Use apenas palavras reais em português. Não invente palavras.)'
+                    });
+
+                    bruta = await gerarComNarradorLocal(mensagensRetry, {
+                        max_new_tokens: 15,
+                        do_sample: true,
+                        temperature: 0.4,
+                        top_p: 0.9,
+                        repetition_penalty: 1.2,
+                        no_repeat_ngram_size: 3,
+                    });
+
+                    candidata = bruta ? limparRespostaLocal(bruta) : null;
+                    validacao = candidata ? validarRespostaLocal(candidata) : { valido: false, motivo: 'falha técnica / saída vazia' };
                 }
-                
-                // Garante pontuação final correta
-                if (!/[.!?]$/.test(texto)) {
-                    texto += "...";
+
+                if (validacao.valido) {
+                    return candidata;
                 }
 
-                console.log("✅ [DEBUG TIER 3] Texto Final Aprovado:", texto);
-                return texto;
-                
+                console.warn(`⚠️ [Tier 3] As 2 tentativas falharam (${validacao.motivo}).`);
+
+                if (USAR_FALLBACK_EXTRATIVO_TIER3) {
+                    // As 2 tentativas do 0.6B falharam a validação. Em vez de
+                    // estourar direto pro LLM remoto por causa de uma palavra
+                    // estranha, reaproveitamos a própria frase de contexto —
+                    // já escrita em português correto pelo modelo grande —
+                    // como resposta. Risco de alucinação: zero. Se preferir
+                    // voltar ao comportamento antigo (cair pro remoto sempre
+                    // que o 0.6B falhar), defina USAR_FALLBACK_EXTRATIVO_TIER3
+                    // como false no topo deste bloco.
+                    console.warn("↩️ [Tier 3] Usando fallback extrativo (frase de contexto).");
+                    return limparRespostaLocal(fraseContexto);
+                }
+
+                return null;
+
             } catch (erro) {
                 console.error("❌ Erro na geração local (Tier 3):", erro);
-                // Fallback seguro de erro técnico para não quebrar a UI
-                return "Você sente uma estática irreal no ar, distorcendo a realidade por um segundo.";
+                return null;
             }
         }
-
-    
         iniciarMotorSemantico();
         iniciarGeradorLocal();
 
