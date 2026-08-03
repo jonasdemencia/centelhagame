@@ -940,10 +940,7 @@
     
       
         // ============================================================
-        // TIER 3 — NARRADOR LOCAL (Ajustado para ações com NPCs)
-        // ============================================================
-        // ============================================================
-        // TIER 3 — NARRADOR LOCAL (Anti-Alucinação e Foco na Pergunta)
+        // TIER 3 — NARRADOR LOCAL (Anti-Eco e Vocabulário Simples)
         // ============================================================
         async function responderExameLocal(pergunta, fraseContexto) {
             if (!window.geradorLocal && window.geradorLocalPromise) {
@@ -956,35 +953,37 @@
                 const mensagens = [
                     {
                         role: 'system',
-                        // Instrução brutalmente direta: Você DEVE responder a pergunta exata.
-                        content: 'You are a horror RPG narrator. Answer ONLY in Brazilian Portuguese. Keep responses under 10 words. You MUST answer the exact question asked. If asked about a detail (like color or clothing) not in the CONTEXT, invent a simple, normal answer. Never ignore the user\'s question. /no_think'
+                        // 1. "Use simple adjectives" evita o "escuridora/brancura".
+                        // 2. "Mundane logic" evita o sapato de pedra.
+                        // 3. "NEVER repeat the player" mata o efeito papagaio.
+                        content: 'You are a horror RPG narrator. Answer ONLY in natural Brazilian Portuguese. Use simple adjectives (e.g., use "branca", never "brancura"). NEVER repeat the player\'s action. If asked about details not in the CONTEXT, invent a normal, mundane answer (e.g., shoes are leather, not stone). If the player acts, narrate the consequence. Keep it under 15 words. /no_think'
                     },
-                    // Exemplo 1 (Cura o problema do Sofá: Força a responder a cor, mesmo que o contexto não tenha)
+                    // Exemplo 1 (Cura a bizarrice visual e de material: Força adjetivos simples e normais)
                     {
                         role: 'user',
-                        content: 'CONTEXTO: "Um baú de madeira velha está no chão."\nAÇÃO/PERGUNTA: "Qual a cor do baú?"\n/no_think'
+                        content: 'CONTEXTO: "Um homem sentado na cadeira."\nAÇÃO/PERGUNTA: "Qual a cor da pele dele e o que ele calça?"\n/no_think'
                     },
                     {
                         role: 'assistant',
-                        content: 'O baú é de um marrom escuro.'
+                        content: 'Sua pele é pálida e ele calça sapatos de couro escuro.'
                     },
-                    // Exemplo 2 (Cura o problema do Sapato/Olhos: Ensina a ignorar distrações no contexto)
+                    // Exemplo 2 (Cura o Efeito Papagaio: Ensina a REAGIR à ação de sentar, e não repeti-la)
                     {
                         role: 'user',
-                        content: 'CONTEXTO: "Um homem sentado sozinho, olhando fixamente para a parede."\nAÇÃO/PERGUNTA: "O que ele está calçando?"\n/no_think'
+                        content: 'CONTEXTO: "Um homem sussurra de olhos fechados."\nAÇÃO/PERGUNTA: "Vou me sentar do lado do homem."\n/no_think'
                     },
                     {
                         role: 'assistant',
-                        content: 'Ele calça botas de couro pretas e sujas.'
+                        content: 'Você se senta. Ele para de sussurrar e vira o rosto lentamente para você.'
                     },
-                    // Exemplo 3 (Mantém a capacidade de reagir a ações)
+                    // Exemplo 3 (Reforço para objetos de cenário com cores simples)
                     {
                         role: 'user',
-                        content: 'CONTEXTO: "A porta de vidro parece pesada."\nAÇÃO/PERGUNTA: "Eu empurro a porta com força."\n/no_think'
+                        content: 'CONTEXTO: "Um travesseiro rasgado repousa no sofá."\nAÇÃO/PERGUNTA: "Qual a cor do travesseiro?"\n/no_think'
                     },
                     {
                         role: 'assistant',
-                        content: 'A porta range, mas não cede ao seu empurrão.'
+                        content: 'O travesseiro é de um tom amarelo encardido.'
                     },
                     // Interação Real
                     {
@@ -994,9 +993,9 @@
                 ];
 
                 const saida = await window.geradorLocal(mensagens, {
-                    max_new_tokens: 20, // Reduzido ligeiramente para focar a resposta
+                    max_new_tokens: 30, // Mantendo espaço suficiente para a reação
                     do_sample: false,
-                    repetition_penalty: 1.15,
+                    repetition_penalty: 1.18, // Subi ligeiramente de 1.15 para 1.18 para dificultar ainda mais o "eco"
                 });
                 
                 let texto = saida?.[0]?.generated_text?.at(-1)?.content ?? '';
@@ -1018,6 +1017,8 @@
                 return null;
             }
         }
+
+    
         iniciarMotorSemantico();
         iniciarGeradorLocal();
 
