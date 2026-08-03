@@ -943,52 +943,63 @@
         // liberdade de "world knowledge": só pode responder com base no
         // trecho já validado como semanticamente relevante.
         // ============================================================
-        async function responderExameLocal(pergunta, fraseContexto) {
-            if (!window.geradorLocal && window.geradorLocalPromise) {
-                console.log("⏳ [Tier 3] Narrador local ainda carregando, aguardando...");
-                await window.geradorLocalPromise;
-            }
-            if (!window.geradorLocal) return null;
-            try {
-                const mensagens = [
-  {
-    role: 'system',
-    content: `Você narra um RPG de horror em Português Brasileiro. Responda em NO MÁXIMO 8 palavras, tom seco e sem poesia. Responda DIRETAMENTE ao que foi perguntado. Atenda o pedido do jogador. Baseie-se no CONTEXTO abaixo. Se o CONTEXTO não detalhar exatamente o que foi perguntado ou ordenado, DEDUZA um detalhe pequeno, plausível e coerente com o cenário da cena — nunca recuse, nunca diga que não há nada, nunca mencione ser uma IA nem quebre o personagem. 
-Siga estritamente este padrão de inspeção física:
-Pergunta: Qual a cor da parede?
-Resposta: Branco desgastado.
-Ordem: Abrir a gaveta.
-Resposta: Você abre a gaveta. 
-Pergunta: O que tem dentro da gaveta?
-Resposta: O interior cheira a mofo. Há apenas um clipe de papel enferrujado e poeira acumulada.
-Pergunta: [INSERIR_PERGUNTA_OU_ORDEM_DO_JOGADOR_AQUI]
-Resposta: " /no_think`
-  },
-  {
-    role: 'user',
-    content: `CONTEXTO: "${fraseContexto}"\nPERGUNTA DO JOGADOR: "${pergunta}"\n/no_think`
-  }
-];
-                const saida = await window.geradorLocal(mensagens, {
-                    max_new_tokens: 15,
-                    do_sample: false,
-                    repetition_penalty: 1.3 // combate o loop de frases genéricas tipo "ele está sozinho"
-                });
-                let texto = saida?.[0]?.generated_text?.at(-1)?.content ?? '';
+       async function responderExameLocal(pergunta, fraseContexto) {
+    if (!window.geradorLocal && window.geradorLocalPromise) {
+        console.log("⏳ [Tier 3] Narrador local ainda carregando, aguardando...");
+        await window.geradorLocalPromise;
+    }
+    if (!window.geradorLocal) return null;
 
-                // Rede de segurança: se algum bloco de raciocínio vazar (ou ficar truncado sem fechar),
-                // remove e trata como falha técnica em vez de mostrar "pensamento" pro jogador.
-                texto = texto.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
-                if (!texto || texto.includes('<think>')) {
-                    console.warn("⚠️ [Tier 3] Saída ainda continha <think> ou veio vazia — descartando.");
-                    return null;
-                }
-                return texto;
-            } catch (erro) {
-                console.error("❌ Erro na geração local (Tier 3):", erro);
-                return null;
+    try {
+        const mensagens = [
+            {
+                role: 'system',
+                content: `Você narra um RPG de horror em Português Brasileiro. 
+Responda em NO MÁXIMO 8 palavras, tom seco, sem poesia. 
+Baseie-se apenas no CONTEXTO fornecido. 
+- Se for uma PERGUNTA, responda a informação diretamente. 
+- Se for uma ORDEM (ex.: "Abrir a gaveta", "Correr para ele"), narre a execução com "Você" + verbo no presente, sem acrescentar juízos. 
+Se o CONTEXTO não detalhar exatamente o que foi perguntado, DEDUZA um detalhe pequeno, plausível e coerente com o cenário de horror. 
+Nunca recuse, nunca diga que não há nada, nunca mencione ser uma IA nem quebre o personagem.
+
+Exemplos: 
+CONTEXTO: "Sala vazia, exceto por uma escrivaninha." 
+Pergunta: "Qual a cor da parede?" 
+Resposta: Branco descascado. 
+
+Ordem: "Abrir a gaveta." 
+Resposta: Você abre a gaveta. 
+
+Pergunta: "O que tem dentro?" 
+Resposta: Poeira e um alfinete enferrujado.`
+            },
+            {
+                role: 'user',
+                content: `CONTEXTO: "${fraseContexto}"\nPERGUNTA DO JOGADOR: "${pergunta}"\n/no_think`
             }
+        ];
+
+        const saida = await window.geradorLocal(mensagens, {
+            max_new_tokens: 15,
+            do_sample: false,
+            repetition_penalty: 1.3
+        });
+
+        let texto = saida?.[0]?.generated_text?.at(-1)?.content ?? '';
+
+        // Remove blocos <think> que possam ter vazado
+        texto = texto.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+        if (!texto || texto.includes('<think>')) {
+            console.warn("⚠️ [Tier 3] Saída ainda continha <think> ou veio vazia — descartando.");
+            return null;
         }
+
+        return texto;
+    } catch (erro) {
+        console.error("❌ Erro na geração local (Tier 3):", erro);
+        return null;
+    }
+}
 
         iniciarMotorSemantico();
         iniciarGeradorLocal();
