@@ -950,32 +950,33 @@
     }
     if (!window.geradorLocal) return null;
 
+    // Detecta se é pergunta (termina com ?) ou ordem (ação)
+    const ehPergunta = pergunta.trim().endsWith('?');
+    const tipo = ehPergunta ? 'PERGUNTA' : 'ORDEM';
+    const instrucao = ehPergunta
+        ? 'Responda diretamente com a informação pedida, em no máximo 8 palavras.'
+        : 'Narre a execução da ação com "Você" + verbo no presente, em no máximo 8 palavras.';
+
     try {
         const mensagens = [
             {
                 role: 'system',
-                content: `Você narra um RPG de horror em Português Brasileiro. 
-Responda em NO MÁXIMO 8 palavras, tom seco, sem poesia. 
-Baseie-se apenas no CONTEXTO fornecido. 
-- Se for uma PERGUNTA, responda a informação diretamente. 
-- Se for uma ORDEM (ex.: "Abrir a gaveta", "Correr para ele"), narre a execução com "Você" + verbo no presente, sem acrescentar juízos. 
-Se o CONTEXTO não detalhar exatamente o que foi perguntado, DEDUZA um detalhe pequeno, plausível e coerente com o cenário de horror. 
-Nunca recuse, nunca diga que não há nada, nunca mencione ser uma IA nem quebre o personagem.
+                content: `Você narra um RPG de horror em Português Brasileiro.
+Baseie-se apenas no CONTEXTO fornecido.
+Se o CONTEXTO não detalhar o que foi perguntado, DEDUZA um detalhe pequeno, plausível e coerente com horror (cores sujas, tecidos gastos).
+Nunca recuse, nunca diga que não há nada, nunca mencione ser IA.
 
-Exemplos: 
-CONTEXTO: "Sala vazia, exceto por uma escrivaninha." 
-Pergunta: "Qual a cor da parede?" 
-Resposta: Branco descascado. 
+Exemplos:
+CONTEXTO: "um homem sentado, olhos no chão, dedos se movem."
+PERGUNTA: "qual a cor da camisa do homem?"
+RESPOSTA: Camisa cinza manchada de suor.
 
-Ordem: "Abrir a gaveta." 
-Resposta: Você abre a gaveta. 
-
-Pergunta: "O que tem dentro?" 
-Resposta: Poeira e um alfinete enferrujado.`
+ORDEM: "Correr para ele."
+RESPOSTA: Você corre até o homem.`
             },
             {
                 role: 'user',
-                content: `CONTEXTO: "${fraseContexto}"\nPERGUNTA DO JOGADOR: "${pergunta}"\n/no_think`
+                content: `CONTEXTO: "${fraseContexto}"\n${tipo}: "${pergunta}"\n${instrucao}\nResponda estritamente sobre isso, sem mencionar outros elementos do cenário.\n/no_think`
             }
         ];
 
@@ -987,7 +988,7 @@ Resposta: Poeira e um alfinete enferrujado.`
 
         let texto = saida?.[0]?.generated_text?.at(-1)?.content ?? '';
 
-        // Remove blocos <think> que possam ter vazado
+        // Remove blocos <think> que tenham vazado
         texto = texto.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
         if (!texto || texto.includes('<think>')) {
             console.warn("⚠️ [Tier 3] Saída ainda continha <think> ou veio vazia — descartando.");
