@@ -949,6 +949,12 @@
         // liberdade de "world knowledge": só pode responder com base no
         // trecho já validado como semanticamente relevante.
         // ============================================================
+        // ============================================================
+        // TIER 3 — o narrador local só reformula a frase que o Tier 2
+        // encontrou. Ele nunca recebe o texto_logico inteiro nem tem
+        // liberdade de "world knowledge": só pode responder com base no
+        // trecho já validado como semanticamente relevante.
+        // ============================================================
         async function responderExameLocal(pergunta, fraseContexto) {
             if (!window.geradorLocal && window.geradorLocalPromise) {
                 console.log("⏳ [Tier 3] Narrador local ainda carregando, aguardando...");
@@ -960,45 +966,54 @@
                 const mensagens = [
                     {
                         role: 'system',
-                        // Instrução em inglês para o modelo de 0.6B processar a regra melhor, 
-                        // mas exigindo estritamente a saída em Português Brasileiro.
-                        content: 'You are a horror RPG narrator. You must answer ONLY in correct Brazilian Portuguese. Keep responses under 8 words. Be direct and immersive. Base your answer on the CONTEXT. If the CONTEXT lacks detail, deduce a plausible one. Never refuse to answer. Do not use English in your response. Never break character. /no_think'
+                        // Atualizado para ensinar o modelo a diferenciar perguntas de ações.
+                        content: 'You are a horror RPG narrator. Answer ONLY in correct Brazilian Portuguese. Keep responses under 10 words. If the player asks a question, answer it. If the player performs an action, narrate the consequence. Deduce plausible details if the CONTEXT is vague. Never break character. /no_think'
                     },
-                    // Exemplo 1 (Few-Shot) - Mostra o tom, a língua e o limite de palavras
+                    // Exemplo 1 (Pergunta investigativa)
                     {
                         role: 'user',
-                        content: 'CONTEXTO: "Um cheiro metálico e forte toma conta do ar."\nPERGUNTA DO JOGADOR: "O que tem nessa sala?"\n/no_think'
+                        content: 'CONTEXTO: "Um cheiro metálico e forte toma conta do ar."\nAÇÃO/PERGUNTA: "O que tem nessa sala?"\n/no_think'
                     },
                     {
                         role: 'assistant',
                         content: 'O ar cheira fortemente a sangue fresco.'
                     },
-                    // Exemplo 2 (Few-Shot) - Mostra como lidar com deduções ou negativas
+                    // Exemplo 2 (Ação do jogador com sucesso e dedução)
                     {
                         role: 'user',
-                        content: 'CONTEXTO: "O baú de madeira está trancado."\nPERGUNTA DO JOGADOR: "O baú está aberto?"\n/no_think'
+                        content: 'CONTEXTO: "Uma pequena caixa de madeira repousa na mesa."\nAÇÃO/PERGUNTA: "Vou quebrar a caixa com meu pé de cabra"\n/no_think'
                     },
                     {
                         role: 'assistant',
-                        content: 'Não, o baú encontra-se firmemente trancado.'
+                        content: 'A madeira cede, revelando papéis antigos no interior.'
                     },
-                    // Interação Real com o Jogador
+                    // Exemplo 3 (Ação do jogador sem sucesso/narrativa estática)
                     {
                         role: 'user',
-                        content: `CONTEXTO: "${fraseContexto}"\nPERGUNTA DO JOGADOR: "${pergunta}"\n/no_think`
+                        content: 'CONTEXTO: "A porta de vidro parece pesada e emperrada."\nAÇÃO/PERGUNTA: "Eu empurro a porta com força"\n/no_think'
+                    },
+                    {
+                        role: 'assistant',
+                        content: 'A porta range alto, mas não cede ao empurrão.'
+                    },
+                    // Interação Real
+                    {
+                        role: 'user',
+                        // Trocamos o label para AÇÃO/PERGUNTA
+                        content: `CONTEXTO: "${fraseContexto}"\nAÇÃO/PERGUNTA: "${pergunta}"\n/no_think`
                     }
                 ];
 
                 const saida = await window.geradorLocal(mensagens, {
-                    max_new_tokens: 15,
+                    // Aumentei levemente para 20 tokens para garantir que a consequência de uma ação não seja cortada no meio.
+                    max_new_tokens: 20, 
                     do_sample: false,
-                    repetition_penalty: 1.15, // <-- Previne o modelo de entrar em loop de palavras
+                    repetition_penalty: 1.15,
                 });
                 
                 let texto = saida?.[0]?.generated_text?.at(-1)?.content ?? '';
 
-                // Rede de segurança: se algum bloco de raciocínio vazar (ou ficar truncado sem fechar),
-                // remove e trata como falha técnica em vez de mostrar "pensamento" pro jogador.
+                // Rede de segurança contra vazamento de raciocínio
                 texto = texto.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
                 
                 if (!texto || texto.includes('<think>')) {
