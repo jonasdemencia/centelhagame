@@ -994,25 +994,42 @@
             return false;
         }
 
-        function validarRespostaLocal(texto) {
-            if (!texto || texto.trim().length === 0) return { valido: false, motivo: 'vazio' };
+        // Respostas de 1 palavra que são completas por si só (diretas e sem
+// alucinação nenhuma) — não devem ser confundidas com "casca vazia"
+// tipo "A." ou "É.", que não respondem nada de fato.
+const RESPOSTAS_CURTAS_VALIDAS = new Set(['sim', 'não', 'nao', 'talvez', 'nunca', 'sempre']);
 
-            if (/<\|.*?\|>|\bassistant\b|\bsystem\b|\buser\b/i.test(texto)) {
-                return { valido: false, motivo: 'vazamento de token de controle' };
-            }
-            if (PALAVRAS_INGLES_SUSPEITAS.test(texto)) {
-                return { valido: false, motivo: 'inglês detectado' };
-            }
+function validarRespostaLocal(texto) {
+    if (!texto || texto.trim().length === 0) return { valido: false, motivo: 'vazio' };
 
-            const palavras = texto.split(/\s+/).filter(Boolean);
-            if (palavras.length === 0) return { valido: false, motivo: 'vazio' };
+    if (/<\|.*?\|>|\bassistant\b|\bsystem\b|\buser\b/i.test(texto)) {
+        return { valido: false, motivo: 'vazamento de token de controle' };
+    }
+    if (PALAVRAS_INGLES_SUSPEITAS.test(texto)) {
+        return { valido: false, motivo: 'inglês detectado' };
+    }
 
-            const suspeita = palavras.find(palavraParecInventadaOuEstrangeira);
-            if (suspeita) {
-                return { valido: false, motivo: `palavra suspeita: "${suspeita}"` };
-            }
-            return { valido: true };
-        }
+    const palavras = texto.split(/\s+/).filter(Boolean);
+    if (palavras.length === 0) return { valido: false, motivo: 'vazio' };
+
+    // Descarta respostas "casca vazia" tipo "A." — passam em todo o
+    // resto (sem inglês, sem palavra inventada) mas não dizem nada.
+    // Exige 2+ palavras com 2+ letras, exceto quando a resposta inteira
+    // é um "sim"/"não"/"talvez" sozinho, que é válido por si só.
+    const palavrasComConteudo = palavras.filter(p => p.replace(/[.,!?;:"']/g, '').length >= 2);
+    const primeiraPalavraLimpa = (palavras[0] || '').toLowerCase().replace(/[^a-zà-ú]/gi, '');
+    const ehRespostaCurtaValida = palavras.length === 1 && RESPOSTAS_CURTAS_VALIDAS.has(primeiraPalavraLimpa);
+
+    if (palavrasComConteudo.length < 2 && !ehRespostaCurtaValida) {
+        return { valido: false, motivo: 'resposta sem conteúdo (curta demais)' };
+    }
+
+    const suspeita = palavras.find(palavraParecInventadaOuEstrangeira);
+    if (suspeita) {
+        return { valido: false, motivo: `palavra suspeita: "${suspeita}"` };
+    }
+    return { valido: true };
+}
 
         
 
