@@ -1014,33 +1014,7 @@
             return { valido: true };
         }
 
-        function limparRespostaLocal(texto) {
-    let limpo = (texto || '')
-        .replace(/<\|.*?\|>/g, '')
-        .replace(/^(assistant|system|user)\s*[:\-]?\s*/i, '')
-        .trim();
-
-    const temFechamento = /[.!?]/.test(limpo);
-    if (temFechamento) {
-        const fechada = limpo.match(/^(.*[.!?])/s);
-        if (fechada) limpo = fechada[1];
-    } else if (limpo) {
-        // Nenhuma pontuação em lugar nenhum = a resposta inteira foi
-        // cortada pelo max_new_tokens no meio de uma palavra. Descarta
-        // a última "palavra" (fragmento provável) em vez de mostrar
-        // algo tipo "bigo." pro jogador.
-        const partes = limpo.split(/\s+/);
-        if (partes.length > 1) {
-            partes.pop();
-            limpo = partes.join(' ');
-        }
-    }
-
-    limpo = limpo.trim();
-    if (limpo && !/[.!?]$/.test(limpo)) limpo += '.';
-    if (limpo) limpo = limpo.charAt(0).toUpperCase() + limpo.slice(1);
-    return limpo;
-}
+        
 
         async function gerarComNarradorLocal(mensagens, opcoesGeracao) {
             const saida = await window.geradorLocal(mensagens, opcoesGeracao);
