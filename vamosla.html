@@ -937,26 +937,13 @@
             sala._fatosCache.push({ pergunta, vetor: vetorPergunta, resposta });
         }
 
-        // ============================================================
-        // TIER 3 — o narrador local só reformula a frase que o Tier 2
-        // encontrou. Ele nunca recebe o texto_logico inteiro nem tem
-        // liberdade de "world knowledge": só pode responder com base no
-        // trecho já validado como semanticamente relevante.
-        // ============================================================
-        // ============================================================
-        // TIER 3 — o narrador local só reformula a frase que o Tier 2
-        // encontrou. Ele nunca recebe o texto_logico inteiro nem tem
-        // liberdade de "world knowledge": só pode responder com base no
-        // trecho já validado como semanticamente relevante.
-        // ============================================================
-        // ============================================================
-        // TIER 3 — o narrador local só reformula a frase que o Tier 2
-        // encontrou. Ele nunca recebe o texto_logico inteiro nem tem
-        // liberdade de "world knowledge": só pode responder com base no
-        // trecho já validado como semanticamente relevante.
-        // ============================================================
+    
+      
         // ============================================================
         // TIER 3 — NARRADOR LOCAL (Ajustado para ações com NPCs)
+        // ============================================================
+        // ============================================================
+        // TIER 3 — NARRADOR LOCAL (Anti-Alucinação e Foco na Pergunta)
         // ============================================================
         async function responderExameLocal(pergunta, fraseContexto) {
             if (!window.geradorLocal && window.geradorLocalPromise) {
@@ -969,35 +956,35 @@
                 const mensagens = [
                     {
                         role: 'system',
-                        // Refinamos a instrução para forçar sentenças completas e reações a diálogos
-                        content: 'You are a horror RPG narrator. Answer ONLY in correct Brazilian Portuguese. Keep responses short but always finish your sentences. If the player asks a question, answer it. If the player performs an action or speaks, narrate the consequence or the character\'s reaction. Never break character. /no_think'
+                        // Instrução brutalmente direta: Você DEVE responder a pergunta exata.
+                        content: 'You are a horror RPG narrator. Answer ONLY in Brazilian Portuguese. Keep responses under 10 words. You MUST answer the exact question asked. If asked about a detail (like color or clothing) not in the CONTEXT, invent a simple, normal answer. Never ignore the user\'s question. /no_think'
                     },
-                    // Exemplo 1 (Investigação de cenário)
+                    // Exemplo 1 (Cura o problema do Sofá: Força a responder a cor, mesmo que o contexto não tenha)
                     {
                         role: 'user',
-                        content: 'CONTEXTO: "Um cheiro metálico e forte toma conta do ar."\nAÇÃO/PERGUNTA: "O que tem nessa sala?"\n/no_think'
+                        content: 'CONTEXTO: "Um baú de madeira velha está no chão."\nAÇÃO/PERGUNTA: "Qual a cor do baú?"\n/no_think'
                     },
                     {
                         role: 'assistant',
-                        content: 'O ar cheira fortemente a sangue fresco.'
+                        content: 'O baú é de um marrom escuro.'
                     },
-                    // Exemplo 2 (Ação física em objetos)
+                    // Exemplo 2 (Cura o problema do Sapato/Olhos: Ensina a ignorar distrações no contexto)
                     {
                         role: 'user',
-                        content: 'CONTEXTO: "A porta de vidro parece pesada e emperrada."\nAÇÃO/PERGUNTA: "Eu empurro a porta com força"\n/no_think'
+                        content: 'CONTEXTO: "Um homem sentado sozinho, olhando fixamente para a parede."\nAÇÃO/PERGUNTA: "O que ele está calçando?"\n/no_think'
                     },
                     {
                         role: 'assistant',
-                        content: 'A porta range alto, mas não cede ao empurrão.'
+                        content: 'Ele calça botas de couro pretas e sujas.'
                     },
-                    // Exemplo 3 NOVO (Interação com NPCs e diálogos)
+                    // Exemplo 3 (Mantém a capacidade de reagir a ações)
                     {
                         role: 'user',
-                        content: 'CONTEXTO: "Uma mulher chora no canto, tremendo muito."\nAÇÃO/PERGUNTA: "Vou me aproximar e perguntar o nome dela."\n/no_think'
+                        content: 'CONTEXTO: "A porta de vidro parece pesada."\nAÇÃO/PERGUNTA: "Eu empurro a porta com força."\n/no_think'
                     },
                     {
                         role: 'assistant',
-                        content: 'Ela recua assustada e ignora sua pergunta, murmurando coisas incompreensíveis.'
+                        content: 'A porta range, mas não cede ao seu empurrão.'
                     },
                     // Interação Real
                     {
@@ -1007,9 +994,7 @@
                 ];
 
                 const saida = await window.geradorLocal(mensagens, {
-                    // Subimos de 20 para 35. Dá espaço para ele fechar a frase com sentido,
-                    // mas ainda é curto o suficiente para não deixá-lo divagar.
-                    max_new_tokens: 35, 
+                    max_new_tokens: 20, // Reduzido ligeiramente para focar a resposta
                     do_sample: false,
                     repetition_penalty: 1.15,
                 });
@@ -1022,8 +1007,6 @@
                     return null;
                 }
                 
-                // Trava extra de segurança: se a frase terminou sem pontuação final, 
-                // e parece cortada, adicionamos reticências para fins de imersão.
                 if (!/[.!?]$/.test(texto)) {
                     texto += "...";
                 }
