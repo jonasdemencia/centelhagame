@@ -533,6 +533,9 @@
         // Import separado (versão mais nova da mesma lib, renomeada) só para o pipeline de geração de texto.
         // Mantido isolado do import acima para não arriscar quebrar o motor de embeddings que já funciona.
         import { pipeline as pipelineGeracao } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@4';
+    import { pipeline, cos_sim } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.16.0';
+import { pipeline as pipelineGeracao } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@4';
+    import nspell from 'https://cdn.jsdelivr.net/npm/nspell@2.0.0/dist/index.js';
 
         // ============================================================
         // Importações Firebase
@@ -806,6 +809,7 @@
         window.extratorSemantico = null;
         window.geradorLocal = null;
         window.geradorLocalPromise = null; // permite o Tier 3 aguardar o load em vez de desistir na hora
+    window.corretorPT = null;
 
         async function iniciarMotorSemantico() {
             try {
@@ -823,122 +827,192 @@
             }
         }
 
+    async function iniciarCorretorOrtografico() {
+    try {
+        const [aff, dic] = await Promise.all([
+            fetch('/assets/dicionarios/pt-BR.aff').then(r => r.text()),
+            fetch('/assets/dicionarios/pt-BR.dic').then(r => r.text())
+        ]);
+        window.corretorPT = nspell({ aff, dic });
+
+        // Opcional: adicione nomes de NPCs, itens ou lugares que não existem no dicionário
+        // window.corretorPT.add('nome_do_npc');
+        // window.corretorPT.add('item_especial');
+
+        console.log("✅ Corretor ortográfico PT-BR carregado.");
+    } catch (erro) {
+        console.error("❌ Erro ao carregar o corretor ortográfico:", erro);
+        window.corretorPT = null;
+    }
+}
+
+    function corrigirLexicoLocal(texto) {
+    if (!window.corretorPT || !texto) return texto;
+
+    const tokens = texto.split(/(\s+)/); // preserva espaços
+    return tokens.map(token => {
+        if (/^\s*$/.test(token)) return token;
+
+        const pontuacaoAntes = token.match(/^[.,!?;:()"']*/)?.[0] || '';
+        const pontuacaoDepois = token.match(/[.,!?;:()"']*$/)?.[0] || '';
+        const palavra = token.slice(pontuacaoAntes.length, token.length - pontuacaoDepois.length || undefined);
+
+        if (palavra.length <= 2) return token;
+        if (window.corretorPT.correct(palavra)) return token;
+
+        const sugestoes = window.corretorPT.suggest(palavra);
+        if (sugestoes.length === 0) return token;
+
+        console.warn(`🔧 [Tier 3] Léxico corrigido: "${palavra}" → "${sugestoes[0]}"`);
+        return pontuacaoAntes + sugestoes[0] + pontuacaoDepois;
+    }).join('');
+}
+
+    async function corrigirSintaxeRemota(texto) {
+    if (!texto) return texto;
+    try {
+        const resp = await fetch(URL_WORKER_LANGUAGETOOL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({ text: texto, language: 'pt-BR' }),
+            signal: AbortSignal.timeout(2000) // timeout de 2s para não travar
+        });
+        if (!resp.ok) return texto;
+
+        const dados = await resp.json();
+        let corrigido = texto;
+
+        // Aplica as substituições de trás para frente
+        for (const match of (dados.matches || []).slice().reverse()) {
+            if (match.replacements?.length > 0) {
+                corrigido = corrigido.slice(0, match.offset)
+                    + match.replacements[0].value
+                    + corrigido.slice(match.offset + match.length);
+            }
+        }
+        return corrigido;
+    } catch (erro) {
+        console.warn("⚠️ [Tier 3] Correção sintática remota indisponível, mantendo correção local:", erro.message);
+        return texto;
+    }
+}
+
         // ============================================================
         // NARRADOR LOCAL MÍNIMO (Tier 3) — 100% no navegador, sem servidor
         // externo (LM Studio, Ollama, etc). Roda via WebGPU se disponível,
         // com fallback automático para WASM.
         // ============================================================
         async function iniciarGeradorLocal() {
-            window.geradorLocalPromise = (async () => {
-                // Voltamos pro 0.6B: o 1.7B deu std::bad_alloc na GPU dessa máquina
-                // (memória insuficiente pra sessão WebGPU, mesmo quantizado). O 0.6B
-                // sabidamente carrega aqui. As melhorias de prompt/repetition_penalty/
-                // cache continuam valendo independente do tamanho do modelo.
-                const modelId = 'onnx-community/Qwen3-0.6B-ONNX';
-
-                // Tenta WebGPU primeiro; se a GPU não tiver memória (bad_alloc) ou o
-                // device não existir, cai pra WASM (CPU) — mais lento, mas não trava.
-                const dispositivosCandidatos = (typeof navigator !== 'undefined' && navigator.gpu)
-                    ? ['webgpu', 'wasm']
-                    : ['wasm'];
-
-                for (const dispositivo of dispositivosCandidatos) {
-                    const dtypesCandidatos = dispositivo === 'webgpu' ? ['q4f16', 'q4', 'q8'] : ['q4', 'q8'];
-                    for (const dtypeTentativa of dtypesCandidatos) {
-                        try {
-                            window.geradorLocal = await pipelineGeracao('text-generation', modelId, {
-                                device: dispositivo,
-                                dtype: dtypeTentativa
-                            });
-                            console.log(`✅ Narrador local carregado (device: ${dispositivo}, dtype: ${dtypeTentativa}).`);
-                            return;
-                        } catch (erro) {
-                            console.warn(`⚠️ Falhou carregar com device '${dispositivo}' / dtype '${dtypeTentativa}':`, erro.message);
-                        }
-                    }
-                }
-
-                console.error("❌ Não foi possível carregar o narrador local com nenhuma combinação testada.");
-                window.geradorLocal = null;
-            })();
-            return window.geradorLocalPromise;
-        }
-
-        // ============================================================
-        // TIER 2 — RAG local por sentença sobre o texto_logico já gerado.
-        // Não adiciona nada ao prompt do Arquiteto de Cenas: reaproveita
-        // o texto que já existe, cortado em frases e cacheado por sala.
-        // ============================================================
-        function dividirEmFrases(texto) {
-            if (!texto) return [];
-            return texto
-                .split(/(?<=[.!?])\s+/)
-                .map(f => f.trim())
-                .filter(f => f.length > 3);
-        }
-
-        async function obterFrasesEmbedadas(sala) {
-            if (!sala || !sala.texto_logico) return [];
-            if (sala._fraseEmbeds) return sala._fraseEmbeds; // cache: computa 1x por sala
-
-            if (!window.extratorSemantico) return [];
-
-            const frases = dividirEmFrases(sala.texto_logico);
-            const embeds = [];
-            for (const frase of frases) {
-                const vetor = await window.extratorSemantico(frase, { pooling: 'mean', normalize: true });
-                embeds.push({ texto: frase, vetor: vetor.data });
-            }
-            sala._fraseEmbeds = embeds;
-            return embeds;
-        }
-
-        async function buscarFraseRelevante(pergunta, sala, vetorPerguntaPrecomputado = null) {
-            if (!window.extratorSemantico) return null;
-            const frases = await obterFrasesEmbedadas(sala);
-            if (frases.length === 0) return null;
-
-            const vetorPergunta = vetorPerguntaPrecomputado
-                ?? (await window.extratorSemantico(pergunta, { pooling: 'mean', normalize: true })).data;
-
-            let melhorFrase = null;
-            let melhorScore = 0;
-            for (const f of frases) {
-                const score = cos_sim(vetorPergunta, f.vetor);
-                if (score > melhorScore) {
-                    melhorScore = score;
-                    melhorFrase = f.texto;
+    window.geradorLocalPromise = (async () => {
+        // Voltamos pro 0.6B: o 1.7B deu std::bad_alloc na GPU dessa máquina
+        // (memória insuficiente pra sessão WebGPU, mesmo quantizado). O 0.6B
+        // sabidamente carrega aqui. As melhorias de prompt/repetition_penalty/
+        // cache continuam valendo independente do tamanho do modelo.
+        const modelId = 'onnx-community/Qwen3-0.6B-ONNX';
+ 
+        // Tenta WebGPU primeiro; se a GPU não tiver memória (bad_alloc) ou o
+        // device não existir, cai pra WASM (CPU) — mais lento, mas não trava.
+        const dispositivosCandidatos = (typeof navigator !== 'undefined' && navigator.gpu)
+            ? ['webgpu', 'wasm']
+            : ['wasm'];
+ 
+        for (const dispositivo of dispositivosCandidatos) {
+            const dtypesCandidatos = dispositivo === 'webgpu' ? ['q4f16', 'q4', 'q8'] : ['q4', 'q8'];
+            for (const dtypeTentativa of dtypesCandidatos) {
+                try {
+                    window.geradorLocal = await pipelineGeracao('text-generation', modelId, {
+                        device: dispositivo,
+                        dtype: dtypeTentativa
+                    });
+                    console.log(`✅ Narrador local carregado (device: ${dispositivo}, dtype: ${dtypeTentativa}).`);
+                    return;
+                } catch (erro) {
+                    console.warn(`⚠️ Falhou carregar com device '${dispositivo}' / dtype '${dtypeTentativa}':`, erro.message);
                 }
             }
-            return melhorFrase ? { frase: melhorFrase, score: melhorScore } : null;
         }
-
-        // ============================================================
-        // CACHE DE FATOS IMPROVISADOS — quando o Tier 3 inventa um detalhe
-        // (ex: "o sapato é azul"), essa resposta é travada por sala. Uma
-        // pergunta parafraseada ("qual a cor do sapato dele?") reconhece a
-        // mesma pergunta por similaridade semântica e reusa a MESMA resposta,
-        // em vez de rolar uma resposta nova (e possivelmente contraditória)
-        // a cada vez. Resolve o "o sapato ora é azul, ora não é" do teste.
-        // ============================================================
-        function verificarCacheDeFatos(vetorPergunta, sala) {
-            if (!sala._fatosCache) return null;
-            const LIMIAR_MESMA_PERGUNTA = 0.82; // alto de propósito: só reusa se for claramente a mesma pergunta
-            let melhor = null, melhorScore = 0;
-            for (const fato of sala._fatosCache) {
-                const score = cos_sim(vetorPergunta, fato.vetor);
-                if (score > melhorScore) { melhorScore = score; melhor = fato; }
-            }
-            return (melhor && melhorScore >= LIMIAR_MESMA_PERGUNTA) ? melhor.resposta : null;
+ 
+        console.error("❌ Não foi possível carregar o narrador local com nenhuma combinação testada.");
+        window.geradorLocal = null;
+    })();
+    return window.geradorLocalPromise;
+}
+ 
+// ============================================================
+// TIER 2 — RAG local por sentença sobre o texto_logico já gerado.
+// Não adiciona nada ao prompt do Arquiteto de Cenas: reaproveita
+// o texto que já existe, cortado em frases e cacheado por sala.
+// ============================================================
+function dividirEmFrases(texto) {
+    if (!texto) return [];
+    return texto
+        .split(/(?<=[.!?])\s+/)
+        .map(f => f.trim())
+        .filter(f => f.length > 3);
+}
+ 
+async function obterFrasesEmbedadas(sala) {
+    if (!sala || !sala.texto_logico) return [];
+    if (sala._fraseEmbeds) return sala._fraseEmbeds; // cache: computa 1x por sala
+ 
+    if (!window.extratorSemantico) return [];
+ 
+    const frases = dividirEmFrases(sala.texto_logico);
+    const embeds = [];
+    for (const frase of frases) {
+        const vetor = await window.extratorSemantico(frase, { pooling: 'mean', normalize: true });
+        embeds.push({ texto: frase, vetor: vetor.data });
+    }
+    sala._fraseEmbeds = embeds;
+    return embeds;
+}
+ 
+async function buscarFraseRelevante(pergunta, sala, vetorPerguntaPrecomputado = null) {
+    if (!window.extratorSemantico) return null;
+    const frases = await obterFrasesEmbedadas(sala);
+    if (frases.length === 0) return null;
+ 
+    const vetorPergunta = vetorPerguntaPrecomputado
+        ?? (await window.extratorSemantico(pergunta, { pooling: 'mean', normalize: true })).data;
+ 
+    let melhorFrase = null;
+    let melhorScore = 0;
+    for (const f of frases) {
+        const score = cos_sim(vetorPergunta, f.vetor);
+        if (score > melhorScore) {
+            melhorScore = score;
+            melhorFrase = f.texto;
         }
-
-        function salvarFatoCache(pergunta, vetorPergunta, resposta, sala) {
-            if (!sala._fatosCache) sala._fatosCache = [];
-            sala._fatosCache.push({ pergunta, vetor: vetorPergunta, resposta });
-        }
-
-    
-       // ============================================================
+    }
+    return melhorFrase ? { frase: melhorFrase, score: melhorScore } : null;
+}
+ 
+// ============================================================
+// CACHE DE FATOS IMPROVISADOS — quando o Tier 3 inventa um detalhe
+// (ex: "o sapato é azul"), essa resposta é travada por sala. Uma
+// pergunta parafraseada ("qual a cor do sapato dele?") reconhece a
+// mesma pergunta por similaridade semântica e reusa a MESMA resposta,
+// em vez de rolar uma resposta nova (e possivelmente contraditória)
+// a cada vez. Resolve o "o sapato ora é azul, ora não é" do teste.
+// ============================================================
+function verificarCacheDeFatos(vetorPergunta, sala) {
+    if (!sala._fatosCache) return null;
+    const LIMIAR_MESMA_PERGUNTA = 0.82; // alto de propósito: só reusa se for claramente a mesma pergunta
+    let melhor = null, melhorScore = 0;
+    for (const fato of sala._fatosCache) {
+        const score = cos_sim(vetorPergunta, fato.vetor);
+        if (score > melhorScore) { melhorScore = score; melhor = fato; }
+    }
+    return (melhor && melhorScore >= LIMIAR_MESMA_PERGUNTA) ? melhor.resposta : null;
+}
+ 
+function salvarFatoCache(pergunta, vetorPergunta, resposta, sala) {
+    if (!sala._fatosCache) sala._fatosCache = [];
+    sala._fatosCache.push({ pergunta, vetor: vetorPergunta, resposta });
+}
+ 
+ 
+// ============================================================
 // TIER 3 — Narrador local recebe o texto_logico INTEGRAL da sala.
 // Isso garante respostas coerentes com o cenário completo, sem
 // perder detalhes que uma única frase poderia omitir.
@@ -949,7 +1023,7 @@ async function responderExameLocal(pergunta, textoLogico) {
         await window.geradorLocalPromise;
     }
     if (!window.geradorLocal) return null;
-
+ 
     // Se o texto for muito grande, corta no final para evitar sobrecarga do modelo.
     // O 0.6B tem contexto limitado; 300 palavras é um limite seguro.
     const MAX_PALAVRAS_CONTEXTO = 300;
@@ -959,7 +1033,7 @@ async function responderExameLocal(pergunta, textoLogico) {
         contextoReduzido = palavras.slice(0, MAX_PALAVRAS_CONTEXTO).join(' ') + '…';
         console.warn(`⚠️ [Tier 3] Texto_logico truncado para ${MAX_PALAVRAS_CONTEXTO} palavras.`);
     }
-
+ 
     try {
         const mensagens = [
             {
@@ -989,73 +1063,82 @@ async function responderExameLocal(pergunta, textoLogico) {
                 content: `CONTEXTO COMPLETO DA SALA: "${contextoReduzido}"\nPERGUNTA DO JOGADOR: "${pergunta}"\n/no_think`
             }
         ];
-
+ 
         const saida = await window.geradorLocal(mensagens, {
             max_new_tokens: 15,
             do_sample: false,
             repetition_penalty: 1.15,
         });
-
+ 
         let texto = saida?.[0]?.generated_text?.at(-1)?.content ?? '';
         texto = texto.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
-
+ 
         if (!texto || texto.includes('<think>')) {
             console.warn("⚠️ [Tier 3] Saída ainda continha <think> ou veio vazia — descartando.");
             return null;
         }
-
+ 
+        // ------------------------------------------------------
+        // NOVO: pipeline de correção. Camada 1 sempre roda (0ms de
+        // rede); Camada 2 é best-effort e nunca bloqueia a resposta
+        // por mais que o timeout configurado.
+        // ------------------------------------------------------
+        texto = corrigirLexicoLocal(texto);
+        texto = await corrigirSintaxeRemota(texto);
+ 
         return texto;
-
+ 
     } catch (erro) {
         console.error("❌ Erro na geração local (Tier 3):", erro);
         return null;
     }
 }
-        iniciarMotorSemantico();
-        iniciarGeradorLocal();
-
-        function pseudoRandom(seed) {
-            let x = Math.sin(seed++) * 10000;
-            return x - Math.floor(x);
-        }
-
-        function analisarContexto(texto) {
-            if (!texto) return null;
-            const tokens = texto.toLowerCase()
-                .replace(/[.,!?;:()]/g, '')
-                .split(/\s+/)
-                .filter(w => w.length > 2);
-            if (tokens.length === 0) return null;
-            const tfDoc = {};
-            tokens.forEach(term => tfDoc[term] = (tfDoc[term] || 0) + 1);
-            const scores = {};
-            for (const [tema, keywords] of Object.entries(KEYWORDS_LOOT)) {
-                let dotProduct = 0, normA = 0, normB = 0;
-                const themeVector = {};
-                keywords.forEach(k => { themeVector[k] = k.includes(' ') ? 3 : 1; });
-                for (const term in tfDoc) {
-                    if (themeVector[term]) {
-                        dotProduct += tfDoc[term] * themeVector[term];
-                    }
-                    normA += Math.pow(tfDoc[term], 2);
-                }
-                for (const term in themeVector) {
-                    normB += Math.pow(themeVector[term], 2);
-                }
-                normA = Math.sqrt(normA);
-                normB = Math.sqrt(normB);
-                scores[tema] = (normA && normB) ? (dotProduct / (normA * normB)) : 0;
+iniciarMotorSemantico();
+iniciarGeradorLocal();
+iniciarCorretorOrtografico(); // NOVO
+ 
+function pseudoRandom(seed) {
+    let x = Math.sin(seed++) * 10000;
+    return x - Math.floor(x);
+}
+ 
+function analisarContexto(texto) {
+    if (!texto) return null;
+    const tokens = texto.toLowerCase()
+        .replace(/[.,!?;:()]/g, '')
+        .split(/\s+/)
+        .filter(w => w.length > 2);
+    if (tokens.length === 0) return null;
+    const tfDoc = {};
+    tokens.forEach(term => tfDoc[term] = (tfDoc[term] || 0) + 1);
+    const scores = {};
+    for (const [tema, keywords] of Object.entries(KEYWORDS_LOOT)) {
+        let dotProduct = 0, normA = 0, normB = 0;
+        const themeVector = {};
+        keywords.forEach(k => { themeVector[k] = k.includes(' ') ? 3 : 1; });
+        for (const term in tfDoc) {
+            if (themeVector[term]) {
+                dotProduct += tfDoc[term] * themeVector[term];
             }
-            let vencedor = null;
-            let maxSimilarity = 0.12;
-            for (const [tema, sim] of Object.entries(scores)) {
-                if (sim > maxSimilarity && (vencedor === null || sim > scores[vencedor])) {
-                    maxSimilarity = sim;
-                    vencedor = tema;
-                }
-            }
-            return vencedor;
+            normA += Math.pow(tfDoc[term], 2);
         }
+        for (const term in themeVector) {
+            normB += Math.pow(themeVector[term], 2);
+        }
+        normA = Math.sqrt(normA);
+        normB = Math.sqrt(normB);
+        scores[tema] = (normA && normB) ? (dotProduct / (normA * normB)) : 0;
+    }
+    let vencedor = null;
+    let maxSimilarity = 0.12;
+    for (const [tema, sim] of Object.entries(scores)) {
+        if (sim > maxSimilarity && (vencedor === null || sim > scores[vencedor])) {
+            maxSimilarity = sim;
+            vencedor = tema;
+        }
+    }
+    return vencedor;
+}
 
         function distribuirItens(textoLogico, nomeLocal, idSala, sementeGlobal, historicoItens = []) {
             const seedHash = sementeGlobal.split('').reduce((a, b) => { a = ((a << 5) - a) + b.charCodeAt(0); return a & a }, 0);
