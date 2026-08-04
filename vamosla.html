@@ -834,7 +834,7 @@
                 // (memória insuficiente pra sessão WebGPU, mesmo quantizado). O 0.6B
                 // sabidamente carrega aqui. As melhorias de prompt/repetition_penalty/
                 // cache continuam valendo independente do tamanho do modelo.
-                const modelId = 'onnx-community/Qwen2.5-1.5B';
+                const modelId = 'onnx-community/Qwen3-0.6B-ONNX';
 
                 // Tenta WebGPU primeiro; se a GPU não tiver memória (bad_alloc) ou o
                 // device não existir, cai pra WASM (CPU) — mais lento, mas não trava.
@@ -843,9 +843,7 @@
                     : ['wasm'];
 
                 for (const dispositivo of dispositivosCandidatos) {
-                    // REMOVIDO 'q4f16' AQUI PARA EVITAR A CORRUPÇÃO MATEMÁTICA NA GPU.
-                    // O 'q4' usará cálculos em f32 que são processados corretamente.
-                    const dtypesCandidatos = dispositivo === 'webgpu' ? ['q4', 'q8'] : ['q4', 'q8'];
+                    const dtypesCandidatos = dispositivo === 'webgpu' ? ['q4f16', 'q4', 'q8'] : ['q4', 'q8'];
                     for (const dtypeTentativa of dtypesCandidatos) {
                         try {
                             window.geradorLocal = await pipelineGeracao('text-generation', modelId, {
@@ -939,59 +937,80 @@
             sala._fatosCache.push({ pergunta, vetor: vetorPergunta, resposta });
         }
 
-        // ============================================================
-        // TIER 3 — o narrador local só reformula a frase que o Tier 2
-        // encontrou. Ele nunca recebe o texto_logico inteiro nem tem
-        // liberdade de "world knowledge": só pode responder com base no
-        // trecho já validado como semanticamente relevante.
-        // ============================================================
-        // ============================================================
-        // TIER 3 — o narrador local só reformula a frase que o Tier 2
-        // encontrou. Ele nunca recebe o texto_logico inteiro nem tem
-        // liberdade de "world knowledge": só pode responder com base no
-        // trecho já validado como semanticamente relevante.
-        // ============================================================
-        async function responderExameLocal(pergunta, fraseContexto) {
-            if (!window.geradorLocal && window.geradorLocalPromise) {
-                console.log("⏳ [Tier 3] Narrador local ainda carregando, aguardando...");
-                await window.geradorLocalPromise;
-            }
-            if (!window.geradorLocal) return null;
-            try {
-                const mensagens = [
-                    {
-                        role: 'system',
-                        content: 'Você narra um RPG de horror em Português Brasileiro. Responda em NO MÁXIMO 8 palavras, tom seco e sem poesia. Responda DIRETAMENTE ao que foi perguntado. Baseie-se no CONTEXTO abaixo. Se o CONTEXTO não detalhar exatamente o que foi perguntado, DEDUZA um detalhe pequeno, plausível e coerente com o cenário da cena — nunca recuse, nunca diga que não há nada, nunca mencione ser uma IA nem quebre o personagem.'
-                    },
-                    {
-                        role: 'user',
-                        content: `CONTEXTO: "${fraseContexto}"\nPERGUNTA DO JOGADOR: "${pergunta}"`
-                    }
-                ];
-                
-                const saida = await window.geradorLocal(mensagens, {
-                    max_new_tokens: 25, 
-                    do_sample: true,      // Evita o colapso de tokens iterativos
-                    temperature: 0.3,     // Mantém a precisão e coerência sem alucinar muito
-                    repetition_penalty: 1.12 // Reduzido de 1.3 para evitar loops de pontuação
-                });
-                
-                let texto = saida?.[0]?.generated_text?.at(-1)?.content ?? '';
+    
+       // ============================================================
+// TIER 3 — Narrador local recebe o texto_logico INTEGRAL da sala.
+// Isso garante respostas coerentes com o cenário completo, sem
+// perder detalhes que uma única frase poderia omitir.
+// ============================================================
+async function responderExameLocal(pergunta, textoLogico) {
+    if (!window.geradorLocal && window.geradorLocalPromise) {
+        console.log("⏳ [Tier 3] Narrador local ainda carregando, aguardando...");
+        await window.geradorLocalPromise;
+    }
+    if (!window.geradorLocal) return null;
 
-                // Rede de segurança mantida caso o modelo produza <think> acidentalmente,
-                // embora o Qwen2.5-1.5B padrão não costume fazer isso.
-                texto = texto.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
-                if (!texto || texto.includes('<think>')) {
-                    console.warn("⚠️ [Tier 3] Saída ainda continha <think> ou veio vazia — descartando.");
-                    return null;
-                }
-                return texto;
-            } catch (erro) {
-                console.error("❌ Erro na geração local (Tier 3):", erro);
-                return null;
+    // Se o texto for muito grande, corta no final para evitar sobrecarga do modelo.
+    // O 0.6B tem contexto limitado; 300 palavras é um limite seguro.
+    const MAX_PALAVRAS_CONTEXTO = 300;
+    let contextoReduzido = textoLogico.trim();
+    const palavras = contextoReduzido.split(/\s+/);
+    if (palavras.length > MAX_PALAVRAS_CONTEXTO) {
+        contextoReduzido = palavras.slice(0, MAX_PALAVRAS_CONTEXTO).join(' ') + '…';
+        console.warn(`⚠️ [Tier 3] Texto_logico truncado para ${MAX_PALAVRAS_CONTEXTO} palavras.`);
+    }
+
+    try {
+        const mensagens = [
+            {
+                role: 'system',
+                content: 'You are a horror RPG narrator. You must answer ONLY in correct Brazilian Portuguese. Keep responses under 8 words. Be direct and immersive. Base your answer on the CONTEXTO COMPLETO DA SALA. If the context lacks detail, deduce a plausible one. Never refuse to answer. Do not use English in your response. Never break character. /no_think'
+            },
+            // Exemplos (few-shot) iguais aos anteriores
+            {
+                role: 'user',
+                content: 'CONTEXTO: "Um cheiro metálico e forte toma conta do ar."\nPERGUNTA DO JOGADOR: "O que tem nessa sala?"\n/no_think'
+            },
+            {
+                role: 'assistant',
+                content: 'O ar cheira fortemente a sangue fresco.'
+            },
+            {
+                role: 'user',
+                content: 'CONTEXTO: "O baú de madeira está trancado."\nPERGUNTA DO JOGADOR: "O baú está aberto?"\n/no_think'
+            },
+            {
+                role: 'assistant',
+                content: 'Não, o baú encontra-se firmemente trancado.'
+            },
+            // Interação real – agora com o texto completo da sala
+            {
+                role: 'user',
+                content: `CONTEXTO COMPLETO DA SALA: "${contextoReduzido}"\nPERGUNTA DO JOGADOR: "${pergunta}"\n/no_think`
             }
+        ];
+
+        const saida = await window.geradorLocal(mensagens, {
+            max_new_tokens: 15,
+            do_sample: false,
+            repetition_penalty: 1.15,
+        });
+
+        let texto = saida?.[0]?.generated_text?.at(-1)?.content ?? '';
+        texto = texto.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+
+        if (!texto || texto.includes('<think>')) {
+            console.warn("⚠️ [Tier 3] Saída ainda continha <think> ou veio vazia — descartando.");
+            return null;
         }
 
+        return texto;
+
+    } catch (erro) {
+        console.error("❌ Erro na geração local (Tier 3):", erro);
+        return null;
+    }
+}
         iniciarMotorSemantico();
         iniciarGeradorLocal();
 
