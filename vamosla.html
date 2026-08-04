@@ -954,7 +954,9 @@
                 const mensagens = [
                     {
                         role: 'system',
-                        content: 'You are a realistic scenario assistant. Be brutally concise (1 to 3 words max). If the CONTEXT lacks the exact detail, you MUST invent a COMMON, MUNDANE, and REALISTIC physical detail. Never use horror tropes, fantasy, or personality traits for physical questions (e.g., if asked ethnicity, say "Asiático", never "Assassino"). Answer ONLY in Brazilian Portuguese. /no_think'
+                        // NOVA REGRA: A "Trava Biológica". O modelo é forçado a usar atributos 
+                        // humanos reais e naturais sempre que deduzir algo sobre um corpo.
+                        content: 'You are a strict grounded reality assistant. Be brutally concise (1 to 3 words max). If a detail is missing, invent a COMMON, mundane detail. CRITICAL RULE: Any physical description of a human body (skin, eyes, hair) MUST be strictly biologically normal and natural for real-world humans. No fantasy colors or tropes. Answer ONLY in Brazilian Portuguese. /no_think'
                     },
                     {
                         role: 'user',
