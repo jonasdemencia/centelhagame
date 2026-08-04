@@ -947,100 +947,106 @@
         async function responderExameLocal(pergunta, fraseContexto) {
 
     if (!window.geradorLocal && window.geradorLocalPromise) {
+        console.log("⏳ [Tier 3] Narrador local ainda carregando...");
         await window.geradorLocalPromise;
     }
 
     if (!window.geradorLocal) return null;
 
-    const mensagens = [
-        {
-            role: "system",
-            content: `
-Você é um compressor de texto.
+    try {
 
-REGRAS OBRIGATÓRIAS
+        const mensagens = [
+            {
+                role: "system",
+                content:
+`Você é um compressor de texto.
 
-- O CONTEXTO é a única realidade existente.
-- Ignore completamente qualquer conhecimento do mundo.
+REGRAS:
+
+- O CONTEXTO é a única realidade.
+- Ignore qualquer conhecimento do mundo.
 - Nunca deduza.
+- Nunca invente.
 - Nunca complete informações.
 - Nunca explique.
-- Nunca invente.
-- Nunca use conhecimento externo.
-- Nunca responda "provavelmente", "talvez", "parece", "deve", ou semelhantes.
 
-PROCESSO
-
-1. Verifique se a pergunta pode ser respondida SOMENTE usando o CONTEXTO.
-
-2. Se NÃO puder,
-responda exatamente:
+Se o CONTEXTO não responder explicitamente à PERGUNTA, responda exatamente:
 
 DESCONHECIDO
 
-3. Se puder,
-reescreva APENAS a informação presente no CONTEXTO.
+Caso responda, apenas reescreva a informação presente no CONTEXTO.
 
-Nunca acrescente nenhuma informação nova.
-
-A resposta deve possuir no máximo 12 palavras.
-`
-        },
-
-        {
-            role: "user",
-            content:
+Máximo de 12 palavras.`
+            },
+            {
+                role: "user",
+                content:
 `CONTEXTO:
 ${fraseContexto}
 
 PERGUNTA:
 ${pergunta}`
-        }
-    ];
-
-    try {
+            }
+        ];
 
         const resultado = await window.geradorLocal(
             mensagens,
             {
                 max_new_tokens: 18,
-
-                temperature: 0.0,
-
+                temperature: 0,
                 do_sample: false,
-
                 repetition_penalty: 1.15,
-
-                no_repeat_ngram_size: 3,
-
-                top_p: 0.05,
-
-                top_k: 5,
-
                 return_full_text: false
             }
         );
 
-        let resposta = resultado[0].generated_text.trim();
+        let resposta = "";
+
+        if (Array.isArray(resultado) && resultado.length > 0) {
+
+            const gt = resultado[0].generated_text;
+
+            // formato antigo
+            if (typeof gt === "string") {
+                resposta = gt;
+            }
+
+            // chat template novo
+            else if (Array.isArray(gt)) {
+
+                const assistant = [...gt].reverse().find(m => m.role === "assistant");
+
+                if (assistant)
+                    resposta = assistant.content ?? "";
+            }
+
+            // algumas versões retornam objeto
+            else if (gt && typeof gt === "object") {
+
+                resposta = gt.content ?? "";
+            }
+        }
+
+        resposta = String(resposta).trim();
 
         resposta = resposta
+            .replace(/^assistant\s*/i, "")
             .replace(/^Resposta:\s*/i, "")
             .replace(/^RESPOSTA:\s*/i, "")
-            .replace(/^R:/i, "")
             .trim();
 
-        if (resposta.length > 120)
-            resposta = resposta.substring(0,120);
+        if (!resposta)
+            return null;
 
         return resposta;
 
-    } catch (erro) {
+    }
+    catch (erro) {
 
         console.error("[Tier 3]", erro);
 
         return null;
     }
-
 }
         iniciarMotorSemantico();
         iniciarGeradorLocal();
