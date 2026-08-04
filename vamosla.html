@@ -830,7 +830,7 @@
         // ============================================================
         async function iniciarGeradorLocal() {
             window.geradorLocalPromise = (async () => {
-                const modelId = 'deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B';
+                const modelId = 'onnx-community/DeepSeek-R1-Distill-Qwen-1.5B-ONNX';
 
                 // Tenta WebGPU primeiro; se a GPU não tiver memória (bad_alloc) ou o
                 // device não existir, cai pra WASM (CPU) — mais lento, mas não trava.
