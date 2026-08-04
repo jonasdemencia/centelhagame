@@ -937,8 +937,13 @@
             sala._fatosCache.push({ pergunta, vetor: vetorPergunta, resposta });
         }
 
-        
-       // ============================================================
+        // ============================================================
+        // TIER 3 — o narrador local só reformula a frase que o Tier 2
+        // encontrou. Ele nunca recebe o texto_logico inteiro nem tem
+        // liberdade de "world knowledge": só pode responder com base no
+        // trecho já validado como semanticamente relevante.
+        // ============================================================
+        // ============================================================
         // TIER 3 — o narrador local só reformula a frase que o Tier 2
         // encontrou. Ele nunca recebe o texto_logico inteiro nem tem
         // liberdade de "world knowledge": só pode responder com base no
@@ -1003,13 +1008,15 @@
                 ];
 
                 const saida = await window.geradorLocal(mensagens, {
-                    max_new_tokens: 10, // Mantém a rédea curta para evitar frases longas
+                    max_new_tokens: 15,
                     do_sample: false,
-                    repetition_penalty: 1.15,
+                    repetition_penalty: 1.15, // <-- Previne o modelo de entrar em loop de palavras
                 });
                 
                 let texto = saida?.[0]?.generated_text?.at(-1)?.content ?? '';
 
+                // Rede de segurança: se algum bloco de raciocínio vazar (ou ficar truncado sem fechar),
+                // remove e trata como falha técnica em vez de mostrar "pensamento" pro jogador.
                 texto = texto.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
                 
                 if (!texto || texto.includes('<think>')) {
