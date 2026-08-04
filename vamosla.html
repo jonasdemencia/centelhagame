@@ -800,7 +800,7 @@
             ]
         };
 
-        // ============================================================
+       // ============================================================
         // MOTOR SEMÂNTICO
         // ============================================================
         window.extratorSemantico = null;
@@ -1003,6 +1003,9 @@
             if (PALAVRAS_INGLES_SUSPEITAS.test(texto)) {
                 return { valido: false, motivo: 'inglês detectado' };
             }
+            if (!/[a-zà-ú]/i.test(texto)) {
+                return { valido: false, motivo: 'sem letras válidas' };
+            }
 
             const palavras = texto.split(/\s+/).filter(Boolean);
             if (palavras.length === 0) return { valido: false, motivo: 'vazio' };
@@ -1044,7 +1047,7 @@
         }
         // ================= FIM DAS MULETAS DO TIER 3 =================
 
-       async function responderExameLocal(pergunta, fraseContexto) {
+        async function responderExameLocal(pergunta, fraseContexto) {
             if (!window.geradorLocal && window.geradorLocalPromise) {
                 console.log("⏳ [Tier 3] Narrador local ainda carregando, aguardando...");
                 await window.geradorLocalPromise;
@@ -1054,24 +1057,25 @@
             const mensagens = [
                 {
                     role: 'system',
-                    // Regra linear, apenas em português. 
-                    // Sem ordens complexas de "dedução" ou punições.
-                    content: 'Você é um narrador de RPG de terror. Responda em português do Brasil. Seja direto, sombrio e utilize frases curtas (máximo 10 palavras). Se a pergunta for sobre um detalhe não mencionado no contexto, crie uma resposta simples e comum que se encaixe no cenário. Não invente palavras. /no_think'
+                    // Totalmente em português e sem ordens paradoxais.
+                    content: 'Você é um narrador. Responda apenas em português do Brasil. Use gramática correta e palavras simples.'
                 },
                 {
                     role: 'user',
-                    content: `CONTEXTO: "${fraseContexto}"\nPERGUNTA: "${pergunta}"\n/no_think`
+                    // O gatilho "Responda em português:" no final atua como uma trava forte
+                    content: `Cenário: "${fraseContexto}"\nPergunta: "${pergunta}"\nResponda em português:`
                 }
             ];
 
             try {
-                // Tentativa 1 — Focada no caminho mais óbvio (Greedy Search)
-                // Reduzimos o sufocamento das palavras para evitar alucinação
+                // Tentativa 1 — A guilhotina matemática ligada
                 let bruta = await gerarComNarradorLocal(mensagens, {
-                    max_new_tokens: 15,
-                    do_sample: false, // Força a resposta mais provável matematicamente
-                    repetition_penalty: 1.05, // Muito mais leve, permite usar as palavras do contexto
-                    // Removido o no_repeat_ngram_size para não quebrar a sintaxe do PT-BR
+                    max_new_tokens: 30, // Aumentado para evitar corte precoce
+                    do_sample: true,    // Necessário ser true para ativar o top_k
+                    temperature: 0.1,   // Foco total no token mais lógico, tira a criatividade
+                    top_k: 20,          // Trava o modelo para usar só as 20 palavras mais prováveis
+                    top_p: 0.85,
+                    repetition_penalty: 1.05 
                 });
 
                 let candidata = bruta ? limparRespostaLocal(bruta) : null;
@@ -1080,23 +1084,24 @@
                 if (!validacao.valido) {
                     console.warn(`⚠️ [Tier 3] Tentativa 1 reprovada (${validacao.motivo}). Tentando rota B.`);
 
-                    // Tentativa 2 — Amostragem muito contida (Low Temperature)
+                    // Tentativa 2 — Prompt ainda mais curto e focado
                     const mensagensRetry = [
                         {
                             role: 'system',
-                            content: 'Responda a pergunta do jogador de forma extremamente simples e direta, usando apenas palavras comuns do dia a dia.'
+                            content: 'Responda a pergunta de forma extremamente simples e direta, usando apenas palavras comuns do dia a dia.'
                         },
                         {
                             role: 'user',
-                            content: `CONTEXTO: "${fraseContexto}"\nPERGUNTA: "${pergunta}"\n/no_think`
+                            content: `Cenário: "${fraseContexto}"\nPergunta: "${pergunta}"\nResponda em português:`
                         }
                     ];
 
                     bruta = await gerarComNarradorLocal(mensagensRetry, {
-                        max_new_tokens: 15,
+                        max_new_tokens: 30,
                         do_sample: true,
-                        temperature: 0.2, // Baixíssima para evitar devaneios criativos ("canela")
-                        top_p: 0.8,
+                        temperature: 0.1, // Mantemos severo
+                        top_k: 20,        // Mantemos restrito
+                        top_p: 0.85,
                         repetition_penalty: 1.1,
                     });
 
@@ -1121,6 +1126,7 @@
                 return null;
             }
         }
+        
         iniciarMotorSemantico();
         iniciarGeradorLocal();
 
