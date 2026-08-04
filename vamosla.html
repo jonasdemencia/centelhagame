@@ -937,7 +937,7 @@
             sala._fatosCache.push({ pergunta, vetor: vetorPergunta, resposta });
         }
 
-        // ============================================================
+       // ============================================================
         // TIER 3 — o narrador local só reformula a frase que o Tier 2
         // encontrou. Ele nunca recebe o texto_logico inteiro nem tem
         // liberdade de "world knowledge": só pode responder com base no
@@ -954,34 +954,38 @@
                 const mensagens = [
                     {
                         role: 'system',
-                        // NOVA REGRA: A "Trava Biológica". O modelo é forçado a usar atributos 
-                        // humanos reais e naturais sempre que deduzir algo sobre um corpo.
-                        content: 'You are a strict grounded reality assistant. Be brutally concise (1 to 3 words max). If a detail is missing, invent a COMMON, mundane detail. CRITICAL RULE: Any physical description of a human body (skin, eyes, hair) MUST be strictly biologically normal and natural for real-world humans. No fantasy colors or tropes. Answer ONLY in Brazilian Portuguese. /no_think'
+                        // O modelo agora é estritamente proibido de inventar.
+                        // Se não estiver escrito de forma clara no contexto, a resposta é NULL.
+                        content: 'You are a strict text parser. Answer ONLY based on the exact words in the CONTEXT. If the answer is not explicitly written in the CONTEXT, you MUST answer exactly "NULL". Do not invent, deduce, or guess anything. Be brutally concise. /no_think'
                     },
+                    // Exemplo 1: Informação não existente no texto -> NULL imediato
                     {
                         role: 'user',
                         content: 'CONTEXTO: "Um homem está sentado sozinho no escuro."\nPERGUNTA DO JOGADOR: "Qual a etnia do homem?"\n/no_think'
                     },
                     {
                         role: 'assistant',
-                        content: 'Asiático.'
+                        content: 'NULL'
                     },
+                    // Exemplo 2: Informação existente -> Resposta concisa
                     {
                         role: 'user',
-                        content: 'CONTEXTO: "Ele não se move e olha para baixo."\nPERGUNTA DO JOGADOR: "O homem é careca?"\n/no_think'
+                        content: 'CONTEXTO: "O homem negro não se move."\nPERGUNTA DO JOGADOR: "Qual a etnia do homem?"\n/no_think'
                     },
                     {
                         role: 'assistant',
-                        content: 'Sim, é careca.'
+                        content: 'Negro.'
                     },
+                    // Exemplo 3: Informação existente -> Resposta concisa
                     {
                         role: 'user',
-                        content: 'CONTEXTO: "Você encontra uma camisa jogada na poltrona."\nPERGUNTA DO JOGADOR: "Qual a cor da camisa?"\n/no_think'
+                        content: 'CONTEXTO: "Você encontra uma camisa vermelha jogada."\nPERGUNTA DO JOGADOR: "Qual a cor da camisa?"\n/no_think'
                     },
                     {
                         role: 'assistant',
                         content: 'Vermelha.'
                     },
+                    // Exemplo 4: Lógica simples baseada no texto -> Resposta binária
                     {
                         role: 'user',
                         content: 'CONTEXTO: "O rosto do paciente está perfeitamente liso."\nPERGUNTA DO JOGADOR: "Ele tem bigode?"\n/no_think'
@@ -990,6 +994,7 @@
                         role: 'assistant',
                         content: 'Não.'
                     },
+                    // Interação Real
                     {
                         role: 'user',
                         content: `CONTEXTO: "${fraseContexto}"\nPERGUNTA DO JOGADOR: "${pergunta}"\n/no_think`
@@ -997,22 +1002,19 @@
                 ];
 
                 const saida = await window.geradorLocal(mensagens, {
-                    // Aumentado para 50. Dá margem caso ele decida abrir o <think>,
-                    // mas os exemplos few-shot garantem que a resposta final continuará concisa.
-                    max_new_tokens: 50, 
-                    do_sample: false,
-                    repetition_penalty: 1.15,
+                    max_new_tokens: 15, // Espaço curto apenas para extrair a palavra ou dizer NULL
+                    do_sample: false,   // Mantém a resposta engessada e previsível
                 });
                 
                 let texto = saida?.[0]?.generated_text?.at(-1)?.content ?? '';
 
-                // NOVA REGEX: Destrói qualquer coisa a partir de <think>, mesmo se a tag 
-                // de fechamento </think> nunca for gerada (caso seja truncado).
+                // Destrói tags de raciocínio (think) se ele tentar abrir
                 texto = texto.replace(/<think>[\s\S]*?(?:<\/think>|$)/gi, '').trim();
                 
-                if (!texto) {
-                    console.warn("⚠️ [Tier 3] Modelo gerou apenas um pensamento ou saída vazia — descartando.");
-                    return null;
+                // Se a resposta for vazia, ou se o modelo obedeceu e disse NULL
+                if (!texto || texto === 'NULL' || texto.includes('NULL')) {
+                    console.log("📖 [Tier 3] Informação ausente no contexto. Retornando null.");
+                    return null; 
                 }
                 
                 return texto;
@@ -1022,6 +1024,7 @@
                 return null;
             }
         }
+    
         iniciarMotorSemantico();
         iniciarGeradorLocal();
 
