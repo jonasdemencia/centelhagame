@@ -943,48 +943,55 @@
         // liberdade de "world knowledge": só pode responder com base no
         // trecho já validado como semanticamente relevante.
         // ============================================================
-       async function responderExameLocal(pergunta, fraseContexto) {
-    if (!window.geradorLocal && window.geradorLocalPromise) {
-        console.log("⏳ [Tier 3] Narrador local ainda carregando, aguardando...");
-        await window.geradorLocalPromise;
-    }
-    if (!window.geradorLocal) return null;
-    try {
-        const mensagens = [
-            {
-                role: 'system',
-                // Removido /no_think e ajustado para Qwen2.5
-                content: 'Você narra um RPG de horror em Português Brasileiro. Responda em NO MÁXIMO 8 palavras, tom seco e sem poesia. Responda DIRETAMENTE ao que foi perguntado. Baseie-se no CONTEXTO abaixo. Se o CONTEXTO não detalhar exatamente o que foi perguntado, DEDUZA um detalhe pequeno, plausível e coerente com o cenário da cena — nunca recuse, nunca diga que não há nada, nunca mencione ser uma IA nem quebre o personagem.'
-            },
-            {
-                role: 'user',
-                content: `CONTEXTO: "${fraseContexto}"\nPERGUNTA DO JOGADOR: "${pergunta}"`
+       // ============================================================
+        // TIER 3 — o narrador local só reformula a frase que o Tier 2
+        // encontrou. Ele nunca recebe o texto_logico inteiro nem tem
+        // liberdade de "world knowledge": só pode responder com base no
+        // trecho já validado como semanticamente relevante.
+        // ============================================================
+        async function responderExameLocal(pergunta, fraseContexto) {
+            if (!window.geradorLocal && window.geradorLocalPromise) {
+                console.log("⏳ [Tier 3] Narrador local ainda carregando, aguardando...");
+                await window.geradorLocalPromise;
             }
-        ];
-        const saida = await window.geradorLocal(mensagens, {
-            max_new_tokens: 25,          // aumentado para dar margem
-            do_sample: true,             // ativa sampling para evitar loops
-            temperature: 0.3,            // baixo para manter coerência
-            repetition_penalty: 1.2      // agora é respeitado
-        });
-        let texto = saida?.[0]?.generated_text?.at(-1)?.content ?? '';
+            if (!window.geradorLocal) return null;
+            try {
+                const mensagens = [
+                    {
+                        role: 'system',
+                        // Removido /no_think e ajustado para Qwen2.5
+                        content: 'Você narra um RPG de horror em Português Brasileiro. Responda em NO MÁXIMO 8 palavras, tom seco e sem poesia. Responda DIRETAMENTE ao que foi perguntado. Baseie-se no CONTEXTO abaixo. Se o CONTEXTO não detalhar exatamente o que foi perguntado, DEDUZA um detalhe pequeno, plausível e coerente com o cenário da cena — nunca recuse, nunca diga que não há nada, nunca mencione ser uma IA nem quebre o personagem.'
+                    },
+                    {
+                        role: 'user',
+                        content: `CONTEXTO: "${fraseContexto}"\nPERGUNTA DO JOGADOR: "${pergunta}"`
+                    }
+                ];
+                
+                const saida = await window.geradorLocal(mensagens, {
+                    max_new_tokens: 25,          // aumentado para dar margem
+                    do_sample: false,            // MUDANÇA: Greedy search foca no token mais lógico (evita alucinações e loops)
+                    temperature: 1.0,            // Ignorado quando do_sample é false, mas mantido por segurança da API
+                    repetition_penalty: 1.0      // MUDANÇA: O culpado pelos símbolos. 1.0 desliga a penalidade.
+                });
+                
+                let texto = saida?.[0]?.generated_text?.at(-1)?.content ?? '';
 
-        // Remove qualquer marcação residual (caso ainda venha)
-        texto = texto.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+                // Remove qualquer marcação residual (caso ainda venha)
+                texto = texto.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
 
-        // Validação de saída: se vazia, com menos de 2 caracteres, ou apenas símbolos repetidos, descarta
-        if (!texto || texto.length < 2 || /^[!@#$%^&*()_+=\-{}\[\]:;"'<>,.?\/\\|`~]+$/.test(texto)) {
-            console.warn("⚠️ [Tier 3] Saída inválida:", texto);
-            return null;
+                // Validação de saída: se vazia, com menos de 2 caracteres, ou apenas símbolos repetidos, descarta
+                if (!texto || texto.length < 2 || /^[!@#$%^&*()_+=\-{}\[\]:;"'<>,.?\/\\|`~]+$/.test(texto)) {
+                    console.warn("⚠️ [Tier 3] Saída inválida:", texto);
+                    return null;
+                }
+
+                return texto;
+            } catch (erro) {
+                console.error("❌ Erro na geração local (Tier 3):", erro);
+                return null;
+            }
         }
-
-        return texto;
-    } catch (erro) {
-        console.error("❌ Erro na geração local (Tier 3):", erro);
-        return null;
-    }
-}
-
         iniciarMotorSemantico();
         iniciarGeradorLocal();
 
