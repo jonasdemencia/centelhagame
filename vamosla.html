@@ -4041,53 +4041,94 @@ async function executarDilemaComRamificacao(pai, ram, silent = false) {
                 // se não achar nada forte, ele improvisa em cima do clima geral da cena (texto_logico inteiro).
                 // Só cai pro fluxo remoto (chamarLLMStream) se o narrador local falhar tecnicamente
                 // (modelo não carregou, erro de geração, etc.) — não mais por "não achei a resposta exata".
-                try {
-                    const vetorPerguntaAtual = (await window.extratorSemantico(pergunta, { pooling: 'mean', normalize: true })).data;
+                                    // ===== TIER 2 + 3 – EXTRAÇÃO LOCAL COM FALLBACK GENÉRICO =====
+                    try {
+                        const vetorPerguntaAtual = (await window.extratorSemantico(pergunta, { pooling: 'mean', normalize: true })).data;
 
-                    // Checa primeiro se essa pergunta (ou uma parafraseada) já foi respondida
-                    // nessa sala — se sim, reusa a MESMA resposta em vez de gerar de novo.
-                    const respostaCache = verificarCacheDeFatos(vetorPerguntaAtual, salaAtual);
-                    if (respostaCache) {
-                        console.log("💾 [Cache] Pergunta já respondida antes nessa sala, reusando:", respostaCache);
-                        clearInterval(intervaloAnimacao);
-                        const tempElementCache = document.getElementById(tempId);
-                        if (tempElementCache) tempElementCache.remove();
-                        adicionarMensagem(respostaCache, "system");
-                        sendBtn.disabled = false;
-                        userInput.disabled = false;
-                        userInput.focus();
-                        return;
-                    }
+                        // Checa cache de fatos para esta sala
+                        const respostaCache = verificarCacheDeFatos(vetorPerguntaAtual, salaAtual);
+                        if (respostaCache) {
+                            console.log("💾 [Cache] Pergunta já respondida antes nessa sala, reusando:", respostaCache);
+                            clearInterval(intervaloAnimacao);
+                            const tempElementCache = document.getElementById(tempId);
+                            if (tempElementCache) tempElementCache.remove();
+                            adicionarMensagem(respostaCache, "system");
+                            sendBtn.disabled = false;
+                            userInput.disabled = false;
+                            userInput.focus();
+                            return;
+                        }
 
-                    const fraseRelevante = await buscarFraseRelevante(pergunta, salaAtual, vetorPerguntaAtual);
-                    if (fraseRelevante) {
-                        console.log(`📖 [Tier 2] Frase mais próxima (${fraseRelevante.score.toFixed(4)}): "${fraseRelevante.frase}"`);
-                    } else {
-                        console.log("📖 [Tier 2] Nenhuma frase se destacou — usando a cena inteira como contexto/tom.");
-                    }
+                        // Busca a frase mais relevante no texto da sala
+                        const fraseRelevante = await buscarFraseRelevante(pergunta, salaAtual, vetorPerguntaAtual);
+                        if (fraseRelevante) {
+                            console.log(`📖 [Tier 2] Frase mais próxima (${fraseRelevante.score.toFixed(4)}): "${fraseRelevante.frase}"`);
+                        } else {
+                            console.log("📖 [Tier 2] Nenhuma frase se destacou — usando a cena inteira como contexto/tom.");
+                        }
 
-                    const contextoParaNarrador = fraseRelevante
-                        ? fraseRelevante.frase
-                        : (salaAtual?.texto_logico || 'Um ambiente sombrio e silencioso.');
+                        const contextoParaNarrador = fraseRelevante
+                            ? fraseRelevante.frase
+                            : (salaAtual?.texto_logico || 'Um ambiente sombrio e silencioso.');
 
-                    const respostaLocal = await responderExameLocal(pergunta, contextoParaNarrador);
+                        // Tenta extrair a resposta com o modelo local (0.6B)
+                        const respostaLocal = await responderExameLocal(pergunta, contextoParaNarrador);
 
-                    if (respostaLocal) {
-                        console.log("🧠 [Tier 3] Narrador local respondeu:", respostaLocal);
-                        salvarFatoCache(pergunta, vetorPerguntaAtual, respostaLocal, salaAtual);
+                        if (respostaLocal) {
+                            // Encontrou uma informação explícita no contexto
+                            console.log("🧠 [Tier 3] Narrador local respondeu:", respostaLocal);
+                            salvarFatoCache(pergunta, vetorPerguntaAtual, respostaLocal, salaAtual);
+                            clearInterval(intervaloAnimacao);
+                            const tempElementLocal = document.getElementById(tempId);
+                            if (tempElementLocal) tempElementLocal.remove();
+                            adicionarMensagem(respostaLocal, "system");
+                            sendBtn.disabled = false;
+                            userInput.disabled = false;
+                            userInput.focus();
+                            return;
+                        }
+
+                        // Se o modelo retornou NULL, usamos uma mensagem genérica de incerteza
+                        // (mantém o clima de horror e evita alucinações)
                         clearInterval(intervaloAnimacao);
                         const tempElementLocal = document.getElementById(tempId);
                         if (tempElementLocal) tempElementLocal.remove();
-                        adicionarMensagem(respostaLocal, "system");
+
+                        const respostasIncerteza = [
+                            "A escuridão é densa demais para que você tenha certeza disso.",
+                            "Você foca sua atenção, mas os detalhes escapam à sua percepção.",
+                            "A penumbra não permite discernir esse detalhe com clareza.",
+                            "Sua visão tateia o ambiente, mas o que procura permanece oculto.",
+                            "Você não consegue afirmar nada sobre isso neste momento."
+                        ];
+                        const mensagemGenérica = respostasIncerteza[Math.floor(Math.random() * respostasIncerteza.length)];
+                        adicionarMensagem(mensagemGenérica, "system");
+
                         sendBtn.disabled = false;
                         userInput.disabled = false;
                         userInput.focus();
-                        return;
+                        return; // <-- NÃO prossegue para o fluxo remoto
+
+                    } catch (erroRAGLocal) {
+                        // Em caso de erro no fluxo local, também usamos a mensagem genérica
+                        console.error("❌ [Tier 2/3] Erro no fluxo local:", erroRAGLocal);
+                        clearInterval(intervaloAnimacao);
+                        const tempElementLocal = document.getElementById(tempId);
+                        if (tempElementLocal) tempElementLocal.remove();
+
+                        const respostasErro = [
+                            "Sua percepção falha momentaneamente, a escuridão parece distorcê-la.",
+                            "Você tenta se concentrar, mas o ambiente parece resistir à sua observação.",
+                            "Algo na atmosfera turva seus sentidos, você não consegue precisar."
+                        ];
+                        const msgErro = respostasErro[Math.floor(Math.random() * respostasErro.length)];
+                        adicionarMensagem(msgErro, "system");
+
+                        sendBtn.disabled = false;
+                        userInput.disabled = false;
+                        userInput.focus();
+                        return; // <-- Não chama LLM remoto mesmo em erro
                     }
-                    console.warn("⚠️ [Tier 3] Narrador local não retornou nada válido — seguindo para o fluxo remoto normal.");
-                } catch (erroRAGLocal) {
-                    console.error("❌ [Tier 2/3] Erro no fluxo local, seguindo para o fluxo remoto normal:", erroRAGLocal);
-                }
                 // ================= FIM TIER 2 + 3 =================
                 }
                 // ================= FIM DO BLOCO DE INTERCEPTAÇÃO SEMÂNTICA =================
