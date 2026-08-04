@@ -843,7 +843,9 @@
                     : ['wasm'];
 
                 for (const dispositivo of dispositivosCandidatos) {
-                    const dtypesCandidatos = dispositivo === 'webgpu' ? ['q4f16', 'q4', 'q8'] : ['q4', 'q8'];
+                    // REMOVIDO 'q4f16' AQUI PARA EVITAR A CORRUPÇÃO MATEMÁTICA NA GPU.
+                    // O 'q4' usará cálculos em f32 que são processados corretamente.
+                    const dtypesCandidatos = dispositivo === 'webgpu' ? ['q4', 'q8'] : ['q4', 'q8'];
                     for (const dtypeTentativa of dtypesCandidatos) {
                         try {
                             window.geradorLocal = await pipelineGeracao('text-generation', modelId, {
