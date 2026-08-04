@@ -830,11 +830,7 @@
         // ============================================================
         async function iniciarGeradorLocal() {
             window.geradorLocalPromise = (async () => {
-                // Voltamos pro 0.6B: o 1.7B deu std::bad_alloc na GPU dessa máquina
-                // (memória insuficiente pra sessão WebGPU, mesmo quantizado). O 0.6B
-                // sabidamente carrega aqui. As melhorias de prompt/repetition_penalty/
-                // cache continuam valendo independente do tamanho do modelo.
-                const modelId = 'onnx-community/Qwen3-0.6B-ONNX';
+                const modelId = 'deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B';
 
                 // Tenta WebGPU primeiro; se a GPU não tiver memória (bad_alloc) ou o
                 // device não existir, cai pra WASM (CPU) — mais lento, mas não trava.
