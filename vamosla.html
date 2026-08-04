@@ -824,122 +824,115 @@
         }
 
         // ============================================================
-        // NARRADOR LOCAL MÍNIMO (Tier 3) — 100% no navegador, sem servidor
-        // externo (LM Studio, Ollama, etc). Roda via WebGPU se disponível,
-        // com fallback automático para WASM.
-        // ============================================================
-        async function iniciarGeradorLocal() {
-            window.geradorLocalPromise = (async () => {
-                const modelId = 'onnx-community/DeepSeek-R1-Distill-Qwen-1.5B-ONNX';
+// NARRADOR LOCAL MÍNIMO (Tier 3) — 100% no navegador, sem servidor
+// externo (LM Studio, Ollama, etc). Roda via WebGPU se disponível,
+// com fallback automático para WASM.
+// ============================================================
+async function iniciarGeradorLocal() {
+    window.geradorLocalPromise = (async () => {
+        const modelId = 'onnx-community/DeepSeek-R1-Distill-Qwen-1.5B-ONNX';
 
-                // Tenta WebGPU primeiro; se a GPU não tiver memória (bad_alloc) ou o
-                // device não existir, cai pra WASM (CPU) — mais lento, mas não trava.
-                const dispositivosCandidatos = (typeof navigator !== 'undefined' && navigator.gpu)
-                    ? ['webgpu', 'wasm']
-                    : ['wasm'];
+        // Tenta WebGPU primeiro; se a GPU não tiver memória (bad_alloc) ou o
+        // device não existir, cai pra WASM (CPU) — mais lento, mas não trava.
+        const dispositivosCandidatos = (typeof navigator !== 'undefined' && navigator.gpu)
+            ? ['webgpu', 'wasm']
+            : ['wasm'];
 
-                for (const dispositivo of dispositivosCandidatos) {
-                    const dtypesCandidatos = dispositivo === 'webgpu' ? ['q4f16', 'q4', 'q8'] : ['q4', 'q8'];
-                    for (const dtypeTentativa of dtypesCandidatos) {
-                        try {
-                            window.geradorLocal = await pipelineGeracao('text-generation', modelId, {
-                                device: dispositivo,
-                                dtype: dtypeTentativa
-                            });
-                            console.log(`✅ Narrador local carregado (device: ${dispositivo}, dtype: ${dtypeTentativa}).`);
-                            return;
-                        } catch (erro) {
-                            console.warn(`⚠️ Falhou carregar com device '${dispositivo}' / dtype '${dtypeTentativa}':`, erro.message);
-                        }
-                    }
-                }
-
-                console.error("❌ Não foi possível carregar o narrador local com nenhuma combinação testada.");
-                window.geradorLocal = null;
-            })();
-            return window.geradorLocalPromise;
-        }
-
-        // ============================================================
-        // TIER 2 — RAG local por sentença sobre o texto_logico já gerado.
-        // Não adiciona nada ao prompt do Arquiteto de Cenas: reaproveita
-        // o texto que já existe, cortado em frases e cacheado por sala.
-        // ============================================================
-        function dividirEmFrases(texto) {
-            if (!texto) return [];
-            return texto
-                .split(/(?<=[.!?])\s+/)
-                .map(f => f.trim())
-                .filter(f => f.length > 3);
-        }
-
-        async function obterFrasesEmbedadas(sala) {
-            if (!sala || !sala.texto_logico) return [];
-            if (sala._fraseEmbeds) return sala._fraseEmbeds; // cache: computa 1x por sala
-
-            if (!window.extratorSemantico) return [];
-
-            const frases = dividirEmFrases(sala.texto_logico);
-            const embeds = [];
-            for (const frase of frases) {
-                const vetor = await window.extratorSemantico(frase, { pooling: 'mean', normalize: true });
-                embeds.push({ texto: frase, vetor: vetor.data });
-            }
-            sala._fraseEmbeds = embeds;
-            return embeds;
-        }
-
-        async function buscarFraseRelevante(pergunta, sala, vetorPerguntaPrecomputado = null) {
-            if (!window.extratorSemantico) return null;
-            const frases = await obterFrasesEmbedadas(sala);
-            if (frases.length === 0) return null;
-
-            const vetorPergunta = vetorPerguntaPrecomputado
-                ?? (await window.extratorSemantico(pergunta, { pooling: 'mean', normalize: true })).data;
-
-            let melhorFrase = null;
-            let melhorScore = 0;
-            for (const f of frases) {
-                const score = cos_sim(vetorPergunta, f.vetor);
-                if (score > melhorScore) {
-                    melhorScore = score;
-                    melhorFrase = f.texto;
+        for (const dispositivo of dispositivosCandidatos) {
+            const dtypesCandidatos = dispositivo === 'webgpu' ? ['q4f16', 'q4', 'q8'] : ['q4', 'q8'];
+            for (const dtypeTentativa of dtypesCandidatos) {
+                try {
+                    window.geradorLocal = await pipelineGeracao('text-generation', modelId, {
+                        device: dispositivo,
+                        dtype: dtypeTentativa
+                    });
+                    console.log(`✅ Narrador local carregado (device: ${dispositivo}, dtype: ${dtypeTentativa}).`);
+                    return;
+                } catch (erro) {
+                    console.warn(`⚠️ Falhou carregar com device '${dispositivo}' / dtype '${dtypeTentativa}':`, erro.message);
                 }
             }
-            return melhorFrase ? { frase: melhorFrase, score: melhorScore } : null;
         }
 
-        // ============================================================
-        // CACHE DE FATOS IMPROVISADOS — quando o Tier 3 inventa um detalhe
-        // (ex: "o sapato é azul"), essa resposta é travada por sala. Uma
-        // pergunta parafraseada ("qual a cor do sapato dele?") reconhece a
-        // mesma pergunta por similaridade semântica e reusa a MESMA resposta,
-        // em vez de rolar uma resposta nova (e possivelmente contraditória)
-        // a cada vez. Resolve o "o sapato ora é azul, ora não é" do teste.
-        // ============================================================
-        function verificarCacheDeFatos(vetorPergunta, sala) {
-            if (!sala._fatosCache) return null;
-            const LIMIAR_MESMA_PERGUNTA = 0.82; // alto de propósito: só reusa se for claramente a mesma pergunta
-            let melhor = null, melhorScore = 0;
-            for (const fato of sala._fatosCache) {
-                const score = cos_sim(vetorPergunta, fato.vetor);
-                if (score > melhorScore) { melhorScore = score; melhor = fato; }
-            }
-            return (melhor && melhorScore >= LIMIAR_MESMA_PERGUNTA) ? melhor.resposta : null;
-        }
+        console.error("❌ Não foi possível carregar o narrador local com nenhuma combinação testada.");
+        window.geradorLocal = null;
+    })();
+    return window.geradorLocalPromise;
+}
 
-        function salvarFatoCache(pergunta, vetorPergunta, resposta, sala) {
-            if (!sala._fatosCache) sala._fatosCache = [];
-            sala._fatosCache.push({ pergunta, vetor: vetorPergunta, resposta });
-        }
+// ============================================================
+// TIER 2 — RAG local por sentença sobre o texto_logico já gerado.
+// Não adiciona nada ao prompt do Arquiteto de Cenas: reaproveita
+// o texto que já existe, cortado em frases e cacheado por sala.
+// ============================================================
+function dividirEmFrases(texto) {
+    if (!texto) return [];
+    return texto
+        .split(/(?<=[.!?])\s+/)
+        .map(f => f.trim())
+        .filter(f => f.length > 3);
+}
 
-        // ============================================================
-        // TIER 3 — o narrador local só reformula a frase que o Tier 2
-        // encontrou. Ele nunca recebe o texto_logico inteiro nem tem
-        // liberdade de "world knowledge": só pode responder com base no
-        // trecho já validado como semanticamente relevante.
-        // ============================================================
-        async function responderExameLocal(pergunta, fraseContexto) {
+async function obterFrasesEmbedadas(sala) {
+    if (!sala || !sala.texto_logico) return [];
+    if (sala._fraseEmbeds) return sala._fraseEmbeds; // cache: computa 1x por sala
+
+    if (!window.extratorSemantico) return [];
+
+    const frases = dividirEmFrases(sala.texto_logico);
+    const embeds = [];
+    for (const frase of frases) {
+        const vetor = await window.extratorSemantico(frase, { pooling: 'mean', normalize: true });
+        embeds.push({ texto: frase, vetor: vetor.data });
+    }
+    sala._fraseEmbeds = embeds;
+    return embeds;
+}
+
+async function buscarFraseRelevante(pergunta, sala, vetorPerguntaPrecomputado = null) {
+    if (!window.extratorSemantico) return null;
+    const frases = await obterFrasesEmbedadas(sala);
+    if (frases.length === 0) return null;
+
+    const vetorPergunta = vetorPerguntaPrecomputado
+        ?? (await window.extratorSemantico(pergunta, { pooling: 'mean', normalize: true })).data;
+
+    let melhorFrase = null;
+    let melhorScore = 0;
+    for (const f of frases) {
+        const score = cos_sim(vetorPergunta, f.vetor);
+        if (score > melhorScore) {
+            melhorScore = score;
+            melhorFrase = f.texto;
+        }
+    }
+    return melhorFrase ? { frase: melhorFrase, score: melhorScore } : null;
+}
+
+// ============================================================
+// CACHE DE FATOS IMPROVISADOS
+// ============================================================
+function verificarCacheDeFatos(vetorPergunta, sala) {
+    if (!sala._fatosCache) return null;
+    const LIMIAR_MESMA_PERGUNTA = 0.82; 
+    let melhor = null, melhorScore = 0;
+    for (const fato of sala._fatosCache) {
+        const score = cos_sim(vetorPergunta, fato.vetor);
+        if (score > melhorScore) { melhorScore = score; melhor = fato; }
+    }
+    return (melhor && melhorScore >= LIMIAR_MESMA_PERGUNTA) ? melhor.resposta : null;
+}
+
+function salvarFatoCache(pergunta, vetorPergunta, resposta, sala) {
+    if (!sala._fatosCache) sala._fatosCache = [];
+    sala._fatosCache.push({ pergunta, vetor: vetorPergunta, resposta });
+}
+
+// ============================================================
+// TIER 3 — o narrador local só reformula a frase que o Tier 2
+// encontrou. Configurado estritamente para o DeepSeek-R1.
+// ============================================================
+async function responderExameLocal(pergunta, fraseContexto) {
     if (!window.geradorLocal && window.geradorLocalPromise) {
         console.log("⏳ [Tier 3] Narrador local ainda carregando, aguardando...");
         await window.geradorLocalPromise;
@@ -949,36 +942,51 @@
         const mensagens = [
             {
                 role: 'system',
-                content: 'Você narra um RPG em Português Brasileiro. Responda DIRETAMENTE à pergunta, em no máximo 5 palavras, sem explicações, sem tags, sem raciocínio. Seja seco e objetivo.'
+                // O prompt foi ajustado. R1 precisa ser avisado sobre o que fazer APÓS pensar.
+                content: 'Você é um narrador de RPG. Sua tarefa é responder à pergunta usando APENAS o contexto fornecido. Após o seu raciocínio, sua resposta final deve ser EXTREMAMENTE curta, no máximo 5 palavras. Seja seco e direto.'
             },
             {
                 role: 'user',
                 content: `CONTEXTO: "${fraseContexto}"\nPERGUNTA DO JOGADOR: "${pergunta}"`
             }
         ];
+        
         const saida = await window.geradorLocal(mensagens, {
-            max_new_tokens: 200,            // um pouco mais para garantir a resposta
+            max_new_tokens: 800,           // AUMENTADO: Garante que ele tenha espaço para fechar a tag </think> e dar a resposta.
             do_sample: false,
-            repetition_penalty: 1.2
+            repetition_penalty: 1.05       // REDUZIDO: Modelos R1 enlouquecem (alucinam) com penalty acima de 1.1 durante o raciocínio.
         });
+        
         let texto = saida?.[0]?.generated_text?.at(-1)?.content ?? '';
 
         // --- EXTRAÇÃO ROBUSTA ---
-        // 1. Remove blocos <think>...</think> (com ou sem quebras)
-        texto = texto.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+        // 1. Remove blocos <think>...</think> (completos)
+        let respostaLimpa = texto.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
 
-        // 2. Se ainda houver <think> (sem fechamento), descarta tudo até o final
-        if (texto.includes('<think>')) {
-            texto = texto.replace(/<think>[\s\S]*$/, '').trim();
-        }
-
-        // 3. Se a resposta estiver vazia, retorna null (fallback)
-        if (!texto) {
-            console.warn("⚠️ [Tier 3] Resposta vazia após limpeza.");
+        // 2. Se ainda houver <think> (sem fechamento), o modelo esgotou os 800 tokens só pensando.
+        if (respostaLimpa.includes('<think>')) {
+            console.warn("⚠️ [Tier 3] O DeepSeek atingiu o limite de tokens antes de concluir o raciocínio.");
             return null;
         }
 
-        return texto;
+        // 3. Limpeza de aspas ou caracteres residuais que o modelo às vezes injeta
+        respostaLimpa = respostaLimpa.replace(/["'*]/g, '').trim();
+
+        // 4. Se a resposta estiver vazia, retorna null (fallback)
+        if (!respostaLimpa) {
+            console.warn("⚠️ [Tier 3] Resposta vazia após limpeza do pensamento.");
+            return null;
+        }
+
+        // 5. GARANTIA DE VALIDADE: Força o limite de palavras via código caso o modelo tagarele na resposta final
+        const palavras = respostaLimpa.split(/\s+/);
+        if (palavras.length > 7) {
+            respostaLimpa = palavras.slice(0, 7).join(' ') + '...';
+        }
+
+        console.log("🧠 [Tier 3] Narrador local respondeu:", respostaLimpa);
+        return respostaLimpa;
+
     } catch (erro) {
         console.error("❌ Erro na geração local (Tier 3):", erro);
         return null;
