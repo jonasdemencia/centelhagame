@@ -962,16 +962,16 @@
                         role: 'system',
                         // Instrução em inglês para o modelo de 0.6B processar a regra melhor, 
                         // mas exigindo estritamente a saída em Português Brasileiro.
-                        content: 'You are a horror RPG narrator. You must answer ONLY in correct Brazilian Portuguese. Keep responses under 8 words. Be direct and immersive. Base your answer on the CONTEXT. If the CONTEXT lacks detail, deduce a plausible one. Never refuse to answer. Do not use English in your response. Never break character. /no_think'
+                        content: 'You are a horror RPG narrator. You must answer ONLY in correct Brazilian Portuguese. Keep responses under 5 words. Be direct. Base your answer on the CONTEXT. If the CONTEXT lacks detail, deduce a plausible one. Never refuse to answer. Do not use English in your response. Never break character. /no_think'
                     },
                     // Exemplo 1 (Few-Shot) - Mostra o tom, a língua e o limite de palavras
                     {
                         role: 'user',
-                        content: 'CONTEXTO: "Um cheiro metálico e forte toma conta do ar."\nPERGUNTA DO JOGADOR: "O que tem nessa sala?"\n/no_think'
+                        content: 'CONTEXTO: "Um cheiro metálico toma conta do ar."\nPERGUNTA DO JOGADOR: "O que tem nessa sala?"\n/no_think'
                     },
                     {
                         role: 'assistant',
-                        content: 'O ar cheira fortemente a sangue fresco.'
+                        content: 'O ar cheira a sangue fresco.'
                     },
                     // Exemplo 2 (Few-Shot) - Mostra como lidar com deduções ou negativas
                     {
@@ -980,7 +980,7 @@
                     },
                     {
                         role: 'assistant',
-                        content: 'Não, o baú encontra-se firmemente trancado.'
+                        content: 'Não, o baú encontra-se trancado.'
                     },
                     // Interação Real com o Jogador
                     {
@@ -990,7 +990,7 @@
                 ];
 
                 const saida = await window.geradorLocal(mensagens, {
-                    max_new_tokens: 15,
+                    max_new_tokens: 20,
                     do_sample: false,
                     repetition_penalty: 1.15, // <-- Previne o modelo de entrar em loop de palavras
                 });
