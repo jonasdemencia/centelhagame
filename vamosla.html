@@ -937,7 +937,7 @@
             sala._fatosCache.push({ pergunta, vetor: vetorPergunta, resposta });
         }
 
-       // ============================================================
+        // ============================================================
         // TIER 3 — o narrador local só reformula a frase que o Tier 2
         // encontrou. Ele nunca recebe o texto_logico inteiro nem tem
         // liberdade de "world knowledge": só pode responder com base no
@@ -949,82 +949,41 @@
                 await window.geradorLocalPromise;
             }
             if (!window.geradorLocal) return null;
-            
             try {
                 const mensagens = [
                     {
                         role: 'system',
-                        // O modelo agora é estritamente proibido de inventar.
-                        // Se não estiver escrito de forma clara no contexto, a resposta é NULL.
-                        content: 'You are a strict text parser. Answer ONLY based on the exact words in the CONTEXT. If the answer is not explicitly written in the CONTEXT, you MUST answer exactly "NULL". Do not invent, deduce, or guess anything. Be brutally concise. /no_think'
+                        // /no_think: o Qwen3 é um modelo híbrido "thinking/non-thinking" — sem isso ele gasta
+                        // o max_new_tokens inteiro num bloco <think>...</think> e nunca chega na resposta.
+                        // Mesmo gatilho já usado no resto do projeto pro Qwen3-32b via Groq.
+                        content: 'Você narra um RPG em Português Brasileiro. Responda em NO MÁXIMO 8 palavras, tom seco e sem poesia. Responda DIRETAMENTE ao que foi perguntado. Baseie-se no CONTEXTO abaixo. Se o CONTEXTO não detalhar exatamente o que foi perguntado, DEDUZA um detalhe pequeno, plausível e coerente com a cena — nunca recuse, nunca diga que não há nada, nunca mencione ser uma IA nem quebre o personagem. /no_think'
                     },
-                    // Exemplo 1: Informação não existente no texto -> NULL imediato
-                    {
-                        role: 'user',
-                        content: 'CONTEXTO: "Um homem está sentado sozinho no escuro."\nPERGUNTA DO JOGADOR: "Qual a etnia do homem?"\n/no_think'
-                    },
-                    {
-                        role: 'assistant',
-                        content: 'NULL'
-                    },
-                    // Exemplo 2: Informação existente -> Resposta concisa
-                    {
-                        role: 'user',
-                        content: 'CONTEXTO: "O homem negro não se move."\nPERGUNTA DO JOGADOR: "Qual a etnia do homem?"\n/no_think'
-                    },
-                    {
-                        role: 'assistant',
-                        content: 'Negro.'
-                    },
-                    // Exemplo 3: Informação existente -> Resposta concisa
-                    {
-                        role: 'user',
-                        content: 'CONTEXTO: "Você encontra uma camisa vermelha jogada."\nPERGUNTA DO JOGADOR: "Qual a cor da camisa?"\n/no_think'
-                    },
-                    {
-                        role: 'assistant',
-                        content: 'Vermelha.'
-                    },
-                    // Exemplo 4: Lógica simples baseada no texto -> Resposta binária
-                    {
-                        role: 'user',
-                        content: 'CONTEXTO: "O rosto do paciente está perfeitamente liso."\nPERGUNTA DO JOGADOR: "Ele tem bigode?"\n/no_think'
-                    },
-                    {
-                        role: 'assistant',
-                        content: 'Não.'
-                    },
-                    // Interação Real
                     {
                         role: 'user',
                         content: `CONTEXTO: "${fraseContexto}"\nPERGUNTA DO JOGADOR: "${pergunta}"\n/no_think`
                     }
                 ];
-
                 const saida = await window.geradorLocal(mensagens, {
-                    max_new_tokens: 15, // Espaço curto apenas para extrair a palavra ou dizer NULL
-                    do_sample: false,   // Mantém a resposta engessada e previsível
+                    max_new_tokens: 10,
+                    do_sample: false,
+                    repetition_penalty: 1.3 // combate o loop de frases genéricas tipo "ele está sozinho"
                 });
-                
                 let texto = saida?.[0]?.generated_text?.at(-1)?.content ?? '';
 
-                // Destrói tags de raciocínio (think) se ele tentar abrir
-                texto = texto.replace(/<think>[\s\S]*?(?:<\/think>|$)/gi, '').trim();
-                
-                // Se a resposta for vazia, ou se o modelo obedeceu e disse NULL
-                if (!texto || texto === 'NULL' || texto.includes('NULL')) {
-                    console.log("📖 [Tier 3] Informação ausente no contexto. Retornando null.");
-                    return null; 
+                // Rede de segurança: se algum bloco de raciocínio vazar (ou ficar truncado sem fechar),
+                // remove e trata como falha técnica em vez de mostrar "pensamento" pro jogador.
+                texto = texto.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+                if (!texto || texto.includes('<think>')) {
+                    console.warn("⚠️ [Tier 3] Saída ainda continha <think> ou veio vazia — descartando.");
+                    return null;
                 }
-                
                 return texto;
-                
             } catch (erro) {
                 console.error("❌ Erro na geração local (Tier 3):", erro);
                 return null;
             }
         }
-    
+
         iniciarMotorSemantico();
         iniciarGeradorLocal();
 
@@ -4041,94 +4000,53 @@ async function executarDilemaComRamificacao(pai, ram, silent = false) {
                 // se não achar nada forte, ele improvisa em cima do clima geral da cena (texto_logico inteiro).
                 // Só cai pro fluxo remoto (chamarLLMStream) se o narrador local falhar tecnicamente
                 // (modelo não carregou, erro de geração, etc.) — não mais por "não achei a resposta exata".
-                                    // ===== TIER 2 + 3 – EXTRAÇÃO LOCAL COM FALLBACK GENÉRICO =====
-                    try {
-                        const vetorPerguntaAtual = (await window.extratorSemantico(pergunta, { pooling: 'mean', normalize: true })).data;
+                try {
+                    const vetorPerguntaAtual = (await window.extratorSemantico(pergunta, { pooling: 'mean', normalize: true })).data;
 
-                        // Checa cache de fatos para esta sala
-                        const respostaCache = verificarCacheDeFatos(vetorPerguntaAtual, salaAtual);
-                        if (respostaCache) {
-                            console.log("💾 [Cache] Pergunta já respondida antes nessa sala, reusando:", respostaCache);
-                            clearInterval(intervaloAnimacao);
-                            const tempElementCache = document.getElementById(tempId);
-                            if (tempElementCache) tempElementCache.remove();
-                            adicionarMensagem(respostaCache, "system");
-                            sendBtn.disabled = false;
-                            userInput.disabled = false;
-                            userInput.focus();
-                            return;
-                        }
-
-                        // Busca a frase mais relevante no texto da sala
-                        const fraseRelevante = await buscarFraseRelevante(pergunta, salaAtual, vetorPerguntaAtual);
-                        if (fraseRelevante) {
-                            console.log(`📖 [Tier 2] Frase mais próxima (${fraseRelevante.score.toFixed(4)}): "${fraseRelevante.frase}"`);
-                        } else {
-                            console.log("📖 [Tier 2] Nenhuma frase se destacou — usando a cena inteira como contexto/tom.");
-                        }
-
-                        const contextoParaNarrador = fraseRelevante
-                            ? fraseRelevante.frase
-                            : (salaAtual?.texto_logico || 'Um ambiente sombrio e silencioso.');
-
-                        // Tenta extrair a resposta com o modelo local (0.6B)
-                        const respostaLocal = await responderExameLocal(pergunta, contextoParaNarrador);
-
-                        if (respostaLocal) {
-                            // Encontrou uma informação explícita no contexto
-                            console.log("🧠 [Tier 3] Narrador local respondeu:", respostaLocal);
-                            salvarFatoCache(pergunta, vetorPerguntaAtual, respostaLocal, salaAtual);
-                            clearInterval(intervaloAnimacao);
-                            const tempElementLocal = document.getElementById(tempId);
-                            if (tempElementLocal) tempElementLocal.remove();
-                            adicionarMensagem(respostaLocal, "system");
-                            sendBtn.disabled = false;
-                            userInput.disabled = false;
-                            userInput.focus();
-                            return;
-                        }
-
-                        // Se o modelo retornou NULL, usamos uma mensagem genérica de incerteza
-                        // (mantém o clima de horror e evita alucinações)
+                    // Checa primeiro se essa pergunta (ou uma parafraseada) já foi respondida
+                    // nessa sala — se sim, reusa a MESMA resposta em vez de gerar de novo.
+                    const respostaCache = verificarCacheDeFatos(vetorPerguntaAtual, salaAtual);
+                    if (respostaCache) {
+                        console.log("💾 [Cache] Pergunta já respondida antes nessa sala, reusando:", respostaCache);
                         clearInterval(intervaloAnimacao);
-                        const tempElementLocal = document.getElementById(tempId);
-                        if (tempElementLocal) tempElementLocal.remove();
-
-                        const respostasIncerteza = [
-                            "A escuridão é densa demais para que você tenha certeza disso.",
-                            "Você foca sua atenção, mas os detalhes escapam à sua percepção.",
-                            "A penumbra não permite discernir esse detalhe com clareza.",
-                            "Sua visão tateia o ambiente, mas o que procura permanece oculto.",
-                            "Você não consegue afirmar nada sobre isso neste momento."
-                        ];
-                        const mensagemGenérica = respostasIncerteza[Math.floor(Math.random() * respostasIncerteza.length)];
-                        adicionarMensagem(mensagemGenérica, "system");
-
+                        const tempElementCache = document.getElementById(tempId);
+                        if (tempElementCache) tempElementCache.remove();
+                        adicionarMensagem(respostaCache, "system");
                         sendBtn.disabled = false;
                         userInput.disabled = false;
                         userInput.focus();
-                        return; // <-- NÃO prossegue para o fluxo remoto
-
-                    } catch (erroRAGLocal) {
-                        // Em caso de erro no fluxo local, também usamos a mensagem genérica
-                        console.error("❌ [Tier 2/3] Erro no fluxo local:", erroRAGLocal);
-                        clearInterval(intervaloAnimacao);
-                        const tempElementLocal = document.getElementById(tempId);
-                        if (tempElementLocal) tempElementLocal.remove();
-
-                        const respostasErro = [
-                            "Sua percepção falha momentaneamente, a escuridão parece distorcê-la.",
-                            "Você tenta se concentrar, mas o ambiente parece resistir à sua observação.",
-                            "Algo na atmosfera turva seus sentidos, você não consegue precisar."
-                        ];
-                        const msgErro = respostasErro[Math.floor(Math.random() * respostasErro.length)];
-                        adicionarMensagem(msgErro, "system");
-
-                        sendBtn.disabled = false;
-                        userInput.disabled = false;
-                        userInput.focus();
-                        return; // <-- Não chama LLM remoto mesmo em erro
+                        return;
                     }
+
+                    const fraseRelevante = await buscarFraseRelevante(pergunta, salaAtual, vetorPerguntaAtual);
+                    if (fraseRelevante) {
+                        console.log(`📖 [Tier 2] Frase mais próxima (${fraseRelevante.score.toFixed(4)}): "${fraseRelevante.frase}"`);
+                    } else {
+                        console.log("📖 [Tier 2] Nenhuma frase se destacou — usando a cena inteira como contexto/tom.");
+                    }
+
+                    const contextoParaNarrador = fraseRelevante
+                        ? fraseRelevante.frase
+                        : (salaAtual?.texto_logico || 'Um ambiente sombrio e silencioso.');
+
+                    const respostaLocal = await responderExameLocal(pergunta, contextoParaNarrador);
+
+                    if (respostaLocal) {
+                        console.log("🧠 [Tier 3] Narrador local respondeu:", respostaLocal);
+                        salvarFatoCache(pergunta, vetorPerguntaAtual, respostaLocal, salaAtual);
+                        clearInterval(intervaloAnimacao);
+                        const tempElementLocal = document.getElementById(tempId);
+                        if (tempElementLocal) tempElementLocal.remove();
+                        adicionarMensagem(respostaLocal, "system");
+                        sendBtn.disabled = false;
+                        userInput.disabled = false;
+                        userInput.focus();
+                        return;
+                    }
+                    console.warn("⚠️ [Tier 3] Narrador local não retornou nada válido — seguindo para o fluxo remoto normal.");
+                } catch (erroRAGLocal) {
+                    console.error("❌ [Tier 2/3] Erro no fluxo local, seguindo para o fluxo remoto normal:", erroRAGLocal);
+                }
                 // ================= FIM TIER 2 + 3 =================
                 }
                 // ================= FIM DO BLOCO DE INTERCEPTAÇÃO SEMÂNTICA =================
