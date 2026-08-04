@@ -937,12 +937,7 @@
             sala._fatosCache.push({ pergunta, vetor: vetorPergunta, resposta });
         }
 
-        // ============================================================
-        // TIER 3 — o narrador local só reformula a frase que o Tier 2
-        // encontrou. Ele nunca recebe o texto_logico inteiro nem tem
-        // liberdade de "world knowledge": só pode responder com base no
-        // trecho já validado como semanticamente relevante.
-        // ============================================================
+        
         // ============================================================
         // TIER 3 — o narrador local só reformula a frase que o Tier 2
         // encontrou. Ele nunca recebe o texto_logico inteiro nem tem
@@ -950,69 +945,103 @@
         // trecho já validado como semanticamente relevante.
         // ============================================================
         async function responderExameLocal(pergunta, fraseContexto) {
-            if (!window.geradorLocal && window.geradorLocalPromise) {
-                console.log("⏳ [Tier 3] Narrador local ainda carregando, aguardando...");
-                await window.geradorLocalPromise;
-            }
-            if (!window.geradorLocal) return null;
-            
-            try {
-                const mensagens = [
-                    {
-                        role: 'system',
-                        // Instrução em inglês para o modelo de 0.6B processar a regra melhor, 
-                        // mas exigindo estritamente a saída em Português Brasileiro.
-                        content: 'You are a horror RPG narrator. You must answer ONLY in correct Brazilian Portuguese. Keep responses under 8 words. Be direct and immersive. Base your answer on the CONTEXT. If the CONTEXT lacks detail, deduce a plausible one. Never refuse to answer. Do not use English in your response. Never break character. /no_think'
-                    },
-                    // Exemplo 1 (Few-Shot) - Mostra o tom, a língua e o limite de palavras
-                    {
-                        role: 'user',
-                        content: 'CONTEXTO: "Um cheiro metálico e forte toma conta do ar."\nPERGUNTA DO JOGADOR: "O que tem nessa sala?"\n/no_think'
-                    },
-                    {
-                        role: 'assistant',
-                        content: 'O ar cheira fortemente a sangue fresco.'
-                    },
-                    // Exemplo 2 (Few-Shot) - Mostra como lidar com deduções ou negativas
-                    {
-                        role: 'user',
-                        content: 'CONTEXTO: "O baú de madeira está trancado."\nPERGUNTA DO JOGADOR: "O baú está aberto?"\n/no_think'
-                    },
-                    {
-                        role: 'assistant',
-                        content: 'Não, o baú encontra-se firmemente trancado.'
-                    },
-                    // Interação Real com o Jogador
-                    {
-                        role: 'user',
-                        content: `CONTEXTO: "${fraseContexto}"\nPERGUNTA DO JOGADOR: "${pergunta}"\n/no_think`
-                    }
-                ];
 
-                const saida = await window.geradorLocal(mensagens, {
-                    max_new_tokens: 15,
-                    do_sample: false,
-                    repetition_penalty: 1.15, // <-- Previne o modelo de entrar em loop de palavras
-                });
-                
-                let texto = saida?.[0]?.generated_text?.at(-1)?.content ?? '';
+    if (!window.geradorLocal && window.geradorLocalPromise) {
+        await window.geradorLocalPromise;
+    }
 
-                // Rede de segurança: se algum bloco de raciocínio vazar (ou ficar truncado sem fechar),
-                // remove e trata como falha técnica em vez de mostrar "pensamento" pro jogador.
-                texto = texto.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
-                
-                if (!texto || texto.includes('<think>')) {
-                    console.warn("⚠️ [Tier 3] Saída ainda continha <think> ou veio vazia — descartando.");
-                    return null;
-                }
-                
-                return texto;
-                
-            } catch (erro) {
-                console.error("❌ Erro na geração local (Tier 3):", erro);
-                return null;
-            }
+    if (!window.geradorLocal) return null;
+
+    const mensagens = [
+        {
+            role: "system",
+            content: `
+Você é um compressor de texto.
+
+REGRAS OBRIGATÓRIAS
+
+- O CONTEXTO é a única realidade existente.
+- Ignore completamente qualquer conhecimento do mundo.
+- Nunca deduza.
+- Nunca complete informações.
+- Nunca explique.
+- Nunca invente.
+- Nunca use conhecimento externo.
+- Nunca responda "provavelmente", "talvez", "parece", "deve", ou semelhantes.
+
+PROCESSO
+
+1. Verifique se a pergunta pode ser respondida SOMENTE usando o CONTEXTO.
+
+2. Se NÃO puder,
+responda exatamente:
+
+DESCONHECIDO
+
+3. Se puder,
+reescreva APENAS a informação presente no CONTEXTO.
+
+Nunca acrescente nenhuma informação nova.
+
+A resposta deve possuir no máximo 12 palavras.
+`
+        },
+
+        {
+            role: "user",
+            content:
+`CONTEXTO:
+${fraseContexto}
+
+PERGUNTA:
+${pergunta}`
         }
+    ];
+
+    try {
+
+        const resultado = await window.geradorLocal(
+            mensagens,
+            {
+                max_new_tokens: 18,
+
+                temperature: 0.0,
+
+                do_sample: false,
+
+                repetition_penalty: 1.15,
+
+                no_repeat_ngram_size: 3,
+
+                top_p: 0.05,
+
+                top_k: 5,
+
+                return_full_text: false
+            }
+        );
+
+        let resposta = resultado[0].generated_text.trim();
+
+        resposta = resposta
+            .replace(/^Resposta:\s*/i, "")
+            .replace(/^RESPOSTA:\s*/i, "")
+            .replace(/^R:/i, "")
+            .trim();
+
+        if (resposta.length > 120)
+            resposta = resposta.substring(0,120);
+
+        return resposta;
+
+    } catch (erro) {
+
+        console.error("[Tier 3]", erro);
+
+        return null;
+    }
+
+}
         iniciarMotorSemantico();
         iniciarGeradorLocal();
 
