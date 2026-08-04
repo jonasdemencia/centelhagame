@@ -834,7 +834,7 @@
                 // (memória insuficiente pra sessão WebGPU, mesmo quantizado). O 0.6B
                 // sabidamente carrega aqui. As melhorias de prompt/repetition_penalty/
                 // cache continuam valendo independente do tamanho do modelo.
-                const modelId = 'onnx-community/Huihui-Qwen3-0.6B-abliterated-v2-ONNX';
+                const modelId = 'onnx-community/Qwen3-0.6B-ONNX';
 
                 // Tenta WebGPU primeiro; se a GPU não tiver memória (bad_alloc) ou o
                 // device não existir, cai pra WASM (CPU) — mais lento, mas não trava.
@@ -937,7 +937,12 @@
             sala._fatosCache.push({ pergunta, vetor: vetorPergunta, resposta });
         }
 
-       
+        // ============================================================
+        // TIER 3 — o narrador local só reformula a frase que o Tier 2
+        // encontrou. Ele nunca recebe o texto_logico inteiro nem tem
+        // liberdade de "world knowledge": só pode responder com base no
+        // trecho já validado como semanticamente relevante.
+        // ============================================================
         // ============================================================
         // TIER 3 — o narrador local só reformula a frase que o Tier 2
         // encontrou. Ele nunca recebe o texto_logico inteiro nem tem
@@ -957,7 +962,7 @@
                         role: 'system',
                         // Instrução em inglês para o modelo de 0.6B processar a regra melhor, 
                         // mas exigindo estritamente a saída em Português Brasileiro.
-                        content: 'You are a horror RPG narrator. You must answer ONLY in correct Brazilian Portuguese. Keep responses under 8 words. Be direct and immersive. Base your answer on the CONTEXT. Never refuse to answer. Do not use English in your response. Never break character. /no_think'
+                        content: 'You are a horror RPG narrator. You must answer ONLY in correct Brazilian Portuguese. Keep responses under 8 words. Be direct and immersive. Base your answer on the CONTEXT. If the CONTEXT lacks detail, deduce a plausible one. Never refuse to answer. Do not use English in your response. Never break character. /no_think'
                     },
                     // Exemplo 1 (Few-Shot) - Mostra o tom, a língua e o limite de palavras
                     {
