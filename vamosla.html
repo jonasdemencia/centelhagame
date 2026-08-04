@@ -976,14 +976,13 @@ DESCONHECIDO
 
 Caso responda, apenas reescreva a informação presente no CONTEXTO.
 
-Máximo de 12 palavras.`
+Máximo de 8 palavras.`
             },
             {
                 role: "user",
-    content:
-`/no_think
+    content: `/no_think
 
-`CONTEXTO:
+CONTEXTO:
 ${fraseContexto}
 
 PERGUNTA:
@@ -994,7 +993,7 @@ ${pergunta}`
         const resultado = await window.geradorLocal(
             mensagens,
             {
-                max_new_tokens: 18,
+                max_new_tokens: 15,
                 temperature: 0,
                 do_sample: false,
                 repetition_penalty: 1.15,
