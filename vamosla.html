@@ -943,12 +943,6 @@
         // liberdade de "world knowledge": só pode responder com base no
         // trecho já validado como semanticamente relevante.
         // ============================================================
-        // ============================================================
-        // TIER 3 — o narrador local só reformula a frase que o Tier 2
-        // encontrou. Ele nunca recebe o texto_logico inteiro nem tem
-        // liberdade de "world knowledge": só pode responder com base no
-        // trecho já validado como semanticamente relevante.
-        // ============================================================
         async function responderExameLocal(pergunta, fraseContexto) {
             if (!window.geradorLocal && window.geradorLocalPromise) {
                 console.log("⏳ [Tier 3] Narrador local ainda carregando, aguardando...");
@@ -960,11 +954,8 @@
                 const mensagens = [
                     {
                         role: 'system',
-                        // Instrução refinada: obriga a improvisação (inventar detalhes faltantes),
-                        // mas exige que sejam puramente físicos, comuns e mundanos. Proíbe tropos de terror para descrições.
                         content: 'You are a realistic scenario assistant. Be brutally concise (1 to 3 words max). If the CONTEXT lacks the exact detail, you MUST invent a COMMON, MUNDANE, and REALISTIC physical detail. Never use horror tropes, fantasy, or personality traits for physical questions (e.g., if asked ethnicity, say "Asiático", never "Assassino"). Answer ONLY in Brazilian Portuguese. /no_think'
                     },
-                    // Exemplo 1: Improvisação de Etnia (exatamente o seu caso de uso)
                     {
                         role: 'user',
                         content: 'CONTEXTO: "Um homem está sentado sozinho no escuro."\nPERGUNTA DO JOGADOR: "Qual a etnia do homem?"\n/no_think'
@@ -973,7 +964,6 @@
                         role: 'assistant',
                         content: 'Asiático.'
                     },
-                    // Exemplo 2: Improvisação de característica física (Careca)
                     {
                         role: 'user',
                         content: 'CONTEXTO: "Ele não se move e olha para baixo."\nPERGUNTA DO JOGADOR: "O homem é careca?"\n/no_think'
@@ -982,7 +972,6 @@
                         role: 'assistant',
                         content: 'Sim, é careca.'
                     },
-                    // Exemplo 3: Improvisação de cor (ausente no contexto)
                     {
                         role: 'user',
                         content: 'CONTEXTO: "Você encontra uma camisa jogada na poltrona."\nPERGUNTA DO JOGADOR: "Qual a cor da camisa?"\n/no_think'
@@ -991,7 +980,6 @@
                         role: 'assistant',
                         content: 'Vermelha.'
                     },
-                    // Exemplo 4: Mantendo a resposta binária direta para coisas simples
                     {
                         role: 'user',
                         content: 'CONTEXTO: "O rosto do paciente está perfeitamente liso."\nPERGUNTA DO JOGADOR: "Ele tem bigode?"\n/no_think'
@@ -1000,7 +988,6 @@
                         role: 'assistant',
                         content: 'Não.'
                     },
-                    // Interação Real com o Jogador
                     {
                         role: 'user',
                         content: `CONTEXTO: "${fraseContexto}"\nPERGUNTA DO JOGADOR: "${pergunta}"\n/no_think`
@@ -1008,19 +995,21 @@
                 ];
 
                 const saida = await window.geradorLocal(mensagens, {
-                    max_new_tokens: 15,
+                    // Aumentado para 50. Dá margem caso ele decida abrir o <think>,
+                    // mas os exemplos few-shot garantem que a resposta final continuará concisa.
+                    max_new_tokens: 50, 
                     do_sample: false,
-                    repetition_penalty: 1.15, // <-- Previne o modelo de entrar em loop de palavras
+                    repetition_penalty: 1.15,
                 });
                 
                 let texto = saida?.[0]?.generated_text?.at(-1)?.content ?? '';
 
-                // Rede de segurança: se algum bloco de raciocínio vazar (ou ficar truncado sem fechar),
-                // remove e trata como falha técnica em vez de mostrar "pensamento" pro jogador.
-                texto = texto.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+                // NOVA REGEX: Destrói qualquer coisa a partir de <think>, mesmo se a tag 
+                // de fechamento </think> nunca for gerada (caso seja truncado).
+                texto = texto.replace(/<think>[\s\S]*?(?:<\/think>|$)/gi, '').trim();
                 
-                if (!texto || texto.includes('<think>')) {
-                    console.warn("⚠️ [Tier 3] Saída ainda continha <think> ou veio vazia — descartando.");
+                if (!texto) {
+                    console.warn("⚠️ [Tier 3] Modelo gerou apenas um pensamento ou saída vazia — descartando.");
                     return null;
                 }
                 
