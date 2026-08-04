@@ -937,7 +937,8 @@
             sala._fatosCache.push({ pergunta, vetor: vetorPergunta, resposta });
         }
 
-        // ============================================================
+        
+       // ============================================================
         // TIER 3 — o narrador local só reformula a frase que o Tier 2
         // encontrou. Ele nunca recebe o texto_logico inteiro nem tem
         // liberdade de "world knowledge": só pode responder com base no
@@ -949,41 +950,80 @@
                 await window.geradorLocalPromise;
             }
             if (!window.geradorLocal) return null;
+            
             try {
                 const mensagens = [
                     {
                         role: 'system',
-                        // /no_think: o Qwen3 é um modelo híbrido "thinking/non-thinking" — sem isso ele gasta
-                        // o max_new_tokens inteiro num bloco <think>...</think> e nunca chega na resposta.
-                        // Mesmo gatilho já usado no resto do projeto pro Qwen3-32b via Groq.
-                        content: 'Você é o mestre de um RPG em Português Brasileiro. Responda em NO MÁXIMO 8 palavras, tom seco e sem poesia. Responda DIRETAMENTE ao que foi perguntado. Baseie-se no CONTEXTO abaixo. Se o CONTEXTO não detalhar exatamente o que foi perguntado, DEDUZA um detalhe pequeno, plausível e coerente com o cenário da cena — nunca recuse, nunca diga que não há nada, nunca mencione ser uma IA nem quebre o personagem. /no_think'
+                        // Instrução refinada: obriga a improvisação (inventar detalhes faltantes),
+                        // mas exige que sejam puramente físicos, comuns e mundanos. Proíbe tropos de terror para descrições.
+                        content: 'You are a realistic scenario assistant. Be brutally concise (1 to 3 words max). If the CONTEXT lacks the exact detail, you MUST invent a COMMON, MUNDANE, and REALISTIC physical detail. Never use horror tropes, fantasy, or personality traits for physical questions (e.g., if asked ethnicity, say "Asiático", never "Assassino"). Answer ONLY in Brazilian Portuguese. /no_think'
                     },
+                    // Exemplo 1: Improvisação de Etnia (exatamente o seu caso de uso)
+                    {
+                        role: 'user',
+                        content: 'CONTEXTO: "Um homem está sentado sozinho no escuro."\nPERGUNTA DO JOGADOR: "Qual a etnia do homem?"\n/no_think'
+                    },
+                    {
+                        role: 'assistant',
+                        content: 'Asiático.'
+                    },
+                    // Exemplo 2: Improvisação de característica física (Careca)
+                    {
+                        role: 'user',
+                        content: 'CONTEXTO: "Ele não se move e olha para baixo."\nPERGUNTA DO JOGADOR: "O homem é careca?"\n/no_think'
+                    },
+                    {
+                        role: 'assistant',
+                        content: 'Sim, é careca.'
+                    },
+                    // Exemplo 3: Improvisação de cor (ausente no contexto)
+                    {
+                        role: 'user',
+                        content: 'CONTEXTO: "Você encontra uma camisa jogada na poltrona."\nPERGUNTA DO JOGADOR: "Qual a cor da camisa?"\n/no_think'
+                    },
+                    {
+                        role: 'assistant',
+                        content: 'Vermelha.'
+                    },
+                    // Exemplo 4: Mantendo a resposta binária direta para coisas simples
+                    {
+                        role: 'user',
+                        content: 'CONTEXTO: "O rosto do paciente está perfeitamente liso."\nPERGUNTA DO JOGADOR: "Ele tem bigode?"\n/no_think'
+                    },
+                    {
+                        role: 'assistant',
+                        content: 'Não.'
+                    },
+                    // Interação Real com o Jogador
                     {
                         role: 'user',
                         content: `CONTEXTO: "${fraseContexto}"\nPERGUNTA DO JOGADOR: "${pergunta}"\n/no_think`
                     }
                 ];
+
                 const saida = await window.geradorLocal(mensagens, {
-                    max_new_tokens: 15,
+                    max_new_tokens: 10, // Mantém a rédea curta para evitar frases longas
                     do_sample: false,
-                    repetition_penalty: 1.3 // combate o loop de frases genéricas tipo "ele está sozinho"
+                    repetition_penalty: 1.15,
                 });
+                
                 let texto = saida?.[0]?.generated_text?.at(-1)?.content ?? '';
 
-                // Rede de segurança: se algum bloco de raciocínio vazar (ou ficar truncado sem fechar),
-                // remove e trata como falha técnica em vez de mostrar "pensamento" pro jogador.
                 texto = texto.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+                
                 if (!texto || texto.includes('<think>')) {
                     console.warn("⚠️ [Tier 3] Saída ainda continha <think> ou veio vazia — descartando.");
                     return null;
                 }
+                
                 return texto;
+                
             } catch (erro) {
                 console.error("❌ Erro na geração local (Tier 3):", erro);
                 return null;
             }
         }
-
         iniciarMotorSemantico();
         iniciarGeradorLocal();
 
