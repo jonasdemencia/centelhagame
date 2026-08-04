@@ -923,7 +923,7 @@
         // ============================================================
         function verificarCacheDeFatos(vetorPergunta, sala) {
             if (!sala._fatosCache) return null;
-            const LIMIAR_MESMA_PERGUNTA = 0.82; // alto de propósito: só reusa se for claramente a mesma pergunta
+            const LIMIAR_MESMA_PERGUNTA = 0.94; // alto de propósito: só reusa se for claramente a mesma pergunta
             let melhor = null, melhorScore = 0;
             for (const fato of sala._fatosCache) {
                 const score = cos_sim(vetorPergunta, fato.vetor);
