@@ -937,117 +937,110 @@
             sala._fatosCache.push({ pergunta, vetor: vetorPergunta, resposta });
         }
 
-    
-       // ============================================================
-// TIER 3 — Narrador local recebe o texto_logico INTEGRAL da sala.
-// Isso garante respostas coerentes com o cenário completo, sem
-// perder detalhes que uma única frase poderia omitir.
-// ============================================================
-// ============================================================
-// MOTOR DIRETOR DE ALUCINAÇÕES E CONTEXTO 
-// (A Inteligência por trás da "Mágica")
-// ============================================================
 
-// Detecta se a pergunta é de exploração geral (ex: "o que tem aqui?", "olhe ao redor")
-function isPerguntaAmpla(pergunta) {
-    const p = pergunta.toLowerCase();
-    return /o que (tem|há)|olhar|olhe|descreva|ver|vejo|como é/.test(p) && p.split(' ').length <= 5;
-}
 
 // ============================================================
-// TIER 3 — ARQUITETURA "BOCA DE HIERRO" (Investigador -> Diretor -> Ator)
+// TIER 3 — NARRADOR LOCAL (Liberdade Guiada)
 // ============================================================
-async function responderExameLocal(pergunta, sala) {
+async function responderExameLocal(pergunta, textoLogico) {
     if (!window.geradorLocal && window.geradorLocalPromise) {
+        console.log("⏳ [Tier 3] Narrador local ainda carregando, aguardando...");
         await window.geradorLocalPromise;
     }
-    if (!window.geradorLocal || !window.extratorSemantico) return null;
+    if (!window.geradorLocal) return null;
 
-    // 1. O INVESTIGADOR: Busca matemática da verdade (sem alucinações)
-    let fatoBase = "";
-    let instrucaoDiretor = "";
-    
-    if (isPerguntaAmpla(pergunta)) {
-        // Se for pergunta ampla, pegamos a essência da sala (as 2 primeiras frases)
-        const frases = dividirEmFrases(sala.texto_logico);
-        fatoBase = frases.slice(0, 2).join(" ");
-        instrucaoDiretor = "Descreva este ambiente de forma imersiva e sombria, baseando-se APENAS no fato fornecido.";
-    } else {
-        // Se for pergunta específica, o MiniLM procura a resposta exata
-        const analiseSemantica = await buscarFraseRelevante(pergunta, sala);
-        
-        // LIMIAR MÁGICO: Se o score for menor que 0.35, o jogador perguntou algo que NÃO EXISTE.
-        // É aqui que cortamos a alucinação pela raiz.
-        if (!analiseSemantica || analiseSemantica.score < 0.35) {
-            fatoBase = "O item ou detalhe perguntado não existe neste local.";
-            instrucaoDiretor = "Negue a existência do que foi perguntado. Diga que há apenas vazio, escuridão ou poeira em relação a isso. Seja direto e não invente objetos.";
-        } else {
-            fatoBase = analiseSemantica.frase;
-            instrucaoDiretor = "Responda à pergunta do jogador usando APENAS a informação do FATO fornecido. Não adicione nada que não esteja no fato.";
-        }
+    // Limita o contexto para não afogar a atenção do 0.6B (200-250 palavras é o sweet spot)
+    const MAX_PALAVRAS_CONTEXTO = 220;
+    let contextoReduzido = textoLogico.trim();
+    const palavras = contextoReduzido.split(/\s+/);
+    if (palavras.length > MAX_PALAVRAS_CONTEXTO) {
+        contextoReduzido = palavras.slice(0, MAX_PALAVRAS_CONTEXTO).join(' ') + '…';
     }
 
-    // 2. O DIRETOR: Monta um prompt inescapável. 
-    // Removemos todo o texto_logico pesado. O 0.6B agora foca como um laser em UMA única diretriz.
-    const mensagens = [
-        {
-            role: 'system',
-            content: `You are an AI actor playing a horror narrator. Follow the DIRECTOR INSTRUCTIONS strictly. 
-                      Translate the FACT into a short, immersive response in Brazilian Portuguese. 
-                      NEVER invent information outside the FACT. Output ONLY the localized Portuguese text. /no_think`
-        },
-        {
-            role: 'user',
-            content: `PERGUNTA DO JOGADOR: "Tem uma janela aqui?"
-                      FATO: O item ou detalhe perguntado não existe neste local.
-                      DIRECTOR INSTRUCTIONS: Negue a existência do que foi perguntado.
-                      /no_think`
-        },
-        {
-            role: 'assistant',
-            content: 'As paredes são completamente cegas. Nenhuma luz ou janela existe aqui.'
-        },
-        {
-            role: 'user',
-            content: `PERGUNTA DO JOGADOR: "${pergunta}"
-                      FATO: "${fatoBase}"
-                      DIRECTOR INSTRUCTIONS: ${instrucaoDiretor}
-                      /no_think`
-        }
-    ];
-
-    // 3. O ATOR: Geração com amarras rigorosas
     try {
+        // O PROMPT DEFINITIVO: 
+        // 1. Mantemos em inglês para forçar a obediência da IA.
+        // 2. Os exemplos (Few-Shots) são o mapa da mina. Eles ensinam o modelo a ser coloquial,
+        // inventar coisas plausíveis (como cores) e reagir a ações ("Vou me aproximar").
+        const mensagens = [
+            {
+                role: 'system',
+                content: 'You are a horror RPG narrator. Answer ONLY in correct Brazilian Portuguese. Be EXTREMELY concise (under 10 words). Base answers on the CONTEXTO. If the player asks about a visual detail not in the text (like color, clothes, height), LOGICALLY INVENT a plausible one using natural terms like "Me parece...", "Aparentemente..." or "Não sei dizer". Handle player actions naturally. Never use English. /no_think'
+            },
+            {
+                role: 'user',
+                content: 'CONTEXTO: "Um cheiro metálico toma conta do ar da sala escura."\nPERGUNTA: "Qual a cor da parede?"\n/no_think'
+            },
+            {
+                role: 'assistant',
+                content: 'Me parece ser de um cinza sujo e descascado.'
+            },
+            {
+                role: 'user',
+                content: 'CONTEXTO: "Uma mala fechada parece ter sido esquecida."\nPERGUNTA: "Qual o peso aproximado da mala?"\n/no_think'
+            },
+            {
+                role: 'assistant',
+                content: 'Honestamente, não sei dizer olhando daqui.'
+            },
+            {
+                role: 'user',
+                content: 'CONTEXTO: "Um homem sentado sozinho, com os olhos cravados no chão."\nPERGUNTA: "O homem tem bigode?"\n/no_think'
+            },
+            {
+                role: 'assistant',
+                content: 'Não, o rosto dele parece liso.'
+            },
+            {
+                role: 'user',
+                content: 'CONTEXTO: "Um homem sentado sozinho..."\nPERGUNTA: "Vou me aproximar do homem."\n/no_think'
+            },
+            {
+                role: 'assistant',
+                content: 'Você dá um passo à frente. Ele continua imóvel.'
+            },
+            {
+                role: 'user',
+                content: `CONTEXTO: "${contextoReduzido}"\nPERGUNTA: "${pergunta}"\n/no_think`
+            }
+        ];
+
         const saida = await window.geradorLocal(mensagens, {
-            max_new_tokens: 30, // Mais tokens para permitir uma resposta polida
-            do_sample: false,   // Mantém a precisão matemática do prompt (Impede inglês)
-            repetition_penalty: 1.18, 
+            max_new_tokens: 25, // Dá espaço suficiente para terminar a frase sem cortar
+            do_sample: false,   // Mantém a criatividade controlada pelo Prompt, evita inglês
+            repetition_penalty: 1.15,
         });
 
         let texto = saida?.[0]?.generated_text?.at(-1)?.content ?? '';
         texto = texto.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
 
-        // Limpeza avançada e pós-processamento de emergência
-        if (!texto || /\b(the|and|is|are|it|this)\b/i.test(texto)) {
-            // Fallbacks baseados no contexto, não genéricos
-            return fatoBase === "O item ou detalhe perguntado não existe neste local." 
-                ? "Você procura por algo que não está lá..."
-                : "Seus olhos lutam para focar nesse detalhe na escuridão...";
+        // ==========================================
+        // FILTROS DE SEGURANÇA (Mascara a insuficiência)
+        // ==========================================
+
+        // 1. Falha crítica ou inglês vazando
+        if (!texto || /\b(the|and|is|are|it|this|that|wall)\b/i.test(texto)) {
+            console.warn("⚠️ [Tier 3] Modelo gerou lixo ou inglês. Aplicando fallback de imersão.");
+            return "Na escuridão, é difícil ter certeza disso...";
         }
 
-        // Reconstrói a frase ignorando cortes no meio de palavras (Corte Semântico)
-        const sentencas = texto.match(/[^.!?]+[.!?]+/g);
-        if (sentencas) {
-            texto = sentencas.join(' ').trim(); // Pega apenas frases que terminaram corretamente
+        // 2. Cura do "Corte Seco"
+        // Como o modelo tem limite de tokens, às vezes ele para no meio de uma palavra.
+        // Pegamos tudo até a última pontuação válida.
+        const ultimoPonto = texto.match(/.*[.!?]/);
+        if (ultimoPonto) {
+            texto = ultimoPonto[0]; 
         } else {
-            texto = texto.replace(/\s\w+$/, '...'); // Corta a última palavra fragmentada e põe reticências
+            // Se ele não pontuou, cortamos a última palavra (que pode estar pela metade) 
+            // e adicionamos reticências dramáticas.
+            texto = texto.replace(/\s\w+$/, '...'); 
         }
 
         return texto;
 
     } catch (erro) {
-        console.error("❌ Erro no Motor Ator:", erro);
-        return "Um frio súbito distorce sua percepção...";
+        console.error("❌ Erro na geração local (Tier 3):", erro);
+        return "Seus sentidos falham por um momento...";
     }
 }
         iniciarMotorSemantico();
