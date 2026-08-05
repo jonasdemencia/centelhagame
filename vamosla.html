@@ -946,6 +946,9 @@
 // ============================================================
 // TIER 3 — Narrador "Ilusionista" para o Monarca
 // ============================================================
+// ============================================================
+// TIER 3 — Narrador "Ilusionista" para o Monarca
+// ============================================================
 async function responderExameLocal(pergunta, textoLogico) {
     if (!window.geradorLocal && window.geradorLocalPromise) {
         console.log("⏳ [Tier 3] Narrador local ainda carregando...");
@@ -1014,12 +1017,6 @@ async function responderExameLocal(pergunta, textoLogico) {
                 tentativas++; continue;
             }
             
-            // 0.6B adora usar palavras soltas em inglês quando se perde. Rejeite.
-            if (/\b(the|and|is|are|you|it|this)\b/i.test(texto)) {
-                console.warn(`⚠️ [Tier 3] Resposta com inglês detectada (Tentativa ${tentativas+1}). Refazendo...`);
-                tentativas++; continue;
-            }
-
             // Pós-processamento: Cortar frases incompletas de forma elegante
             // Encontra a posição do último sinal de pontuação final
             const ultimoPonto = texto.match(/.*[.!?]/);
