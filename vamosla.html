@@ -944,9 +944,9 @@
 // perder detalhes que uma única frase poderia omitir.
 // ============================================================
 // ============================================================
-// TIER 3 — Narrador Local Restaurado com Múltiplas Intenções e Anti-Alucinação
+// TIER 3 — Narrador Local Restaurado (100% Português)
 // ============================================================
-async function responderExameLocal(inputJogador, textoLogico) {
+async function responderExameLocal(pergunta, textoLogico) {
     if (!window.geradorLocal && window.geradorLocalPromise) {
         console.log("⏳ [Tier 3] Narrador local ainda carregando, aguardando...");
         await window.geradorLocalPromise;
@@ -960,22 +960,12 @@ async function responderExameLocal(inputJogador, textoLogico) {
         contextoReduzido = palavras.slice(0, MAX_PALAVRAS_CONTEXTO).join(' ') + '…';
     }
 
-    // ============================================================
-    // 1. DETECÇÃO APRIMORADA DE INTENÇÃO (Pergunta vs Ação)
-    // ============================================================
-    // Agora verifica o '?' E também palavras iniciais que indicam fala/dúvida
-    const inputLimpo = inputJogador.trim().toLowerCase();
-    const ehPergunta = inputLimpo.includes('?') || 
-        /^(pergunt|falar|dizer|questionar|qual|como|onde|quem|por\s*que|será)/.test(inputLimpo);
-    
-    let mensagens = [];
-
-    if (ehPergunta) {
-        // --- PROMPT DE PERGUNTAS (Focado em observar e responder) ---
-        mensagens = [
+    try {
+        // MANTIDO EXATAMENTE SEU PROMPT ORIGINAL (Sistema em Inglês + /no_think)
+        const mensagens = [
             {
                 role: 'system',
-                content: 'You are a horror narrator. You must answer ONLY in correct Brazilian Portuguese. Prefer answers with 1 to 6 words. Be direct and immersive. Base your answer on the CONTEXTO COMPLETO DA SALA. If the context lacks detail, deduce a plausible one. Never refuse to answer. Do not use English in your response. Never break character. If something is strongly implied, answer using: "Parece...", "Aparentemente...", "Provavelmente..."/no_think'
+                content: 'You are a horror narrator. You must answer ONLY in correct Brazilian Portuguese. Keep responses under 8 words. Be direct and immersive. Base your answer on the CONTEXTO COMPLETO DA SALA. If the context lacks detail, deduce a plausible one. Never refuse to answer. Do not use English in your response. Never break character. /no_think'
             },
             {
                 role: 'user',
@@ -995,56 +985,17 @@ async function responderExameLocal(inputJogador, textoLogico) {
             },
             {
                 role: 'user',
-                content: `CONTEXTO COMPLETO DA SALA: "${contextoReduzido}"\nPERGUNTA DO JOGADOR: "${inputJogador}"\n/no_think`
+                content: `CONTEXTO COMPLETO DA SALA: "${contextoReduzido}"\nPERGUNTA DO JOGADOR: "${pergunta}"\n/no_think`
             }
         ];
-    } else {
-        // --- NOVO PROMPT DE AÇÕES (Focado em realismo, física e restrições) ---
-        mensagens = [
-            {
-                role: 'system',
-                content: 'You are a realistic horror RPG narrator. The player performed an ACTION. Describe the logical, realistic outcome in Brazilian Portuguese (max 10 words). Maintain physical realism: objects do not move by themselves unless supernatural. Base it ONLY on the CONTEXT. Never break physics without reason. Be immersive but grounded./no_think'
-            },
-            {
-                role: 'user',
-                content: 'CONTEXTO: "Um homem está sentado no chão, olhando para o nada."\nAÇÃO DO JOGADOR: "Cumprimentar o homem"\n/no_think'
-            },
-            {
-                role: 'assistant',
-                content: 'Ele ignora sua presença e continua olhando para o vazio.'
-            },
-            {
-                role: 'user',
-                content: 'CONTEXTO: "Um sofá velho de couro ocupa a parede."\nAÇÃO DO JOGADOR: "Vou me sentar no sofá"\n/no_think'
-            },
-            {
-                role: 'assistant',
-                content: 'O estofado gasto afunda sob seu peso, levantando poeira.'
-            },
-            {
-                role: 'user',
-                content: `CONTEXTO COMPLETO DA SALA: "${contextoReduzido}"\nAÇÃO DO JOGADOR: "${inputJogador}"\n/no_think`
-            }
-        ];
-    }
-
-    try {
-        // ============================================================
-        // 2. CONFIGURAÇÃO DE AMOSTRAGEM ANTI-ALUCINAÇÃO
-        // ============================================================
-        const tokensMaximos = ehPergunta ? 22 : 30;
 
         const saida = await window.geradorLocal(mensagens, {
-            max_new_tokens: tokensMaximos, 
-            do_sample: true,        // Permite flexibilidade de vocabulário
-            temperature: 0.3,       // Mantém o modelo pé no chão, sem ser criativo demais
-            top_p: 0.85,            // Corta as caudas (palavras absurdas ou improváveis)
+            max_new_tokens: 22,       // Aumentado ligeiramente de 15 para 22 para dar margem de término
+            do_sample: false,         // OBRIGATÓRIO: Mantém a estabilidade do idioma
             repetition_penalty: 1.15,
         });
 
         let texto = saida?.[0]?.generated_text?.at(-1)?.content ?? '';
-        
-        // Limpa possíveis tags de raciocínio (caso o modelo vaze algo)
         texto = texto.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
 
         if (!texto || texto.includes('<think>')) {
@@ -1053,12 +1004,16 @@ async function responderExameLocal(inputJogador, textoLogico) {
         }
 
         // ============================================================
-        // 3. CORREÇÃO DOS CORTES DE FRASE
+        // CORREÇÃO DOS CORTES DE FRASE (Pós-processamento JS puro)
         // ============================================================
+        
+        // 1. Se tem ponto final, exclamação ou interrogação, corta exatamente ali
         const ultimoPonto = texto.match(/.*[.!?]/);
         if (ultimoPonto) {
             texto = ultimoPonto[0];
         } else {
+            // 2. Se a frase foi cortada no meio por limite de tokens:
+            // Remove a última palavra (que provavelmente está incompleta) e adiciona "..."
             const palavrasResposta = texto.trim().split(/\s+/);
             if (palavrasResposta.length > 2) {
                 texto = palavrasResposta.slice(0, -1).join(' ') + '...';
