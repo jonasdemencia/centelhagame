@@ -937,111 +937,258 @@
             sala._fatosCache.push({ pergunta, vetor: vetorPergunta, resposta });
         }
 
-
-
+    
 // ============================================================
-// TIER 3 — NARRADOR LOCAL (Liberdade Guiada)
+// TIER 3 — Narrador Local Restaurado (100% Português)
+// ============================================================
+// ============================================================
+// TIER 3 — Narrador Local Restaurado (100% Português)
 // ============================================================
 async function responderExameLocal(pergunta, textoLogico) {
+
     if (!window.geradorLocal && window.geradorLocalPromise) {
-        console.log("⏳ [Tier 3] Narrador local ainda carregando, aguardando...");
+        console.log("⏳ [Tier 3] Narrador local ainda carregando...");
         await window.geradorLocalPromise;
     }
+
     if (!window.geradorLocal) return null;
 
-    // Limita o contexto para não afogar a atenção do 0.6B (200-250 palavras é o sweet spot)
-    const MAX_PALAVRAS_CONTEXTO = 220;
+    const MAX_PALAVRAS_CONTEXTO = 300;
+
     let contextoReduzido = textoLogico.trim();
+
     const palavras = contextoReduzido.split(/\s+/);
+
     if (palavras.length > MAX_PALAVRAS_CONTEXTO) {
-        contextoReduzido = palavras.slice(0, MAX_PALAVRAS_CONTEXTO).join(' ') + '…';
+        contextoReduzido = palavras
+            .slice(0, MAX_PALAVRAS_CONTEXTO)
+            .join(" ") + "…";
     }
 
     try {
-        // O PROMPT DEFINITIVO: 
-        // 1. Mantemos em inglês para forçar a obediência da IA.
-        // 2. Os exemplos (Few-Shots) são o mapa da mina. Eles ensinam o modelo a ser coloquial,
-        // inventar coisas plausíveis (como cores) e reagir a ações ("Vou me aproximar").
+
         const mensagens = [
+
             {
-                role: 'system',
-                content: 'You are a horror RPG narrator. Answer ONLY in correct Brazilian Portuguese. Be EXTREMELY concise (under 10 words). Base answers on the CONTEXTO. If the player asks about a visual detail not in the text (like color, clothes, height), LOGICALLY INVENT a plausible one using natural terms like "Me parece...", "Aparentemente..." or "Não sei dizer". Handle player actions naturally. Never use English. /no_think'
+                role: "system",
+                content: `
+You are an observer inside a horror adventure.
+
+Answer ONLY in Brazilian Portuguese.
+
+/no_think
+
+Rules:
+
+- Never answer in English.
+- Never explain your reasoning.
+- Never mention the context.
+- Never break character.
+- Answer ONLY the player's question.
+- Prefer answers with 1 to 6 words.
+- Use complete sentences only when necessary.
+- If something is clearly described, answer confidently.
+- If something is strongly implied, answer using:
+  "Parece..."
+  "Aparentemente..."
+  "Provavelmente..."
+- If the information does not exist, answer:
+  "Não sei."
+- Never invent numbers.
+- Never invent names.
+- Never invent colors.
+- Never invent measurements.
+- Never invent exact facts.
+- Base every answer on the COMPLETE ROOM CONTEXT.
+`
             },
+
             {
-                role: 'user',
-                content: 'CONTEXTO: "Um cheiro metálico toma conta do ar da sala escura."\nPERGUNTA: "Qual a cor da parede?"\n/no_think'
+                role: "user",
+                content:
+`CONTEXTO:
+"Um cheiro metálico e forte toma conta do ar."
+
+PERGUNTA:
+"O que tem nessa sala?"
+
+/no_think`
             },
+
             {
-                role: 'assistant',
-                content: 'Me parece ser de um cinza sujo e descascado.'
+                role: "assistant",
+                content:
+"Cheiro intenso de sangue."
             },
+
             {
-                role: 'user',
-                content: 'CONTEXTO: "Uma mala fechada parece ter sido esquecida."\nPERGUNTA: "Qual o peso aproximado da mala?"\n/no_think'
+                role: "user",
+                content:
+`CONTEXTO:
+"O baú de madeira está trancado."
+
+PERGUNTA:
+"O baú está aberto?"
+
+/no_think`
             },
+
             {
-                role: 'assistant',
-                content: 'Honestamente, não sei dizer olhando daqui.'
+                role: "assistant",
+                content:
+"Não."
             },
+
             {
-                role: 'user',
-                content: 'CONTEXTO: "Um homem sentado sozinho, com os olhos cravados no chão."\nPERGUNTA: "O homem tem bigode?"\n/no_think'
+                role: "user",
+                content:
+`CONTEXTO:
+"Um homem usa uma camisa azul, botas de couro e uma longa barba."
+
+PERGUNTA:
+"Qual a cor da camisa?"
+
+/no_think`
             },
+
             {
-                role: 'assistant',
-                content: 'Não, o rosto dele parece liso.'
+                role: "assistant",
+                content:
+"Azul."
             },
+
             {
-                role: 'user',
-                content: 'CONTEXTO: "Um homem sentado sozinho..."\nPERGUNTA: "Vou me aproximar do homem."\n/no_think'
+                role: "user",
+                content:
+`CONTEXTO:
+"Um homem usa uma camisa azul, botas de couro e uma longa barba."
+
+PERGUNTA:
+"Que sapatos ele usa?"
+
+/no_think`
             },
+
             {
-                role: 'assistant',
-                content: 'Você dá um passo à frente. Ele continua imóvel.'
+                role: "assistant",
+                content:
+"Botas de couro."
             },
+
             {
-                role: 'user',
-                content: `CONTEXTO: "${contextoReduzido}"\nPERGUNTA: "${pergunta}"\n/no_think`
+                role: "user",
+                content:
+`CONTEXTO:
+"Há uma mala ao lado da cadeira."
+
+PERGUNTA:
+"Qual o peso da mala?"
+
+/no_think`
+            },
+
+            {
+                role: "assistant",
+                content:
+"Não sei."
+            },
+
+            {
+                role: "user",
+                content:
+`CONTEXTO:
+"A sala possui um teto muito distante do chão."
+
+PERGUNTA:
+"A sala é alta?"
+
+/no_think`
+            },
+
+            {
+                role: "assistant",
+                content:
+"Sim."
+            },
+
+            {
+                role: "user",
+                content:
+`CONTEXTO COMPLETO DA SALA:
+
+"${contextoReduzido}"
+
+PERGUNTA DO JOGADOR:
+
+"${pergunta}"
+
+/no_think`
             }
+
         ];
 
         const saida = await window.geradorLocal(mensagens, {
-            max_new_tokens: 25, // Dá espaço suficiente para terminar a frase sem cortar
-            do_sample: false,   // Mantém a criatividade controlada pelo Prompt, evita inglês
-            repetition_penalty: 1.15,
+
+            max_new_tokens: 18,
+
+            do_sample: false,
+
+            repetition_penalty: 1.10
+
         });
 
-        let texto = saida?.[0]?.generated_text?.at(-1)?.content ?? '';
-        texto = texto.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+        let texto =
+            saida?.[0]?.generated_text?.at(-1)?.content ?? "";
 
-        // ==========================================
-        // FILTROS DE SEGURANÇA (Mascara a insuficiência)
-        // ==========================================
+        texto = texto
+            .replace(/<think>[\s\S]*?<\/think>/gi, "")
+            .replace(/<\|.*?\|>/g, "")
+            .replace(/^Resposta:\s*/i, "")
+            .trim();
 
-        // 1. Falha crítica ou inglês vazando
-        if (!texto || /\b(the|and|is|are|it|this|that|wall)\b/i.test(texto)) {
-            console.warn("⚠️ [Tier 3] Modelo gerou lixo ou inglês. Aplicando fallback de imersão.");
-            return "Na escuridão, é difícil ter certeza disso...";
+        if (!texto || texto.includes("<think>")) {
+            console.warn("⚠️ Resposta inválida.");
+            return null;
         }
 
-        // 2. Cura do "Corte Seco"
-        // Como o modelo tem limite de tokens, às vezes ele para no meio de uma palavra.
-        // Pegamos tudo até a última pontuação válida.
-        const ultimoPonto = texto.match(/.*[.!?]/);
-        if (ultimoPonto) {
-            texto = ultimoPonto[0]; 
+        texto = texto.replace(/\s+/g, " ").trim();
+
+        const ultimaFrase = texto.match(/^.*?[.!?](?=\s|$)/);
+
+        if (ultimaFrase) {
+
+            texto = ultimaFrase[0];
+
         } else {
-            // Se ele não pontuou, cortamos a última palavra (que pode estar pela metade) 
-            // e adicionamos reticências dramáticas.
-            texto = texto.replace(/\s\w+$/, '...'); 
+
+            const palavras = texto.split(/\s+/);
+
+            if (palavras.length > 2) {
+
+                texto = palavras.slice(0, -1).join(" ");
+
+            }
+
+            texto = texto.replace(/[,:;]+$/, "").trim();
+
+            if (!/[.!?]$/.test(texto)) {
+
+                texto += ".";
+
+            }
+
         }
 
         return texto;
 
     } catch (erro) {
-        console.error("❌ Erro na geração local (Tier 3):", erro);
-        return "Seus sentidos falham por um momento...";
+
+        console.error("❌ Erro Tier 3:", erro);
+
+        return null;
+
     }
+
 }
         iniciarMotorSemantico();
         iniciarGeradorLocal();
