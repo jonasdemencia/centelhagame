@@ -944,9 +944,9 @@
 // perder detalhes que uma única frase poderia omitir.
 // ============================================================
 // ============================================================
-// TIER 3 — Narrador Local Restaurado (100% Português)
+// TIER 3 — Narrador Local Restaurado com Múltiplas Intenções
 // ============================================================
-async function responderExameLocal(pergunta, textoLogico) {
+async function responderExameLocal(inputJogador, textoLogico) {
     if (!window.geradorLocal && window.geradorLocalPromise) {
         console.log("⏳ [Tier 3] Narrador local ainda carregando, aguardando...");
         await window.geradorLocalPromise;
@@ -960,9 +960,17 @@ async function responderExameLocal(pergunta, textoLogico) {
         contextoReduzido = palavras.slice(0, MAX_PALAVRAS_CONTEXTO).join(' ') + '…';
     }
 
-    try {
-        // MANTIDO EXATAMENTE SEU PROMPT ORIGINAL (Sistema em Inglês + /no_think)
-        const mensagens = [
+    // ============================================================
+    // 1. DETECÇÃO DE INTENÇÃO (Pergunta vs Ação)
+    // ============================================================
+    // Se tem '?', tratamos como pergunta. Se não tem, tratamos como ação.
+    const ehPergunta = inputJogador.includes('?');
+    
+    let mensagens = [];
+
+    if (ehPergunta) {
+        // --- PROMPT DE PERGUNTAS (Seu prompt original) ---
+        mensagens = [
             {
                 role: 'system',
                 content: 'You are a horror narrator. You must answer ONLY in correct Brazilian Portuguese. Prefer answers with 1 to 6 words. Be direct and immersive. Base your answer on the CONTEXTO COMPLETO DA SALA. If the context lacks detail, deduce a plausible one. Never refuse to answer. Do not use English in your response. Never break character. If something is strongly implied, answer using: "Parece...", "Aparentemente...", "Provavelmente..."/no_think'
@@ -985,13 +993,46 @@ async function responderExameLocal(pergunta, textoLogico) {
             },
             {
                 role: 'user',
-                content: `CONTEXTO COMPLETO DA SALA: "${contextoReduzido}"\nPERGUNTA DO JOGADOR: "${pergunta}"\n/no_think`
+                content: `CONTEXTO COMPLETO DA SALA: "${contextoReduzido}"\nPERGUNTA DO JOGADOR: "${inputJogador}"\n/no_think`
             }
         ];
+    } else {
+        // --- NOVO PROMPT DE AÇÕES (Para "sentar", "abrir", "bater") ---
+        mensagens = [
+            {
+                role: 'system',
+                content: 'You are a horror RPG narrator. The player just performed an ACTION. Describe the immediate consequence or reaction of the environment in correct Brazilian Portuguese. Keep it under 10 words. Be dark and immersive. Base it on the CONTEXT. If context lacks detail, deduce a plausible horror consequence. Never break character./no_think'
+            },
+            {
+                role: 'user',
+                content: 'CONTEXTO: "Há um homem estranho chorando no canto escuro."\nAÇÃO DO JOGADOR: "Vou sentar ao lado do homem."\n/no_think'
+            },
+            {
+                role: 'assistant',
+                content: 'Ele para de chorar e vira o rosto lentamente para você.'
+            },
+            {
+                role: 'user',
+                content: 'CONTEXTO: "O baú de madeira está trancado."\nAÇÃO DO JOGADOR: "Chuto o baú com toda a minha força"\n/no_think'
+            },
+            {
+                role: 'assistant',
+                content: 'A madeira velha range, mas a tranca não cede.'
+            },
+            {
+                role: 'user',
+                content: `CONTEXTO COMPLETO DA SALA: "${contextoReduzido}"\nAÇÃO DO JOGADOR: "${inputJogador}"\n/no_think`
+            }
+        ];
+    }
+
+    try {
+        // Se for ação, damos um pouquinho mais de margem de tokens, pois descrever uma consequência exige um pouco mais que um "sim/não".
+        const tokensMaximos = ehPergunta ? 22 : 30;
 
         const saida = await window.geradorLocal(mensagens, {
-            max_new_tokens: 22,       // Aumentado ligeiramente de 15 para 22 para dar margem de término
-            do_sample: false,         // OBRIGATÓRIO: Mantém a estabilidade do idioma
+            max_new_tokens: tokensMaximos, 
+            do_sample: false,          
             repetition_penalty: 1.15,
         });
 
@@ -1004,16 +1045,12 @@ async function responderExameLocal(pergunta, textoLogico) {
         }
 
         // ============================================================
-        // CORREÇÃO DOS CORTES DE FRASE (Pós-processamento JS puro)
+        // CORREÇÃO DOS CORTES DE FRASE
         // ============================================================
-        
-        // 1. Se tem ponto final, exclamação ou interrogação, corta exatamente ali
         const ultimoPonto = texto.match(/.*[.!?]/);
         if (ultimoPonto) {
             texto = ultimoPonto[0];
         } else {
-            // 2. Se a frase foi cortada no meio por limite de tokens:
-            // Remove a última palavra (que provavelmente está incompleta) e adiciona "..."
             const palavrasResposta = texto.trim().split(/\s+/);
             if (palavrasResposta.length > 2) {
                 texto = palavrasResposta.slice(0, -1).join(' ') + '...';
