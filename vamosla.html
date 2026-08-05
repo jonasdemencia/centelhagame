@@ -1001,7 +1001,7 @@ async function responderExameLocal(inputJogador, textoLogico) {
         mensagens = [
             {
                 role: 'system',
-                content: 'You are a horror RPG narrator. The player just performed an ACTION. Describe the immediate consequence or reaction of the environment in correct Brazilian Portuguese. Keep it under 10 words. Be dark and immersive. Base it on the CONTEXT. If context lacks detail, deduce a plausible horror consequence. Never break character./no_think'
+                content: 'You are a horror RPG narrator. The player just performed an ACTION. Describe the immediate consequence in correct Brazilian Portuguese. Keep it under 8 words. Base it on the CONTEXT. If context lacks detail, deduce a plausible horror consequence. Never break character./no_think'
             },
             {
                 role: 'user',
@@ -1009,7 +1009,7 @@ async function responderExameLocal(inputJogador, textoLogico) {
             },
             {
                 role: 'assistant',
-                content: 'Ele para de chorar e vira o rosto lentamente para você.'
+                content: 'Ele vira o rosto para você.'
             },
             {
                 role: 'user',
@@ -1017,7 +1017,7 @@ async function responderExameLocal(inputJogador, textoLogico) {
             },
             {
                 role: 'assistant',
-                content: 'A madeira velha range, mas a tranca não cede.'
+                content: 'A tranca não cede.'
             },
             {
                 role: 'user',
@@ -1028,7 +1028,7 @@ async function responderExameLocal(inputJogador, textoLogico) {
 
     try {
         // Se for ação, damos um pouquinho mais de margem de tokens, pois descrever uma consequência exige um pouco mais que um "sim/não".
-        const tokensMaximos = ehPergunta ? 22 : 30;
+        const tokensMaximos = ehPergunta ? 22 : 22;
 
         const saida = await window.geradorLocal(mensagens, {
             max_new_tokens: tokensMaximos, 
