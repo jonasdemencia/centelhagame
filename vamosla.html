@@ -944,87 +944,110 @@
 // perder detalhes que uma única frase poderia omitir.
 // ============================================================
 // ============================================================
-// TIER 3 — Narrador Local Restaurado (100% Português)
+// MOTOR DIRETOR DE ALUCINAÇÕES E CONTEXTO 
+// (A Inteligência por trás da "Mágica")
 // ============================================================
-async function responderExameLocal(pergunta, textoLogico) {
+
+// Detecta se a pergunta é de exploração geral (ex: "o que tem aqui?", "olhe ao redor")
+function isPerguntaAmpla(pergunta) {
+    const p = pergunta.toLowerCase();
+    return /o que (tem|há)|olhar|olhe|descreva|ver|vejo|como é/.test(p) && p.split(' ').length <= 5;
+}
+
+// ============================================================
+// TIER 3 — ARQUITETURA "BOCA DE HIERRO" (Investigador -> Diretor -> Ator)
+// ============================================================
+async function responderExameLocal(pergunta, sala) {
     if (!window.geradorLocal && window.geradorLocalPromise) {
-        console.log("⏳ [Tier 3] Narrador local ainda carregando, aguardando...");
         await window.geradorLocalPromise;
     }
-    if (!window.geradorLocal) return null;
+    if (!window.geradorLocal || !window.extratorSemantico) return null;
 
-    const MAX_PALAVRAS_CONTEXTO = 300;
-    let contextoReduzido = textoLogico.trim();
-    const palavras = contextoReduzido.split(/\s+/);
-    if (palavras.length > MAX_PALAVRAS_CONTEXTO) {
-        contextoReduzido = palavras.slice(0, MAX_PALAVRAS_CONTEXTO).join(' ') + '…';
+    // 1. O INVESTIGADOR: Busca matemática da verdade (sem alucinações)
+    let fatoBase = "";
+    let instrucaoDiretor = "";
+    
+    if (isPerguntaAmpla(pergunta)) {
+        // Se for pergunta ampla, pegamos a essência da sala (as 2 primeiras frases)
+        const frases = dividirEmFrases(sala.texto_logico);
+        fatoBase = frases.slice(0, 2).join(" ");
+        instrucaoDiretor = "Descreva este ambiente de forma imersiva e sombria, baseando-se APENAS no fato fornecido.";
+    } else {
+        // Se for pergunta específica, o MiniLM procura a resposta exata
+        const analiseSemantica = await buscarFraseRelevante(pergunta, sala);
+        
+        // LIMIAR MÁGICO: Se o score for menor que 0.35, o jogador perguntou algo que NÃO EXISTE.
+        // É aqui que cortamos a alucinação pela raiz.
+        if (!analiseSemantica || analiseSemantica.score < 0.35) {
+            fatoBase = "O item ou detalhe perguntado não existe neste local.";
+            instrucaoDiretor = "Negue a existência do que foi perguntado. Diga que há apenas vazio, escuridão ou poeira em relação a isso. Seja direto e não invente objetos.";
+        } else {
+            fatoBase = analiseSemantica.frase;
+            instrucaoDiretor = "Responda à pergunta do jogador usando APENAS a informação do FATO fornecido. Não adicione nada que não esteja no fato.";
+        }
     }
 
-    try {
-        // MANTIDO EXATAMENTE SEU PROMPT ORIGINAL (Sistema em Inglês + /no_think)
-        const mensagens = [
-            {
-                role: 'system',
-                content: 'You are a horror narrator. You must answer ONLY in correct Brazilian Portuguese. Keep responses under 8 words. Be direct and immersive. Base your answer on the CONTEXTO COMPLETO DA SALA. If the context lacks detail, deduce a plausible one. Never refuse to answer. Do not use English in your response. Never break character. /no_think'
-            },
-            {
-                role: 'user',
-                content: 'CONTEXTO: "Um cheiro metálico e forte toma conta do ar."\nPERGUNTA DO JOGADOR: "O que tem nessa sala?"\n/no_think'
-            },
-            {
-                role: 'assistant',
-                content: 'O ar cheira fortemente a sangue fresco.'
-            },
-            {
-                role: 'user',
-                content: 'CONTEXTO: "O baú de madeira está trancado."\nPERGUNTA DO JOGADOR: "O baú está aberto?"\n/no_think'
-            },
-            {
-                role: 'assistant',
-                content: 'Não, o baú encontra-se firmemente trancado.'
-            },
-            {
-                role: 'user',
-                content: `CONTEXTO COMPLETO DA SALA: "${contextoReduzido}"\nPERGUNTA DO JOGADOR: "${pergunta}"\n/no_think`
-            }
-        ];
+    // 2. O DIRETOR: Monta um prompt inescapável. 
+    // Removemos todo o texto_logico pesado. O 0.6B agora foca como um laser em UMA única diretriz.
+    const mensagens = [
+        {
+            role: 'system',
+            content: `You are an AI actor playing a horror narrator. Follow the DIRECTOR INSTRUCTIONS strictly. 
+                      Translate the FACT into a short, immersive response in Brazilian Portuguese. 
+                      NEVER invent information outside the FACT. Output ONLY the localized Portuguese text. /no_think`
+        },
+        {
+            role: 'user',
+            content: `PERGUNTA DO JOGADOR: "Tem uma janela aqui?"
+                      FATO: O item ou detalhe perguntado não existe neste local.
+                      DIRECTOR INSTRUCTIONS: Negue a existência do que foi perguntado.
+                      /no_think`
+        },
+        {
+            role: 'assistant',
+            content: 'As paredes são completamente cegas. Nenhuma luz ou janela existe aqui.'
+        },
+        {
+            role: 'user',
+            content: `PERGUNTA DO JOGADOR: "${pergunta}"
+                      FATO: "${fatoBase}"
+                      DIRECTOR INSTRUCTIONS: ${instrucaoDiretor}
+                      /no_think`
+        }
+    ];
 
+    // 3. O ATOR: Geração com amarras rigorosas
+    try {
         const saida = await window.geradorLocal(mensagens, {
-            max_new_tokens: 22,       // Aumentado ligeiramente de 15 para 22 para dar margem de término
-            do_sample: false,         // OBRIGATÓRIO: Mantém a estabilidade do idioma
-            repetition_penalty: 1.15,
+            max_new_tokens: 30, // Mais tokens para permitir uma resposta polida
+            do_sample: false,   // Mantém a precisão matemática do prompt (Impede inglês)
+            repetition_penalty: 1.18, 
         });
 
         let texto = saida?.[0]?.generated_text?.at(-1)?.content ?? '';
         texto = texto.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
 
-        if (!texto || texto.includes('<think>')) {
-            console.warn("⚠️ [Tier 3] Saída inválida — descartando.");
-            return null;
+        // Limpeza avançada e pós-processamento de emergência
+        if (!texto || /\b(the|and|is|are|it|this)\b/i.test(texto)) {
+            // Fallbacks baseados no contexto, não genéricos
+            return fatoBase === "O item ou detalhe perguntado não existe neste local." 
+                ? "Você procura por algo que não está lá..."
+                : "Seus olhos lutam para focar nesse detalhe na escuridão...";
         }
 
-        // ============================================================
-        // CORREÇÃO DOS CORTES DE FRASE (Pós-processamento JS puro)
-        // ============================================================
-        
-        // 1. Se tem ponto final, exclamação ou interrogação, corta exatamente ali
-        const ultimoPonto = texto.match(/.*[.!?]/);
-        if (ultimoPonto) {
-            texto = ultimoPonto[0];
+        // Reconstrói a frase ignorando cortes no meio de palavras (Corte Semântico)
+        const sentencas = texto.match(/[^.!?]+[.!?]+/g);
+        if (sentencas) {
+            texto = sentencas.join(' ').trim(); // Pega apenas frases que terminaram corretamente
         } else {
-            // 2. Se a frase foi cortada no meio por limite de tokens:
-            // Remove a última palavra (que provavelmente está incompleta) e adiciona "..."
-            const palavrasResposta = texto.trim().split(/\s+/);
-            if (palavrasResposta.length > 2) {
-                texto = palavrasResposta.slice(0, -1).join(' ') + '...';
-            }
+            texto = texto.replace(/\s\w+$/, '...'); // Corta a última palavra fragmentada e põe reticências
         }
 
         return texto;
 
     } catch (erro) {
-        console.error("❌ Erro na geração local (Tier 3):", erro);
-        return null;
+        console.error("❌ Erro no Motor Ator:", erro);
+        return "Um frio súbito distorce sua percepção...";
     }
 }
         iniciarMotorSemantico();
