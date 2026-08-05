@@ -944,7 +944,7 @@
 // perder detalhes que uma única frase poderia omitir.
 // ============================================================
 // ============================================================
-// TIER 3 — Narrador Local Restaurado com Múltiplas Intenções
+// TIER 3 — Narrador Local Restaurado com Múltiplas Intenções e Anti-Alucinação
 // ============================================================
 async function responderExameLocal(inputJogador, textoLogico) {
     if (!window.geradorLocal && window.geradorLocalPromise) {
@@ -961,15 +961,17 @@ async function responderExameLocal(inputJogador, textoLogico) {
     }
 
     // ============================================================
-    // 1. DETECÇÃO DE INTENÇÃO (Pergunta vs Ação)
+    // 1. DETECÇÃO APRIMORADA DE INTENÇÃO (Pergunta vs Ação)
     // ============================================================
-    // Se tem '?', tratamos como pergunta. Se não tem, tratamos como ação.
-    const ehPergunta = inputJogador.includes('?');
+    // Agora verifica o '?' E também palavras iniciais que indicam fala/dúvida
+    const inputLimpo = inputJogador.trim().toLowerCase();
+    const ehPergunta = inputLimpo.includes('?') || 
+        /^(pergunt|falar|dizer|questionar|qual|como|onde|quem|por\s*que|será)/.test(inputLimpo);
     
     let mensagens = [];
 
     if (ehPergunta) {
-        // --- PROMPT DE PERGUNTAS (Seu prompt original) ---
+        // --- PROMPT DE PERGUNTAS (Focado em observar e responder) ---
         mensagens = [
             {
                 role: 'system',
@@ -997,27 +999,27 @@ async function responderExameLocal(inputJogador, textoLogico) {
             }
         ];
     } else {
-        // --- NOVO PROMPT DE AÇÕES (Para "sentar", "abrir", "bater") ---
+        // --- NOVO PROMPT DE AÇÕES (Focado em realismo, física e restrições) ---
         mensagens = [
             {
                 role: 'system',
-                content: 'You are a horror RPG narrator. The player just performed an ACTION. Describe the immediate consequence in correct Brazilian Portuguese. Keep it under 8 words. Base it on the CONTEXT. If context lacks detail, deduce a plausible horror consequence. Never break character./no_think'
+                content: 'You are a realistic horror RPG narrator. The player performed an ACTION. Describe the logical, realistic outcome in Brazilian Portuguese (max 10 words). Maintain physical realism: objects do not move by themselves unless supernatural. Base it ONLY on the CONTEXT. Never break physics without reason. Be immersive but grounded./no_think'
             },
             {
                 role: 'user',
-                content: 'CONTEXTO: "Há um homem estranho chorando no canto escuro."\nAÇÃO DO JOGADOR: "Vou sentar ao lado do homem."\n/no_think'
+                content: 'CONTEXTO: "Um homem está sentado no chão, olhando para o nada."\nAÇÃO DO JOGADOR: "Cumprimentar o homem"\n/no_think'
             },
             {
                 role: 'assistant',
-                content: 'Ele vira o rosto para você.'
+                content: 'Ele ignora sua presença e continua olhando para o vazio.'
             },
             {
                 role: 'user',
-                content: 'CONTEXTO: "O baú de madeira está trancado."\nAÇÃO DO JOGADOR: "Chuto o baú com toda a minha força"\n/no_think'
+                content: 'CONTEXTO: "Um sofá velho de couro ocupa a parede."\nAÇÃO DO JOGADOR: "Vou me sentar no sofá"\n/no_think'
             },
             {
                 role: 'assistant',
-                content: 'A tranca não cede.'
+                content: 'O estofado gasto afunda sob seu peso, levantando poeira.'
             },
             {
                 role: 'user',
@@ -1027,16 +1029,22 @@ async function responderExameLocal(inputJogador, textoLogico) {
     }
 
     try {
-        // Se for ação, damos um pouquinho mais de margem de tokens, pois descrever uma consequência exige um pouco mais que um "sim/não".
-        const tokensMaximos = ehPergunta ? 22 : 22;
+        // ============================================================
+        // 2. CONFIGURAÇÃO DE AMOSTRAGEM ANTI-ALUCINAÇÃO
+        // ============================================================
+        const tokensMaximos = ehPergunta ? 22 : 30;
 
         const saida = await window.geradorLocal(mensagens, {
             max_new_tokens: tokensMaximos, 
-            do_sample: false,          
+            do_sample: true,        // Permite flexibilidade de vocabulário
+            temperature: 0.3,       // Mantém o modelo pé no chão, sem ser criativo demais
+            top_p: 0.85,            // Corta as caudas (palavras absurdas ou improváveis)
             repetition_penalty: 1.15,
         });
 
         let texto = saida?.[0]?.generated_text?.at(-1)?.content ?? '';
+        
+        // Limpa possíveis tags de raciocínio (caso o modelo vaze algo)
         texto = texto.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
 
         if (!texto || texto.includes('<think>')) {
@@ -1045,7 +1053,7 @@ async function responderExameLocal(inputJogador, textoLogico) {
         }
 
         // ============================================================
-        // CORREÇÃO DOS CORTES DE FRASE
+        // 3. CORREÇÃO DOS CORTES DE FRASE
         // ============================================================
         const ultimoPonto = texto.match(/.*[.!?]/);
         if (ultimoPonto) {
