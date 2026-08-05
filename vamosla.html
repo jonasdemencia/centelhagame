@@ -944,111 +944,88 @@
 // perder detalhes que uma única frase poderia omitir.
 // ============================================================
 // ============================================================
-// TIER 3 — Narrador "Ilusionista" para o Monarca
-// ============================================================
-// ============================================================
-// TIER 3 — Narrador "Ilusionista" para o Monarca
+// TIER 3 — Narrador Local Restaurado (100% Português)
 // ============================================================
 async function responderExameLocal(pergunta, textoLogico) {
     if (!window.geradorLocal && window.geradorLocalPromise) {
-        console.log("⏳ [Tier 3] Narrador local ainda carregando...");
+        console.log("⏳ [Tier 3] Narrador local ainda carregando, aguardando...");
         await window.geradorLocalPromise;
     }
     if (!window.geradorLocal) return null;
 
-    const MAX_PALAVRAS_CONTEXTO = 200; // Reduzido um pouco para focar a atenção do 0.6B
+    const MAX_PALAVRAS_CONTEXTO = 300;
     let contextoReduzido = textoLogico.trim();
     const palavras = contextoReduzido.split(/\s+/);
     if (palavras.length > MAX_PALAVRAS_CONTEXTO) {
-        contextoReduzido = palavras.slice(0, MAX_PALAVRAS_CONTEXTO).join(' ') + '.';
+        contextoReduzido = palavras.slice(0, MAX_PALAVRAS_CONTEXTO).join(' ') + '…';
     }
 
-    // PROMPT 100% EM PORTUGUÊS: Evita "sangramento" do inglês.
-    const mensagens = [
-        {
-            role: 'system',
-            content: 'Você é um narrador de terror enigmático. Responda SEMPRE em português do Brasil, usando no máximo 10 palavras. Baseie-se no CONTEXTO da sala. Seja direto, assustador e misterioso. Nunca justifique.'
-        },
-        {
-            role: 'user',
-            content: 'CONTEXTO: "Um cheiro metálico e forte toma conta do ar."\nPERGUNTA DO JOGADOR: "O que tem nessa sala?"'
-        },
-        {
-            role: 'assistant',
-            content: 'O ar cheira fortemente a sangue fresco.'
-        },
-        {
-            role: 'user',
-            content: 'CONTEXTO: "O baú de madeira está trancado."\nPERGUNTA DO JOGADOR: "O baú está aberto?"'
-        },
-        {
-            role: 'assistant',
-            content: 'Não, o baú encontra-se firmemente trancado.'
-        },
-        {
-            role: 'user',
-            content: `CONTEXTO COMPLETO DA SALA: "${contextoReduzido}"\nPERGUNTA DO JOGADOR: "${pergunta}"`
+    try {
+        // MANTIDO EXATAMENTE SEU PROMPT ORIGINAL (Sistema em Inglês + /no_think)
+        const mensagens = [
+            {
+                role: 'system',
+                content: 'You are a horror narrator. You must answer ONLY in correct Brazilian Portuguese. Keep responses under 8 words. Be direct and immersive. Base your answer on the CONTEXTO COMPLETO DA SALA. If the context lacks detail, deduce a plausible one. Never refuse to answer. Do not use English in your response. Never break character. /no_think'
+            },
+            {
+                role: 'user',
+                content: 'CONTEXTO: "Um cheiro metálico e forte toma conta do ar."\nPERGUNTA DO JOGADOR: "O que tem nessa sala?"\n/no_think'
+            },
+            {
+                role: 'assistant',
+                content: 'O ar cheira fortemente a sangue fresco.'
+            },
+            {
+                role: 'user',
+                content: 'CONTEXTO: "O baú de madeira está trancado."\nPERGUNTA DO JOGADOR: "O baú está aberto?"\n/no_think'
+            },
+            {
+                role: 'assistant',
+                content: 'Não, o baú encontra-se firmemente trancado.'
+            },
+            {
+                role: 'user',
+                content: `CONTEXTO COMPLETO DA SALA: "${contextoReduzido}"\nPERGUNTA DO JOGADOR: "${pergunta}"\n/no_think`
+            }
+        ];
+
+        const saida = await window.geradorLocal(mensagens, {
+            max_new_tokens: 22,       // Aumentado ligeiramente de 15 para 22 para dar margem de término
+            do_sample: false,         // OBRIGATÓRIO: Mantém a estabilidade do idioma
+            repetition_penalty: 1.15,
+        });
+
+        let texto = saida?.[0]?.generated_text?.at(-1)?.content ?? '';
+        texto = texto.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+
+        if (!texto || texto.includes('<think>')) {
+            console.warn("⚠️ [Tier 3] Saída inválida — descartando.");
+            return null;
         }
-    ];
 
-    // LOOP DE QUALIDADE: Tenta até 3 vezes se a resposta for inaceitável.
-    let tentativas = 0;
-    const MAX_TENTATIVAS = 3;
-    let textoFinal = null;
-
-    while (tentativas < MAX_TENTATIVAS && !textoFinal) {
-        try {
-            const saida = await window.geradorLocal(mensagens, {
-                max_new_tokens: 30, // Aumentado para não cortar prematuramente
-                do_sample: true,    // Habilitado para permitir variações no re-roll
-                temperature: 0.3,   // Temperatura baixa para manter coerência
-                repetition_penalty: 1.15,
-            });
-
-            let texto = saida?.[0]?.generated_text?.at(-1)?.content ?? '';
-            
-            // Limpeza bruta
-            texto = texto.replace(/<think>[\s\S]*?<\/think>/gi, '')
-                         .replace(/<\|.*?\|>/g, '') // Remove qualquer token de controle que vazar
-                         .trim();
-
-            // VALIDAÇÕES RIGOROSAS (O Segredo da Ilusão)
-            if (!texto) {
-                tentativas++; continue;
+        // ============================================================
+        // CORREÇÃO DOS CORTES DE FRASE (Pós-processamento JS puro)
+        // ============================================================
+        
+        // 1. Se tem ponto final, exclamação ou interrogação, corta exatamente ali
+        const ultimoPonto = texto.match(/.*[.!?]/);
+        if (ultimoPonto) {
+            texto = ultimoPonto[0];
+        } else {
+            // 2. Se a frase foi cortada no meio por limite de tokens:
+            // Remove a última palavra (que provavelmente está incompleta) e adiciona "..."
+            const palavrasResposta = texto.trim().split(/\s+/);
+            if (palavrasResposta.length > 2) {
+                texto = palavrasResposta.slice(0, -1).join(' ') + '...';
             }
-            
-            // Pós-processamento: Cortar frases incompletas de forma elegante
-            // Encontra a posição do último sinal de pontuação final
-            const ultimoPonto = texto.match(/.*[.!?]/);
-            
-            if (ultimoPonto) {
-                // Corta no último ponto para garantir uma frase completa
-                texto = ultimoPonto[0];
-            } else {
-                // Se o modelo não pontuou e atingiu o limite de tokens, transformamos o corte em suspense
-                texto = texto + "...";
-            }
-
-            // Garante o limite visual de palavras (se passar um pouco, corta suavemente)
-            const palavrasResposta = texto.split(' ');
-            if (palavrasResposta.length > 15) {
-                texto = palavrasResposta.slice(0, 12).join(' ') + "...";
-            }
-
-            textoFinal = texto; // Passou no crivo!
-
-        } catch (erro) {
-            console.error("❌ Erro na tentativa de geração:", erro);
-            tentativas++;
         }
-    }
 
-    // Se falhou todas as vezes, entrega uma resposta genérica (mas imersiva) baseada no cache
-    if (!textoFinal) {
-        return "As sombras escondem a resposta para isso...";
-    }
+        return texto;
 
-    return textoFinal;
+    } catch (erro) {
+        console.error("❌ Erro na geração local (Tier 3):", erro);
+        return null;
+    }
 }
         iniciarMotorSemantico();
         iniciarGeradorLocal();
