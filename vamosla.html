@@ -945,83 +945,75 @@
         // real de um modelo desse tamanho — troca a versão anterior, que
         // pedia narração livre sobre os 300 palavras da sala inteira.
         // ============================================================
-        async function inventarDetalheLocal(pergunta, opcoes = {}) {
-            if (!window.geradorLocal && window.geradorLocalPromise) {
-                console.log("⏳ [Tier 3] Narrador local ainda carregando, aguardando...");
-                await window.geradorLocalPromise;
-            }
-            if (!window.geradorLocal) return null;
+       async function inventarDetalheLocal(pergunta, opcoes = {}) {
+    if (!window.geradorLocal && window.geradorLocalPromise) {
+        console.log("⏳ [Tier 3] Narrador local ainda carregando, aguardando...");
+        await window.geradorLocalPromise;
+    }
+    if (!window.geradorLocal) return null;
 
-            const { segundaTentativa = false } = opcoes;
+    const { segundaTentativa = false } = opcoes;
 
-            try {
-                const mensagens = [
-                    {
-                        role: 'system',
-                        content: 'You are a prop/character detail generator for a horror game in BRAZILIAN PORTUGUESE. Given a QUESTION about something not described in the story, invent ONE simple, ordinary, plausible answer that fits a grim, decayed atmosphere. Respond ONLY in CORRECT Brazilian Portuguese, 1 to 4 words, ending in a period. Never explain. Never refuse. If the question asks about something unknowable without direct interaction (exact weight, contents of something closed, private thoughts), respond with "Não sei." Otherwise you must invent something concrete. Never invent non-existent Portuguese words. Only use real vocabulary from the language. /no_think'
-                    },
-                    { role: 'user', content: 'PERGUNTA: "qual a cor da camisa do homem?"\n/no_think' },
-                    { role: 'assistant', content: 'Azul.' },
-                    { role: 'user', content: 'PERGUNTA: "que tipo de sapato ele está usando?"\n/no_think' },
-                    { role: 'assistant', content: 'Botas gastas.' },
-                    { role: 'user', content: 'PERGUNTA: "qual o peso da mala?"\n/no_think' },
-                    { role: 'assistant', content: 'Não sei.' },
-                    { role: 'user', content: 'PERGUNTA: "o homem tem bigode?"\n/no_think' },
-                    { role: 'assistant', content: 'Não, tem barba longa.' },
-                    { role: 'user', content: `PERGUNTA: "${pergunta}"\n/no_think` }
-                ];
+    try {
+        const mensagens = [
+            {
+                role: 'system',
+                // ABORDAGEM ROBUSTA: Definição de Axiomas Estritos (Regras físicas e biológicas absolutas)
+                content: 'You are a strict data-extraction and detail-generation algorithm for a realistic horror game in BRAZILIAN PORTUGUESE. AXIOMS: 1. Standard human biology strictly applies (humans always have 2 arms, 2 legs, normal skin, real ethnicities). 2. NO fantasy, NO magic, NO made-up words. TASK: Answer the QUESTION with ONE simple, ordinary, plausible answer. 1 to 4 words. End with a period. CORRECT Portuguese ONLY. If unknowable without direct interaction, output EXACTLY "Não sei.". /no_think'
+            },
+            // Seus exemplos originais mantidos sem alterações
+            { role: 'user', content: 'PERGUNTA: "qual a cor da camisa do homem?"\n/no_think' },
+            { role: 'assistant', content: 'Azul.' },
+            { role: 'user', content: 'PERGUNTA: "que tipo de sapato ele está usando?"\n/no_think' },
+            { role: 'assistant', content: 'Botas gastas.' },
+            { role: 'user', content: 'PERGUNTA: "qual o peso da mala?"\n/no_think' },
+            { role: 'assistant', content: 'Não sei.' },
+            { role: 'user', content: 'PERGUNTA: "o homem tem bigode?"\n/no_think' },
+            { role: 'assistant', content: 'Não, tem barba longa.' },
+            
+            { role: 'user', content: `PERGUNTA: "${pergunta}"\n/no_think` }
+        ];
 
-                const saida = await window.geradorLocal(mensagens, {
-    max_new_tokens: 150,
-    do_sample: true,
-    
-    // HIPERPARÂMETROS CRÍTICOS PARA O MODELO 0.6B:
-    
-    // Mantém a criatividade para deduções simples, mas impede invenções malucas.
-    temperature: 0.35, 
-    
-    // Corta severamente a "cauda longa" de tokens. 
-    // É isso que impede o modelo de inventar palavras como "braças".
-    top_k: 40, 
-    
-    // Restringe o modelo a usar apenas o grupo de palavras que somam 85% de probabilidade lógica.
-    top_p: 0.85, 
-    
-    // Evita que o modelo repita a mesma palavra em loop sem quebrar a estrutura da frase.
-    repetition_penalty: 1.15 
-});
+        const saida = await window.geradorLocal(mensagens, {
+            max_new_tokens: 150,
+            do_sample: true,
+            
+            // ACHATAMENTO ESTATÍSTICO EXTREMO:
+            // Temperature 0.1 transforma o modelo quase em greedy decoding (determinístico).
+            temperature: 0.1, 
+            
+            // Top_k 10: O modelo é fisicamente proibido de olhar além das 10 palavras mais óbvias.
+            // Isso mata completamente as alucinações de palavras como "Brande-espírito".
+            top_k: 10, 
+            
+            // Top_p 0.5: Corta pela metade a margem criativa da rede neural.
+            top_p: 0.5, 
+            
+            repetition_penalty: 1.15 
+        });
 
-                let texto = saida?.[0]?.generated_text?.at(-1)?.content ?? '';
-                texto = texto.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+        let texto = saida?.[0]?.generated_text?.at(-1)?.content ?? '';
+        texto = texto.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
 
-                // Checagem de forma, não de conteúdo: só descarta se veio
-                // quebrado (vazio, longo demais, inglês vazando). Nunca
-                // rejeita por não estar "fundamentado" no texto da sala —
-                // aqui inventar dentro do razoável é o objetivo.
-                const PALAVRAS_SUSPEITAS = /\b(the|is|are|and|you|sorry|cannot|answer|question)\b/i;
-                if (!texto || texto.length > 40 || PALAVRAS_SUSPEITAS.test(texto) || texto.includes('<think>')) {
-                    console.warn("⚠️ [Tier 3] Saída inválida — descartando.");
-                    return null;
-                }
-
-                // Corta na primeira pontuação final. Se não tiver nenhuma,
-                // a resposta veio cortada no meio — descarta em vez de
-                // devolver frase pela metade (isso aciona o retry com
-                // forcarSample:true que já existe no chamador).
-                const primeiroPonto = texto.match(/^.*?[.!?]/);
-                if (!primeiroPonto) {
-                    console.warn("⚠️ [Tier 3] Saída cortada sem pontuação final — descartando:", texto);
-                    return null;
-                }
-
-                return primeiroPonto[0];
-
-            } catch (erro) {
-                console.error("❌ Erro na geração local (Tier 3):", erro);
-                return null;
-            }
+        const PALAVRAS_SUSPEITAS = /\b(the|is|are|and|you|sorry|cannot|answer|question)\b/i;
+        if (!texto || texto.length > 40 || PALAVRAS_SUSPEITAS.test(texto) || texto.includes('<think>')) {
+            console.warn("⚠️ [Tier 3] Saída inválida — descartando.");
+            return null;
         }
 
+        const primeiroPonto = texto.match(/^.*?[.!?]/);
+        if (!primeiroPonto) {
+            console.warn("⚠️ [Tier 3] Saída cortada sem pontuação final — descartando:", texto);
+            return null;
+        }
+
+        return primeiroPonto[0];
+
+    } catch (erro) {
+        console.error("❌ Erro na geração local (Tier 3):", erro);
+        return null;
+    }
+}
     
         iniciarMotorSemantico();
         iniciarGeradorLocal();
