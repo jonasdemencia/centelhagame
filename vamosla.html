@@ -801,290 +801,205 @@
         };
 
         // ============================================================
-// MOTOR SEMÂNTICO (sem mudanças)
-// ============================================================
-window.extratorSemantico = null;
-window.geradorLocal = null;
-window.geradorLocalPromise = null;
-
-async function iniciarMotorSemantico() {
-    try {
-        const modelId = 'Xenova/paraphrase-multilingual-MiniLM-L12-v2';
-        window.extratorSemantico = await pipeline('feature-extraction', modelId, {
-            quantized: true,
-            use_fp16: false,
-            model_file_name: 'model_quantized.onnx',
-            base_url: 'https://huggingface.co/'
-        });
-        console.log("✅ Motor semântico carregado.");
-    } catch (erro) {
-        console.error("❌ Erro ao carregar o motor semântico:", erro);
+        // MOTOR SEMÂNTICO
+        // ============================================================
         window.extratorSemantico = null;
-    }
-}
+        window.geradorLocal = null;
+        window.geradorLocalPromise = null; // permite o Tier 3 aguardar o load em vez de desistir na hora
 
-// ============================================================
-// NARRADOR LOCAL (Tier 3) — carregamento sem mudanças
-// ============================================================
-async function iniciarGeradorLocal() {
-    window.geradorLocalPromise = (async () => {
-        const modelId = 'onnx-community/Qwen3-0.6B-ONNX';
-        const dispositivosCandidatos = (typeof navigator !== 'undefined' && navigator.gpu)
-            ? ['webgpu', 'wasm']
-            : ['wasm'];
+        async function iniciarMotorSemantico() {
+            try {
+                const modelId = 'Xenova/paraphrase-multilingual-MiniLM-L12-v2';
+                window.extratorSemantico = await pipeline('feature-extraction', modelId, {
+                    quantized: true,
+                    use_fp16: false,
+                    model_file_name: 'model_quantized.onnx',
+                    base_url: 'https://huggingface.co/'
+                });
+                console.log("✅ Motor semântico carregado.");
+            } catch (erro) {
+                console.error("❌ Erro ao carregar o motor semântico:", erro);
+                window.extratorSemantico = null;
+            }
+        }
 
-        for (const dispositivo of dispositivosCandidatos) {
-            const dtypesCandidatos = dispositivo === 'webgpu' ? ['q4f16', 'q4', 'q8'] : ['q4', 'q8'];
-            for (const dtypeTentativa of dtypesCandidatos) {
-                try {
-                    window.geradorLocal = await pipelineGeracao('text-generation', modelId, {
-                        device: dispositivo,
-                        dtype: dtypeTentativa
-                    });
-                    console.log(`✅ Narrador local carregado (device: ${dispositivo}, dtype: ${dtypeTentativa}).`);
-                    return;
-                } catch (erro) {
-                    console.warn(`⚠️ Falhou carregar com device '${dispositivo}' / dtype '${dtypeTentativa}':`, erro.message);
+        // ============================================================
+        // NARRADOR LOCAL MÍNIMO (Tier 3) — 100% no navegador, sem servidor
+        // externo (LM Studio, Ollama, etc). Roda via WebGPU se disponível,
+        // com fallback automático para WASM.
+        // ============================================================
+        async function iniciarGeradorLocal() {
+            window.geradorLocalPromise = (async () => {
+                // Voltamos pro 0.6B: o 1.7B deu std::bad_alloc na GPU dessa máquina
+                // (memória insuficiente pra sessão WebGPU, mesmo quantizado). O 0.6B
+                // sabidamente carrega aqui. As melhorias de prompt/repetition_penalty/
+                // cache continuam valendo independente do tamanho do modelo.
+                const modelId = 'onnx-community/Qwen3-0.6B-ONNX';
+
+                // Tenta WebGPU primeiro; se a GPU não tiver memória (bad_alloc) ou o
+                // device não existir, cai pra WASM (CPU) — mais lento, mas não trava.
+                const dispositivosCandidatos = (typeof navigator !== 'undefined' && navigator.gpu)
+                    ? ['webgpu', 'wasm']
+                    : ['wasm'];
+
+                for (const dispositivo of dispositivosCandidatos) {
+                    const dtypesCandidatos = dispositivo === 'webgpu' ? ['q4f16', 'q4', 'q8'] : ['q4', 'q8'];
+                    for (const dtypeTentativa of dtypesCandidatos) {
+                        try {
+                            window.geradorLocal = await pipelineGeracao('text-generation', modelId, {
+                                device: dispositivo,
+                                dtype: dtypeTentativa
+                            });
+                            console.log(`✅ Narrador local carregado (device: ${dispositivo}, dtype: ${dtypeTentativa}).`);
+                            return;
+                        } catch (erro) {
+                            console.warn(`⚠️ Falhou carregar com device '${dispositivo}' / dtype '${dtypeTentativa}':`, erro.message);
+                        }
+                    }
+                }
+
+                console.error("❌ Não foi possível carregar o narrador local com nenhuma combinação testada.");
+                window.geradorLocal = null;
+            })();
+            return window.geradorLocalPromise;
+        }
+
+        // ============================================================
+        // TIER 2 — RAG local por sentença sobre o texto_logico já gerado.
+        // Não adiciona nada ao prompt do Arquiteto de Cenas: reaproveita
+        // o texto que já existe, cortado em frases e cacheado por sala.
+        // ============================================================
+        function dividirEmFrases(texto) {
+            if (!texto) return [];
+            return texto
+                .split(/(?<=[.!?])\s+/)
+                .map(f => f.trim())
+                .filter(f => f.length > 3);
+        }
+
+        async function obterFrasesEmbedadas(sala) {
+            if (!sala || !sala.texto_logico) return [];
+            if (sala._fraseEmbeds) return sala._fraseEmbeds; // cache: computa 1x por sala
+
+            if (!window.extratorSemantico) return [];
+
+            const frases = dividirEmFrases(sala.texto_logico);
+            const embeds = [];
+            for (const frase of frases) {
+                const vetor = await window.extratorSemantico(frase, { pooling: 'mean', normalize: true });
+                embeds.push({ texto: frase, vetor: vetor.data });
+            }
+            sala._fraseEmbeds = embeds;
+            return embeds;
+        }
+
+        async function buscarFraseRelevante(pergunta, sala, vetorPerguntaPrecomputado = null) {
+            if (!window.extratorSemantico) return null;
+            const frases = await obterFrasesEmbedadas(sala);
+            if (frases.length === 0) return null;
+
+            const vetorPergunta = vetorPerguntaPrecomputado
+                ?? (await window.extratorSemantico(pergunta, { pooling: 'mean', normalize: true })).data;
+
+            let melhorFrase = null;
+            let melhorScore = 0;
+            for (const f of frases) {
+                const score = cos_sim(vetorPergunta, f.vetor);
+                if (score > melhorScore) {
+                    melhorScore = score;
+                    melhorFrase = f.texto;
                 }
             }
+            return melhorFrase ? { frase: melhorFrase, score: melhorScore } : null;
         }
-        console.error("❌ Não foi possível carregar o narrador local com nenhuma combinação testada.");
-        window.geradorLocal = null;
-    })();
-    return window.geradorLocalPromise;
-}
 
-// ============================================================
-// TIER 2 — RAG local por sentença (sem mudanças)
-// ============================================================
-function dividirEmFrases(texto) {
-    if (!texto) return [];
-    return texto
-        .split(/(?<=[.!?])\s+/)
-        .map(f => f.trim())
-        .filter(f => f.length > 3);
-}
-
-async function obterFrasesEmbedadas(sala) {
-    if (!sala || !sala.texto_logico) return [];
-    if (sala._fraseEmbeds) return sala._fraseEmbeds;
-    if (!window.extratorSemantico) return [];
-
-    const frases = dividirEmFrases(sala.texto_logico);
-    const embeds = [];
-    for (const frase of frases) {
-        const vetor = await window.extratorSemantico(frase, { pooling: 'mean', normalize: true });
-        embeds.push({ texto: frase, vetor: vetor.data });
-    }
-    sala._fraseEmbeds = embeds;
-    return embeds;
-}
-
-async function buscarFraseRelevante(pergunta, sala, vetorPerguntaPrecomputado = null) {
-    if (!window.extratorSemantico) return null;
-    const frases = await obterFrasesEmbedadas(sala);
-    if (frases.length === 0) return null;
-
-    const vetorPergunta = vetorPerguntaPrecomputado
-        ?? (await window.extratorSemantico(pergunta, { pooling: 'mean', normalize: true })).data;
-
-    let melhorFrase = null;
-    let melhorScore = 0;
-    for (const f of frases) {
-        const score = cos_sim(vetorPergunta, f.vetor);
-        if (score > melhorScore) {
-            melhorScore = score;
-            melhorFrase = f.texto;
-        }
-    }
-    return melhorFrase ? { frase: melhorFrase, score: melhorScore } : null;
-}
-
-// ============================================================
-// CACHE DE FATOS IMPROVISADOS (sem mudanças)
-// ============================================================
-function verificarCacheDeFatos(vetorPergunta, sala) {
-    if (!sala._fatosCache) return null;
-    const LIMIAR_MESMA_PERGUNTA = 0.82;
-    let melhor = null, melhorScore = 0;
-    for (const fato of sala._fatosCache) {
-        const score = cos_sim(vetorPergunta, fato.vetor);
-        if (score > melhorScore) { melhorScore = score; melhor = fato; }
-    }
-    return (melhor && melhorScore >= LIMIAR_MESMA_PERGUNTA) ? melhor.resposta : null;
-}
-
-function salvarFatoCache(pergunta, vetorPergunta, resposta, sala) {
-    if (!sala._fatosCache) sala._fatosCache = [];
-    sala._fatosCache.push({ pergunta, vetor: vetorPergunta, resposta });
-}
-
-// ============================================================
-// NOVO — reaproveita o extratorSemantico (já carregado pro Tier 2)
-// como verificador de alucinação: a resposta do Tier 3 tem lastro
-// real no texto da sala, ou o modelo inventou por conta própria?
-// ============================================================
-async function calcularFundamentacao(resposta, frasesDaSala) {
-    if (!window.extratorSemantico || !resposta || !frasesDaSala || frasesDaSala.length === 0) return 1;
-    const vetorResposta = (await window.extratorSemantico(resposta, { pooling: 'mean', normalize: true })).data;
-    let melhor = 0;
-    for (const f of frasesDaSala) {
-        const score = cos_sim(vetorResposta, f.vetor);
-        if (score > melhor) melhor = score;
-    }
-    return melhor;
-}
-
-// ============================================================
-// TIER 3 — Narrador Local
-// MUDANÇAS: recebe `sala` (não mais texto_logico cru) pra focar o
-// contexto via Tier 2 em vez de cortar em 300 palavras; aceita
-// vetorPerguntaPrecomputado pra não recalcular embedding; aceita
-// forcarSample pro segundo degrau da escada; ganhou um 3º few-shot
-// pro caso "a sala não cobre a pergunta". Agora retorna um objeto
-// { texto, cobertura } em vez de string — ATENÇÃO ao call site.
-// ============================================================
-async function responderExameLocal(pergunta, sala, opcoes = {}) {
-    const { vetorPerguntaPrecomputado = null, forcarSample = false } = opcoes;
-
-    if (!window.geradorLocal && window.geradorLocalPromise) {
-        console.log("⏳ [Tier 3] Narrador local ainda carregando, aguardando...");
-        await window.geradorLocalPromise;
-    }
-    if (!window.geradorLocal) return null;
-
-    const frases = await obterFrasesEmbedadas(sala);
-    let contextoFocado;
-    let cobertura = 1;
-
-    if (window.extratorSemantico && frases.length > 0) {
-        const vetorPergunta = vetorPerguntaPrecomputado
-            ?? (await window.extratorSemantico(pergunta, { pooling: 'mean', normalize: true })).data;
-        const rankeadas = frases
-            .map(f => ({ texto: f.texto, score: cos_sim(vetorPergunta, f.vetor) }))
-            .sort((a, b) => b.score - a.score);
-        contextoFocado = rankeadas.slice(0, 3).map(f => f.texto).join(' ');
-        cobertura = rankeadas[0]?.score ?? 0;
-    } else {
-        const MAX_PALAVRAS_CONTEXTO = 300;
-        const palavras = sala.texto_logico.trim().split(/\s+/);
-        contextoFocado = palavras.length > MAX_PALAVRAS_CONTEXTO
-            ? palavras.slice(0, MAX_PALAVRAS_CONTEXTO).join(' ') + '…'
-            : sala.texto_logico.trim();
-    }
-
-    try {
-        const mensagens = [
-            {
-                role: 'system',
-                content: 'You are a horror narrator. You must answer ONLY in correct Brazilian Portuguese. Keep responses under 8 words. Be direct and immersive. Base your answer on the CONTEXTO COMPLETO DA SALA. If the context lacks detail, deduce a plausible one. Never refuse to answer. Do not use English in your response. Never break character. /no_think'
-            },
-            {
-                role: 'user',
-                content: 'CONTEXTO: "Um cheiro metálico e forte toma conta do ar."\nPERGUNTA DO JOGADOR: "O que tem nessa sala?"\n/no_think'
-            },
-            { role: 'assistant', content: 'O ar cheira fortemente a sangue fresco.' },
-            {
-                role: 'user',
-                content: 'CONTEXTO: "O baú de madeira está trancado."\nPERGUNTA DO JOGADOR: "O baú está aberto?"\n/no_think'
-            },
-            { role: 'assistant', content: 'Não, o baú encontra-se firmemente trancado.' },
-            {
-                // NOVO: contexto não cobre a pergunta — deduz algo plausível
-                // e atmosférico, sem travar e sem inventar dado específico.
-                role: 'user',
-                content: 'CONTEXTO: "Uma porta enferrujada range com o vento lá fora."\nPERGUNTA DO JOGADOR: "Quantos degraus tem essa escada?"\n/no_think'
-            },
-            { role: 'assistant', content: 'Poucos — mas cada um range sob o peso dos seus passos.' },
-            {
-                role: 'user',
-                content: `CONTEXTO COMPLETO DA SALA: "${contextoFocado}"\nPERGUNTA DO JOGADOR: "${pergunta}"\n/no_think`
+        // ============================================================
+        // CACHE DE FATOS IMPROVISADOS — quando o Tier 3 inventa um detalhe
+        // (ex: "o sapato é azul"), essa resposta é travada por sala. Uma
+        // pergunta parafraseada ("qual a cor do sapato dele?") reconhece a
+        // mesma pergunta por similaridade semântica e reusa a MESMA resposta,
+        // em vez de rolar uma resposta nova (e possivelmente contraditória)
+        // a cada vez. Resolve o "o sapato ora é azul, ora não é" do teste.
+        // ============================================================
+        function verificarCacheDeFatos(vetorPergunta, sala) {
+            if (!sala._fatosCache) return null;
+            const LIMIAR_MESMA_PERGUNTA = 0.82; // alto de propósito: só reusa se for claramente a mesma pergunta
+            let melhor = null, melhorScore = 0;
+            for (const fato of sala._fatosCache) {
+                const score = cos_sim(vetorPergunta, fato.vetor);
+                if (score > melhorScore) { melhorScore = score; melhor = fato; }
             }
-        ];
-
-        const saida = await window.geradorLocal(mensagens, {
-            max_new_tokens: 22,
-            do_sample: forcarSample === true,
-            temperature: forcarSample ? 0.6 : undefined,
-            repetition_penalty: 1.15,
-        });
-
-        let texto = saida?.[0]?.generated_text?.at(-1)?.content ?? '';
-        texto = texto.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
-
-        if (!texto || texto.includes('<think>')) {
-            console.warn("⚠️ [Tier 3] Saída inválida — descartando.");
-            return null;
+            return (melhor && melhorScore >= LIMIAR_MESMA_PERGUNTA) ? melhor.resposta : null;
         }
 
-        const ultimoPonto = texto.match(/.*[.!?]/);
-        if (ultimoPonto) {
-            texto = ultimoPonto[0];
-        } else {
-            const palavrasResposta = texto.trim().split(/\s+/);
-            if (palavrasResposta.length > 2) {
-                texto = palavrasResposta.slice(0, -1).join(' ') + '...';
+        function salvarFatoCache(pergunta, vetorPergunta, resposta, sala) {
+            if (!sala._fatosCache) sala._fatosCache = [];
+            sala._fatosCache.push({ pergunta, vetor: vetorPergunta, resposta });
+        }
+
+        // ============================================================
+        // TIER 3 — Geração real (não extração, não pool) pra perguntas que
+        // vão além do texto_logico. O 0.6B decide o conteúdo a cada
+        // chamada; nada aqui é pré-escrito. A tarefa é deliberadamente
+        // estreita (1-4 palavras, sem narrativa) pra caber na capacidade
+        // real de um modelo desse tamanho — troca a versão anterior, que
+        // pedia narração livre sobre os 300 palavras da sala inteira.
+        // ============================================================
+        async function inventarDetalheLocal(pergunta, opcoes = {}) {
+            if (!window.geradorLocal && window.geradorLocalPromise) {
+                console.log("⏳ [Tier 3] Narrador local ainda carregando, aguardando...");
+                await window.geradorLocalPromise;
+            }
+            if (!window.geradorLocal) return null;
+
+            const { forcarSample = false } = opcoes;
+
+            try {
+                const mensagens = [
+                    {
+                        role: 'system',
+                        content: 'You are a prop/character detail generator for a horror game. Given a QUESTION about something not described in the story, invent ONE simple, ordinary, plausible answer that fits a grim, decayed atmosphere. Respond in Brazilian Portuguese, 1 to 4 words, ending in a period. Never explain. Never refuse. If the question asks about something unknowable without direct interaction (exact weight, contents of something closed, private thoughts), respond with "Não sei." Otherwise you must invent something concrete. /no_think'
+                    },
+                    { role: 'user', content: 'PERGUNTA: "qual a cor da camisa do homem?"\n/no_think' },
+                    { role: 'assistant', content: 'Azul.' },
+                    { role: 'user', content: 'PERGUNTA: "que tipo de sapato ele está usando?"\n/no_think' },
+                    { role: 'assistant', content: 'Botas gastas.' },
+                    { role: 'user', content: 'PERGUNTA: "qual o peso da mala?"\n/no_think' },
+                    { role: 'assistant', content: 'Não sei.' },
+                    { role: 'user', content: 'PERGUNTA: "o homem tem bigode?"\n/no_think' },
+                    { role: 'assistant', content: 'Não, tem barba longa.' },
+                    { role: 'user', content: `PERGUNTA: "${pergunta}"\n/no_think` }
+                ];
+
+                const saida = await window.geradorLocal(mensagens, {
+                    max_new_tokens: 8,
+                    do_sample: forcarSample === true,
+                    temperature: forcarSample ? 0.6 : undefined,
+                    repetition_penalty: 1.15,
+                });
+
+                let texto = saida?.[0]?.generated_text?.at(-1)?.content ?? '';
+                texto = texto.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+
+                // Checagem de forma, não de conteúdo: só descarta se veio
+                // quebrado (vazio, longo demais, inglês vazando). Nunca
+                // rejeita por não estar "fundamentado" no texto da sala —
+                // aqui inventar dentro do razoável é o objetivo.
+                const PALAVRAS_SUSPEITAS = /\b(the|is|are|and|you|sorry|cannot|answer|question)\b/i;
+                if (!texto || texto.length > 40 || PALAVRAS_SUSPEITAS.test(texto) || texto.includes('<think>')) {
+                    console.warn("⚠️ [Tier 3] Saída inválida — descartando.");
+                    return null;
+                }
+
+                return texto;
+
+            } catch (erro) {
+                console.error("❌ Erro na geração local (Tier 3):", erro);
+                return null;
             }
         }
 
-        return { texto, cobertura };
-
-    } catch (erro) {
-        console.error("❌ Erro na geração local (Tier 3):", erro);
-        return null;
-    }
-}
-
-// ============================================================
-// NOVO — ponto de entrada único. Troque as chamadas antigas de
-// responderExameLocal(pergunta, sala.texto_logico) por
-// responderComEscalonamento(pergunta, sala) onde isso for orquestrado.
-//
-// Ordem: cache de fatos (grátis, garante consistência) → Tier 3
-// guloso → Tier 3 com sample (só se o guloso falhar o gate) →
-// extrativo do Tier 2 (nunca inventa) → template opcional (off).
-// ============================================================
-const PERMITIR_FALLBACK_TEMPLATE = false; // true só se aceitar um último recurso não-gerado
-
-async function responderComEscalonamento(pergunta, sala) {
-    const LIMIAR_FUNDAMENTACAO = 0.30; // ponto de partida — calibrar com os logs da sua semana de teste
-
-    const vetorPergunta = window.extratorSemantico
-        ? (await window.extratorSemantico(pergunta, { pooling: 'mean', normalize: true })).data
-        : null;
-
-    if (vetorPergunta) {
-        const doCache = verificarCacheDeFatos(vetorPergunta, sala);
-        if (doCache) return doCache;
-    }
-
-    const frases = await obterFrasesEmbedadas(sala);
-
-    let resultado = await responderExameLocal(pergunta, sala, { vetorPerguntaPrecomputado: vetorPergunta });
-    if (resultado?.texto && (await calcularFundamentacao(resultado.texto, frases)) >= LIMIAR_FUNDAMENTACAO) {
-        if (vetorPergunta) salvarFatoCache(pergunta, vetorPergunta, resultado.texto, sala);
-        return resultado.texto;
-    }
-
-    resultado = await responderExameLocal(pergunta, sala, { vetorPerguntaPrecomputado: vetorPergunta, forcarSample: true });
-    if (resultado?.texto && (await calcularFundamentacao(resultado.texto, frases)) >= LIMIAR_FUNDAMENTACAO) {
-        if (vetorPergunta) salvarFatoCache(pergunta, vetorPergunta, resultado.texto, sala);
-        return resultado.texto;
-    }
-
-    const extrato = await buscarFraseRelevante(pergunta, sala, vetorPergunta);
-    if (extrato && extrato.score >= 0.4) {
-        if (vetorPergunta) salvarFatoCache(pergunta, vetorPergunta, extrato.frase, sala);
-        return extrato.frase;
-    }
-
-    if (PERMITIR_FALLBACK_TEMPLATE) {
-        const foco = sala.entidades?.[0]?.nome || sala.objetos?.[0]?.nome || 'algo próximo';
-        return `Algo sobre ${foco} ainda escapa à sua percepção.`;
-    }
-
-    return null;
-}
+    
         iniciarMotorSemantico();
         iniciarGeradorLocal();
 
