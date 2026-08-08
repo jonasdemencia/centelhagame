@@ -945,70 +945,69 @@
         // real de um modelo desse tamanho — troca a versão anterior, que
         // pedia narração livre sobre os 300 palavras da sala inteira.
         // ============================================================
-        async function inventarDetalheLocal(pergunta, opcoes = {}) {
-            if (!window.geradorLocal && window.geradorLocalPromise) {
-                console.log("⏳ [Tier 3] Narrador local ainda carregando, aguardando...");
-                await window.geradorLocalPromise;
+       async function inventarDetalheLocal(pergunta, opcoes = {}) {
+    if (!window.geradorLocal && window.geradorLocalPromise) {
+        console.log("⏳ [Tier 3] Narrador local ainda carregando, aguardando...");
+        await window.geradorLocalPromise;
+    }
+    if (!window.geradorLocal) return null;
+
+    const { segundaTentativa = false } = opcoes;
+
+    for (let tentativa = 0; tentativa < 3; tentativa++) {
+        try {
+            const mensagens = [
+                {
+                    role: 'system',
+                    content: 'You are a prop/character detail generator for a horror game. Given a QUESTION about something not described in the story, invent ONE simple, ordinary, plausible answer that fits a grim, decayed atmosphere. Respond in Brazilian Portuguese, 1 to 4 words, ending in a period. Never explain. Never refuse. If the question asks about something unknowable without direct interaction (exact weight, contents of something closed, private thoughts), respond with "Não sei." Otherwise you must invent something concrete. /no_think'
+                },
+                { role: 'user', content: 'PERGUNTA: "qual a cor da camisa do homem?"\n/no_think' },
+                { role: 'assistant', content: 'Azul.' },
+                { role: 'user', content: 'PERGUNTA: "que tipo de sapato ele está usando?"\n/no_think' },
+                { role: 'assistant', content: 'Botas gastas.' },
+                { role: 'user', content: 'PERGUNTA: "qual o peso da mala?"\n/no_think' },
+                { role: 'assistant', content: 'Não sei.' },
+                { role: 'user', content: 'PERGUNTA: "o homem tem bigode?"\n/no_think' },
+                { role: 'assistant', content: 'Não, tem barba longa.' },
+                { role: 'user', content: `PERGUNTA: "${pergunta}"\n/no_think` }
+            ];
+
+            const saida = await window.geradorLocal(mensagens, {
+                max_new_tokens: 14,
+                do_sample: true,
+                top_p: opcoes.segundaTentativa ? 0.92 : 0.9,
+                temperature: opcoes.segundaTentativa ? 0.8 : 0.6,
+                repetition_penalty: 1.15,
+            });
+
+            let texto = saida?.[0]?.generated_text?.at(-1)?.content ?? '';
+            texto = texto.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+
+            // Checagem de pontuação e tamanho (já existente)
+            const primeiroPonto = texto.match(/^.*?[.!?]/);
+            if (!primeiroPonto || texto.length > 40) {
+                console.warn("⚠️ [Tier 3] Saída inválida (cortada ou longa) – descartando.");
+                continue;
             }
-            if (!window.geradorLocal) return null;
+            const resposta = primeiroPonto[0];
 
-            const { segundaTentativa = false } = opcoes;
-
-            try {
-                const mensagens = [
-                    {
-                        role: 'system',
-                        content: 'You are a prop/character detail generator for a horror game. Given a QUESTION about something not described in the story, invent ONE simple, ordinary, plausible answer that fits a grim, decayed atmosphere. Respond in Brazilian Portuguese, 1 to 4 words, ending in a period. Never explain. Never refuse. If the question asks about something unknowable without direct interaction (exact weight, contents of something closed, private thoughts), respond with "Não sei." Otherwise you must invent something concrete. /no_think'
-                    },
-                    { role: 'user', content: 'PERGUNTA: "qual a cor da camisa do homem?"\n/no_think' },
-                    { role: 'assistant', content: 'Azul.' },
-                    { role: 'user', content: 'PERGUNTA: "que tipo de sapato ele está usando?"\n/no_think' },
-                    { role: 'assistant', content: 'Botas gastas.' },
-                    { role: 'user', content: 'PERGUNTA: "qual o peso da mala?"\n/no_think' },
-                    { role: 'assistant', content: 'Não sei.' },
-                    { role: 'user', content: 'PERGUNTA: "o homem tem bigode?"\n/no_think' },
-                    { role: 'assistant', content: 'Não, tem barba longa.' },
-                    { role: 'user', content: `PERGUNTA: "${pergunta}"\n/no_think` }
-                ];
-
-                const saida = await window.geradorLocal(mensagens, {
-    max_new_tokens: 14,
-    do_sample: true,                                    // era false
-    top_p: opcoes.segundaTentativa ? 0.92 : 0.9,
-    temperature: opcoes.segundaTentativa ? 0.8 : 0.6,
-    repetition_penalty: 1.15,
-});
-
-                let texto = saida?.[0]?.generated_text?.at(-1)?.content ?? '';
-                texto = texto.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
-
-                // Checagem de forma, não de conteúdo: só descarta se veio
-                // quebrado (vazio, longo demais, inglês vazando). Nunca
-                // rejeita por não estar "fundamentado" no texto da sala —
-                // aqui inventar dentro do razoável é o objetivo.
-                const PALAVRAS_SUSPEITAS = /\b(the|is|are|and|you|sorry|cannot|answer|question)\b/i;
-                if (!texto || texto.length > 40 || PALAVRAS_SUSPEITAS.test(texto) || texto.includes('<think>')) {
-                    console.warn("⚠️ [Tier 3] Saída inválida — descartando.");
-                    return null;
-                }
-
-                // Corta na primeira pontuação final. Se não tiver nenhuma,
-                // a resposta veio cortada no meio — descarta em vez de
-                // devolver frase pela metade (isso aciona o retry com
-                // forcarSample:true que já existe no chamador).
-                const primeiroPonto = texto.match(/^.*?[.!?]/);
-                if (!primeiroPonto) {
-                    console.warn("⚠️ [Tier 3] Saída cortada sem pontuação final — descartando:", texto);
-                    return null;
-                }
-
-                return primeiroPonto[0];
-
-            } catch (erro) {
-                console.error("❌ Erro na geração local (Tier 3):", erro);
-                return null;
+            // ⭐ VALIDAÇÃO DE PALAVRA REAL (novo)
+            const palavraValida = await validarPalavraReal(resposta);
+            if (!palavraValida) {
+                console.warn(`⚠️ [Tier 3] Palavra rejeitada pelo LanguageTool: "${resposta}" – tentando novamente...`);
+                continue; // tenta outra geração
             }
+
+            return resposta;
+        } catch (erro) {
+            console.error("❌ [Tier 3] Erro na geração local:", erro);
+            // Se der erro, tenta de novo até 3 vezes
         }
+    }
+
+    // Esgotou as tentativas
+    return null;
+}
 
     
         iniciarMotorSemantico();
