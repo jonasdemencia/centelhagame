@@ -1014,6 +1014,27 @@
         iniciarMotorSemantico();
         iniciarGeradorLocal();
 
+    const LANGUAGETOOL_URL = 'http://localhost:8081/v2/check'; // aponta pro seu Docker
+
+async function validarPalavraReal(texto) {
+    try {
+        const resposta = await fetch(LANGUAGETOOL_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({ text: texto, language: 'pt-BR' })
+        });
+        if (!resposta.ok) return true; // não deu pra checar — não bloqueia, mesmo padrão de fallback silencioso que vocês já usam
+
+        const dados = await resposta.json();
+        const temErroDeGrafia = (dados.matches || []).some(m => m.rule?.issueType === 'misspelling');
+        return !temErroDeGrafia;
+
+    } catch (erro) {
+        console.warn('[LanguageTool] Não alcançável, seguindo sem checagem:', erro);
+        return true; // idem: falha aberta, não trava o narrador se o serviço estiver fora
+    }
+}
+
         function pseudoRandom(seed) {
             let x = Math.sin(seed++) * 10000;
             return x - Math.floor(x);
