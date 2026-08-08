@@ -952,7 +952,7 @@
             }
             if (!window.geradorLocal) return null;
 
-            const { forcarSample = false } = opcoes;
+            const { segundaTentativa = false } = opcoes;
 
             try {
                 const mensagens = [
@@ -972,11 +972,12 @@
                 ];
 
                 const saida = await window.geradorLocal(mensagens, {
-                    max_new_tokens: 14,
-                    do_sample: forcarSample === true,
-                    temperature: forcarSample ? 0.6 : undefined,
-                    repetition_penalty: 1.15,
-                });
+    max_new_tokens: 14,
+    do_sample: true,                                    // era false
+    top_p: opcoes.segundaTentativa ? 0.92 : 0.9,
+    temperature: opcoes.segundaTentativa ? 0.8 : 0.6,
+    repetition_penalty: 1.15,
+});
 
                 let texto = saida?.[0]?.generated_text?.at(-1)?.content ?? '';
                 texto = texto.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
