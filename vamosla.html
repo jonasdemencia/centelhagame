@@ -4076,13 +4076,25 @@ ANSWER:`
                     const fraseRelevante = await buscarFraseRelevante(pergunta, salaAtual, vetorPerguntaAtual);
                     let fatoExtraido = null;
 
-                    if (fraseRelevante && fraseRelevante.score > 0.45) {
+                   if (fraseRelevante && fraseRelevante.score > 0.45) {
                         console.log(`📖 [RAG] Frase encontrada (${fraseRelevante.score.toFixed(4)}): "${fraseRelevante.frase}"`);
                         
                         // 3. Extrai o fato com o 0.6B (Extrator, NÃO narrador)
                         fatoExtraido = await extrairFatoLocal(pergunta, fraseRelevante.frase);
                     } else {
                         console.log("📖 [RAG] Nenhuma frase relevante encontrada.");
+                    }
+
+                    // NOVO: extração literal falhou (ou não tinha frase pra extrair de) —
+                    // tenta gerar do zero antes de desistir.
+                    if (!fatoExtraido) {
+                        fatoExtraido = await inventarDetalheLocal(pergunta);
+                        if (!fatoExtraido) {
+                            fatoExtraido = await inventarDetalheLocal(pergunta, { forcarSample: true });
+                        }
+                        if (fatoExtraido) {
+                            console.log(`🎭 [Invenção] "${pergunta}" -> "${fatoExtraido}"`);
+                        }
                     }
 
                     // 4. Exibe o resultado
