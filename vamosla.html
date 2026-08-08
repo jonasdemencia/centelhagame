@@ -958,7 +958,7 @@
                 const mensagens = [
                     {
                         role: 'system',
-                        content: 'You are a prop/character detail generator for a horror game. Given a QUESTION about something not described in the story, invent ONE simple, ordinary, plausible answer that fits a grim, decayed atmosphere. Respond in Brazilian Portuguese, 1 to 4 words, ending in a period. Never explain. Never refuse. If the question asks about something unknowable without direct interaction (exact weight, contents of something closed, private thoughts), respond with "Não sei." Otherwise you must invent something concrete. /no_think'
+                        content: 'You are a prop/character detail generator for a horror game in BRAZILIAN PORTUGUESE. Given a QUESTION about something not described in the story, invent ONE simple, ordinary, plausible answer that fits a grim, decayed atmosphere. Respond ONLY in CORRECT Brazilian Portuguese, 1 to 4 words, ending in a period. Never explain. Never refuse. If the question asks about something unknowable without direct interaction (exact weight, contents of something closed, private thoughts), respond with "Não sei." Otherwise you must invent something concrete. /no_think'
                     },
                     { role: 'user', content: 'PERGUNTA: "qual a cor da camisa do homem?"\n/no_think' },
                     { role: 'assistant', content: 'Azul.' },
@@ -972,11 +972,23 @@
                 ];
 
                 const saida = await window.geradorLocal(mensagens, {
-    max_new_tokens: 14,
-    do_sample: true,                                    // era false
-    top_p: opcoes.segundaTentativa ? 0.92 : 0.9,
-    temperature: opcoes.segundaTentativa ? 0.8 : 0.6,
-    repetition_penalty: 1.15,
+    max_new_tokens: 150,
+    do_sample: true,
+    
+    // HIPERPARÂMETROS CRÍTICOS PARA O MODELO 0.6B:
+    
+    // Mantém a criatividade para deduções simples, mas impede invenções malucas.
+    temperature: 0.35, 
+    
+    // Corta severamente a "cauda longa" de tokens. 
+    // É isso que impede o modelo de inventar palavras como "braças".
+    top_k: 40, 
+    
+    // Restringe o modelo a usar apenas o grupo de palavras que somam 85% de probabilidade lógica.
+    top_p: 0.85, 
+    
+    // Evita que o modelo repita a mesma palavra em loop sem quebrar a estrutura da frase.
+    repetition_penalty: 1.15 
 });
 
                 let texto = saida?.[0]?.generated_text?.at(-1)?.content ?? '';
