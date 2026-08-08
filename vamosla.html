@@ -972,7 +972,7 @@
                 ];
 
                 const saida = await window.geradorLocal(mensagens, {
-                    max_new_tokens: 8,
+                    max_new_tokens: 14,
                     do_sample: forcarSample === true,
                     temperature: forcarSample ? 0.6 : undefined,
                     repetition_penalty: 1.15,
@@ -991,7 +991,17 @@
                     return null;
                 }
 
-                return texto;
+                // Corta na primeira pontuação final. Se não tiver nenhuma,
+                // a resposta veio cortada no meio — descarta em vez de
+                // devolver frase pela metade (isso aciona o retry com
+                // forcarSample:true que já existe no chamador).
+                const primeiroPonto = texto.match(/^.*?[.!?]/);
+                if (!primeiroPonto) {
+                    console.warn("⚠️ [Tier 3] Saída cortada sem pontuação final — descartando:", texto);
+                    return null;
+                }
+
+                return primeiroPonto[0];
 
             } catch (erro) {
                 console.error("❌ Erro na geração local (Tier 3):", erro);
