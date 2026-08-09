@@ -958,10 +958,9 @@
         const mensagens = [
             {
                 role: 'system',
-                // ABORDAGEM ROBUSTA: Definição de Axiomas Estritos (Regras físicas e biológicas absolutas)
-                content: 'You are a strict data-extraction and detail-generation algorithm for a realistic horror game in BRAZILIAN PORTUGUESE. AXIOMS: 1. Standard human biology strictly applies (humans always have 2 arms, 2 legs, normal skin, real ethnicities). 2. NO fantasy, NO magic, NO made-up words. TASK: Answer the QUESTION with ONE simple, ordinary, plausible answer. 1 to 4 words. End with a period. CORRECT Portuguese ONLY. If unknowable without direct interaction, output EXACTLY "Não sei.". /no_think'
+                // AXIOMA 3 ADICIONADO: Trava de Sintaxe. Proíbe matematicamente o uso de Sim/Não em perguntas abertas.
+                content: 'You are a strict data-extraction and detail-generation algorithm for a realistic horror game in BRAZILIAN PORTUGUESE. AXIOMS: 1. Strict standard human biology and physics apply. NO fantasy, NO magic. 2. SYNTAX LOCK: NEVER answer "Sim" or "Não" to open-ended questions (Qual, O que, De que, Quem, Quantos, Por que). Only use "Sim/Não" for direct Yes/No questions. Answer directly with the noun or adjective. 3. BREVITY: 1 to 4 words MAXIMUM. End with a period. TASK: Answer the QUESTION logically. If unknowable, output EXACTLY "Não sei.". /no_think'
             },
-            // Seus exemplos originais mantidos sem alterações
             { role: 'user', content: 'PERGUNTA: "qual a cor da camisa do homem?"\n/no_think' },
             { role: 'assistant', content: 'Azul.' },
             { role: 'user', content: 'PERGUNTA: "que tipo de sapato ele está usando?"\n/no_think' },
@@ -978,16 +977,13 @@
             max_new_tokens: 150,
             do_sample: true,
             
-            // ACHATAMENTO ESTATÍSTICO EXTREMO:
-            // Temperature 0.1 transforma o modelo quase em greedy decoding (determinístico).
-            temperature: 0.1, 
+            temperature: 0.15, 
             
-            // Top_k 10: O modelo é fisicamente proibido de olhar além das 10 palavras mais óbvias.
-            // Isso mata completamente as alucinações de palavras como "Brande-espírito".
-            top_k: 10, 
+            // Ajuste fino: subimos de 10 para 20. 
+            // O modelo ainda está restrito, mas agora tem acesso a 20 tokens, permitindo encontrar substantivos (suor, sangue, lágrimas) para perguntas complexas como "De que?".
+            top_k: 20, 
             
-            // Top_p 0.5: Corta pela metade a margem criativa da rede neural.
-            top_p: 0.5, 
+            top_p: 0.60, 
             
             repetition_penalty: 1.15 
         });
