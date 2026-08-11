@@ -828,38 +828,62 @@
         // externo (LM Studio, Ollama, etc). Roda via WebGPU se disponível,
         // com fallback automático para WASM.
         // ============================================================
-        async function iniciarGeradorLocal() {
-            window.geradorLocalPromise = (async () => {
-                // Voltamos pro 0.6B: o 1.7B deu std::bad_alloc na GPU dessa máquina
-                // (memória insuficiente pra sessão WebGPU, mesmo quantizado). O 0.6B
-                // sabidamente carrega aqui. As melhorias de prompt/repetition_penalty/
-                // cache continuam valendo independente do tamanho do modelo.
-                const modelId = 'onnx-community/Qwen3.5-0.8B-Text-ONNX';
+        // Candidatos pra Tier 3. 'atual' é o que sabidamente carrega (0.8B).
+        // 'teste_3b' é pra comparar taxa de alucinação/contagem antes de decidir
+        // se vale migrar de stack (ver conversa sobre WebLLM/wllama-webgpu).
+        // Llama 3.2 tem PT-BR como idioma oficialmente suportado no treino.
+        // Repo "-onnx-web-gqa" é o que tem quant q4f16 confirmada rodando em
+        // WebGPU; atenção: há um issue conhecido (transformers.js#1172) de
+        // esse modelo ignorar o system prompt em alguns casos — vale checar
+        // se seus gates de categoria (Não sei.) continuam sendo respeitados.
+        const MODELOS_TIER3 = {
+            atual: 'onnx-community/Qwen3.5-0.8B-Text-ONNX',
+            teste_3b: 'onnx-community/Llama-3.2-3B-Instruct-onnx-web-gqa'
+        };
 
-                // Tenta WebGPU primeiro; se a GPU não tiver memória (bad_alloc) ou o
-                // device não existir, cai pra WASM (CPU) — mais lento, mas não trava.
-                const dispositivosCandidatos = (typeof navigator !== 'undefined' && navigator.gpu)
-                    ? ['webgpu', 'wasm']
-                    : ['wasm'];
+        // Troque aqui pra alternar entre produção e o candidato em teste.
+        const MODELO_TIER3_ATIVO = MODELOS_TIER3.teste_3b;
 
-                for (const dispositivo of dispositivosCandidatos) {
-                    const dtypesCandidatos = dispositivo === 'webgpu' ? ['q4f16', 'q4', 'q8'] : ['q4', 'q8'];
-                    for (const dtypeTentativa of dtypesCandidatos) {
-                        try {
-                            window.geradorLocal = await pipelineGeracao('text-generation', modelId, {
-                                device: dispositivo,
-                                dtype: dtypeTentativa
-                            });
-                            console.log(`✅ Narrador local carregado (device: ${dispositivo}, dtype: ${dtypeTentativa}).`);
-                            return;
-                        } catch (erro) {
-                            console.warn(`⚠️ Falhou carregar com device '${dispositivo}' / dtype '${dtypeTentativa}':`, erro.message);
-                        }
+        async function carregarModeloLocal(modelId) {
+            const dispositivosCandidatos = (typeof navigator !== 'undefined' && navigator.gpu)
+                ? ['webgpu', 'wasm']
+                : ['wasm'];
+
+            for (const dispositivo of dispositivosCandidatos) {
+                const dtypesCandidatos = dispositivo === 'webgpu' ? ['q4f16', 'q4', 'q8'] : ['q4', 'q8'];
+                for (const dtypeTentativa of dtypesCandidatos) {
+                    try {
+                        const inicio = performance.now();
+                        const gerador = await pipelineGeracao('text-generation', modelId, {
+                            device: dispositivo,
+                            dtype: dtypeTentativa
+                        });
+                        const segundos = ((performance.now() - inicio) / 1000).toFixed(1);
+                        console.log(`✅ Narrador local carregado: ${modelId} (device: ${dispositivo}, dtype: ${dtypeTentativa}, ${segundos}s).`);
+                        return gerador;
+                    } catch (erro) {
+                        console.warn(`⚠️ Falhou carregar '${modelId}' com device '${dispositivo}' / dtype '${dtypeTentativa}':`, erro.message);
                     }
                 }
+            }
+            return null;
+        }
 
-                console.error("❌ Não foi possível carregar o narrador local com nenhuma combinação testada.");
-                window.geradorLocal = null;
+        async function iniciarGeradorLocal() {
+            window.geradorLocalPromise = (async () => {
+                window.geradorLocal = await carregarModeloLocal(MODELO_TIER3_ATIVO);
+
+                // Se o candidato em teste falhar em todas as combinações (ex: bad_alloc
+                // por falta de VRAM/RAM), cai pro modelo que sabidamente funciona, em
+                // vez de deixar o Tier 3 inteiro morto durante o teste.
+                if (!window.geradorLocal && MODELO_TIER3_ATIVO !== MODELOS_TIER3.atual) {
+                    console.warn(`⚠️ Candidato '${MODELO_TIER3_ATIVO}' não carregou em nenhuma combinação. Caindo pro modelo de produção.`);
+                    window.geradorLocal = await carregarModeloLocal(MODELOS_TIER3.atual);
+                }
+
+                if (!window.geradorLocal) {
+                    console.error("❌ Não foi possível carregar o narrador local com nenhuma combinação testada.");
+                }
             })();
             return window.geradorLocalPromise;
         }
