@@ -834,7 +834,7 @@
                 // (memória insuficiente pra sessão WebGPU, mesmo quantizado). O 0.6B
                 // sabidamente carrega aqui. As melhorias de prompt/repetition_penalty/
                 // cache continuam valendo independente do tamanho do modelo.
-                const modelId = 'onnx-community/Qwen3-0.6B-heretic-abliterated-uncensored-ONNX';
+                const modelId = 'onnx-community/Qwen3.5-0.8B-Text-ONNX';
 
                 // Tenta WebGPU primeiro; se a GPU não tiver memória (bad_alloc) ou o
                 // device não existir, cai pra WASM (CPU) — mais lento, mas não trava.
