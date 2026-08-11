@@ -834,7 +834,7 @@
                 // (memória insuficiente pra sessão WebGPU, mesmo quantizado). O 0.6B
                 // sabidamente carrega aqui. As melhorias de prompt/repetition_penalty/
                 // cache continuam valendo independente do tamanho do modelo.
-                const modelId = 'onnx-community/Llama-3.2-1B-Instruct-q4f16';
+                const modelId = 'onnx-community/Qwen3-0.6B-heretic-abliterated-uncensored-ONNX';
 
                 // Tenta WebGPU primeiro; se a GPU não tiver memória (bad_alloc) ou o
                 // device não existir, cai pra WASM (CPU) — mais lento, mas não trava.
@@ -959,7 +959,7 @@
             {
                 role: 'system',
                 // ABORDAGEM ROBUSTA: Definição de Axiomas Estritos (Regras físicas e biológicas absolutas)
-                content: 'You are a strict data-extraction and detail-generation algorithm for a realistic horror game in BRAZILIAN PORTUGUESE. AXIOMS: 1. Standard human biology strictly applies (humans always have 2 arms, 2 legs, normal skin, real ethnicities). 2. NO fantasy, NO magic, NO made-up words. TASK: Answer the QUESTION with ONE simple, ordinary, plausible answer. 1 to 4 words. End with a period. CORRECT Portuguese ONLY. If unknowable without direct interaction, output EXACTLY "Não sei.". /no_think'
+                content: 'You are a strict data-extraction and detail-generation algorithm for a realistic horror game in BRAZILIAN PORTUGUESE. NO made-up words. TASK: Answer the QUESTION with ONE simple, ordinary, plausible answer. 1 to 4 words. End with a period. CORRECT Portuguese ONLY. If unknowable without direct interaction, output EXACTLY "Não sei.". /no_think'
             },
             // Seus exemplos originais mantidos sem alterações
             { role: 'user', content: 'PERGUNTA: "qual a cor da camisa do homem?"\n/no_think' },
