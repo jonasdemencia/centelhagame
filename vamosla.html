@@ -82,6 +82,69 @@
         font-size: 18px;
     }
 
+    /* ============================================================
+       WIDGET DE STATUS DO NARRADOR LOCAL (Tier 3) — visível em
+       qualquer dispositivo (iPhone, Android, desktop) pra saber se
+       o modelo carregou, qual (3B ou 0.8B), e o que deu errado,
+       sem precisar de console/DevTools.
+       ============================================================ */
+    #narrador-status-badge {
+        position: fixed;
+        top: 8px;
+        right: 8px;
+        z-index: 500;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(15, 13, 10, 0.92);
+        border: 1px solid #3a3228;
+        border-radius: 4px;
+        padding: 4px 8px;
+        font-family: 'VT323', monospace;
+        font-size: 16px;
+        color: #999;
+        cursor: pointer;
+        user-select: none;
+        max-width: 46vw;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+    #narrador-status-badge .ponto {
+        width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+        background: #666; transition: background 0.3s;
+    }
+    #narrador-status-badge.carregando .ponto { background: #d9a441; animation: pulsar 1.2s infinite; }
+    #narrador-status-badge.pronto .ponto { background: #4caf50; }
+    #narrador-status-badge.erro .ponto { background: #e53935; }
+    @keyframes pulsar { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+    #narrador-status-barra-container {
+        width: 40px; height: 5px; background: #2a251e; border-radius: 3px;
+        overflow: hidden; flex-shrink: 0; display: none;
+    }
+    #narrador-status-badge.carregando #narrador-status-barra-container { display: block; }
+    #narrador-status-barra {
+        height: 100%; width: 0%; background: #d9a441; transition: width 0.25s ease-out;
+    }
+
+    #narrador-status-painel {
+        position: fixed; top: 40px; right: 8px; z-index: 500;
+        width: min(340px, 88vw); max-height: 50vh; overflow-y: auto;
+        background: rgba(10, 9, 7, 0.97); border: 1px solid #3a3228; border-radius: 4px;
+        padding: 10px 12px; font-family: 'Courier New', monospace; font-size: 12px;
+        color: #aaa; line-height: 1.5; display: none;
+    }
+    #narrador-status-painel.aberto { display: block; }
+    #narrador-status-painel .linha-log { margin-bottom: 4px; word-break: break-word; }
+    #narrador-status-painel .linha-log.ok { color: #4caf50; }
+    #narrador-status-painel .linha-log.falha { color: #e53935; }
+    #narrador-status-painel .linha-log.info { color: #888; }
+    #narrador-status-painel .fechar-painel {
+        display: block; margin-top: 8px; color: #666; text-align: right;
+        font-family: 'VT323', monospace; font-size: 14px; cursor: pointer;
+    }
+
     #main-scroll-area {
         display: flex;
         flex-direction: column;
@@ -334,6 +397,16 @@
             <button onclick="abrirMapaVisual()" class="nav-btn" style="padding: 4px 8px; font-size: 16px; font-family: 'VT323', monospace;">👁️ MAPA</button>
             <button id="abrir-inventario-btn" class="nav-btn" style="padding: 4px 8px; font-size: 16px; font-family: 'VT323', monospace;" onclick="abrirInventarioSemItem()">🎒 INV</button>
         </div>
+    </div>
+
+    <div id="narrador-status-badge" onclick="alternarPainelStatusNarrador()" title="Status do narrador local">
+        <span class="ponto"></span>
+        <span id="narrador-status-texto">narrador: aguardando…</span>
+        <span id="narrador-status-barra-container"><span id="narrador-status-barra"></span></span>
+    </div>
+    <div id="narrador-status-painel">
+        <div id="narrador-status-log"></div>
+        <span class="fechar-painel" onclick="alternarPainelStatusNarrador()">fechar ✕</span>
     </div>
 
     <div id="main-scroll-area">
@@ -843,10 +916,74 @@
         }
 
         // ============================================================
-        // NARRADOR LOCAL MÍNIMO (Tier 3) — 100% no navegador, sem servidor
-        // externo (LM Studio, Ollama, etc). Roda via WebGPU se disponível,
-        // com fallback automático para WASM.
+        // WIDGET DE STATUS DO NARRADOR — atualiza o badge fixo e o
+        // painel de log. Funciona em qualquer device; é o substituto
+        // do console do DevTools pra quem tá testando no iPhone.
         // ============================================================
+        const _arquivosProgresso = new Map(); // nome do arquivo -> {loaded, total}
+
+        function logStatusNarrador(mensagem, tipo = 'info') {
+            const log = document.getElementById('narrador-status-log');
+            if (!log) return;
+            const linha = document.createElement('div');
+            linha.className = `linha-log ${tipo}`;
+            const hora = new Date().toLocaleTimeString('pt-BR', { hour12: false });
+            linha.textContent = `[${hora}] ${mensagem}`;
+            log.appendChild(linha);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        function atualizarBadgeNarrador({ estado, texto, progresso = null }) {
+            const badge = document.getElementById('narrador-status-badge');
+            const textoEl = document.getElementById('narrador-status-texto');
+            const barra = document.getElementById('narrador-status-barra');
+            if (!badge || !textoEl) return;
+
+            badge.classList.remove('carregando', 'pronto', 'erro');
+            if (estado) badge.classList.add(estado);
+            textoEl.textContent = texto;
+
+            if (progresso !== null && barra) {
+                barra.style.width = `${Math.max(0, Math.min(100, progresso))}%`;
+            }
+        }
+
+        function alternarPainelStatusNarrador() {
+            document.getElementById('narrador-status-painel')?.classList.toggle('aberto');
+        }
+
+        // Callback pra passar em `pipelineGeracao(..., { progress_callback })`.
+        // O transformers.js chama isso por arquivo (pesos costumam vir em vários
+        // shards + tokenizer + config), então agregamos loaded/total de todos os
+        // arquivos vistos até agora pra ter uma % geral, não só do último arquivo.
+        function criarCallbackProgresso(rotuloModelo) {
+            return (info) => {
+                if (info.status === 'initiate') {
+                    _arquivosProgresso.set(info.file, { loaded: 0, total: 0 });
+                    logStatusNarrador(`${rotuloModelo}: iniciando '${info.file}'…`, 'info');
+                } else if (info.status === 'progress') {
+                    _arquivosProgresso.set(info.file, { loaded: info.loaded, total: info.total });
+                    let loadedTotal = 0, totalTotal = 0;
+                    for (const { loaded, total } of _arquivosProgresso.values()) {
+                        loadedTotal += loaded;
+                        totalTotal += total;
+                    }
+                    const pct = totalTotal > 0 ? (loadedTotal / totalTotal) * 100 : 0;
+                    const mb = (loadedTotal / 1e6).toFixed(0);
+                    const mbTotal = (totalTotal / 1e6).toFixed(0);
+                    atualizarBadgeNarrador({
+                        estado: 'carregando',
+                        texto: `${rotuloModelo}: ${pct.toFixed(0)}% (${mb}/${mbTotal}MB)`,
+                        progresso: pct
+                    });
+                } else if (info.status === 'done') {
+                    logStatusNarrador(`${rotuloModelo}: '${info.file}' concluído.`, 'ok');
+                } else if (info.status === 'ready') {
+                    logStatusNarrador(`${rotuloModelo}: modelo pronto para inferência.`, 'ok');
+                }
+            };
+        }
+
         // Candidatos pra Tier 3. 'atual' é o que sabidamente carrega (0.8B).
         // 'teste_3b' é pra comparar taxa de alucinação/contagem antes de decidir
         // se vale migrar de stack (ver conversa sobre WebLLM/wllama-webgpu).
@@ -886,24 +1023,29 @@
         // pra saber se um tensor grande do 3B tem chance de ser rejeitado.
         async function sondarCapacidadeWebGPU() {
             if (!(typeof navigator !== 'undefined' && navigator.gpu)) {
+                logStatusNarrador('WebGPU indisponível neste navegador (navigator.gpu ausente).', 'falha');
                 return { suportado: false };
             }
             try {
                 const adapter = await navigator.gpu.requestAdapter();
-                if (!adapter) return { suportado: false };
+                if (!adapter) {
+                    logStatusNarrador('navigator.gpu existe, mas requestAdapter() retornou nulo.', 'falha');
+                    return { suportado: false };
+                }
                 const temF16 = adapter.features.has('shader-f16');
                 const limiteBuffer = adapter.limits?.maxBufferSize || 0;
                 const limiteStorageBuffer = adapter.limits?.maxStorageBufferBindingSize || 0;
-                console.log(`ℹ️ Adapter WebGPU: shader-f16=${temF16}, maxBufferSize=${(limiteBuffer / 1e9).toFixed(2)}GB, maxStorageBufferBindingSize=${(limiteStorageBuffer / 1e9).toFixed(2)}GB`);
+                logStatusNarrador(`Adapter WebGPU ok — shader-f16: ${temF16 ? 'sim' : 'não'}, maxBufferSize: ${(limiteBuffer / 1e9).toFixed(2)}GB.`, 'info');
                 return { suportado: true, temF16, limiteBuffer, limiteStorageBuffer };
             } catch (erro) {
-                console.warn('⚠️ Falha ao sondar adapter WebGPU:', erro.message);
+                logStatusNarrador(`Falha ao sondar adapter WebGPU: ${erro.message}`, 'falha');
                 return { suportado: false };
             }
         }
 
-        async function carregarModeloLocal(modelId, opcoes = {}) {
+        async function carregarModeloLocal(modelId, rotuloModelo, opcoes = {}) {
             const { pularWasmSeIOS = false } = opcoes;
+            atualizarBadgeNarrador({ estado: 'carregando', texto: `narrador: verificando GPU…`, progresso: 0 });
             const capacidade = await sondarCapacidadeWebGPU();
             const noIOS = ehIOS();
 
@@ -915,7 +1057,7 @@
                 // cresce até ser matado pelo Jetsam. Geração de texto sempre
                 // tem pelo menos algumas ops (sampling, cast) que caem pra CPU,
                 // então isso é risco estrutural, não hipotético, no seu stack.
-                console.warn('⚠️ iOS detectado: risco conhecido de JSEP travar memória no WebKit 26 (onnxruntime#26827). Monitorando de perto.');
+                logStatusNarrador('iOS detectado — risco conhecido de JSEP travar memória no WebKit 26 (onnxruntime#26827).', 'info');
             }
 
             const dispositivosCandidatos = capacidade.suportado
@@ -927,7 +1069,7 @@
                 if (dispositivo === 'webgpu') {
                     dtypesCandidatos = capacidade.temF16 ? ['q4f16', 'q4', 'q8'] : ['q4', 'q8'];
                     if (!capacidade.temF16) {
-                        console.warn('⚠️ shader-f16 indisponível neste adapter — pulando dtype q4f16 (evita tentativa de load fadada).');
+                        logStatusNarrador('shader-f16 indisponível — pulando dtype q4f16.', 'info');
                     }
                 } else {
                     dtypesCandidatos = ['q4', 'q8'];
@@ -935,16 +1077,24 @@
 
                 for (const dtypeTentativa of dtypesCandidatos) {
                     try {
+                        _arquivosProgresso.clear();
+                        const rotuloTentativa = `${rotuloModelo} (${dispositivo}/${dtypeTentativa})`;
+                        atualizarBadgeNarrador({ estado: 'carregando', texto: `${rotuloTentativa}: iniciando…`, progresso: 0 });
+                        logStatusNarrador(`Tentando ${modelId} — device: ${dispositivo}, dtype: ${dtypeTentativa}…`, 'info');
+
                         const inicio = performance.now();
                         const gerador = await pipelineGeracao('text-generation', modelId, {
                             device: dispositivo,
-                            dtype: dtypeTentativa
+                            dtype: dtypeTentativa,
+                            progress_callback: criarCallbackProgresso(rotuloTentativa)
                         });
                         const segundos = ((performance.now() - inicio) / 1000).toFixed(1);
-                        console.log(`✅ Narrador local carregado: ${modelId} (device: ${dispositivo}, dtype: ${dtypeTentativa}, ${segundos}s).`);
+
+                        logStatusNarrador(`Carregado: ${modelId} (${dispositivo}, ${dtypeTentativa}, ${segundos}s).`, 'ok');
+                        atualizarBadgeNarrador({ estado: 'pronto', texto: `✅ ${rotuloModelo} pronto (${dispositivo}/${dtypeTentativa})`, progresso: 100 });
                         return gerador;
                     } catch (erro) {
-                        console.warn(`⚠️ Falhou carregar '${modelId}' com device '${dispositivo}' / dtype '${dtypeTentativa}':`, erro.message);
+                        logStatusNarrador(`Falhou (${dispositivo}/${dtypeTentativa}): ${erro.message}`, 'falha');
                     }
                 }
             }
@@ -958,18 +1108,19 @@
                 // a tentativa, e cada tentativa extra de load é mais uma chance
                 // de bater no bug de memória do JSEP antes mesmo de chegar no
                 // modelo de produção.
-                window.geradorLocal = await carregarModeloLocal(MODELO_TIER3_ATIVO, { pularWasmSeIOS: true });
+                window.geradorLocal = await carregarModeloLocal(MODELO_TIER3_ATIVO, '3B', { pularWasmSeIOS: true });
 
                 // Se o candidato em teste falhar em todas as combinações (ex: bad_alloc
                 // por falta de VRAM/RAM, ou o bug do JSEP no iOS), cai pro modelo que
                 // sabidamente funciona, em vez de deixar o Tier 3 inteiro morto.
                 if (!window.geradorLocal && MODELO_TIER3_ATIVO !== MODELOS_TIER3.atual) {
-                    console.warn(`⚠️ Candidato '${MODELO_TIER3_ATIVO}' não carregou em nenhuma combinação. Caindo pro modelo de produção.`);
-                    window.geradorLocal = await carregarModeloLocal(MODELOS_TIER3.atual);
+                    logStatusNarrador(`Candidato '${MODELO_TIER3_ATIVO}' não carregou em nenhuma combinação. Caindo pro modelo de produção (0.8B).`, 'falha');
+                    window.geradorLocal = await carregarModeloLocal(MODELOS_TIER3.atual, '0.8B');
                 }
 
                 if (!window.geradorLocal) {
-                    console.error("❌ Não foi possível carregar o narrador local com nenhuma combinação testada.");
+                    logStatusNarrador('Não foi possível carregar o narrador local com nenhuma combinação testada.', 'falha');
+                    atualizarBadgeNarrador({ estado: 'erro', texto: '❌ narrador indisponível (toque p/ ver erros)', progresso: 0 });
                 }
             })();
             return window.geradorLocalPromise;
