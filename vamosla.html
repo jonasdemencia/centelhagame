@@ -3,7 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <title>Centelha</title>
-    
+
+    <!-- PWA: instalado via "Adicionar à Tela de Início" no Safari, o jogo
+         roda fora da política de expiração de 7 dias de storage do ITP que
+         se aplica a abas normais — importante pro cache do modelo de 3B
+         (~1.7GB) sobreviver entre sessões. Também roda em processo próprio,
+         separado do gerenciamento de memória de abas em segundo plano do
+         Safari. Requer manifest.json na raiz do site (ver arquivo separado). -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Centelha">
+    <meta name="theme-color" content="#050505">
+
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
     
@@ -532,7 +544,14 @@
         import { pipeline, cos_sim } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.16.0';
         // Import separado (versão mais nova da mesma lib, renomeada) só para o pipeline de geração de texto.
         // Mantido isolado do import acima para não arriscar quebrar o motor de embeddings que já funciona.
-        import { pipeline as pipelineGeracao } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@4';
+        import { pipeline as pipelineGeracao, env as envGeracao } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@4';
+
+        // Cache persistente dos pesos do modelo via Cache Storage do browser,
+        // pra não rebaixar ~1.7GB toda sessão. Isso NÃO contorna o teto de 7
+        // dias de inatividade do ITP do Safari em storage script-acessível —
+        // pra isso o jogo precisa estar instalado como PWA (ver manifest.json).
+        envGeracao.useBrowserCache = true;
+        envGeracao.allowLocalModels = false;
 
         // ============================================================
         // Importações Firebase
@@ -844,13 +863,76 @@
         // Troque aqui pra alternar entre produção e o candidato em teste.
         const MODELO_TIER3_ATIVO = MODELOS_TIER3.teste_3b;
 
-        async function carregarModeloLocal(modelId) {
-            const dispositivosCandidatos = (typeof navigator !== 'undefined' && navigator.gpu)
-                ? ['webgpu', 'wasm']
+        // ------------------------------------------------------------
+        // iOS/iPadOS: WebGPU só é padrão a partir do Safari 26 (iOS 26).
+        // Detecção é por engine, não por "navigator.gpu existe": todo
+        // browser em iOS usa WebKit por baixo (regra da própria Apple),
+        // então Chrome/Firefox/Edge no iPhone têm exatamente as mesmas
+        // limitações de memória e o mesmo bug abaixo.
+        // ------------------------------------------------------------
+        function ehIOS() {
+            const ua = navigator.userAgent || '';
+            const ehIPhoneIPad = /iPad|iPhone|iPod/.test(ua);
+            // iPadOS moderno se reporta como "Mac" com touch — sem isso, iPad passa batido.
+            const ehIPadDisfarcado = navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1;
+            return ehIPhoneIPad || ehIPadDisfarcado;
+        }
+
+        // Sonda o adapter WebGPU de verdade em vez de só checar se
+        // 'navigator.gpu' existe. Isso nos diz: (1) se o shader-f16 tá
+        // disponível — sem ele, dtype 'q4f16' não deveria nem ser tentado,
+        // é desperdício de uma tentativa de load num ambiente que já é
+        // apertado em memória; (2) o teto de buffer que o driver aceita,
+        // pra saber se um tensor grande do 3B tem chance de ser rejeitado.
+        async function sondarCapacidadeWebGPU() {
+            if (!(typeof navigator !== 'undefined' && navigator.gpu)) {
+                return { suportado: false };
+            }
+            try {
+                const adapter = await navigator.gpu.requestAdapter();
+                if (!adapter) return { suportado: false };
+                const temF16 = adapter.features.has('shader-f16');
+                const limiteBuffer = adapter.limits?.maxBufferSize || 0;
+                const limiteStorageBuffer = adapter.limits?.maxStorageBufferBindingSize || 0;
+                console.log(`ℹ️ Adapter WebGPU: shader-f16=${temF16}, maxBufferSize=${(limiteBuffer / 1e9).toFixed(2)}GB, maxStorageBufferBindingSize=${(limiteStorageBuffer / 1e9).toFixed(2)}GB`);
+                return { suportado: true, temF16, limiteBuffer, limiteStorageBuffer };
+            } catch (erro) {
+                console.warn('⚠️ Falha ao sondar adapter WebGPU:', erro.message);
+                return { suportado: false };
+            }
+        }
+
+        async function carregarModeloLocal(modelId, opcoes = {}) {
+            const { pularWasmSeIOS = false } = opcoes;
+            const capacidade = await sondarCapacidadeWebGPU();
+            const noIOS = ehIOS();
+
+            if (noIOS) {
+                // Bug ativo (fechado por stale-bot sem correção confirmada) em
+                // ONNX Runtime Web #26827: no modo JSEP do Safari/WebKit 26,
+                // qualquer operação que caia pra execução em CPU dentro da
+                // mesma sessão WebGPU trava num loop de realocação e o processo
+                // cresce até ser matado pelo Jetsam. Geração de texto sempre
+                // tem pelo menos algumas ops (sampling, cast) que caem pra CPU,
+                // então isso é risco estrutural, não hipotético, no seu stack.
+                console.warn('⚠️ iOS detectado: risco conhecido de JSEP travar memória no WebKit 26 (onnxruntime#26827). Monitorando de perto.');
+            }
+
+            const dispositivosCandidatos = capacidade.suportado
+                ? (noIOS && pularWasmSeIOS ? ['webgpu'] : ['webgpu', 'wasm'])
                 : ['wasm'];
 
             for (const dispositivo of dispositivosCandidatos) {
-                const dtypesCandidatos = dispositivo === 'webgpu' ? ['q4f16', 'q4', 'q8'] : ['q4', 'q8'];
+                let dtypesCandidatos;
+                if (dispositivo === 'webgpu') {
+                    dtypesCandidatos = capacidade.temF16 ? ['q4f16', 'q4', 'q8'] : ['q4', 'q8'];
+                    if (!capacidade.temF16) {
+                        console.warn('⚠️ shader-f16 indisponível neste adapter — pulando dtype q4f16 (evita tentativa de load fadada).');
+                    }
+                } else {
+                    dtypesCandidatos = ['q4', 'q8'];
+                }
+
                 for (const dtypeTentativa of dtypesCandidatos) {
                     try {
                         const inicio = performance.now();
@@ -871,11 +953,16 @@
 
         async function iniciarGeradorLocal() {
             window.geradorLocalPromise = (async () => {
-                window.geradorLocal = await carregarModeloLocal(MODELO_TIER3_ATIVO);
+                // No iOS, não tentamos o fallback wasm pro modelo de 3B: rodar
+                // 3B em CPU pura no Safari mobile é lento a ponto de não valer
+                // a tentativa, e cada tentativa extra de load é mais uma chance
+                // de bater no bug de memória do JSEP antes mesmo de chegar no
+                // modelo de produção.
+                window.geradorLocal = await carregarModeloLocal(MODELO_TIER3_ATIVO, { pularWasmSeIOS: true });
 
                 // Se o candidato em teste falhar em todas as combinações (ex: bad_alloc
-                // por falta de VRAM/RAM), cai pro modelo que sabidamente funciona, em
-                // vez de deixar o Tier 3 inteiro morto durante o teste.
+                // por falta de VRAM/RAM, ou o bug do JSEP no iOS), cai pro modelo que
+                // sabidamente funciona, em vez de deixar o Tier 3 inteiro morto.
                 if (!window.geradorLocal && MODELO_TIER3_ATIVO !== MODELOS_TIER3.atual) {
                     console.warn(`⚠️ Candidato '${MODELO_TIER3_ATIVO}' não carregou em nenhuma combinação. Caindo pro modelo de produção.`);
                     window.geradorLocal = await carregarModeloLocal(MODELOS_TIER3.atual);
