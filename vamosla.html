@@ -1106,7 +1106,9 @@
             for (const dispositivo of dispositivosCandidatos) {
                 let dtypesCandidatos;
                 if (dispositivo === 'webgpu') {
-                    dtypesCandidatos = capacidade.temF16 ? ['q4f16', 'q4', 'q8'] : ['q4', 'q8'];
+                    dtypesCandidatos = noIOS
+                        ? [capacidade.temF16 ? 'q4f16' : 'q4']
+                        : (capacidade.temF16 ? ['q4f16', 'q4', 'q8'] : ['q4', 'q8']);
                     if (!capacidade.temF16) {
                         logStatusNarrador('shader-f16 indisponível — pulando dtype q4f16.', 'info');
                     }
@@ -1181,25 +1183,8 @@
             _trocandoModeloNarrador = true;
             definirSeletorHabilitado(false);
 
-            CHAVE_MODELO_ATIVA = chave;
             try { localStorage.setItem('centelha_narrador_modelo', chave); } catch (_) { /* ignora */ }
-
-            // Libera o modelo anterior antes de carregar o novo — evita
-            // empilhar dois modelos na memória ao mesmo tempo, que é o pior
-            // cenário possível no iOS, onde já estamos no limite.
-            if (window.geradorLocal?.model?.dispose) {
-                try { await window.geradorLocal.model.dispose(); } catch (erro) {
-                    logStatusNarrador(`Aviso: dispose() do modelo anterior falhou: ${erro.message}`, 'info');
-                }
-            }
-            window.geradorLocal = null;
-            logStatusNarrador(`Trocando narrador pra ${MODELOS_TIER3[chave].rotulo}…`, 'info');
-            atualizarSeletorModeloUI();
-
-            await iniciarGeradorLocal();
-
-            _trocandoModeloNarrador = false;
-            definirSeletorHabilitado(true);
+            location.reload(); // reload completo garante que a memória do modelo anterior é liberada de verdade
         }
         window.trocarModeloNarrador = trocarModeloNarrador;
 
@@ -1366,10 +1351,11 @@
     }
 }
     
-        iniciarMotorSemantico();
-        atualizarSeletorModeloUI();
-        iniciarGeradorLocal();
-
+        (async () => {
+    await iniciarMotorSemantico();
+    atualizarSeletorModeloUI();
+    await iniciarGeradorLocal();
+})();
         function pseudoRandom(seed) {
             let x = Math.sin(seed++) * 10000;
             return x - Math.floor(x);
