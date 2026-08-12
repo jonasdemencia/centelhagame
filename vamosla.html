@@ -11,7 +11,7 @@
          separado do gerenciamento de memória de abas em segundo plano do
          Safari. Requer manifest.json na raiz do site (ver arquivo separado). -->
     <link rel="manifest" href="manifest.json">
-    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Centelha">
     <meta name="theme-color" content="#050505">
@@ -975,6 +975,9 @@
     function alternarPainelStatusNarrador() {
         document.getElementById('narrador-status-painel')?.classList.toggle('aberto');
     }
+
+    // EXPORTA PARA O ESCOPO GLOBAL
+    window.alternarPainelStatusNarrador = alternarPainelStatusNarrador;
 
     function criarCallbackProgresso(rotuloModelo) {
         return (info) => {
