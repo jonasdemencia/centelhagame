@@ -11,10 +11,16 @@
          separado do gerenciamento de memória de abas em segundo plano do
          Safari. Requer manifest.json na raiz do site (ver arquivo separado). -->
     <link rel="manifest" href="manifest.json">
+    <!-- Safari ainda só lê a versão com prefixo "apple-"; a versão sem prefixo
+         é o padrão novo cross-browser. Mantemos as duas. -->
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Centelha">
     <meta name="theme-color" content="#050505">
+    <!-- Favicon inline mínimo — só pra parar o 404 no console até você ter
+         um ícone de verdade (ver icons/icon-192.png / icon-512.png). -->
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23050505'/%3E%3Ctext x='50' y='68' font-size='60' text-anchor='middle' fill='%23d9a441'%3E%E2%9A%A1%3C/text%3E%3C/svg%3E">
 
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
@@ -971,6 +977,7 @@
         function alternarPainelStatusNarrador() {
             document.getElementById('narrador-status-painel')?.classList.toggle('aberto');
         }
+        window.alternarPainelStatusNarrador = alternarPainelStatusNarrador;
 
         // Callback pra passar em `pipelineGeracao(..., { progress_callback })`.
         // O transformers.js chama isso por arquivo (pesos costumam vir em vários
@@ -1194,6 +1201,7 @@
             _trocandoModeloNarrador = false;
             definirSeletorHabilitado(true);
         }
+        window.trocarModeloNarrador = trocarModeloNarrador;
 
         function atualizarSeletorModeloUI() {
             document.querySelectorAll('#narrador-seletor-modelo button').forEach(btn => {
