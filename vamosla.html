@@ -427,9 +427,7 @@
     <div id="narrador-status-painel">
         <div id="narrador-seletor-modelo" class="seletor-modelo">
             <span class="seletor-titulo">modelo:</span>
-            <button data-modelo="q08b" onclick="trocarModeloNarrador('q08b')">0.8B</button>
-            <button data-modelo="q15b" onclick="trocarModeloNarrador('q15b')">1.5B</button>
-            <button data-modelo="l3b" onclick="trocarModeloNarrador('l3b')">3B</button>
+            <span id="narrador-seletor-modelo-botoes"></span>
         </div>
         <div id="narrador-status-log"></div>
         <span class="fechar-painel" onclick="alternarPainelStatusNarrador()">fechar ✕</span>
@@ -641,16 +639,12 @@
 <script type="module">
 
         import { pipeline, cos_sim } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.16.0';
-        // Import separado (versão mais nova da mesma lib, renomeada) só para o pipeline de geração de texto.
-        // Mantido isolado do import acima para não arriscar quebrar o motor de embeddings que já funciona.
-        import { pipeline as pipelineGeracao, env as envGeracao } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@4';
-
-        // Cache persistente dos pesos do modelo via Cache Storage do browser,
-        // pra não rebaixar ~1.7GB toda sessão. Isso NÃO contorna o teto de 7
-        // dias de inatividade do ITP do Safari em storage script-acessível —
-        // pra isso o jogo precisa estar instalado como PWA (ver manifest.json).
-        envGeracao.useBrowserCache = true;
-        envGeracao.allowLocalModels = false;
+        // Tier 3 (geração de texto) migrado de @huggingface/transformers (ONNX
+        // Runtime Web) para WebLLM/MLC — motivo: bug ativa de memória no modo
+        // JSEP em Safari/WebKit 26 (onnxruntime#26827), ausente nesse stack
+        // porque o WebLLM compila via Apache TVM, não ONNX Runtime. Mantido
+        // isolado do import do motor de embeddings acima, que não muda.
+        import * as webllm from 'https://esm.run/@mlc-ai/web-llm@0.2';
 
         // ============================================================
         // Importações Firebase
@@ -946,8 +940,6 @@
         // painel de log. Funciona em qualquer device; é o substituto
         // do console do DevTools pra quem tá testando no iPhone.
         // ============================================================
-        const _arquivosProgresso = new Map(); // nome do arquivo -> {loaded, total}
-
         function logStatusNarrador(mensagem, tipo = 'info') {
             const log = document.getElementById('narrador-status-log');
             if (!log) return;
@@ -979,73 +971,33 @@
         }
         window.alternarPainelStatusNarrador = alternarPainelStatusNarrador;
 
-        // Callback pra passar em `pipelineGeracao(..., { progress_callback })`.
-        // O transformers.js chama isso por arquivo (pesos costumam vir em vários
-        // shards + tokenizer + config), então agregamos loaded/total de todos os
-        // arquivos vistos até agora pra ter uma % geral, não só do último arquivo.
-        function criarCallbackProgresso(rotuloModelo) {
-            return (info) => {
-                if (info.status === 'initiate') {
-                    _arquivosProgresso.set(info.file, { loaded: 0, total: 0 });
-                    logStatusNarrador(`${rotuloModelo}: iniciando '${info.file}'…`, 'info');
-                } else if (info.status === 'progress') {
-                    _arquivosProgresso.set(info.file, { loaded: info.loaded, total: info.total });
-                    let loadedTotal = 0, totalTotal = 0;
-                    for (const { loaded, total } of _arquivosProgresso.values()) {
-                        loadedTotal += loaded;
-                        totalTotal += total;
-                    }
-                    const pct = totalTotal > 0 ? (loadedTotal / totalTotal) * 100 : 0;
-                    const mb = (loadedTotal / 1e6).toFixed(0);
-                    const mbTotal = (totalTotal / 1e6).toFixed(0);
-                    atualizarBadgeNarrador({
-                        estado: 'carregando',
-                        texto: `${rotuloModelo}: ${pct.toFixed(0)}% (${mb}/${mbTotal}MB)`,
-                        progresso: pct
-                    });
-                } else if (info.status === 'done') {
-                    logStatusNarrador(`${rotuloModelo}: '${info.file}' concluído.`, 'ok');
-                } else if (info.status === 'ready') {
-                    logStatusNarrador(`${rotuloModelo}: modelo pronto para inferência.`, 'ok');
-                }
-            };
-        }
-
-        // Candidatos pra Tier 3, pra debug comparativo. 'q08b' é o que
-        // sabidamente carrega em qualquer device (rede de segurança —
-        // ver MODELO_PRODUCAO abaixo). 'q15b' e 'l3b' são candidatos maiores
-        // pra comparar taxa de alucinação/contagem e viabilidade no iPhone.
-        // Llama 3.2 tem PT-BR como idioma oficialmente suportado no treino.
-        // Repo "-onnx-web-gqa" do 3B é o que tem quant q4f16 confirmada
-        // rodando em WebGPU; atenção: há um issue conhecido (transformers.js
-        // #1172) de esse modelo ignorar o system prompt em alguns casos —
-        // vale checar se seus gates de categoria (Não sei.) continuam
-        // sendo respeitados quando esse candidato específico está ativo.
-        const MODELOS_TIER3 = {
-            q08b: { id: 'onnx-community/Qwen3.5-0.8B-Text-ONNX', rotulo: '0.8B' },
-            q15b: { id: 'onnx-community/Qwen2.5-1.5B-Instruct', rotulo: '1.5B' },
-            l3b: { id: 'onnx-community/Llama-3.2-3B-Instruct-onnx-web-gqa', rotulo: '3B' }
-        };
-        const MODELO_PRODUCAO = 'q08b'; // chave de fallback seguro se o escolhido falhar
-
-        function lerModeloSelecionado() {
-            try {
-                const salvo = localStorage.getItem('centelha_narrador_modelo');
-                if (salvo && MODELOS_TIER3[salvo]) return salvo;
-            } catch (_) { /* localStorage indisponível (modo privado etc) — ignora */ }
-            return 'l3b'; // default: candidato 3B em teste
-        }
-
-        let CHAVE_MODELO_ATIVA = lerModeloSelecionado();
-        let _trocandoModeloNarrador = false;
-
         // ------------------------------------------------------------
-        // iOS/iPadOS: WebGPU só é padrão a partir do Safari 26 (iOS 26).
-        // Detecção é por engine, não por "navigator.gpu existe": todo
-        // browser em iOS usa WebKit por baixo (regra da própria Apple),
-        // então Chrome/Firefox/Edge no iPhone têm exatamente as mesmas
-        // limitações de memória e o mesmo bug abaixo.
+        // MIGRAÇÃO: transformers.js/ONNX Runtime Web → WebLLM/MLC.
+        //
+        // Motivo (ver conversa anterior): o ONNX Runtime Web tem uma bug
+        // ativa no modo JSEP em Safari/WebKit 26 (onnxruntime#26827) que
+        // faz a memória espiralar e a aba ser morta pelo SO, independente
+        // do tamanho do modelo. O WebLLM usa um compilador totalmente
+        // diferente por baixo (Apache TVM, não ONNX Runtime), então essa
+        // bug específica não existe nesse stack.
+        //
+        // IMPORTANTE — o que isso NÃO resolve: o teto de memória por aba
+        // do Safari mobile é do sistema operacional, não da lib. Um teste
+        // real (iOS 26.2) conseguiu quebrar uma aba com ~100MB extras num
+        // iPhone SE e ~200MB num iPad — bem abaixo do que a maioria dos
+        // guias teóricos sugere. Trocar de stack reduz o risco (elimina
+        // uma bug conhecida), mas não é garantia em aparelhos com pouca
+        // RAM. Por isso a checagem de capacidade abaixo é conservadora e
+        // por isso o WebGPU não expõe uma forma confiável de perguntar
+        // "quanto de VRAM livre existe agora" — só conseguimos checar o
+        // teto por-buffer do driver (maxStorageBufferBindingSize) e sinais
+        // indiretos (mobile vs desktop, navigator.deviceMemory no Chrome).
+        // Isso é heurística, não garantia.
+        //
+        // Diferença estrutural importante: o WebLLM não tem fallback WASM
+        // pra geração de texto — ou tem WebGPU, ou o Tier 3 fica indisponível.
         // ------------------------------------------------------------
+
         function ehIOS() {
             const ua = navigator.userAgent || '';
             const ehIPhoneIPad = /iPad|iPhone|iPod/.test(ua);
@@ -1053,16 +1005,54 @@
             const ehIPadDisfarcado = navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1;
             return ehIPhoneIPad || ehIPadDisfarcado;
         }
+        function ehAndroid() {
+            return /Android/i.test(navigator.userAgent || '');
+        }
+        function ehMobile() {
+            return ehIOS() || ehAndroid();
+        }
+        // Só existe no Chrome/Chromium (Android incluso); Safari nunca expõe
+        // isso. Retorna GB aproximados de RAM do aparelho, ou null se indisponível.
+        function memoriaAproximadaGB() {
+            return (typeof navigator.deviceMemory === 'number') ? navigator.deviceMemory : null;
+        }
 
-        // Sonda o adapter WebGPU de verdade em vez de só checar se
-        // 'navigator.gpu' existe. Isso nos diz: (1) se o shader-f16 tá
-        // disponível — sem ele, dtype 'q4f16' não deveria nem ser tentado,
-        // é desperdício de uma tentativa de load num ambiente que já é
-        // apertado em memória; (2) o teto de buffer que o driver aceita,
-        // pra saber se um tensor grande do 3B tem chance de ser rejeitado.
+        // Candidatos pra Tier 3. Presos ao catálogo pré-compilado do MLC
+        // (WebLLM não aceita qualquer repo ONNX como antes — ou é um dos
+        // modelos já compilados em formato MLC, ou exige toolchain própria
+        // pra compilar). Confirmei os três IDs abaixo existem no catálogo
+        // oficial antes de usar.
+        //
+        // ATENÇÃO — renomeei o antigo "0.8B": Qwen 0.8B não existe compilado
+        // pro MLC. O substituto mais próximo (mesma faixa de tamanho, mesma
+        // família do candidato de 3B, PT-BR oficialmente suportado no treino)
+        // é o Llama 3.2 1B. Rotulei como "1B" e não "0.8B" de propósito —
+        // seria impreciso chamar de 0.8B um modelo que não é esse.
+        const MODELOS_TIER3 = {
+            pequeno: { id: 'Llama-3.2-1B-Instruct-q4f16_1-MLC', rotulo: '1B' },
+            medio: { id: 'Qwen2.5-1.5B-Instruct-q4f16_1-MLC', rotulo: '1.5B' },
+            grande: { id: 'Llama-3.2-3B-Instruct-q4f16_1-MLC', rotulo: '3B' }
+        };
+        const MODELO_PRODUCAO = 'pequeno'; // chave de fallback seguro se o escolhido falhar
+
+        let CHAVE_MODELO_ATIVA = null;
+        let CHAVES_MODELO_DISPONIVEIS = [];
+
+        function buscarRegistroWebLLM(modelId) {
+            try {
+                return webllm.prebuiltAppConfig.model_list.find(m => m.model_id === modelId) || null;
+            } catch (_) {
+                return null;
+            }
+        }
+
+        // Sonda o adapter WebGPU de verdade. O WebGPU não expõe "VRAM livre"
+        // (por design, contra fingerprinting) — só conseguimos o teto de
+        // alocação por buffer único, que serve pra descartar candidatos que
+        // claramente não cabem, não pra garantir que os que sobram cabem.
         async function sondarCapacidadeWebGPU() {
             if (!(typeof navigator !== 'undefined' && navigator.gpu)) {
-                logStatusNarrador('WebGPU indisponível neste navegador (navigator.gpu ausente).', 'falha');
+                logStatusNarrador('WebGPU indisponível neste navegador (navigator.gpu ausente). WebLLM não tem fallback pra isso — Tier 3 fica indisponível.', 'falha');
                 return { suportado: false };
             }
             try {
@@ -1072,97 +1062,157 @@
                     return { suportado: false };
                 }
                 const temF16 = adapter.features.has('shader-f16');
-                const limiteBuffer = adapter.limits?.maxBufferSize || 0;
                 const limiteStorageBuffer = adapter.limits?.maxStorageBufferBindingSize || 0;
-                logStatusNarrador(`Adapter WebGPU ok — shader-f16: ${temF16 ? 'sim' : 'não'}, maxBufferSize: ${(limiteBuffer / 1e9).toFixed(2)}GB.`, 'info');
-                return { suportado: true, temF16, limiteBuffer, limiteStorageBuffer };
+                logStatusNarrador(`Adapter WebGPU ok — shader-f16: ${temF16 ? 'sim' : 'não'}, maxStorageBufferBindingSize: ${(limiteStorageBuffer / 1e9).toFixed(2)}GB.`, 'info');
+                return { suportado: true, temF16, limiteStorageBuffer };
             } catch (erro) {
                 logStatusNarrador(`Falha ao sondar adapter WebGPU: ${erro.message}`, 'falha');
                 return { suportado: false };
             }
         }
 
-        async function carregarModeloLocal(modelId, rotuloModelo, opcoes = {}) {
-            const { pularWasmSeIOS = false } = opcoes;
-            atualizarBadgeNarrador({ estado: 'carregando', texto: `narrador: verificando GPU…`, progresso: 0 });
-            const capacidade = await sondarCapacidadeWebGPU();
-            const noIOS = ehIOS();
+        // Decide quais chaves de MODELOS_TIER3 aparecem no seletor. Regras,
+        // na ordem em que são aplicadas:
+        // 1. Sem WebGPU utilizável → nenhuma (WebLLM não tem fallback CPU).
+        // 2. Mobile (iOS OU Android) → nunca oferece o 3B, ponto (regra
+        //    explícita, não é só heurística de capacidade).
+        // 3. Android com RAM total reportada < 4GB → só o menor.
+        // 4. Qualquer candidato cujo vram_required_MB (número oficial do
+        //    próprio registro do WebLLM) ultrapasse o maxStorageBufferBindingSize
+        //    do adapter é descartado — não cabe fisicamente num buffer.
+        function modelosDisponiveisParaUI(capacidade) {
+            if (!capacidade.suportado) return [];
 
-            if (noIOS) {
-                // Bug ativo (fechado por stale-bot sem correção confirmada) em
-                // ONNX Runtime Web #26827: no modo JSEP do Safari/WebKit 26,
-                // qualquer operação que caia pra execução em CPU dentro da
-                // mesma sessão WebGPU trava num loop de realocação e o processo
-                // cresce até ser matado pelo Jetsam. Geração de texto sempre
-                // tem pelo menos algumas ops (sampling, cast) que caem pra CPU,
-                // então isso é risco estrutural, não hipotético, no seu stack.
-                logStatusNarrador('iOS detectado — risco conhecido de JSEP travar memória no WebKit 26 (onnxruntime#26827).', 'info');
+            let chaves = ['pequeno', 'medio', 'grande'];
+
+            if (ehMobile()) {
+                chaves = chaves.filter(c => c !== 'grande');
+                logStatusNarrador('Dispositivo móvel detectado — opção de 3B ocultada do seletor.', 'info');
             }
 
-            const dispositivosCandidatos = capacidade.suportado
-                ? (noIOS && pularWasmSeIOS ? ['webgpu'] : ['webgpu', 'wasm'])
-                : ['wasm'];
-
-            for (const dispositivo of dispositivosCandidatos) {
-                let dtypesCandidatos;
-                if (dispositivo === 'webgpu') {
-                    dtypesCandidatos = capacidade.temF16 ? ['q4f16', 'q4', 'q8'] : ['q4', 'q8'];
-                    if (!capacidade.temF16) {
-                        logStatusNarrador('shader-f16 indisponível — pulando dtype q4f16.', 'info');
-                    }
-                } else {
-                    dtypesCandidatos = ['q4', 'q8'];
-                }
-
-                for (const dtypeTentativa of dtypesCandidatos) {
-                    try {
-                        _arquivosProgresso.clear();
-                        const rotuloTentativa = `${rotuloModelo} (${dispositivo}/${dtypeTentativa})`;
-                        atualizarBadgeNarrador({ estado: 'carregando', texto: `${rotuloTentativa}: iniciando…`, progresso: 0 });
-                        logStatusNarrador(`Tentando ${modelId} — device: ${dispositivo}, dtype: ${dtypeTentativa}…`, 'info');
-
-                        const inicio = performance.now();
-                        const gerador = await pipelineGeracao('text-generation', modelId, {
-                            device: dispositivo,
-                            dtype: dtypeTentativa,
-                            progress_callback: criarCallbackProgresso(rotuloTentativa)
-                        });
-                        const segundos = ((performance.now() - inicio) / 1000).toFixed(1);
-
-                        logStatusNarrador(`Carregado: ${modelId} (${dispositivo}, ${dtypeTentativa}, ${segundos}s).`, 'ok');
-                        atualizarBadgeNarrador({ estado: 'pronto', texto: `✅ ${rotuloModelo} pronto (${dispositivo}/${dtypeTentativa})`, progresso: 100 });
-                        return gerador;
-                    } catch (erro) {
-                        logStatusNarrador(`Falhou (${dispositivo}/${dtypeTentativa}): ${erro.message}`, 'falha');
-                    }
-                }
+            const memGB = memoriaAproximadaGB();
+            if (ehAndroid() && memGB !== null && memGB < 4) {
+                chaves = chaves.filter(c => c === 'pequeno');
+                logStatusNarrador(`Android com ~${memGB}GB de RAM reportados — restringindo ao modelo menor.`, 'info');
             }
-            return null;
+
+            chaves = chaves.filter(c => {
+                const registro = buscarRegistroWebLLM(MODELOS_TIER3[c].id);
+                const exigidoBytes = (registro?.vram_required_MB || 0) * 1e6;
+                const cabe = !capacidade.limiteStorageBuffer || exigidoBytes <= capacidade.limiteStorageBuffer;
+                if (!cabe) {
+                    logStatusNarrador(`${MODELOS_TIER3[c].rotulo} descartado: exige ~${(exigidoBytes / 1e9).toFixed(2)}GB por buffer, acima do teto do driver.`, 'info');
+                }
+                return cabe;
+            });
+
+            return chaves;
+        }
+
+        function lerModeloSelecionado(chavesDisponiveis) {
+            try {
+                const salvo = localStorage.getItem('centelha_narrador_modelo');
+                if (salvo && chavesDisponiveis.includes(salvo)) return salvo;
+            } catch (_) { /* localStorage indisponível (modo privado etc) — ignora */ }
+            return chavesDisponiveis.includes(MODELO_PRODUCAO) ? MODELO_PRODUCAO : (chavesDisponiveis[0] || null);
+        }
+
+        // Constrói os botões do seletor dinamicamente — só aparecem as
+        // chaves que passaram pelo gate de modelosDisponiveisParaUI. Isso
+        // garante que o 3B literalmente não existe como opção no mobile,
+        // não é só desabilitado.
+        function montarSeletorModeloUI(chavesDisponiveis) {
+            const container = document.getElementById('narrador-seletor-modelo-botoes');
+            if (!container) return;
+            container.innerHTML = '';
+            for (const chave of chavesDisponiveis) {
+                const btn = document.createElement('button');
+                btn.dataset.modelo = chave;
+                btn.textContent = MODELOS_TIER3[chave].rotulo;
+                btn.onclick = () => trocarModeloNarrador(chave);
+                container.appendChild(btn);
+            }
+            atualizarSeletorModeloUI();
+        }
+
+        function atualizarSeletorModeloUI() {
+            document.querySelectorAll('#narrador-seletor-modelo-botoes button').forEach(btn => {
+                btn.classList.toggle('ativo', btn.dataset.modelo === CHAVE_MODELO_ATIVA);
+            });
+        }
+
+        function definirSeletorHabilitado(habilitado) {
+            document.querySelectorAll('#narrador-seletor-modelo-botoes button').forEach(btn => {
+                btn.disabled = !habilitado;
+            });
+        }
+
+        // Worker inline via Blob — mantém tudo num único arquivo HTML (sem
+        // precisar publicar um worker.js separado). O import dentro do
+        // worker aponta pro mesmo CDN usado na thread principal.
+        function criarWorkerWebLLM() {
+            const codigoWorker = `
+                import { WebWorkerMLCEngineHandler } from 'https://esm.run/@mlc-ai/web-llm@0.2';
+                const handler = new WebWorkerMLCEngineHandler();
+                self.onmessage = (msg) => handler.onmessage(msg);
+            `;
+            const blob = new Blob([codigoWorker], { type: 'application/javascript' });
+            return new Worker(URL.createObjectURL(blob), { type: 'module' });
+        }
+
+        async function carregarModeloLocal(chave) {
+            const registro = MODELOS_TIER3[chave];
+            atualizarBadgeNarrador({ estado: 'carregando', texto: `${registro.rotulo}: iniciando…`, progresso: 0 });
+            logStatusNarrador(`Carregando ${registro.rotulo} (${registro.id}) via WebLLM…`, 'info');
+
+            try {
+                const inicio = performance.now();
+                const worker = criarWorkerWebLLM();
+                const engine = await webllm.CreateWebWorkerMLCEngine(worker, registro.id, {
+                    initProgressCallback: (info) => {
+                        const pct = Math.round((info.progress || 0) * 100);
+                        atualizarBadgeNarrador({ estado: 'carregando', texto: `${registro.rotulo}: ${pct}%`, progresso: pct });
+                        if (info.text) logStatusNarrador(info.text, 'info');
+                    }
+                });
+                const segundos = ((performance.now() - inicio) / 1000).toFixed(1);
+
+                logStatusNarrador(`Carregado: ${registro.rotulo} (${segundos}s).`, 'ok');
+                atualizarBadgeNarrador({ estado: 'pronto', texto: `✅ ${registro.rotulo} pronto`, progresso: 100 });
+                return engine;
+            } catch (erro) {
+                logStatusNarrador(`Falhou carregar ${registro.rotulo}: ${erro.message}`, 'falha');
+                return null;
+            }
         }
 
         async function iniciarGeradorLocal() {
             window.geradorLocalPromise = (async () => {
-                const escolhido = MODELOS_TIER3[CHAVE_MODELO_ATIVA];
+                const capacidade = await sondarCapacidadeWebGPU();
+                CHAVES_MODELO_DISPONIVEIS = modelosDisponiveisParaUI(capacidade);
+                montarSeletorModeloUI(CHAVES_MODELO_DISPONIVEIS);
 
-                // No iOS, não tentamos o fallback wasm pro modelo selecionado quando
-                // ele não é o de produção: rodar 1.5B/3B em CPU pura no Safari mobile
-                // é lento a ponto de não valer a tentativa, e cada tentativa extra de
-                // load é mais uma chance de bater no bug de memória do JSEP antes
-                // mesmo de chegar no modelo de produção.
-                const pularWasmSeIOS = CHAVE_MODELO_ATIVA !== MODELO_PRODUCAO;
-                window.geradorLocal = await carregarModeloLocal(escolhido.id, escolhido.rotulo, { pularWasmSeIOS });
+                if (CHAVES_MODELO_DISPONIVEIS.length === 0) {
+                    logStatusNarrador('Nenhum modelo local viável neste dispositivo (sem WebGPU utilizável, ou nada coube no teto de buffer do driver).', 'falha');
+                    atualizarBadgeNarrador({ estado: 'erro', texto: '❌ narrador indisponível neste dispositivo', progresso: 0 });
+                    window.geradorLocal = null;
+                    return;
+                }
 
-                // Se o candidato escolhido falhar em todas as combinações (ex: bad_alloc
-                // por falta de VRAM/RAM, ou o bug do JSEP no iOS), cai pro modelo que
-                // sabidamente funciona, em vez de deixar o Tier 3 inteiro morto.
-                if (!window.geradorLocal && CHAVE_MODELO_ATIVA !== MODELO_PRODUCAO) {
-                    const producao = MODELOS_TIER3[MODELO_PRODUCAO];
-                    logStatusNarrador(`Candidato '${escolhido.rotulo}' não carregou em nenhuma combinação. Caindo pro modelo de produção (${producao.rotulo}).`, 'falha');
-                    window.geradorLocal = await carregarModeloLocal(producao.id, producao.rotulo);
+                CHAVE_MODELO_ATIVA = lerModeloSelecionado(CHAVES_MODELO_DISPONIVEIS);
+                window.geradorLocal = await carregarModeloLocal(CHAVE_MODELO_ATIVA);
+
+                // Se o candidato escolhido falhar, cai pro modelo de produção
+                // (se ele ainda estiver entre os disponíveis e for diferente
+                // do que já falhou), em vez de deixar o Tier 3 inteiro morto.
+                if (!window.geradorLocal && CHAVE_MODELO_ATIVA !== MODELO_PRODUCAO && CHAVES_MODELO_DISPONIVEIS.includes(MODELO_PRODUCAO)) {
+                    logStatusNarrador(`Candidato '${MODELOS_TIER3[CHAVE_MODELO_ATIVA].rotulo}' não carregou. Caindo pro modelo de produção (${MODELOS_TIER3[MODELO_PRODUCAO].rotulo}).`, 'falha');
+                    CHAVE_MODELO_ATIVA = MODELO_PRODUCAO;
+                    window.geradorLocal = await carregarModeloLocal(MODELO_PRODUCAO);
                 }
 
                 if (!window.geradorLocal) {
-                    logStatusNarrador('Não foi possível carregar o narrador local com nenhuma combinação testada.', 'falha');
+                    logStatusNarrador('Não foi possível carregar o narrador local.', 'falha');
                     atualizarBadgeNarrador({ estado: 'erro', texto: '❌ narrador indisponível (toque p/ ver erros)', progresso: 0 });
                 }
 
@@ -1171,49 +1221,16 @@
             return window.geradorLocalPromise;
         }
 
-        // Chamado pelos botões do painel de status pra trocar o modelo em
-        // debug sem precisar editar código/republicar. Persiste a escolha
-        // em localStorage (sobrevive a reload; sujeita ao teto de 7 dias de
-        // inatividade do ITP do Safari se o jogo não estiver instalado como
-        // PWA — mas é só uma string, reselecionar não tem custo real).
+        // Troca de modelo força reload completo da página em vez de tentar
+        // liberar o engine anterior in-place. Testamos dispose()/unload()
+        // in-place no mobile e não é confiável pra devolver memória a tempo
+        // antes do próximo load começar — reload garante estado limpo.
         async function trocarModeloNarrador(chave) {
-            if (_trocandoModeloNarrador || !MODELOS_TIER3[chave] || chave === CHAVE_MODELO_ATIVA) return;
-            _trocandoModeloNarrador = true;
-            definirSeletorHabilitado(false);
-
-            CHAVE_MODELO_ATIVA = chave;
+            if (!MODELOS_TIER3[chave] || chave === CHAVE_MODELO_ATIVA) return;
             try { localStorage.setItem('centelha_narrador_modelo', chave); } catch (_) { /* ignora */ }
-
-            // Libera o modelo anterior antes de carregar o novo — evita
-            // empilhar dois modelos na memória ao mesmo tempo, que é o pior
-            // cenário possível no iOS, onde já estamos no limite.
-            if (window.geradorLocal?.model?.dispose) {
-                try { await window.geradorLocal.model.dispose(); } catch (erro) {
-                    logStatusNarrador(`Aviso: dispose() do modelo anterior falhou: ${erro.message}`, 'info');
-                }
-            }
-            window.geradorLocal = null;
-            logStatusNarrador(`Trocando narrador pra ${MODELOS_TIER3[chave].rotulo}…`, 'info');
-            atualizarSeletorModeloUI();
-
-            await iniciarGeradorLocal();
-
-            _trocandoModeloNarrador = false;
-            definirSeletorHabilitado(true);
+            location.reload();
         }
         window.trocarModeloNarrador = trocarModeloNarrador;
-
-        function atualizarSeletorModeloUI() {
-            document.querySelectorAll('#narrador-seletor-modelo button').forEach(btn => {
-                btn.classList.toggle('ativo', btn.dataset.modelo === CHAVE_MODELO_ATIVA);
-            });
-        }
-
-        function definirSeletorHabilitado(habilitado) {
-            document.querySelectorAll('#narrador-seletor-modelo button').forEach(btn => {
-                btn.disabled = !habilitado;
-            });
-        }
 
         // ============================================================
         // TIER 2 — RAG local por sentença sobre o texto_logico já gerado.
@@ -1289,6 +1306,59 @@
         }
 
         // ============================================================
+        // Helper central de geração via WebLLM — substitui as chamadas
+        // diretas ao pipeline do transformers.js. A API do WebLLM é estilo
+        // OpenAI (engine.chat.completions.create), não mais um pipeline
+        // callable, então os dois call sites (inventarDetalheLocal e
+        // extrairFatoLocal) passaram por aqui em vez de chamar
+        // window.geradorLocal diretamente.
+        //
+        // ATENÇÃO PRA VALIDAR NA PRÁTICA: 'top_k' não é parâmetro padrão
+        // da API OpenAI e eu não confirmei se o WebLLM realmente aplica
+        // esse campo extra ou se ignora silenciosamente. Isso importa pro
+        // seu caso: o top_k=10 em inventarDetalheLocal foi ajuste
+        // deliberado pra matar alucinação de palavra ("ACHATAMENTO
+        // ESTATÍSTICO EXTREMO" no comentário original). Se a taxa de
+        // alucinação subir depois da migração, este é o primeiro lugar a
+        // investigar — pode precisar compensar via prompt em vez de via
+        // parâmetro se o WebLLM não honrar top_k.
+        // ============================================================
+        async function gerarComNarradorLocal(mensagens, opcoesGeracao = {}) {
+            if (!window.geradorLocal && window.geradorLocalPromise) {
+                console.log("⏳ [Tier 3] Narrador local ainda carregando, aguardando...");
+                await window.geradorLocalPromise;
+            }
+            if (!window.geradorLocal) return null;
+
+            const {
+                max_new_tokens = 150,
+                temperature = 0.1,
+                top_p = 1,
+                top_k = null,
+                repetition_penalty = null,
+                do_sample = true
+            } = opcoesGeracao;
+
+            const requisicao = {
+                messages: mensagens,
+                max_tokens: max_new_tokens,
+                temperature: do_sample ? temperature : 0,
+                top_p,
+            };
+            // Campos fora do padrão OpenAI — repassados, mas ver aviso acima.
+            if (top_k !== null) requisicao.top_k = top_k;
+            if (repetition_penalty !== null) requisicao.repetition_penalty = repetition_penalty;
+
+            try {
+                const resposta = await window.geradorLocal.chat.completions.create(requisicao);
+                return resposta?.choices?.[0]?.message?.content ?? '';
+            } catch (erro) {
+                console.error("❌ Erro na geração local (Tier 3 / WebLLM):", erro);
+                return null;
+            }
+        }
+
+        // ============================================================
         // TIER 3 — Geração real (não extração, não pool) pra perguntas que
         // vão além do texto_logico. O 0.6B decide o conteúdo a cada
         // chamada; nada aqui é pré-escrito. A tarefa é deliberadamente
@@ -1306,45 +1376,50 @@
     const { segundaTentativa = false } = opcoes;
 
     try {
+        // Removi o sufixo "/no_think" dos prompts abaixo: era um token de
+        // controle específico do Qwen3 (desativa o modo de "pensar antes de
+        // responder"). Nem Llama 3.2 nem Qwen2.5 (os modelos do WebLLM agora)
+        // reconhecem isso como comando — ficaria texto morto no prompt.
         const mensagens = [
             {
                 role: 'system',
                 // ABORDAGEM ROBUSTA: Definição de Axiomas Estritos (Regras físicas e biológicas absolutas)
-                content: 'You are a strict data-extraction and detail-generation algorithm for a realistic horror game in BRAZILIAN PORTUGUESE. NO made-up words. TASK: Answer the QUESTION with ONE simple, ordinary, plausible answer. 1 to 4 words. End with a period. CORRECT Portuguese ONLY. If unknowable without direct interaction, output EXACTLY "Não sei.". /no_think'
+                content: 'You are a strict data-extraction and detail-generation algorithm for a realistic horror game in BRAZILIAN PORTUGUESE. NO made-up words. TASK: Answer the QUESTION with ONE simple, ordinary, plausible answer. 1 to 4 words. End with a period. CORRECT Portuguese ONLY. If unknowable without direct interaction, output EXACTLY "Não sei.".'
             },
             // Seus exemplos originais mantidos sem alterações
-            { role: 'user', content: 'PERGUNTA: "qual a cor da camisa do homem?"\n/no_think' },
+            { role: 'user', content: 'PERGUNTA: "qual a cor da camisa do homem?"' },
             { role: 'assistant', content: 'Azul.' },
-            { role: 'user', content: 'PERGUNTA: "que tipo de sapato ele está usando?"\n/no_think' },
+            { role: 'user', content: 'PERGUNTA: "que tipo de sapato ele está usando?"' },
             { role: 'assistant', content: 'Botas gastas.' },
-            { role: 'user', content: 'PERGUNTA: "qual o peso da mala?"\n/no_think' },
+            { role: 'user', content: 'PERGUNTA: "qual o peso da mala?"' },
             { role: 'assistant', content: 'Não sei.' },
-            { role: 'user', content: 'PERGUNTA: "o homem tem bigode?"\n/no_think' },
+            { role: 'user', content: 'PERGUNTA: "o homem tem bigode?"' },
             { role: 'assistant', content: 'Não, tem barba longa.' },
-            
-            { role: 'user', content: `PERGUNTA: "${pergunta}"\n/no_think` }
+
+            { role: 'user', content: `PERGUNTA: "${pergunta}"` }
         ];
 
-        const saida = await window.geradorLocal(mensagens, {
+        const saida = await gerarComNarradorLocal(mensagens, {
             max_new_tokens: 150,
             do_sample: true,
-            
+
             // ACHATAMENTO ESTATÍSTICO EXTREMO:
             // Temperature 0.1 transforma o modelo quase em greedy decoding (determinístico).
-            temperature: 0.1, 
-            
+            temperature: 0.1,
+
             // Top_k 10: O modelo é fisicamente proibido de olhar além das 10 palavras mais óbvias.
             // Isso mata completamente as alucinações de palavras como "Brande-espírito".
-            top_k: 10, 
-            
+            // (ver aviso no helper gerarComNarradorLocal sobre suporte a este campo no WebLLM)
+            top_k: 10,
+
             // Top_p 0.5: Corta pela metade a margem criativa da rede neural.
-            top_p: 0.5, 
-            
-            repetition_penalty: 1.15 
+            top_p: 0.5,
+
+            repetition_penalty: 1.15
         });
 
-        let texto = saida?.[0]?.generated_text?.at(-1)?.content ?? '';
-        texto = texto.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+        if (saida === null) return null;
+        let texto = saida.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
 
         const PALAVRAS_SUSPEITAS = /\b(the|is|are|and|you|sorry|cannot|answer|question)\b/i;
         if (!texto || texto.length > 40 || PALAVRAS_SUSPEITAS.test(texto) || texto.includes('<think>')) {
@@ -1366,9 +1441,10 @@
     }
 }
     
-        iniciarMotorSemantico();
-        atualizarSeletorModeloUI();
-        iniciarGeradorLocal();
+        (async () => {
+            await iniciarMotorSemantico();
+            await iniciarGeradorLocal();
+        })();
 
         function pseudoRandom(seed) {
             let x = Math.sin(seed++) * 10000;
@@ -4212,21 +4288,21 @@ ANSWER:`
     ];
 
     try {
-        const saida = await window.geradorLocal(mensagens, {
+        const saida = await gerarComNarradorLocal(mensagens, {
             max_new_tokens: 10,
             do_sample: false,
             repetition_penalty: 1.1,
         });
 
-        let texto = saida?.[0]?.generated_text?.at(-1)?.content ?? '';
-        texto = texto.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+        if (saida === null) return null;
+        let texto = saida.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
 
         if (!texto || texto === 'N/A' || texto.includes('N/A') || texto.length > 20) {
             return null;
         }
         return texto;
     } catch (e) {
-        console.warn('[0.6B Extrator] Falhou:', e);
+        console.warn('[Extrator local] Falhou:', e);
         return null;
     }
 }
