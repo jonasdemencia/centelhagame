@@ -649,10 +649,8 @@
         // pra não rebaixar ~1.7GB toda sessão. Isso NÃO contorna o teto de 7
         // dias de inatividade do ITP do Safari em storage script-acessível —
         // pra isso o jogo precisa estar instalado como PWA (ver manifest.json).
-        // Avaliação inline para contornar limites agressivos de ITP/Quota no Safari/WKWebView
-const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-envGeracao.useBrowserCache = !isIOS; 
-envGeracao.allowLocalModels = false;
+        envGeracao.useBrowserCache = true;
+        envGeracao.allowLocalModels = false;
 
         // ============================================================
         // Importações Firebase
@@ -1101,26 +1099,14 @@ envGeracao.allowLocalModels = false;
                 logStatusNarrador('iOS detectado — risco conhecido de JSEP travar memória no WebKit 26 (onnxruntime#26827).', 'info');
             }
 
-            let dispositivosCandidatos = [];
-if (capacidade.suportado) {
-    dispositivosCandidatos.push('webgpu');
-}
-if (!(noIOS && pularWasmSeIOS)) {
-    dispositivosCandidatos.push('wasm');
-}
-
-// Se a lista ficar vazia no iOS (ex: WebGPU indisponível no Chrome e WASM ignorado pelo tamanho), evitamos o crash.
-if (dispositivosCandidatos.length === 0) {
-    logStatusNarrador('Dispositivos viáveis esgotados no iOS (WASM ignorado por limite de RAM).', 'falha');
-    return null; 
-}
+            const dispositivosCandidatos = capacidade.suportado
+                ? (noIOS && pularWasmSeIOS ? ['webgpu'] : ['webgpu', 'wasm'])
+                : ['wasm'];
 
             for (const dispositivo of dispositivosCandidatos) {
                 let dtypesCandidatos;
                 if (dispositivo === 'webgpu') {
-                    dtypesCandidatos = noIOS
-                        ? [capacidade.temF16 ? 'q4f16' : 'q4']
-                        : (capacidade.temF16 ? ['q4f16', 'q4', 'q8'] : ['q4', 'q8']);
+                    dtypesCandidatos = capacidade.temF16 ? ['q4f16', 'q4', 'q8'] : ['q4', 'q8'];
                     if (!capacidade.temF16) {
                         logStatusNarrador('shader-f16 indisponível — pulando dtype q4f16.', 'info');
                     }
@@ -1154,40 +1140,36 @@ if (dispositivosCandidatos.length === 0) {
             return null;
         }
 
-       async function iniciarGeradorLocal() {
-    window.geradorLocalPromise = (async () => {
-        try {
-            const escolhido = MODELOS_TIER3[CHAVE_MODELO_ATIVA];
-            const pularWasmSeIOS = CHAVE_MODELO_ATIVA !== MODELO_PRODUCAO;
-            
-            window.geradorLocal = await carregarModeloLocal(escolhido.id, escolhido.rotulo, { pularWasmSeIOS });
+        async function iniciarGeradorLocal() {
+            window.geradorLocalPromise = (async () => {
+                const escolhido = MODELOS_TIER3[CHAVE_MODELO_ATIVA];
 
-            if (!window.geradorLocal && CHAVE_MODELO_ATIVA !== MODELO_PRODUCAO) {
-                const producao = MODELOS_TIER3[MODELO_PRODUCAO];
-                logStatusNarrador(`Candidato '${escolhido.rotulo}' falhou. Caindo pro modelo de produção (${producao.rotulo}).`, 'falha');
-                
-                // CORREÇÃO: Limpar a escolha falha para não repetir o erro no próximo reload
-                try { localStorage.setItem('centelha_narrador_modelo', MODELO_PRODUCAO); } catch (_) {}
-                CHAVE_MODELO_ATIVA = MODELO_PRODUCAO;
-                
-                window.geradorLocal = await carregarModeloLocal(producao.id, producao.rotulo);
-            }
+                // No iOS, não tentamos o fallback wasm pro modelo selecionado quando
+                // ele não é o de produção: rodar 1.5B/3B em CPU pura no Safari mobile
+                // é lento a ponto de não valer a tentativa, e cada tentativa extra de
+                // load é mais uma chance de bater no bug de memória do JSEP antes
+                // mesmo de chegar no modelo de produção.
+                const pularWasmSeIOS = CHAVE_MODELO_ATIVA !== MODELO_PRODUCAO;
+                window.geradorLocal = await carregarModeloLocal(escolhido.id, escolhido.rotulo, { pularWasmSeIOS });
 
-            if (!window.geradorLocal) {
-                logStatusNarrador('Não foi possível carregar o narrador local com nenhuma combinação testada.', 'falha');
-                atualizarBadgeNarrador({ estado: 'erro', texto: '❌ narrador indisponível (toque p/ ver erros)', progresso: 0 });
-                throw new Error("Falha total ao iniciar o gerador local."); // Propaga o erro para quem estiver aguardando a Promise
-            }
+                // Se o candidato escolhido falhar em todas as combinações (ex: bad_alloc
+                // por falta de VRAM/RAM, ou o bug do JSEP no iOS), cai pro modelo que
+                // sabidamente funciona, em vez de deixar o Tier 3 inteiro morto.
+                if (!window.geradorLocal && CHAVE_MODELO_ATIVA !== MODELO_PRODUCAO) {
+                    const producao = MODELOS_TIER3[MODELO_PRODUCAO];
+                    logStatusNarrador(`Candidato '${escolhido.rotulo}' não carregou em nenhuma combinação. Caindo pro modelo de produção (${producao.rotulo}).`, 'falha');
+                    window.geradorLocal = await carregarModeloLocal(producao.id, producao.rotulo);
+                }
 
-            atualizarSeletorModeloUI();
-            return window.geradorLocal;
-        } catch (erro) {
-            console.error("[Gerador Local] Erro crítico:", erro);
-            throw erro;
+                if (!window.geradorLocal) {
+                    logStatusNarrador('Não foi possível carregar o narrador local com nenhuma combinação testada.', 'falha');
+                    atualizarBadgeNarrador({ estado: 'erro', texto: '❌ narrador indisponível (toque p/ ver erros)', progresso: 0 });
+                }
+
+                atualizarSeletorModeloUI();
+            })();
+            return window.geradorLocalPromise;
         }
-    })();
-    return window.geradorLocalPromise;
-}
 
         // Chamado pelos botões do painel de status pra trocar o modelo em
         // debug sem precisar editar código/republicar. Persiste a escolha
@@ -1199,8 +1181,25 @@ if (dispositivosCandidatos.length === 0) {
             _trocandoModeloNarrador = true;
             definirSeletorHabilitado(false);
 
+            CHAVE_MODELO_ATIVA = chave;
             try { localStorage.setItem('centelha_narrador_modelo', chave); } catch (_) { /* ignora */ }
-            location.reload(); // reload completo garante que a memória do modelo anterior é liberada de verdade
+
+            // Libera o modelo anterior antes de carregar o novo — evita
+            // empilhar dois modelos na memória ao mesmo tempo, que é o pior
+            // cenário possível no iOS, onde já estamos no limite.
+            if (window.geradorLocal?.model?.dispose) {
+                try { await window.geradorLocal.model.dispose(); } catch (erro) {
+                    logStatusNarrador(`Aviso: dispose() do modelo anterior falhou: ${erro.message}`, 'info');
+                }
+            }
+            window.geradorLocal = null;
+            logStatusNarrador(`Trocando narrador pra ${MODELOS_TIER3[chave].rotulo}…`, 'info');
+            atualizarSeletorModeloUI();
+
+            await iniciarGeradorLocal();
+
+            _trocandoModeloNarrador = false;
+            definirSeletorHabilitado(true);
         }
         window.trocarModeloNarrador = trocarModeloNarrador;
 
@@ -1367,11 +1366,10 @@ if (dispositivosCandidatos.length === 0) {
     }
 }
     
-        (async () => {
-    await iniciarMotorSemantico();
-    atualizarSeletorModeloUI();
-    await iniciarGeradorLocal();
-})();
+        iniciarMotorSemantico();
+        atualizarSeletorModeloUI();
+        iniciarGeradorLocal();
+
         function pseudoRandom(seed) {
             let x = Math.sin(seed++) * 10000;
             return x - Math.floor(x);
