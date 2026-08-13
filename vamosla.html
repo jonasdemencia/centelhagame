@@ -1160,6 +1160,33 @@
             return new Worker(URL.createObjectURL(blob), { type: 'module' });
         }
 
+        // Clona o registro pré-compilado do modelo, sobrescrevendo só
+        // prefill_chunk_size. Verifiquei na documentação oficial do MLC: de
+        // context_window_size / sliding_window_size / prefill_chunk_size,
+        // SÓ o prefill_chunk_size realmente afeta o comportamento em tempo
+        // de execução pra um WASM já pré-compilado — os outros dois estão
+        // fixos no binário (todos os prebuilt são compilados com contexto
+        // 4096, isso não dá pra encolher via config, só recompilando o
+        // próprio WASM com a toolchain do MLC). Um prefill_chunk_size menor
+        // processa o prompt em pedaços menores — reduz o pico de memória
+        // bem no momento em que seu crash acontece (primeira inferência
+        // real), à custa de um prefill um pouco mais lento.
+        function construirAppConfigComPrefillMenor(modelId, prefillChunkSize) {
+            const registroBase = buscarRegistroWebLLM(modelId);
+            if (!registroBase) return undefined; // deixa o WebLLM usar o default se não achar
+            const registroAjustado = {
+                ...registroBase,
+                overrides: { ...(registroBase.overrides || {}), prefill_chunk_size: prefillChunkSize }
+            };
+            return {
+                ...webllm.prebuiltAppConfig,
+                model_list: [
+                    ...webllm.prebuiltAppConfig.model_list.filter(m => m.model_id !== modelId),
+                    registroAjustado
+                ]
+            };
+        }
+
         async function carregarModeloLocal(chave) {
             const registro = MODELOS_TIER3[chave];
             atualizarBadgeNarrador({ estado: 'carregando', texto: `${registro.rotulo}: iniciando…`, progresso: 0 });
@@ -1168,20 +1195,44 @@
             try {
                 const inicio = performance.now();
                 const worker = criarWorkerWebLLM();
+                // prefill_chunk_size=128 é conservador (default costuma ser maior).
+                // Mobile ganha mais com isso; desktop não sofre por manter também.
+                const appConfig = construirAppConfigComPrefillMenor(registro.id, 128);
                 const engine = await webllm.CreateWebWorkerMLCEngine(worker, registro.id, {
+                    appConfig,
                     initProgressCallback: (info) => {
                         const pct = Math.round((info.progress || 0) * 100);
                         atualizarBadgeNarrador({ estado: 'carregando', texto: `${registro.rotulo}: ${pct}%`, progresso: pct });
                         if (info.text) logStatusNarrador(info.text, 'info');
                     }
                 });
-                const segundos = ((performance.now() - inicio) / 1000).toFixed(1);
 
-                logStatusNarrador(`Carregado: ${registro.rotulo} (${segundos}s).`, 'ok');
+                // Aquecimento: dispara a primeira inferência real AGORA, ainda
+                // na tela de carregamento, em vez de deixar isso acontecer sem
+                // aviso quando o jogador manda a primeira mensagem. O motivo:
+                // a issue mlc-ai/web-llm#753 (dez/2025) documenta exatamente o
+                // seu sintoma — no iOS 26 Safari, um modelo maior que ~135M
+                // consegue baixar inteiro e só quebra a aba depois, sem log
+                // algum. A suspeita fundamentada é que o pico real de memória
+                // não é o peso do modelo, é a primeira inferência (alocação do
+                // KV cache + especialização dos shaders). Isso não CONSERTA
+                // a instabilidade — mas se vai quebrar, prefiro que quebre
+                // aqui, com o badge dizendo "aquecendo", do que no meio da
+                // digitação do jogador sem explicação nenhuma.
+                atualizarBadgeNarrador({ estado: 'carregando', texto: `${registro.rotulo}: aquecendo…`, progresso: 100 });
+                logStatusNarrador(`Rodando inferência de aquecimento (testa o ponto onde o iOS costuma quebrar — ver mlc-ai/web-llm#753)…`, 'info');
+                await engine.chat.completions.create({
+                    messages: [{ role: 'user', content: 'Oi' }],
+                    max_tokens: 4,
+                    temperature: 0
+                });
+
+                const segundos = ((performance.now() - inicio) / 1000).toFixed(1);
+                logStatusNarrador(`Carregado e aquecido: ${registro.rotulo} (${segundos}s).`, 'ok');
                 atualizarBadgeNarrador({ estado: 'pronto', texto: `✅ ${registro.rotulo} pronto`, progresso: 100 });
                 return engine;
             } catch (erro) {
-                logStatusNarrador(`Falhou carregar ${registro.rotulo}: ${erro.message}`, 'falha');
+                logStatusNarrador(`Falhou carregar/aquecer ${registro.rotulo}: ${erro.message}`, 'falha');
                 return null;
             }
         }
@@ -1324,57 +1375,39 @@
         // parâmetro se o WebLLM não honrar top_k.
         // ============================================================
         async function gerarComNarradorLocal(mensagens, opcoesGeracao = {}) {
-    if (!window.geradorLocal && window.geradorLocalPromise) {
-        console.log("⏳ [Tier 3] Narrador local ainda carregando, aguardando...");
-        await window.geradorLocalPromise;
-    }
-    if (!window.geradorLocal) return null;
+            if (!window.geradorLocal && window.geradorLocalPromise) {
+                console.log("⏳ [Tier 3] Narrador local ainda carregando, aguardando...");
+                await window.geradorLocalPromise;
+            }
+            if (!window.geradorLocal) return null;
 
-    // ============================================================
-    // 1. PODA AGRESSIVA DO HISTÓRICO (SLIDING WINDOW)
-    // Mantém apenas o system prompt + as duas últimas interações.
-    // ============================================================
-    let mensagensPodadas = mensagens;
-    if (mensagens.length > 3) {
-        const systemMsg = mensagens[0];          // assume que a primeira é o system
-        const ultimasDuas = mensagens.slice(-2); // contexto imediato
-        mensagensPodadas = [systemMsg, ...ultimasDuas];
-        console.log(`[Memória] Histórico podado de ${mensagens.length} para ${mensagensPodadas.length} mensagens.`);
-    }
+            const {
+                max_new_tokens = 150,
+                temperature = 0.1,
+                top_p = 1,
+                top_k = null,
+                repetition_penalty = null,
+                do_sample = true
+            } = opcoesGeracao;
 
-    // ============================================================
-    // 2. PARÂMETROS DE GERAÇÃO COM TETOS RÍGIDOS
-    // ============================================================
-    const {
-        max_new_tokens = 20,
-        temperature = 0.1,          // ← padrão aumentado para respostas mais diretas
-        top_p = 1,               
-        top_k = null,
-        repetition_penalty = null,
-        do_sample = true
-    } = opcoesGeracao;
+            const requisicao = {
+                messages: mensagens,
+                max_tokens: max_new_tokens,
+                temperature: do_sample ? temperature : 0,
+                top_p,
+            };
+            // Campos fora do padrão OpenAI — repassados, mas ver aviso acima.
+            if (top_k !== null) requisicao.top_k = top_k;
+            if (repetition_penalty !== null) requisicao.repetition_penalty = repetition_penalty;
 
-    // Teto absoluto de saída: nunca ultrapassar 150 tokens
-    const maxTokensFinal = Math.min(max_new_tokens, 150);
-
-    const requisicao = {
-        messages: mensagensPodadas,           // ← agora usando o histórico podado
-        max_tokens: maxTokensFinal,
-        temperature: do_sample ? temperature : 0,
-        top_p: top_p,
-    };
-
-    if (top_k !== null) requisicao.top_k = top_k;
-    if (repetition_penalty !== null) requisicao.repetition_penalty = repetition_penalty;
-
-    try {
-        const resposta = await window.geradorLocal.chat.completions.create(requisicao);
-        return resposta?.choices?.[0]?.message?.content ?? '';
-    } catch (erro) {
-        console.error("❌ Erro na geração local (Tier 3 / WebLLM):", erro);
-        return null;
-    }
-}
+            try {
+                const resposta = await window.geradorLocal.chat.completions.create(requisicao);
+                return resposta?.choices?.[0]?.message?.content ?? '';
+            } catch (erro) {
+                console.error("❌ Erro na geração local (Tier 3 / WebLLM):", erro);
+                return null;
+            }
+        }
 
         // ============================================================
         // TIER 3 — Geração real (não extração, não pool) pra perguntas que
