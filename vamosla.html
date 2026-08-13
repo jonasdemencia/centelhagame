@@ -1324,39 +1324,57 @@
         // parâmetro se o WebLLM não honrar top_k.
         // ============================================================
         async function gerarComNarradorLocal(mensagens, opcoesGeracao = {}) {
-            if (!window.geradorLocal && window.geradorLocalPromise) {
-                console.log("⏳ [Tier 3] Narrador local ainda carregando, aguardando...");
-                await window.geradorLocalPromise;
-            }
-            if (!window.geradorLocal) return null;
+    if (!window.geradorLocal && window.geradorLocalPromise) {
+        console.log("⏳ [Tier 3] Narrador local ainda carregando, aguardando...");
+        await window.geradorLocalPromise;
+    }
+    if (!window.geradorLocal) return null;
 
-            const {
-                max_new_tokens = 20,
-                temperature = 0.1,
-                top_p = 1,
-                top_k = null,
-                repetition_penalty = null,
-                do_sample = true
-            } = opcoesGeracao;
+    // ============================================================
+    // 1. PODA AGRESSIVA DO HISTÓRICO (SLIDING WINDOW)
+    // Mantém apenas o system prompt + as duas últimas interações.
+    // ============================================================
+    let mensagensPodadas = mensagens;
+    if (mensagens.length > 3) {
+        const systemMsg = mensagens[0];          // assume que a primeira é o system
+        const ultimasDuas = mensagens.slice(-2); // contexto imediato
+        mensagensPodadas = [systemMsg, ...ultimasDuas];
+        console.log(`[Memória] Histórico podado de ${mensagens.length} para ${mensagensPodadas.length} mensagens.`);
+    }
 
-            const requisicao = {
-                messages: mensagens,
-                max_tokens: max_new_tokens,
-                temperature: do_sample ? temperature : 0,
-                top_p,
-            };
-            // Campos fora do padrão OpenAI — repassados, mas ver aviso acima.
-            if (top_k !== null) requisicao.top_k = top_k;
-            if (repetition_penalty !== null) requisicao.repetition_penalty = repetition_penalty;
+    // ============================================================
+    // 2. PARÂMETROS DE GERAÇÃO COM TETOS RÍGIDOS
+    // ============================================================
+    const {
+        max_new_tokens = 20,
+        temperature = 0.1,          // ← padrão aumentado para respostas mais diretas
+        top_p = 1,               
+        top_k = null,
+        repetition_penalty = null,
+        do_sample = true
+    } = opcoesGeracao;
 
-            try {
-                const resposta = await window.geradorLocal.chat.completions.create(requisicao);
-                return resposta?.choices?.[0]?.message?.content ?? '';
-            } catch (erro) {
-                console.error("❌ Erro na geração local (Tier 3 / WebLLM):", erro);
-                return null;
-            }
-        }
+    // Teto absoluto de saída: nunca ultrapassar 150 tokens
+    const maxTokensFinal = Math.min(max_new_tokens, 150);
+
+    const requisicao = {
+        messages: mensagensPodadas,           // ← agora usando o histórico podado
+        max_tokens: maxTokensFinal,
+        temperature: do_sample ? temperature : 0,
+        top_p: top_p,
+    };
+
+    if (top_k !== null) requisicao.top_k = top_k;
+    if (repetition_penalty !== null) requisicao.repetition_penalty = repetition_penalty;
+
+    try {
+        const resposta = await window.geradorLocal.chat.completions.create(requisicao);
+        return resposta?.choices?.[0]?.message?.content ?? '';
+    } catch (erro) {
+        console.error("❌ Erro na geração local (Tier 3 / WebLLM):", erro);
+        return null;
+    }
+}
 
         // ============================================================
         // TIER 3 — Geração real (não extração, não pool) pra perguntas que
