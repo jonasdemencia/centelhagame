@@ -1194,18 +1194,34 @@
 
             try {
                 const inicio = performance.now();
-                const worker = criarWorkerWebLLM();
                 // prefill_chunk_size=128 é conservador (default costuma ser maior).
                 // Mobile ganha mais com isso; desktop não sofre por manter também.
                 const appConfig = construirAppConfigComPrefillMenor(registro.id, 128);
-                const engine = await webllm.CreateWebWorkerMLCEngine(worker, registro.id, {
-                    appConfig,
-                    initProgressCallback: (info) => {
-                        const pct = Math.round((info.progress || 0) * 100);
-                        atualizarBadgeNarrador({ estado: 'carregando', texto: `${registro.rotulo}: ${pct}%`, progresso: pct });
-                        if (info.text) logStatusNarrador(info.text, 'info');
-                    }
-                });
+                const callbackProgresso = (info) => {
+                    const pct = Math.round((info.progress || 0) * 100);
+                    atualizarBadgeNarrador({ estado: 'carregando', texto: `${registro.rotulo}: ${pct}%`, progresso: pct });
+                    if (info.text) logStatusNarrador(info.text, 'info');
+                };
+
+                let engine;
+                if (ehMobile()) {
+                    // MUDANÇA: no mobile, não usa Worker. A MDN marca
+                    // WorkerNavigator.gpu (WebGPU dentro de Worker) como "não é
+                    // Baseline — não funciona em alguns dos navegadores mais
+                    // usados". Seu 1B falhou antes mesmo do aquecimento — ou
+                    // seja, dentro da própria criação do engine, não na
+                    // inferência. Isso aponta pra inicialização do WebGPU
+                    // dentro do Worker como suspeito mais provável agora,
+                    // não mais memória. Rodar na thread principal elimina essa
+                    // variável. Custo real: a UI trava durante geração (sem
+                    // Worker não tem como rodar em paralelo) — aceitável
+                    // trade-off enquanto o objetivo é "funciona ou não".
+                    logStatusNarrador('Mobile: rodando sem Worker (WebGPU em Worker tem suporte inconsistente entre navegadores) — UI trava durante a geração.', 'info');
+                    engine = await webllm.CreateMLCEngine(registro.id, { appConfig, initProgressCallback: callbackProgresso });
+                } else {
+                    const worker = criarWorkerWebLLM();
+                    engine = await webllm.CreateWebWorkerMLCEngine(worker, registro.id, { appConfig, initProgressCallback: callbackProgresso });
+                }
 
                 // Aquecimento: dispara a primeira inferência real AGORA, ainda
                 // na tela de carregamento, em vez de deixar isso acontecer sem
