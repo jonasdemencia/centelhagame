@@ -1280,9 +1280,8 @@
                     registro.wllama.repo,
                     registro.wllama.arquivo,
                     {
-                        n_ctx: 2048, 
+                        n_ctx: 512, // Reduzido drasticamente apenas para diagnóstico de memória no WebKit
                         progressCallback: ({ loaded, total }) => {
-                            // Converte explicitamente os BigInts que vêm do WASM para Numbers do JS
                             const numLoaded = Number(loaded);
                             const numTotal = Number(total);
                             const pct = numTotal ? Math.round((numLoaded / numTotal) * 100) : 0;
