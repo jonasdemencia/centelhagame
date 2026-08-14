@@ -645,6 +645,12 @@
         // porque o WebLLM compila via Apache TVM, não ONNX Runtime. Mantido
         // isolado do import do motor de embeddings acima, que não muda.
         import * as webllm from 'https://esm.run/@mlc-ai/web-llm@0.2';
+        // wllama: binding WASM puro do llama.cpp — SEM WebGPU. Usado só no
+        // mobile (ver justificativa na conversa: CPU é mais rápido que GPU
+        // pra modelos de ~1-1.5B no iPhone, e elimina de vez os bugs de
+        // WebGPU/Safari 26 que vínhamos batendo com o WebLLM.
+        import { Wllama } from 'https://esm.run/@wllama/wllama@2/esm/index.js';
+        import WllamaWasmFromCDN from 'https://esm.run/@wllama/wllama@2/esm/wasm-from-cdn.js';
 
         // ============================================================
         // Importações Firebase
@@ -1017,23 +1023,41 @@
             return (typeof navigator.deviceMemory === 'number') ? navigator.deviceMemory : null;
         }
 
-        // Candidatos pra Tier 3. Presos ao catálogo pré-compilado do MLC
-        // (WebLLM não aceita qualquer repo ONNX como antes — ou é um dos
-        // modelos já compilados em formato MLC, ou exige toolchain própria
-        // pra compilar). Confirmei os três IDs abaixo existem no catálogo
-        // oficial antes de usar.
-        //
-        // ATENÇÃO — renomeei o antigo "0.8B": Qwen 0.8B não existe compilado
-        // pro MLC. O substituto mais próximo (mesma faixa de tamanho, mesma
-        // família do candidato de 3B, PT-BR oficialmente suportado no treino)
-        // é o Llama 3.2 1B. Rotulei como "1B" e não "0.8B" de propósito —
-        // seria impreciso chamar de 0.8B um modelo que não é esse.
+        // Dois motores diferentes agora, por causa dos bugs de WebGPU no
+        // Safari que batemos repetidamente:
+        // - DESKTOP: continua no WebLLM/WebGPU (catálogo MLC), sem mudança —
+        //   nenhum problema relatado aí.
+        // - MOBILE: migrado pra wllama (WASM puro, CPU, SEM WebGPU). Modelos
+        //   em formato GGUF, não MLC. Confirmei os dois repos abaixo existem
+        //   antes de usar (bartowski é conversor GGUF de referência da
+        //   comunidade, citado até pelo time oficial do LM Studio).
         const MODELOS_TIER3 = {
-            pequeno: { id: 'Llama-3.2-1B-Instruct-q4f16_1-MLC', rotulo: '1B' },
-            medio: { id: 'Qwen2.5-1.5B-Instruct-q4f16_1-MLC', rotulo: '1.5B' },
-            grande: { id: 'Llama-3.2-3B-Instruct-q4f16_1-MLC', rotulo: '3B' }
+            pequeno: {
+                rotuloBase: '1B',
+                webllm: { id: 'Llama-3.2-1B-Instruct-q4f16_1-MLC' },
+                wllama: { repo: 'bartowski/Llama-3.2-1B-Instruct-GGUF', arquivo: 'Llama-3.2-1B-Instruct-Q4_K_M.gguf' }
+            },
+            medio: {
+                rotuloBase: '1.5B',
+                webllm: { id: 'Qwen2.5-1.5B-Instruct-q4f16_1-MLC' },
+                wllama: { repo: 'bartowski/Qwen2.5-1.5B-Instruct-GGUF', arquivo: 'Qwen2.5-1.5B-Instruct-Q4_K_M.gguf' }
+            },
+            grande: {
+                rotuloBase: '3B',
+                webllm: { id: 'Llama-3.2-3B-Instruct-q4f16_1-MLC' }
+                // Sem entrada wllama de propósito — 3B continua fora do mobile,
+                // regra explícita mantida da instrução original.
+            }
         };
         const MODELO_PRODUCAO = 'pequeno'; // chave de fallback seguro se o escolhido falhar
+
+        function motorAtivo() {
+            return ehMobile() ? 'wllama' : 'webllm';
+        }
+        function rotuloComMotor(chave) {
+            const motor = motorAtivo();
+            return `${MODELOS_TIER3[chave].rotuloBase} (${motor === 'wllama' ? 'CPU' : 'GPU'})`;
+        }
 
         let CHAVE_MODELO_ATIVA = null;
         let CHAVES_MODELO_DISPONIVEIS = [];
@@ -1046,10 +1070,12 @@
             }
         }
 
-        // Sonda o adapter WebGPU de verdade. O WebGPU não expõe "VRAM livre"
-        // (por design, contra fingerprinting) — só conseguimos o teto de
-        // alocação por buffer único, que serve pra descartar candidatos que
-        // claramente não cabem, não pra garantir que os que sobram cabem.
+        // Sonda o adapter WebGPU de verdade. Só é chamada no desktop agora —
+        // mobile usa wllama, que não depende de WebGPU. O WebGPU não expõe
+        // "VRAM livre" (por design, contra fingerprinting) — só conseguimos
+        // o teto de alocação por buffer único, que serve pra descartar
+        // candidatos que claramente não cabem, não pra garantir que os que
+        // sobram cabem.
         async function sondarCapacidadeWebGPU() {
             if (!(typeof navigator !== 'undefined' && navigator.gpu)) {
                 logStatusNarrador('WebGPU indisponível neste navegador (navigator.gpu ausente). WebLLM não tem fallback pra isso — Tier 3 fica indisponível.', 'falha');
@@ -1071,37 +1097,37 @@
             }
         }
 
-        // Decide quais chaves de MODELOS_TIER3 aparecem no seletor. Regras,
-        // na ordem em que são aplicadas:
-        // 1. Sem WebGPU utilizável → nenhuma (WebLLM não tem fallback CPU).
-        // 2. Mobile (iOS OU Android) → nunca oferece o 3B, ponto (regra
-        //    explícita, não é só heurística de capacidade).
-        // 3. Android com RAM total reportada < 4GB → só o menor.
-        // 4. Qualquer candidato cujo vram_required_MB (número oficial do
-        //    próprio registro do WebLLM) ultrapasse o maxStorageBufferBindingSize
-        //    do adapter é descartado — não cabe fisicamente num buffer.
+        // Decide quais chaves de MODELOS_TIER3 aparecem no seletor.
+        // MOBILE (motor wllama, WASM/CPU): WASM é universal — não existe o
+        // conceito de "não suportado" ou "não cabe no buffer" que o WebGPU
+        // tinha. Só aplicamos a regra explícita: nunca oferece o 3B, e
+        // Android com pouca RAM reportada fica só no menor.
+        // DESKTOP (motor webllm, WebGPU): mantém a sondagem de capacidade
+        // de antes.
         function modelosDisponiveisParaUI(capacidade) {
+            const motor = motorAtivo();
+            let chaves = motor === 'wllama'
+                ? ['pequeno', 'medio']  // 3B nunca no mobile, regra explícita
+                : ['pequeno', 'medio', 'grande'];
+
+            if (motor === 'wllama') {
+                const memGB = memoriaAproximadaGB();
+                if (ehAndroid() && memGB !== null && memGB < 4) {
+                    chaves = chaves.filter(c => c === 'pequeno');
+                    logStatusNarrador(`Android com ~${memGB}GB de RAM reportados — restringindo ao modelo menor.`, 'info');
+                }
+                return chaves;
+            }
+
+            // A partir daqui, só motor === 'webllm' (desktop).
             if (!capacidade.suportado) return [];
 
-            let chaves = ['pequeno', 'medio', 'grande'];
-
-            if (ehMobile()) {
-                chaves = chaves.filter(c => c !== 'grande');
-                logStatusNarrador('Dispositivo móvel detectado — opção de 3B ocultada do seletor.', 'info');
-            }
-
-            const memGB = memoriaAproximadaGB();
-            if (ehAndroid() && memGB !== null && memGB < 4) {
-                chaves = chaves.filter(c => c === 'pequeno');
-                logStatusNarrador(`Android com ~${memGB}GB de RAM reportados — restringindo ao modelo menor.`, 'info');
-            }
-
             chaves = chaves.filter(c => {
-                const registro = buscarRegistroWebLLM(MODELOS_TIER3[c].id);
+                const registro = buscarRegistroWebLLM(MODELOS_TIER3[c].webllm.id);
                 const exigidoBytes = (registro?.vram_required_MB || 0) * 1e6;
                 const cabe = !capacidade.limiteStorageBuffer || exigidoBytes <= capacidade.limiteStorageBuffer;
                 if (!cabe) {
-                    logStatusNarrador(`${MODELOS_TIER3[c].rotulo} descartado: exige ~${(exigidoBytes / 1e9).toFixed(2)}GB por buffer, acima do teto do driver.`, 'info');
+                    logStatusNarrador(`${MODELOS_TIER3[c].rotuloBase} descartado: exige ~${(exigidoBytes / 1e9).toFixed(2)}GB por buffer, acima do teto do driver.`, 'info');
                 }
                 return cabe;
             });
@@ -1128,7 +1154,7 @@
             for (const chave of chavesDisponiveis) {
                 const btn = document.createElement('button');
                 btn.dataset.modelo = chave;
-                btn.textContent = MODELOS_TIER3[chave].rotulo;
+                btn.textContent = rotuloComMotor(chave);
                 btn.onclick = () => trocarModeloNarrador(chave);
                 container.appendChild(btn);
             }
@@ -1188,79 +1214,102 @@
         }
 
         async function carregarModeloLocal(chave) {
+            return motorAtivo() === 'wllama'
+                ? carregarViaWllama(chave)
+                : carregarViaWebLLM(chave);
+        }
+
+        async function carregarViaWebLLM(chave) {
             const registro = MODELOS_TIER3[chave];
-            atualizarBadgeNarrador({ estado: 'carregando', texto: `${registro.rotulo}: iniciando…`, progresso: 0 });
-            logStatusNarrador(`Carregando ${registro.rotulo} (${registro.id}) via WebLLM…`, 'info');
+            const rotulo = rotuloComMotor(chave);
+            atualizarBadgeNarrador({ estado: 'carregando', texto: `${rotulo}: iniciando…`, progresso: 0 });
+            logStatusNarrador(`Carregando ${rotulo} (${registro.webllm.id}) via WebLLM…`, 'info');
 
             try {
                 const inicio = performance.now();
-                // prefill_chunk_size=128 é conservador (default costuma ser maior).
-                // Mobile ganha mais com isso; desktop não sofre por manter também.
-                const appConfig = construirAppConfigComPrefillMenor(registro.id, 128);
+                const appConfig = construirAppConfigComPrefillMenor(registro.webllm.id, 128);
                 const callbackProgresso = (info) => {
                     const pct = Math.round((info.progress || 0) * 100);
-                    atualizarBadgeNarrador({ estado: 'carregando', texto: `${registro.rotulo}: ${pct}%`, progresso: pct });
+                    atualizarBadgeNarrador({ estado: 'carregando', texto: `${rotulo}: ${pct}%`, progresso: pct });
                     if (info.text) logStatusNarrador(info.text, 'info');
                 };
 
-                let engine;
-                if (ehMobile()) {
-                    // MUDANÇA: no mobile, não usa Worker. A MDN marca
-                    // WorkerNavigator.gpu (WebGPU dentro de Worker) como "não é
-                    // Baseline — não funciona em alguns dos navegadores mais
-                    // usados". Seu 1B falhou antes mesmo do aquecimento — ou
-                    // seja, dentro da própria criação do engine, não na
-                    // inferência. Isso aponta pra inicialização do WebGPU
-                    // dentro do Worker como suspeito mais provável agora,
-                    // não mais memória. Rodar na thread principal elimina essa
-                    // variável. Custo real: a UI trava durante geração (sem
-                    // Worker não tem como rodar em paralelo) — aceitável
-                    // trade-off enquanto o objetivo é "funciona ou não".
-                    logStatusNarrador('Mobile: rodando sem Worker (WebGPU em Worker tem suporte inconsistente entre navegadores) — UI trava durante a geração.', 'info');
-                    engine = await webllm.CreateMLCEngine(registro.id, { appConfig, initProgressCallback: callbackProgresso });
-                } else {
-                    const worker = criarWorkerWebLLM();
-                    engine = await webllm.CreateWebWorkerMLCEngine(worker, registro.id, { appConfig, initProgressCallback: callbackProgresso });
-                }
+                const worker = criarWorkerWebLLM();
+                const engine = await webllm.CreateWebWorkerMLCEngine(worker, registro.webllm.id, { appConfig, initProgressCallback: callbackProgresso });
 
-                // Aquecimento: dispara a primeira inferência real AGORA, ainda
-                // na tela de carregamento, em vez de deixar isso acontecer sem
-                // aviso quando o jogador manda a primeira mensagem. O motivo:
-                // a issue mlc-ai/web-llm#753 (dez/2025) documenta exatamente o
-                // seu sintoma — no iOS 26 Safari, um modelo maior que ~135M
-                // consegue baixar inteiro e só quebra a aba depois, sem log
-                // algum. A suspeita fundamentada é que o pico real de memória
-                // não é o peso do modelo, é a primeira inferência (alocação do
-                // KV cache + especialização dos shaders). Isso não CONSERTA
-                // a instabilidade — mas se vai quebrar, prefiro que quebre
-                // aqui, com o badge dizendo "aquecendo", do que no meio da
-                // digitação do jogador sem explicação nenhuma.
-                atualizarBadgeNarrador({ estado: 'carregando', texto: `${registro.rotulo}: aquecendo…`, progresso: 100 });
-                logStatusNarrador(`Rodando inferência de aquecimento (testa o ponto onde o iOS costuma quebrar — ver mlc-ai/web-llm#753)…`, 'info');
-                await engine.chat.completions.create({
-                    messages: [{ role: 'user', content: 'Oi' }],
-                    max_tokens: 4,
-                    temperature: 0
-                });
+                atualizarBadgeNarrador({ estado: 'carregando', texto: `${rotulo}: aquecendo…`, progresso: 100 });
+                await engine.chat.completions.create({ messages: [{ role: 'user', content: 'Oi' }], max_tokens: 4, temperature: 0 });
 
                 const segundos = ((performance.now() - inicio) / 1000).toFixed(1);
-                logStatusNarrador(`Carregado e aquecido: ${registro.rotulo} (${segundos}s).`, 'ok');
-                atualizarBadgeNarrador({ estado: 'pronto', texto: `✅ ${registro.rotulo} pronto`, progresso: 100 });
-                return engine;
+                logStatusNarrador(`Carregado e aquecido: ${rotulo} (${segundos}s).`, 'ok');
+                atualizarBadgeNarrador({ estado: 'pronto', texto: `✅ ${rotulo} pronto`, progresso: 100 });
+                return { motor: 'webllm', instancia: engine };
             } catch (erro) {
-                logStatusNarrador(`Falhou carregar/aquecer ${registro.rotulo}: ${erro.message}`, 'falha');
+                logStatusNarrador(`Falhou carregar/aquecer ${rotulo}: ${erro.message}`, 'falha');
+                return null;
+            }
+        }
+
+        // MOBILE — wllama: WASM puro, roda em CPU, zero dependência de
+        // WebGPU. Elimina de vez os bugs que vínhamos batendo (JSEP, Worker,
+        // device lost no Safari 26), porque essa camada inteira nem existe
+        // aqui. Custo real, honesto: GitHub Pages não permite configurar os
+        // headers COOP/Cross-Origin-Embedder-Policy que o build multi-thread
+        // do wllama exige (SharedArrayBuffer). A lib detecta isso sozinha e
+        // cai pro build single-thread — mais lento que os benchmarks com
+        // 2+ threads, mas ainda funcional (WASM single-thread em CPU ARM
+        // pra modelo de 1B costuma ficar na casa de poucos tokens/segundo,
+        // não é instantâneo mas é legível em tempo real).
+        async function carregarViaWllama(chave) {
+            const registro = MODELOS_TIER3[chave];
+            const rotulo = rotuloComMotor(chave);
+            atualizarBadgeNarrador({ estado: 'carregando', texto: `${rotulo}: iniciando…`, progresso: 0 });
+            logStatusNarrador(`Carregando ${rotulo} (${registro.wllama.repo}/${registro.wllama.arquivo}) via wllama (WASM/CPU)…`, 'info');
+
+            try {
+                const inicio = performance.now();
+                const instancia = new Wllama(WllamaWasmFromCDN);
+
+                await instancia.loadModelFromHF(
+                    { repo: registro.wllama.repo, file: registro.wllama.arquivo },
+                    {
+                        n_ctx: 2048, // contexto menor que o default = menos KV cache = menos RAM
+                        progressCallback: ({ loaded, total }) => {
+                            const pct = total ? Math.round((loaded / total) * 100) : 0;
+                            atualizarBadgeNarrador({ estado: 'carregando', texto: `${rotulo}: ${pct}%`, progresso: pct });
+                        }
+                    }
+                );
+
+                logStatusNarrador(`Multi-thread ativo: ${instancia.isMultithread ? instancia.isMultithread() : 'desconhecido'} (GitHub Pages não manda os headers COOP/COEP — single-thread é o esperado).`, 'info');
+
+                // Mesmo raciocínio de aquecimento do WebLLM: dispara a
+                // primeira inferência real ainda na tela de carregamento.
+                atualizarBadgeNarrador({ estado: 'carregando', texto: `${rotulo}: aquecendo…`, progresso: 100 });
+                await instancia.createChatCompletion([{ role: 'user', content: 'Oi' }], { nPredict: 4, sampling: { temp: 0 } });
+
+                const segundos = ((performance.now() - inicio) / 1000).toFixed(1);
+                logStatusNarrador(`Carregado e aquecido: ${rotulo} (${segundos}s).`, 'ok');
+                atualizarBadgeNarrador({ estado: 'pronto', texto: `✅ ${rotulo} pronto`, progresso: 100 });
+                return { motor: 'wllama', instancia };
+            } catch (erro) {
+                logStatusNarrador(`Falhou carregar/aquecer ${rotulo}: ${erro.message}`, 'falha');
                 return null;
             }
         }
 
         async function iniciarGeradorLocal() {
             window.geradorLocalPromise = (async () => {
-                const capacidade = await sondarCapacidadeWebGPU();
+                // No mobile não tocamos em navigator.gpu / WebGPU de propósito —
+                // o motor agora é wllama (WASM/CPU), então nem vale a pena sondar
+                // um subsistema que não vamos usar (e que é justamente a fonte
+                // de instabilidade que estamos evitando).
+                const capacidade = motorAtivo() === 'webllm' ? await sondarCapacidadeWebGPU() : { suportado: true };
                 CHAVES_MODELO_DISPONIVEIS = modelosDisponiveisParaUI(capacidade);
                 montarSeletorModeloUI(CHAVES_MODELO_DISPONIVEIS);
 
                 if (CHAVES_MODELO_DISPONIVEIS.length === 0) {
-                    logStatusNarrador('Nenhum modelo local viável neste dispositivo (sem WebGPU utilizável, ou nada coube no teto de buffer do driver).', 'falha');
+                    logStatusNarrador('Nenhum modelo local viável neste dispositivo.', 'falha');
                     atualizarBadgeNarrador({ estado: 'erro', texto: '❌ narrador indisponível neste dispositivo', progresso: 0 });
                     window.geradorLocal = null;
                     return;
@@ -1273,7 +1322,7 @@
                 // (se ele ainda estiver entre os disponíveis e for diferente
                 // do que já falhou), em vez de deixar o Tier 3 inteiro morto.
                 if (!window.geradorLocal && CHAVE_MODELO_ATIVA !== MODELO_PRODUCAO && CHAVES_MODELO_DISPONIVEIS.includes(MODELO_PRODUCAO)) {
-                    logStatusNarrador(`Candidato '${MODELOS_TIER3[CHAVE_MODELO_ATIVA].rotulo}' não carregou. Caindo pro modelo de produção (${MODELOS_TIER3[MODELO_PRODUCAO].rotulo}).`, 'falha');
+                    logStatusNarrador(`Candidato '${MODELOS_TIER3[CHAVE_MODELO_ATIVA].rotuloBase}' não carregou. Caindo pro modelo de produção (${MODELOS_TIER3[MODELO_PRODUCAO].rotuloBase}).`, 'falha');
                     CHAVE_MODELO_ATIVA = MODELO_PRODUCAO;
                     window.geradorLocal = await carregarModeloLocal(MODELO_PRODUCAO);
                 }
@@ -1406,21 +1455,38 @@
                 do_sample = true
             } = opcoesGeracao;
 
-            const requisicao = {
-                messages: mensagens,
-                max_tokens: max_new_tokens,
-                temperature: do_sample ? temperature : 0,
-                top_p,
-            };
-            // Campos fora do padrão OpenAI — repassados, mas ver aviso acima.
-            if (top_k !== null) requisicao.top_k = top_k;
-            if (repetition_penalty !== null) requisicao.repetition_penalty = repetition_penalty;
-
             try {
-                const resposta = await window.geradorLocal.chat.completions.create(requisicao);
+                if (window.geradorLocal.motor === 'wllama') {
+                    // API do wllama é diferente: createChatCompletion(mensagens, {nPredict, sampling}).
+                    // top_k e repetition_penalty SÃO suportados nativamente aqui
+                    // (llama.cpp sempre teve esses parâmetros — diferente do
+                    // WebLLM, onde eram extensão não confirmada).
+                    const sampling = { temp: do_sample ? temperature : 0, top_p };
+                    if (top_k !== null) sampling.top_k = top_k;
+                    if (repetition_penalty !== null) sampling.repeat_penalty = repetition_penalty;
+
+                    const resposta = await window.geradorLocal.instancia.createChatCompletion(mensagens, {
+                        nPredict: max_new_tokens,
+                        sampling
+                    });
+                    // createChatCompletion retorna string direto (não objeto choices).
+                    return typeof resposta === 'string' ? resposta : (resposta?.choices?.[0]?.message?.content ?? '');
+                }
+
+                // motor === 'webllm'
+                const requisicao = {
+                    messages: mensagens,
+                    max_tokens: max_new_tokens,
+                    temperature: do_sample ? temperature : 0,
+                    top_p,
+                };
+                if (top_k !== null) requisicao.top_k = top_k;
+                if (repetition_penalty !== null) requisicao.repetition_penalty = repetition_penalty;
+
+                const resposta = await window.geradorLocal.instancia.chat.completions.create(requisicao);
                 return resposta?.choices?.[0]?.message?.content ?? '';
             } catch (erro) {
-                console.error("❌ Erro na geração local (Tier 3 / WebLLM):", erro);
+                console.error(`❌ Erro na geração local (Tier 3 / ${window.geradorLocal.motor}):`, erro);
                 return null;
             }
         }
