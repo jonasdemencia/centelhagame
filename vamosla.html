@@ -1273,7 +1273,7 @@
         // 2+ threads, mas ainda funcional (WASM single-thread em CPU ARM
         // pra modelo de 1B costuma ficar na casa de poucos tokens/segundo,
         // não é instantâneo mas é legível em tempo real).
-        async function carregarViaWllama(chave) {
+       async function carregarViaWllama(chave) {
             const registro = MODELOS_TIER3[chave];
             const rotulo = rotuloComMotor(chave);
             atualizarBadgeNarrador({ estado: 'carregando', texto: `${rotulo}: iniciando…`, progresso: 0 });
@@ -1288,19 +1288,21 @@
                     registro.wllama.arquivo,
                     {
                         n_ctx: 512,
+                        // TRAVAS DE MEMÓRIA PARA O WEBKIT (IOS SAFARI)
+                        n_threads: 1,           // Impede o motor de tentar alocar memória para múltiplos workers
+                        n_batch: 64,            // Quebra o processamento em lotes menores para evitar picos de RAM
+                        cache_type_k: 'q8_0',   // Comprime o cache KV (memória de contexto) pela metade
+                        cache_type_v: 'q8_0',   // Comprime o cache KV (memória de contexto) pela metade
                         progressCallback: ({ loaded, total }) => {
-                            // AJUSTE: Conversão explícita para contornar o erro matemático de BigInt
                             const carregadoNum = Number(loaded);
                             const totalNum = Number(total);
-                            
-                            // AQUI ESTÁ A CORREÇÃO: Forçando a UI do Safari a respirar e atualizar
                             const pct = totalNum > 0 ? Math.round((carregadoNum / totalNum) * 100) : 0;
                             atualizarBadgeNarrador({ estado: 'carregando', texto: `${rotulo}: ${pct}%`, progresso: pct });
                         }
                     }
                 );
 
-                logStatusNarrador(`Multi-thread ativo: ${instancia.isMultithread ? instancia.isMultithread() : 'desconhecido'} (GitHub Pages não manda os headers COOP/COEP — single-thread é o esperado).`, 'info');
+                logStatusNarrador(`Multi-thread ativo: ${instancia.isMultithread ? instancia.isMultithread() : 'desconhecido'} (iOS forçado para single-thread).`, 'info');
 
                 atualizarBadgeNarrador({ estado: 'carregando', texto: `${rotulo}: aquecendo…`, progresso: 100 });
                 await instancia.createChatCompletion([{ role: 'user', content: 'Oi' }], { nPredict: 4, sampling: { temp: 0 } });
@@ -1315,6 +1317,7 @@
             }
         }
 
+    
         async function iniciarGeradorLocal() {
             window.geradorLocalPromise = (async () => {
                 // No mobile não tocamos em navigator.gpu / WebGPU de propósito —
