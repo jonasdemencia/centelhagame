@@ -1277,7 +1277,8 @@
                 const instancia = new Wllama(WllamaWasmFromCDN);
 
                 await instancia.loadModelFromHF(
-                    { repo: registro.wllama.repo, file: registro.wllama.arquivo },
+                    registro.wllama.repo,
+                    registro.wllama.arquivo,
                     {
                         n_ctx: 2048, // contexto menor que o default = menos KV cache = menos RAM
                         progressCallback: ({ loaded, total }) => {
