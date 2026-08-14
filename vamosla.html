@@ -649,8 +649,14 @@
         // mobile (ver justificativa na conversa: CPU é mais rápido que GPU
         // pra modelos de ~1-1.5B no iPhone, e elimina de vez os bugs de
         // WebGPU/Safari 26 que vínhamos batendo com o WebLLM.
-        import { Wllama } from 'https://esm.run/@wllama/wllama@2/esm/index.js';
-        import WllamaWasmFromCDN from 'https://esm.run/@wllama/wllama@2/esm/wasm-from-cdn.js';
+        // CORREÇÃO: esm.run só deve ser usado com o nome do pacote sozinho —
+        // ele tenta colar "/+esm" no final de QUALQUER caminho passado, o que
+        // quebra quando o caminho já aponta pra um arquivo específico dentro
+        // do pacote (gerava "wasm-from-cdn.js/+esm", 404). Pra caminhos
+        // profundos, uso o jsdelivr puro, que serve o arquivo real sem
+        // nenhuma transformação por cima.
+        import { Wllama } from 'https://cdn.jsdelivr.net/npm/@wllama/wllama@2/esm/index.js';
+        import WllamaWasmFromCDN from 'https://cdn.jsdelivr.net/npm/@wllama/wllama@2/esm/wasm-from-cdn.js';
 
         // ============================================================
         // Importações Firebase
