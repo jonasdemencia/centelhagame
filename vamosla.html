@@ -1287,12 +1287,16 @@
                     registro.wllama.repo,
                     registro.wllama.arquivo,
                     {
-                        n_ctx: 512, // Reduzido drasticamente apenas para diagnóstico de memória no WebKit
+                        n_ctx: 512,
                         progressCallback: ({ loaded, total }) => {
-                            const numLoaded = Number(loaded);
-                            const numTotal = Number(total);
-                            const pct = numTotal ? Math.round((numLoaded / numTotal) * 100) : 0;
-                            atualizarBadgeNarrador({ estado: 'carregando', texto: `${rotulo}: ${pct}%`, progresso: pct });
+                            // AJUSTE: Converter explicitamente BigInt para Number para evitar o erro matemático
+                            const carregadoNum = Number(loaded);
+                            const totalNum = Number(total);
+                            
+                            // Agora você usa carregadoNum e totalNum para a sua lógica de barra de progresso!
+                            // Exemplo: const porcentagem = (carregadoNum / totalNum) * 100;
+                            
+                            // MANTENHA A SUA LÓGICA ORIGINAL DE ATUALIZAÇÃO DA TELA AQUI
                         }
                     }
                 );
