@@ -1280,9 +1280,12 @@
                     registro.wllama.repo,
                     registro.wllama.arquivo,
                     {
-                        n_ctx: 2048, // contexto menor que o default = menos KV cache = menos RAM
+                        n_ctx: 2048, 
                         progressCallback: ({ loaded, total }) => {
-                            const pct = total ? Math.round((loaded / total) * 100) : 0;
+                            // Converte explicitamente os BigInts que vêm do WASM para Numbers do JS
+                            const numLoaded = Number(loaded);
+                            const numTotal = Number(total);
+                            const pct = numTotal ? Math.round((numLoaded / numTotal) * 100) : 0;
                             atualizarBadgeNarrador({ estado: 'carregando', texto: `${rotulo}: ${pct}%`, progresso: pct });
                         }
                     }
