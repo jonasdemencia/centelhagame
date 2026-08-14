@@ -1038,11 +1038,17 @@
         //   antes de usar (bartowski é conversor GGUF de referência da
         //   comunidade, citado até pelo time oficial do LM Studio).
         const MODELOS_TIER3 = {
+
+            micro: {
+                rotuloBase: '0.5B',
+                webllm: { id: 'Qwen2.5-0.5B-Instruct-q4f16_1-MLC' },
+                wllama: { repo: 'bartowski/Qwen2.5-0.5B-Instruct-GGUF', arquivo: 'Qwen2.5-0.5B-Instruct-Q4_K_M.gguf' }
+            },
             pequeno: {
                 rotuloBase: '1B',
                 webllm: { id: 'Llama-3.2-1B-Instruct-q4f16_1-MLC' },
-                // AJUSTE: Trocado de Q4_K_M para Q3_K_M ou Q2_K para caber na RAM restrita do iOS WebKit
-                wllama: { repo: 'bartowski/Llama-3.2-1B-Instruct-GGUF', arquivo: 'Llama-3.2-1B-Instruct-Q3_K_M.gguf' }
+                // AJUSTE: Descendo para a quantização máxima (Q2_K) para caber na RAM do iPhone
+                wllama: { repo: 'bartowski/Llama-3.2-1B-Instruct-GGUF', arquivo: 'Llama-3.2-1B-Instruct-Q2_K.gguf' }
             },
             medio: {
                 rotuloBase: '1.5B',
