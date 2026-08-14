@@ -1289,22 +1289,19 @@
                     {
                         n_ctx: 512,
                         progressCallback: ({ loaded, total }) => {
-                            // AJUSTE: Converter explicitamente BigInt para Number para evitar o erro matemático
+                            // AJUSTE: Conversão explícita para contornar o erro matemático de BigInt
                             const carregadoNum = Number(loaded);
                             const totalNum = Number(total);
                             
-                            // Agora você usa carregadoNum e totalNum para a sua lógica de barra de progresso!
-                            // Exemplo: const porcentagem = (carregadoNum / totalNum) * 100;
-                            
-                            // MANTENHA A SUA LÓGICA ORIGINAL DE ATUALIZAÇÃO DA TELA AQUI
+                            // AQUI ESTÁ A CORREÇÃO: Forçando a UI do Safari a respirar e atualizar
+                            const pct = totalNum > 0 ? Math.round((carregadoNum / totalNum) * 100) : 0;
+                            atualizarBadgeNarrador({ estado: 'carregando', texto: `${rotulo}: ${pct}%`, progresso: pct });
                         }
                     }
                 );
 
                 logStatusNarrador(`Multi-thread ativo: ${instancia.isMultithread ? instancia.isMultithread() : 'desconhecido'} (GitHub Pages não manda os headers COOP/COEP — single-thread é o esperado).`, 'info');
 
-                // Mesmo raciocínio de aquecimento do WebLLM: dispara a
-                // primeira inferência real ainda na tela de carregamento.
                 atualizarBadgeNarrador({ estado: 'carregando', texto: `${rotulo}: aquecendo…`, progresso: 100 });
                 await instancia.createChatCompletion([{ role: 'user', content: 'Oi' }], { nPredict: 4, sampling: { temp: 0 } });
 
