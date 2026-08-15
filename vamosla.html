@@ -655,8 +655,29 @@
         // do pacote (gerava "wasm-from-cdn.js/+esm", 404). Pra caminhos
         // profundos, uso o jsdelivr puro, que serve o arquivo real sem
         // nenhuma transformação por cima.
-        import { Wllama } from 'https://cdn.jsdelivr.net/npm/@wllama/wllama@2/esm/index.js';
-        import WllamaWasmFromCDN from 'https://cdn.jsdelivr.net/npm/@wllama/wllama@2/esm/wasm-from-cdn.js';
+        // Travado em versão EXATA (não @2, que é uma faixa "qualquer 2.x") —
+        // o erro "function import requires a callable" na instanciação do
+        // WASM é típico de descompasso entre o JS carregador e o binário
+        // .wasm quando vêm de resoluções de versão diferentes entre
+        // requisições separadas ao CDN. Trava garante que index.js e
+        // wasm-from-cdn.js (e o que ele aponta por baixo) vêm do mesmo
+        // build, testado junto.
+        import { Wllama } from 'https://cdn.jsdelivr.net/npm/@wllama/wllama@2.3.7/esm/index.js';
+        // Removi a dependência do helper "wasm-from-cdn.js": a própria doc do
+        // wllama avisa que ele é "não recomendado, só use quando não dá pra
+        // empacotar os arquivos junto" — e não temos visibilidade do que ele
+        // resolve por baixo. Especificando os 5 arquivos manualmente (mesmo
+        // padrão usado num Space real da Hugging Face em produção com
+        // wllama), garantimos que TODOS vêm da mesma versão exata, sem
+        // depender da lógica interna de um helper que não conseguimos inspecionar.
+        const WLLAMA_BASE = 'https://cdn.jsdelivr.net/npm/@wllama/wllama@2.3.7/esm/';
+        const WLLAMA_CONFIG_PATHS = {
+            'single-thread/wllama.js': WLLAMA_BASE + 'single-thread/wllama.js',
+            'single-thread/wllama.wasm': WLLAMA_BASE + 'single-thread/wllama.wasm',
+            'multi-thread/wllama.js': WLLAMA_BASE + 'multi-thread/wllama.js',
+            'multi-thread/wllama.wasm': WLLAMA_BASE + 'multi-thread/wllama.wasm',
+            'multi-thread/wllama.worker.mjs': WLLAMA_BASE + 'multi-thread/wllama.worker.mjs',
+        };
 
         // ============================================================
         // Importações Firebase
@@ -1274,7 +1295,7 @@
 
             try {
                 const inicio = performance.now();
-                const instancia = new Wllama(WllamaWasmFromCDN);
+                const instancia = new Wllama(WLLAMA_CONFIG_PATHS);
 
                 // Camada de compatibilidade oficial do wllama pra Safari/Firefox.
                 // O erro "Conversion from 'BigInt' to 'number' is not allowed" é o
