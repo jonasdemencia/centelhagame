@@ -1059,34 +1059,29 @@
         //   antes de usar (bartowski é conversor GGUF de referência da
         //   comunidade, citado até pelo time oficial do LM Studio).
         const MODELOS_TIER3 = {
-            pequeno: {
-                rotuloBase: 'Aulus Interpress',
-                webllm: { id: 'Llama-3.2-1B-Instruct-q4f16_1-MLC' },
-                wllama: { repo: 'bartowski/Llama-3.2-1B-Instruct-GGUF', arquivo: 'Llama-3.2-1B-Instruct-Q4_K_M.gguf' }
-            },
-            medio: {
-                rotuloBase: 'Ephraemus',
-                webllm: { id: 'Qwen2.5-1.5B-Instruct-q4f16_1-MLC' },
-                wllama: { repo: 'bartowski/Qwen2.5-1.5B-Instruct-GGUF', arquivo: 'Qwen2.5-1.5B-Instruct-Q4_K_M.gguf' }
-            },
-                        grande: {
-                rotuloBase: 'Skaios o estólido',
-                webllm: { id: 'Llama-3.2-3B-Instruct-q4f16_1-MLC' }
-                // Sem entrada wllama de propósito — 3B continua fora do mobile,
-                // regra explícita mantida da instrução original.
-            },
-            semantico: {
-                rotuloBase: 'Johannes',
-                semanticoApenas: true
-                // Sem webllm/wllama de propósito: não carrega NENHUM motor de
-                // geração de texto. O motor semântico (embeddings, usado pelo
-                // Tier 2/RAG e pela interceptação semântica) já roda à parte
-                // via iniciarMotorSemantico() e continua ativo aqui — só o
-                // Tier 3 (invenção de detalhes) fica mudo. É a opção mais leve
-                // possível: zero download extra, zero VRAM/RAM além do modelo
-                // de embeddings que já carrega de qualquer forma.
-            }
-        };
+    pequeno: {
+        rotuloBase: 'Skaios',
+        nomeTecnico: 'Llama-3.2-1B-Instruct-q4f16_1-MLC (WebLLM) / Llama-3.2-1B-Instruct-Q4_K_M.gguf (wllama)',
+        webllm: { id: 'Llama-3.2-1B-Instruct-q4f16_1-MLC' },
+        wllama: { repo: 'bartowski/Llama-3.2-1B-Instruct-GGUF', arquivo: 'Llama-3.2-1B-Instruct-Q4_K_M.gguf' }
+    },
+    medio: {
+        rotuloBase: 'Brutus',
+        nomeTecnico: 'Qwen2.5-1.5B-Instruct-q4f16_1-MLC (WebLLM) / Qwen2.5-1.5B-Instruct-GGUF (wllama)',
+        webllm: { id: 'Qwen2.5-1.5B-Instruct-q4f16_1-MLC' },
+        wllama: { repo: 'bartowski/Qwen2.5-1.5B-Instruct-GGUF', arquivo: 'Qwen2.5-1.5B-Instruct-Q4_K_M.gguf' }
+    },
+    grande: {
+        rotuloBase: 'Augustinus',
+        nomeTecnico: 'Llama-3.2-3B-Instruct-q4f16_1-MLC (WebLLM)',
+        webllm: { id: 'Llama-3.2-3B-Instruct-q4f16_1-MLC' }
+    },
+    semantico: {
+        rotuloBase: 'Johannes',
+        nomeTecnico: 'Xenova/paraphrase-multilingual-MiniLM-L12-v2 (embeddings)',
+        semanticoApenas: true
+    }
+};
         const MODELO_PRODUCAO = 'pequeno'; // chave de fallback seguro se o escolhido falhar
 
         function motorAtivo() {
@@ -1275,17 +1270,18 @@
         // gerarComNarradorLocal detecta motor === 'semantico' e retorna
         // null direto, caindo no fallback padrão do jogo.
         async function carregarSemGeracao(chave) {
-            const rotulo = MODELOS_TIER3[chave].rotuloBase;
-            atualizarBadgeNarrador({ estado: 'pronto', texto: `✅ ${rotulo} (só semântica)`, progresso: 100 });
-            logStatusNarrador(`Modo "${rotulo}" ativo: nenhum LLM local carregado. Tier 3 (invenção de detalhes) fica indisponível; o motor semântico (Tier 2) continua funcionando normalmente.`, 'ok');
+            const nomeExibido = MODELOS_TIER3[chave].rotuloBase;
+const nomeTecnico = MODELOS_TIER3[chave].nomeTecnico;
+atualizarBadgeNarrador({ estado: 'pronto', texto: `✅ ${nomeExibido} (só semântica)`, progresso: 100 });
+logStatusNarrador(`Modo "${nomeExibido}" (${nomeTecnico}) ativo: nenhum LLM local carregado. Tier 3 (invenção de detalhes) fica indisponível; o motor semântico (Tier 2) continua funcionando normalmente.`, 'ok');
             return { motor: 'semantico', instancia: null };
         }
 
         async function carregarViaWebLLM(chave) {
             const registro = MODELOS_TIER3[chave];
-            const rotulo = rotuloComMotor(chave);
-            atualizarBadgeNarrador({ estado: 'carregando', texto: `${rotulo}: iniciando…`, progresso: 0 });
-            logStatusNarrador(`Carregando ${rotulo} (${registro.webllm.id}) via WebLLM…`, 'info');
+            const nomeExibido = MODELOS_TIER3[chave].rotuloBase;
+const nomeTecnico = MODELOS_TIER3[chave].nomeTecnico;
+logStatusNarrador(`Carregando ${nomeExibido} (${nomeTecnico}) via WebLLM…`, 'info');
 
             try {
                 const inicio = performance.now();
@@ -1302,8 +1298,10 @@
                 atualizarBadgeNarrador({ estado: 'carregando', texto: `${rotulo}: aquecendo…`, progresso: 100 });
                 await engine.chat.completions.create({ messages: [{ role: 'user', content: 'Oi' }], max_tokens: 4, temperature: 0 });
 
-                const segundos = ((performance.now() - inicio) / 1000).toFixed(1);
-                logStatusNarrador(`Carregado e aquecido: ${rotulo} (${segundos}s).`, 'ok');
+                const nomeExibido = MODELOS_TIER3[chave].rotuloBase;
+const nomeTecnico = MODELOS_TIER3[chave].nomeTecnico;
+const segundos = ((performance.now() - inicio) / 1000).toFixed(1);
+logStatusNarrador(`Carregado e aquecido: ${nomeExibido} (${nomeTecnico}) (${segundos}s).`, 'ok');
                 atualizarBadgeNarrador({ estado: 'pronto', texto: `✅ ${rotulo} pronto`, progresso: 100 });
                 return { motor: 'webllm', instancia: engine };
             } catch (erro) {
@@ -1324,9 +1322,9 @@
         // não é instantâneo mas é legível em tempo real).
         async function carregarViaWllama(chave) {
             const registro = MODELOS_TIER3[chave];
-            const rotulo = rotuloComMotor(chave);
-            atualizarBadgeNarrador({ estado: 'carregando', texto: `${rotulo}: iniciando…`, progresso: 0 });
-            logStatusNarrador(`Carregando ${rotulo} (${registro.wllama.repo}/${registro.wllama.arquivo}) via wllama (WASM/CPU)…`, 'info');
+            const nomeExibido = MODELOS_TIER3[chave].rotuloBase;
+const nomeTecnico = MODELOS_TIER3[chave].nomeTecnico;
+logStatusNarrador(`Carregando ${nomeExibido} (${nomeTecnico}) via wllama (WASM/CPU)…`, 'info');
 
             try {
                 const inicio = performance.now();
@@ -1367,8 +1365,10 @@
                 atualizarBadgeNarrador({ estado: 'carregando', texto: `${rotulo}: aquecendo…`, progresso: 100 });
                 await instancia.createChatCompletion([{ role: 'user', content: 'Oi' }], { nPredict: 4, sampling: { temp: 0 } });
 
-                const segundos = ((performance.now() - inicio) / 1000).toFixed(1);
-                logStatusNarrador(`Carregado e aquecido: ${rotulo} (${segundos}s).`, 'ok');
+                const nomeExibido = MODELOS_TIER3[chave].rotuloBase;
+const nomeTecnico = MODELOS_TIER3[chave].nomeTecnico;
+const segundos = ((performance.now() - inicio) / 1000).toFixed(1);
+logStatusNarrador(`Carregado e aquecido: ${nomeExibido} (${nomeTecnico}) (${segundos}s).`, 'ok');
                 atualizarBadgeNarrador({ estado: 'pronto', texto: `✅ ${rotulo} pronto`, progresso: 100 });
                 return { motor: 'wllama', instancia };
             } catch (erro) {
@@ -1401,7 +1401,10 @@
                 // (se ele ainda estiver entre os disponíveis e for diferente
                 // do que já falhou), em vez de deixar o Tier 3 inteiro morto.
                 if (!window.geradorLocal && CHAVE_MODELO_ATIVA !== MODELO_PRODUCAO && CHAVES_MODELO_DISPONIVEIS.includes(MODELO_PRODUCAO)) {
-                    logStatusNarrador(`Candidato '${MODELOS_TIER3[CHAVE_MODELO_ATIVA].rotuloBase}' não carregou. Caindo pro modelo de produção (${MODELOS_TIER3[MODELO_PRODUCAO].rotuloBase}).`, 'falha');
+                    const candNome = MODELOS_TIER3[CHAVE_MODELO_ATIVA].rotuloBase;
+const prodNome = MODELOS_TIER3[MODELO_PRODUCAO].rotuloBase;
+const prodTec = MODELOS_TIER3[MODELO_PRODUCAO].nomeTecnico;
+logStatusNarrador(`Candidato '${candNome}' não carregou. Caindo pro modelo de produção (${prodNome} = ${prodTec}).`, 'falha');
                     CHAVE_MODELO_ATIVA = MODELO_PRODUCAO;
                     window.geradorLocal = await carregarModeloLocal(MODELO_PRODUCAO);
                 }
