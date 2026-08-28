@@ -1069,11 +1069,22 @@
                 webllm: { id: 'Qwen2.5-1.5B-Instruct-q4f16_1-MLC' },
                 wllama: { repo: 'bartowski/Qwen2.5-1.5B-Instruct-GGUF', arquivo: 'Qwen2.5-1.5B-Instruct-Q4_K_M.gguf' }
             },
-            grande: {
+                        grande: {
                 rotuloBase: '3B',
                 webllm: { id: 'Llama-3.2-3B-Instruct-q4f16_1-MLC' }
                 // Sem entrada wllama de propósito — 3B continua fora do mobile,
                 // regra explícita mantida da instrução original.
+            },
+            semantico: {
+                rotuloBase: 'Semântico',
+                semanticoApenas: true
+                // Sem webllm/wllama de propósito: não carrega NENHUM motor de
+                // geração de texto. O motor semântico (embeddings, usado pelo
+                // Tier 2/RAG e pela interceptação semântica) já roda à parte
+                // via iniciarMotorSemantico() e continua ativo aqui — só o
+                // Tier 3 (invenção de detalhes) fica mudo. É a opção mais leve
+                // possível: zero download extra, zero VRAM/RAM além do modelo
+                // de embeddings que já carrega de qualquer forma.
             }
         };
         const MODELO_PRODUCAO = 'pequeno'; // chave de fallback seguro se o escolhido falhar
@@ -1081,7 +1092,9 @@
         function motorAtivo() {
             return ehMobile() ? 'wllama' : 'webllm';
         }
-        function rotuloComMotor(chave) {
+               function rotuloComMotor(chave) {
+            // "semantico" não roda em CPU nem GPU (não carrega LLM nenhum).
+            if (MODELOS_TIER3[chave]?.semanticoApenas) return MODELOS_TIER3[chave].rotuloBase;
             const motor = motorAtivo();
             return `${MODELOS_TIER3[chave].rotuloBase} (${motor === 'wllama' ? 'CPU' : 'GPU'})`;
         }
@@ -1124,14 +1137,7 @@
             }
         }
 
-        // Decide quais chaves de MODELOS_TIER3 aparecem no seletor.
-        // MOBILE (motor wllama, WASM/CPU): WASM é universal — não existe o
-        // conceito de "não suportado" ou "não cabe no buffer" que o WebGPU
-        // tinha. Só aplicamos a regra explícita: nunca oferece o 3B, e
-        // Android com pouca RAM reportada fica só no menor.
-        // DESKTOP (motor webllm, WebGPU): mantém a sondagem de capacidade
-        // de antes.
-        function modelosDisponiveisParaUI(capacidade) {
+               function modelosDisponiveisParaUI(capacidade) {
             const motor = motorAtivo();
             let chaves = motor === 'wllama'
                 ? ['pequeno', 'medio']  // 3B nunca no mobile, regra explícita
@@ -1143,23 +1149,33 @@
                     chaves = chaves.filter(c => c === 'pequeno');
                     logStatusNarrador(`Android com ~${memGB}GB de RAM reportados — restringindo ao modelo menor.`, 'info');
                 }
-                return chaves;
+                // 'semantico' não depende de WASM/CPU pra nada além do motor
+                // de embeddings — sempre cabe, até no aparelho mais fraco.
+                return [...chaves, 'semantico'];
             }
 
             // A partir daqui, só motor === 'webllm' (desktop).
-            if (!capacidade.suportado) return [];
+            if (!capacidade.suportado) {
+                logStatusNarrador('WebGPU indisponível — Tier 3 (geração local) fica fora do ar; restando o modo "Semântico".', 'info');
+                return ['semantico'];
+            }
 
-            chaves = chaves.filter(c => {
+            // NOTA: removida a filtragem por maxStorageBufferBindingSize daqui.
+            // Esse teto é POR BUFFER, não "VRAM total", e vem conservador em
+            // muita GPU real — estava descartando o 3B em desktops que o
+            // rodam sem problema. A sondagem fica só como log informativo;
+            // quem decide se cabe de verdade agora é a tentativa real de
+            // carregar via WebLLM, com fallback automático pro modelo de
+            // produção se falhar (ver iniciarGeradorLocal).
+            chaves.forEach(c => {
                 const registro = buscarRegistroWebLLM(MODELOS_TIER3[c].webllm.id);
                 const exigidoBytes = (registro?.vram_required_MB || 0) * 1e6;
-                const cabe = !capacidade.limiteStorageBuffer || exigidoBytes <= capacidade.limiteStorageBuffer;
-                if (!cabe) {
-                    logStatusNarrador(`${MODELOS_TIER3[c].rotuloBase} descartado: exige ~${(exigidoBytes / 1e9).toFixed(2)}GB por buffer, acima do teto do driver.`, 'info');
+                if (capacidade.limiteStorageBuffer && exigidoBytes > capacidade.limiteStorageBuffer) {
+                    logStatusNarrador(`${MODELOS_TIER3[c].rotuloBase} exige ~${(exigidoBytes / 1e9).toFixed(2)}GB por buffer, acima do teto reportado pelo driver (~${(capacidade.limiteStorageBuffer / 1e9).toFixed(2)}GB) — disponibilizando mesmo assim.`, 'info');
                 }
-                return cabe;
             });
 
-            return chaves;
+            return [...chaves, 'semantico'];
         }
 
         function lerModeloSelecionado(chavesDisponiveis) {
@@ -1240,10 +1256,29 @@
             };
         }
 
-        async function carregarModeloLocal(chave) {
+                async function carregarModeloLocal(chave) {
+            if (MODELOS_TIER3[chave]?.semanticoApenas) {
+                return carregarSemGeracao(chave);
+            }
             return motorAtivo() === 'wllama'
                 ? carregarViaWllama(chave)
                 : carregarViaWebLLM(chave);
+        }
+
+        // MODO "SEMÂNTICO" — a opção hiper-leve. Não baixa, não instancia e
+        // não aquece nenhum motor de geração de texto (nem WebLLM, nem
+        // wllama). O motor de embeddings (Xenova/paraphrase-multilingual-
+        // MiniLM), carregado à parte por iniciarMotorSemantico(), continua
+        // funcionando normalmente — então o RAG por sentença (Tier 2) e a
+        // interceptação semântica de ações continuam ativos. Só o Tier 3
+        // (inventarDetalheLocal/extrairFatoLocal) fica mudo de propósito:
+        // gerarComNarradorLocal detecta motor === 'semantico' e retorna
+        // null direto, caindo no fallback padrão do jogo.
+        async function carregarSemGeracao(chave) {
+            const rotulo = MODELOS_TIER3[chave].rotuloBase;
+            atualizarBadgeNarrador({ estado: 'pronto', texto: `✅ ${rotulo} (só semântica)`, progresso: 100 });
+            logStatusNarrador(`Modo "${rotulo}" ativo: nenhum LLM local carregado. Tier 3 (invenção de detalhes) fica indisponível; o motor semântico (Tier 2) continua funcionando normalmente.`, 'ok');
+            return { motor: 'semantico', instancia: null };
         }
 
         async function carregarViaWebLLM(chave) {
@@ -1488,7 +1523,8 @@
                 console.log("⏳ [Tier 3] Narrador local ainda carregando, aguardando...");
                 await window.geradorLocalPromise;
             }
-            if (!window.geradorLocal) return null;
+                        if (!window.geradorLocal) return null;
+            if (window.geradorLocal.motor === 'semantico') return null; // modo hiper-leve: Tier 3 fica mudo de propósito.
 
             const {
                 max_new_tokens = 150,
