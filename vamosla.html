@@ -1277,38 +1277,39 @@ logStatusNarrador(`Modo "${nomeExibido}" (${nomeTecnico}) ativo: nenhum LLM loca
             return { motor: 'semantico', instancia: null };
         }
 
-        async function carregarViaWebLLM(chave) {
-            const registro = MODELOS_TIER3[chave];
-            const nomeExibido = MODELOS_TIER3[chave].rotuloBase;
-const nomeTecnico = MODELOS_TIER3[chave].nomeTecnico;
-logStatusNarrador(`Carregando ${nomeExibido} (${nomeTecnico}) via WebLLM…`, 'info');
+       async function carregarViaWebLLM(chave) {
+    const registro = MODELOS_TIER3[chave];
+    const nomeExibido = MODELOS_TIER3[chave].rotuloBase;
+    const nomeTecnico = MODELOS_TIER3[chave].nomeTecnico;
+    const rotulo = `${nomeExibido} (${nomeTecnico})`; // <- CRIE ESTA LINHA
 
-            try {
-                const inicio = performance.now();
-                const appConfig = construirAppConfigComPrefillMenor(registro.webllm.id, 128);
-                const callbackProgresso = (info) => {
-                    const pct = Math.round((info.progress || 0) * 100);
-                    atualizarBadgeNarrador({ estado: 'carregando', texto: `${rotulo}: ${pct}%`, progresso: pct });
-                    if (info.text) logStatusNarrador(info.text, 'info');
-                };
+    atualizarBadgeNarrador({ estado: 'carregando', texto: `${rotulo}: iniciando…`, progresso: 0 });
+    logStatusNarrador(`Carregando ${rotulo} via WebLLM…`, 'info');
 
-                const worker = criarWorkerWebLLM();
-                const engine = await webllm.CreateWebWorkerMLCEngine(worker, registro.webllm.id, { appConfig, initProgressCallback: callbackProgresso });
+    try {
+        const inicio = performance.now();
+        const appConfig = construirAppConfigComPrefillMenor(registro.webllm.id, 128);
+        const callbackProgresso = (info) => {
+            const pct = Math.round((info.progress || 0) * 100);
+            atualizarBadgeNarrador({ estado: 'carregando', texto: `${rotulo}: ${pct}%`, progresso: pct });
+            if (info.text) logStatusNarrador(info.text, 'info');
+        };
 
-                atualizarBadgeNarrador({ estado: 'carregando', texto: `${rotulo}: aquecendo…`, progresso: 100 });
-                await engine.chat.completions.create({ messages: [{ role: 'user', content: 'Oi' }], max_tokens: 4, temperature: 0 });
+        const worker = criarWorkerWebLLM();
+        const engine = await webllm.CreateWebWorkerMLCEngine(worker, registro.webllm.id, { appConfig, initProgressCallback: callbackProgresso });
 
-                const nomeExibido = MODELOS_TIER3[chave].rotuloBase;
-const nomeTecnico = MODELOS_TIER3[chave].nomeTecnico;
-const segundos = ((performance.now() - inicio) / 1000).toFixed(1);
-logStatusNarrador(`Carregado e aquecido: ${nomeExibido} (${nomeTecnico}) (${segundos}s).`, 'ok');
-                atualizarBadgeNarrador({ estado: 'pronto', texto: `✅ ${rotulo} pronto`, progresso: 100 });
-                return { motor: 'webllm', instancia: engine };
-            } catch (erro) {
-                logStatusNarrador(`Falhou carregar/aquecer ${rotulo}: ${erro.message}`, 'falha');
-                return null;
-            }
-        }
+        atualizarBadgeNarrador({ estado: 'carregando', texto: `${rotulo}: aquecendo…`, progresso: 100 });
+        await engine.chat.completions.create({ messages: [{ role: 'user', content: 'Oi' }], max_tokens: 4, temperature: 0 });
+
+        const segundos = ((performance.now() - inicio) / 1000).toFixed(1);
+        logStatusNarrador(`Carregado e aquecido: ${rotulo} (${segundos}s).`, 'ok');
+        atualizarBadgeNarrador({ estado: 'pronto', texto: `✅ ${rotulo} pronto`, progresso: 100 });
+        return { motor: 'webllm', instancia: engine };
+    } catch (erro) {
+        logStatusNarrador(`Falhou carregar/aquecer ${rotulo}: ${erro.message}`, 'falha');
+        return null;
+    }
+}
 
         // MOBILE — wllama: WASM puro, roda em CPU, zero dependência de
         // WebGPU. Elimina de vez os bugs que vínhamos batendo (JSEP, Worker,
@@ -1324,6 +1325,7 @@ logStatusNarrador(`Carregado e aquecido: ${nomeExibido} (${nomeTecnico}) (${segu
             const registro = MODELOS_TIER3[chave];
             const nomeExibido = MODELOS_TIER3[chave].rotuloBase;
 const nomeTecnico = MODELOS_TIER3[chave].nomeTecnico;
+            const rotulo = `${nomeExibido} (${nomeTecnico})`; // <- ADICIONE ESTA LINHA
 logStatusNarrador(`Carregando ${nomeExibido} (${nomeTecnico}) via wllama (WASM/CPU)…`, 'info');
 
             try {
