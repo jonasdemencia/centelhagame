@@ -1060,23 +1060,23 @@
         //   comunidade, citado até pelo time oficial do LM Studio).
         const MODELOS_TIER3 = {
             pequeno: {
-                rotuloBase: '1B',
+                rotuloBase: 'Aulus Interpress',
                 webllm: { id: 'Llama-3.2-1B-Instruct-q4f16_1-MLC' },
                 wllama: { repo: 'bartowski/Llama-3.2-1B-Instruct-GGUF', arquivo: 'Llama-3.2-1B-Instruct-Q4_K_M.gguf' }
             },
             medio: {
-                rotuloBase: '1.5B',
+                rotuloBase: 'Ephraemus',
                 webllm: { id: 'Qwen2.5-1.5B-Instruct-q4f16_1-MLC' },
                 wllama: { repo: 'bartowski/Qwen2.5-1.5B-Instruct-GGUF', arquivo: 'Qwen2.5-1.5B-Instruct-Q4_K_M.gguf' }
             },
                         grande: {
-                rotuloBase: '3B',
+                rotuloBase: 'Skaios o estólido',
                 webllm: { id: 'Llama-3.2-3B-Instruct-q4f16_1-MLC' }
                 // Sem entrada wllama de propósito — 3B continua fora do mobile,
                 // regra explícita mantida da instrução original.
             },
             semantico: {
-                rotuloBase: 'Semântico',
+                rotuloBase: 'Johannes',
                 semanticoApenas: true
                 // Sem webllm/wllama de propósito: não carrega NENHUM motor de
                 // geração de texto. O motor semântico (embeddings, usado pelo
