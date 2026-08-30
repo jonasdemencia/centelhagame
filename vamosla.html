@@ -968,12 +968,21 @@
             try {
                 const modelId = 'Xenova/paraphrase-multilingual-MiniLM-L12-v2';
                 window.extratorSemantico = await pipeline('feature-extraction', modelId, {
-                    quantized: true,
-                    use_fp16: false,
-                    model_file_name: 'model_quantized.onnx',
-                    base_url: 'https://huggingface.co/'
-                });
-                console.log("✅ Motor semântico carregado.");
+    quantized: true,
+    use_fp16: false,
+    model_file_name: 'model_quantized.onnx',
+    base_url: 'https://huggingface.co/'
+});
+console.log("✅ Motor semântico carregado.");
+
+// FORÇA APLICAÇÃO DOS ECOS NA SALA ATUAL
+setTimeout(() => {
+    const salaAtual = mapaMundo?.[secaoAtualId];
+    const salaDesc = document.getElementById('sala-desc');
+    if (salaAtual && salaDesc && salaDesc.innerText.trim() !== "") {
+        aplicarEcosNaSala(secaoAtualId);
+    }
+}, 100);
             } catch (erro) {
                 console.error("❌ Erro ao carregar o motor semântico:", erro);
                 window.extratorSemantico = null;
@@ -1767,14 +1776,37 @@ function renderizarTextoComEcos(textoAtualHTML, ecos) {
 }
 
 async function aplicarEcosNaSala(idSala) {
-    console.log('[ECOS] Aplicando na sala:', idSala);  // <-- ADICIONE
     const sala = mapaMundo?.[idSala];
-    if (!sala || !sala.texto_logico || !window.extratorSemantico) return;
-    console.log('[ECOS] Pulando: sem sala, texto ou motor');  // <-- ADICIONE
-    await prepararEcosDaSala(sala, idSala);
-    if (String(secaoAtualId) !== String(idSala)) return; // jogador já saiu daqui, não sobrescreve a sala seguinte
     const salaDesc = document.getElementById('sala-desc');
-    if (!salaDesc || !sala._ecos || Object.keys(sala._ecos).length === 0) return;
+    
+    // Pega o texto do DOM se sala.texto_logico estiver vazio
+    const textoBase = sala?.texto_logico || (salaDesc ? salaDesc.innerText : "");
+    
+    if (!sala || !textoBase || !window.extratorSemantico) {
+        console.log('[ECOS] Pulando: sem sala, texto ou motor');
+        return;
+    }
+    
+    // Garante que a sala tenha texto para o prepararEcosDaSala()
+    if (!sala.texto_logico) {
+        sala.texto_logico = textoBase;
+    }
+    
+    console.log(`[ECOS] Aplicando na sala: ${idSala}`);
+    
+    await prepararEcosDaSala(sala, idSala);
+    
+    if (String(secaoAtualId) !== String(idSala)) {
+        console.log('[ECOS] Sala mudou, ignorando');
+        return;
+    }
+    
+    if (!sala._ecos || Object.keys(sala._ecos).length === 0) {
+        console.log('[ECOS] Nenhum eco encontrado');
+        return;
+    }
+    
+    // Aplica no DOM usando o innerHTML atual
     salaDesc.innerHTML = renderizarTextoComEcos(salaDesc.innerHTML, sala._ecos);
 }
 
@@ -4498,7 +4530,11 @@ Retorne EXATAMENTE o JSON abaixo. Nenhuma palavra extra.`
     if (novaSala?.texto_logico) {
         const textoFinal = prepararTextoChegada(novaSala.texto_logico, textoAcao || opcao.texto, parseInt(secaoAtualId), destino);
         salaDesc.innerHTML = textoFinal;
-        aplicarEcosNaSala(secaoAtualId);   // ADICIONAR
+       setTimeout(() => {
+    if (window.extratorSemantico) {
+        aplicarEcosNaSala(secaoAtualId);
+    }
+}, 50);
         historicoConversa.push({ role: 'user', content: `[Navegou para: ${textoAcao || opcao.texto}]` });
         historicoConversa.push({ role: 'assistant', content: novaSala.texto_logico });
         if (historicoConversa.length > 10) historicoConversa.splice(0, 2);
@@ -4680,7 +4716,11 @@ async function executarDilemaComRamificacao(pai, ram, silent = false) {
 
     if (salaDesc.innerHTML === '') {
         salaDesc.innerHTML = sala.texto_logico || "A escuridão domina este lugar...";
-        aplicarEcosNaSala(secaoAtualId);   // ADICIONAR
+        setTimeout(() => {
+    if (window.extratorSemantico) {
+        aplicarEcosNaSala(secaoAtualId);
+    }
+}, 50);
     }
 
     if (!sala.opcoes) return;
@@ -4857,7 +4897,11 @@ ANSWER:`
                 const salaAtual = mapaMundo[secaoAtualId];
                 if (salaAtual?.texto_logico) {
                     document.getElementById('sala-desc').innerHTML = salaAtual.texto_logico;
-                    aplicarEcosNaSala(secaoAtualId);   // ADICIONAR
+                    setTimeout(() => {
+    if (window.extratorSemantico) {
+        aplicarEcosNaSala(secaoAtualId);
+    }
+}, 50);
                     document.getElementById('chat-box').innerHTML = '';
                     adicionarMensagem('⚔️ A escuridão recorda sua presença...', 'system');
                     atualizarBotoesNavegacao();
