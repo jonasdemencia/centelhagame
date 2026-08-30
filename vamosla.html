@@ -400,6 +400,18 @@
 .item-coletavel {
     display: none !important;
 }
+        .eco-clicavel {
+    cursor: pointer;
+    border-bottom: 1px dotted #6a4a0e;
+    color: inherit;
+    transition: 0.2s;
+}
+.eco-clicavel:hover { color: #d9a441; border-bottom-color: #d9a441; }
+.eco-clicavel.eco-revelado {
+    border-bottom-style: solid;
+    color: #8a7040;
+    cursor: default;
+}
     </style>
     <base target="_blank">
 </head>
@@ -1480,6 +1492,300 @@ logStatusNarrador(`Candidato '${candNome}' não carregou. Caindo pro modelo de p
             }
             return melhorFrase ? { frase: melhorFrase, score: melhorScore } : null;
         }
+
+    // ============================================================
+// MÓDULO DE ECOS — expansão simbólica sob demanda (só Tier 2)
+//
+// Não gera texto novo. Recupera/recombina o que o próprio jogo já
+// escreveu: texto_logico de outras salas (Fonte 1), campos
+// estruturados do dnaGlobal (Fonte 2), fatos de grafo já presentes
+// em mapaMundo/entityIndex (Fonte 3), cláusulas soltas extraídas de
+// historicoIND (Fonte 5) — e compõe (Fonte 4) quando mais de uma
+// fonte bate. Zero chamada a chamarGroq/chamarSambanova em tempo de
+// execução. Uma palavra só vira clicável se alguma fonte bateu acima
+// do limiar — nunca promete uma revelação que não pode entregar.
+// ============================================================
+
+const ECOS_STOPWORDS_PT = new Set([
+    'a','o','as','os','um','uma','uns','umas','de','do','da','dos','das',
+    'em','no','na','nos','nas','por','pelo','pela','pelos','pelas','com',
+    'sem','para','que','se','é','são','está','estão','ao','aos','à','às',
+    'e','ou','mas','como','seu','sua','seus','suas','este','esta','esse',
+    'essa','isso','isto','aquele','aquela','muito','muitos','muitas',
+    'pouco','poucos','já','ainda','também','apenas','mais','menos','você',
+    'sob','sobre','até','entre'
+]);
+
+window._corpusMundoEcos = [];    // Fonte 1: [{texto, vetor, idSala}]
+window._corpusDNAEcos = null;    // Fonte 2: null = ainda não construído
+window._corpusCutUpEcos = null;  // Fonte 5: idem
+window._ecosUsadosRecentes = []; // vetores dos últimos cut-ups mostrados (anti-repetição)
+
+// ---------- Extração de candidatos (heurística genérica, não é lista fixa) ----------
+function extrairCandidatosEcos(texto) {
+    if (!texto) return [];
+    const textoLimpo = texto.replace(/<[^>]+>/g, ' ');
+    const regexSintagma = /\b(?:um|uma|uns|umas|o|a|os|as)\s+([a-zà-ÿ]+(?:\s+(?:de|da|do|das|dos)\s+[a-zà-ÿ]+)?)/gi;
+    const candidatos = new Map();
+    let m;
+    while ((m = regexSintagma.exec(textoLimpo)) !== null) {
+        const palavras = m[1].trim().split(/\s+/).filter(p => !ECOS_STOPWORDS_PT.has(p.toLowerCase()));
+        if (palavras.length === 0) continue;
+        const termo = palavras.join(' ');
+        const chave = termo.toLowerCase();
+        if (chave.length < 4 || candidatos.has(chave)) continue;
+        candidatos.set(chave, termo);
+    }
+    return Array.from(candidatos.values()).slice(0, 10); // teto por sala (custo de embedding)
+}
+
+// ---------- Fonte 1: ressonância entre salas já visitadas ----------
+async function indexarSalaNoCorpusMundo(sala, idSala) {
+    if (sala._indexadaEcosMundo) return;
+    if (!salasVisitadas.has(String(idSala))) return; // só o que o jogador já viu — sem spoiler
+    sala._indexadaEcosMundo = true;
+    const frases = await obterFrasesEmbedadas(sala); // já existe, já cacheia em sala._fraseEmbeds
+    for (const f of frases) {
+        window._corpusMundoEcos.push({ texto: f.texto, vetor: f.vetor, idSala: String(idSala) });
+    }
+}
+
+function buscarNoCorpusMundo(vetorTermo, idSalaAtual, limiar = 0.55) {
+    let melhor = null, melhorScore = 0;
+    for (const item of window._corpusMundoEcos) {
+        if (item.idSala === String(idSalaAtual)) continue;
+        const score = cos_sim(vetorTermo, item.vetor);
+        if (score > melhorScore) { melhorScore = score; melhor = item; }
+    }
+    return (melhor && melhorScore >= limiar) ? { texto: melhor.texto, score: melhorScore, fonte: 'mundo' } : null;
+}
+
+// ---------- Fonte 2: lore adormecida do dnaGlobal ----------
+async function garantirCorpusDNA() {
+    if (window._corpusDNAEcos !== null) return;
+    window._corpusDNAEcos = [];
+    if (!dnaGlobal || !window.extratorSemantico) return;
+    const entradas = [];
+    (dnaGlobal.objetos_transzonais || []).forEach(o => { if (o.o_que_desvela) entradas.push(o.o_que_desvela); });
+    (dnaGlobal.entidades || []).forEach(e => { if (e.natureza) entradas.push(e.natureza); });
+    (dnaGlobal.zonas || []).forEach(z => { if (z.segredo_local) entradas.push(z.segredo_local); });
+    (dnaGlobal.conspiracoes_reais || []).forEach(c => entradas.push(c));
+    for (const texto of entradas) {
+        try {
+            const vetor = (await window.extratorSemantico(texto, { pooling: 'mean', normalize: true })).data;
+            window._corpusDNAEcos.push({ texto, vetor });
+        } catch (e) { /* ignora entrada individual que falhar */ }
+    }
+    console.log(`[Ecos] Corpus de DNA pronto: ${window._corpusDNAEcos.length} entradas.`);
+}
+
+function buscarNoCorpusDNA(vetorTermo, limiar = 0.5) {
+    if (!window._corpusDNAEcos || window._corpusDNAEcos.length === 0) return null;
+    let melhor = null, melhorScore = 0;
+    for (const item of window._corpusDNAEcos) {
+        const score = cos_sim(vetorTermo, item.vetor);
+        if (score > melhorScore) { melhorScore = score; melhor = item; }
+    }
+    return (melhor && melhorScore >= limiar) ? { texto: melhor.texto, score: melhorScore, fonte: 'dna' } : null;
+}
+
+// ---------- Fonte 3: inferência estrutural (lê o grafo, não inventa) ----------
+function calcularProfundidadeBFS(idAlvo, idRaiz, mapaMundoRef, limiteZonaFim) {
+    const raiz = String(idRaiz), alvo = String(idAlvo);
+    if (raiz === alvo) return 0;
+    const visitado = new Set([raiz]);
+    const fila = [{ id: raiz, dist: 0 }];
+    while (fila.length > 0) {
+        const atual = fila.shift();
+        const sala = mapaMundoRef[atual.id];
+        if (!sala || !sala.opcoes) continue;
+        for (const o of sala.opcoes) {
+            if (!o.destino) continue;
+            const destino = String(o.destino);
+            if (Number(destino) > limiteZonaFim) continue;
+            if (destino === alvo) return atual.dist + 1;
+            if (!visitado.has(destino)) { visitado.add(destino); fila.push({ id: destino, dist: atual.dist + 1 }); }
+        }
+    }
+    return null;
+}
+
+function normalizarTermoEstrutural(termo) {
+    return termo.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+}
+
+const ANCORAS_ESTRUTURAIS = [
+    {
+        termos: ['escada', 'degraus', 'escadaria'],
+        gerar: (ctx) => {
+            const base = 6 + (ctx.profundidade ?? 1) * 3;
+            const jitter = Math.floor(pseudoRandom(ctx.idSala.length * 97 + base) * 6);
+            return `São aproximadamente ${base + jitter} degraus.`;
+        }
+    },
+    {
+        termos: ['casa', 'edificio', 'construcao', 'predio', 'mansao', 'residencia'],
+        gerar: (ctx) => ctx.totalSalasZona >= 8
+            ? 'Pelo que se percebe até aqui, esta deve ser uma construção bem maior do que parece por fora.'
+            : 'O lugar não parece se estender muito além do que já foi visto.'
+    },
+    {
+        termos: ['corredor', 'passagem', 'sala', 'aposento', 'ambiente', 'comodo'],
+        gerar: () => Object.keys(entityIndex).length === 0
+            ? 'Não parece haver ninguém por perto.'
+            : null // se há gente em cena, essa âncora não se aplica — evita contradição
+    }
+];
+
+function inferenciaEstrutural(termo, ctx) {
+    const termoNorm = normalizarTermoEstrutural(termo);
+    for (const ancora of ANCORAS_ESTRUTURAIS) {
+        if (ancora.termos.some(t => termoNorm.includes(t))) {
+            const texto = ancora.gerar(ctx);
+            if (texto) return texto;
+        }
+    }
+    return null;
+}
+
+// ---------- Fonte 5: cut-up de cláusulas soltas do historicoIND ----------
+function extrairClausulasSoltas(textoOrigem) {
+    const resultado = [];
+    const frases = textoOrigem.split(/(?<=[.!?])\s+/);
+    for (const frase of frases) {
+        for (const parte of frase.split(/,\s*/)) {
+            const limpa = parte.trim().replace(/[.!?]+$/, '');
+            if (limpa.length < 15 || limpa.length > 90) continue;
+            if (/\d/.test(limpa)) continue;
+            if (/^você\b/i.test(limpa)) continue;
+            if (/\bcujo\b|\bcuja\b/i.test(limpa)) continue; // exige concordância — fora do escopo seguro
+            if (/^que\b/i.test(limpa)) resultado.push({ texto: limpa, tipo: 'relativa' });
+            else if (/^(e|onde|enquanto)\b/i.test(limpa)) resultado.push({ texto: limpa, tipo: 'adjunto' });
+        }
+    }
+    return resultado;
+}
+
+async function garantirCorpusCutUp() {
+    if (window._corpusCutUpEcos !== null) return;
+    window._corpusCutUpEcos = [];
+    if (!window.extratorSemantico) return;
+    const vistos = new Set();
+    for (const texto of (historicoIND || [])) {
+        for (const clausula of extrairClausulasSoltas(texto)) {
+            if (vistos.has(clausula.texto)) continue;
+            vistos.add(clausula.texto);
+            try {
+                const vetor = (await window.extratorSemantico(clausula.texto, { pooling: 'mean', normalize: true })).data;
+                window._corpusCutUpEcos.push({ ...clausula, vetor });
+            } catch (e) { /* ignora */ }
+        }
+    }
+    console.log(`[Ecos] Corpus cut-up pronto: ${window._corpusCutUpEcos.length} cláusulas (fonte: historicoIND).`);
+}
+
+function buscarCutUp(vetorTermo, termoOriginal, limiar = 0.42) {
+    if (!window._corpusCutUpEcos || window._corpusCutUpEcos.length === 0) return null;
+    let melhor = null, melhorScore = -Infinity;
+    for (const item of window._corpusCutUpEcos) {
+        let score = cos_sim(vetorTermo, item.vetor);
+        for (const usadoVetor of window._ecosUsadosRecentes) score -= 0.15 * cos_sim(item.vetor, usadoVetor);
+        if (score > melhorScore) { melhorScore = score; melhor = item; }
+    }
+    if (!melhor || melhorScore < limiar) return null;
+    window._ecosUsadosRecentes = window._ecosUsadosRecentes.slice(-19).concat([melhor.vetor]);
+    const termoCap = termoOriginal.charAt(0).toUpperCase() + termoOriginal.slice(1);
+    const texto = melhor.tipo === 'relativa' ? `${termoCap} ${melhor.texto}.` : `${termoCap} — ${melhor.texto}.`;
+    return { texto, score: melhorScore, fonte: 'cutup' };
+}
+
+// ---------- Fonte 4: composição entre fontes ----------
+const CONECTORES_ECO_COMPOSTO = [
+    (a, b) => `${a} O mesmo padrão aparece em outro lugar: ${b}`,
+    (a, b) => `${a} Não é a primeira vez que algo assim aparece: ${b}`,
+    (a, b) => `${a} Isso ecoa algo visto antes: ${b}`
+];
+
+function comporEcos(achadoMundo, achadoDNA, achadoEstrutural, achadoCutUp, seedNumerica) {
+    // Prioridade de "voz": DNA (lore intencional) > cut-up (escrito sob as
+    // regras de estilo do IND) > mundo (eco literal de outra sala).
+    const achadosTextuais = [achadoDNA, achadoCutUp, achadoMundo].filter(Boolean);
+    if (achadosTextuais.length === 0) {
+        return achadoEstrutural ? { texto: achadoEstrutural, fontes: ['estrutural'] } : null;
+    }
+    if (achadosTextuais.length === 1) {
+        const unico = achadosTextuais[0];
+        const texto = achadoEstrutural ? `${unico.texto} ${achadoEstrutural}` : unico.texto;
+        return { texto, fontes: achadoEstrutural ? [unico.fonte, 'estrutural'] : [unico.fonte] };
+    }
+    const [principal, secundario] = achadosTextuais.sort((a, b) => b.score - a.score);
+    const idx = Math.floor(pseudoRandom(seedNumerica) * CONECTORES_ECO_COMPOSTO.length);
+    return { texto: CONECTORES_ECO_COMPOSTO[idx](principal.texto, secundario.texto), fontes: [principal.fonte, secundario.fonte] };
+}
+
+// ---------- Orquestração por sala ----------
+async function prepararEcosDaSala(sala, idSala) {
+    if (sala._ecosPreparados) return;
+    sala._ecosPreparados = true; // trava mesmo se algo falhar, pra não reprocessar em loop
+    sala._ecos = {};
+    try {
+        await garantirCorpusDNA();
+        await garantirCorpusCutUp();
+        await indexarSalaNoCorpusMundo(sala, idSala);
+
+        const limiteZonaFim = zonaAtual * SALAS_POR_ZONA;
+        const idRaizZona = (zonaAtual - 1) * SALAS_POR_ZONA + 1;
+        const totalSalasZona = Object.keys(mapaMundo).filter(k => Number(k) >= idRaizZona && Number(k) <= limiteZonaFim).length;
+        const profundidade = calcularProfundidadeBFS(idSala, idRaizZona, mapaMundo, limiteZonaFim);
+
+        for (const termo of extrairCandidatosEcos(sala.texto_logico)) {
+            const vetorTermo = (await window.extratorSemantico(termo, { pooling: 'mean', normalize: true })).data;
+            const achadoMundo = buscarNoCorpusMundo(vetorTermo, idSala);
+            const achadoDNA = buscarNoCorpusDNA(vetorTermo);
+            const achadoCutUp = buscarCutUp(vetorTermo, termo);
+            const achadoEstrutural = inferenciaEstrutural(termo, { profundidade, totalSalasZona, idSala: String(idSala) });
+            const seedNumerica = String(idSala).split('').reduce((a, c) => a + c.charCodeAt(0), 0) + termo.length;
+            const resultado = comporEcos(achadoMundo, achadoDNA, achadoEstrutural, achadoCutUp, seedNumerica);
+            if (resultado) sala._ecos[termo.toLowerCase()] = resultado;
+        }
+    } catch (e) {
+        console.warn('[Ecos] Falha ao preparar ecos da sala (não crítico, jogo segue normal):', e);
+    }
+}
+
+// ---------- Renderização e clique ----------
+function escapeRegexEcos(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+
+function renderizarTextoComEcos(textoAtualHTML, ecos) {
+    if (!ecos) return textoAtualHTML;
+    let resultado = textoAtualHTML;
+    for (const termo of Object.keys(ecos)) {
+        const regex = new RegExp(`\\b(${escapeRegexEcos(termo)})\\b(?![^<]*>)`, 'i');
+        if (regex.test(resultado)) resultado = resultado.replace(regex, `<span class="eco-clicavel" data-termo="${termo}">$1</span>`);
+    }
+    return resultado;
+}
+
+async function aplicarEcosNaSala(idSala) {
+    const sala = mapaMundo?.[idSala];
+    if (!sala || !sala.texto_logico || !window.extratorSemantico) return;
+    await prepararEcosDaSala(sala, idSala);
+    if (String(secaoAtualId) !== String(idSala)) return; // jogador já saiu daqui, não sobrescreve a sala seguinte
+    const salaDesc = document.getElementById('sala-desc');
+    if (!salaDesc || !sala._ecos || Object.keys(sala._ecos).length === 0) return;
+    salaDesc.innerHTML = renderizarTextoComEcos(salaDesc.innerHTML, sala._ecos);
+}
+
+document.addEventListener('click', function (e) {
+    const alvo = e.target.closest('.eco-clicavel');
+    if (!alvo) return;
+    const termo = alvo.dataset.termo;
+    const sala = mapaMundo?.[secaoAtualId];
+    if (!sala || !sala._ecos || !sala._ecos[termo] || alvo.dataset.revelado === '1') return;
+    alvo.dataset.revelado = '1';
+    alvo.classList.add('eco-revelado');
+    adicionarMensagem(`🔍 ${sala._ecos[termo].texto}`, 'system');
+});
 
         // ============================================================
         // CACHE DE FATOS IMPROVISADOS — quando o Tier 3 inventa um detalhe
@@ -4190,6 +4496,7 @@ Retorne EXATAMENTE o JSON abaixo. Nenhuma palavra extra.`
     if (novaSala?.texto_logico) {
         const textoFinal = prepararTextoChegada(novaSala.texto_logico, textoAcao || opcao.texto, parseInt(secaoAtualId), destino);
         salaDesc.innerHTML = textoFinal;
+        aplicarEcosNaSala(secaoAtualId);   // ADICIONAR
         historicoConversa.push({ role: 'user', content: `[Navegou para: ${textoAcao || opcao.texto}]` });
         historicoConversa.push({ role: 'assistant', content: novaSala.texto_logico });
         if (historicoConversa.length > 10) historicoConversa.splice(0, 2);
@@ -4371,6 +4678,7 @@ async function executarDilemaComRamificacao(pai, ram, silent = false) {
 
     if (salaDesc.innerHTML === '') {
         salaDesc.innerHTML = sala.texto_logico || "A escuridão domina este lugar...";
+        aplicarEcosNaSala(secaoAtualId);   // ADICIONAR
     }
 
     if (!sala.opcoes) return;
@@ -4547,6 +4855,7 @@ ANSWER:`
                 const salaAtual = mapaMundo[secaoAtualId];
                 if (salaAtual?.texto_logico) {
                     document.getElementById('sala-desc').innerHTML = salaAtual.texto_logico;
+                    aplicarEcosNaSala(secaoAtualId);   // ADICIONAR
                     document.getElementById('chat-box').innerHTML = '';
                     adicionarMensagem('⚔️ A escuridão recorda sua presença...', 'system');
                     atualizarBotoesNavegacao();
