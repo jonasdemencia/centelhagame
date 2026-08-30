@@ -1767,8 +1767,10 @@ function renderizarTextoComEcos(textoAtualHTML, ecos) {
 }
 
 async function aplicarEcosNaSala(idSala) {
+    console.log('[ECOS] Aplicando na sala:', idSala);  // <-- ADICIONE
     const sala = mapaMundo?.[idSala];
     if (!sala || !sala.texto_logico || !window.extratorSemantico) return;
+    console.log('[ECOS] Pulando: sem sala, texto ou motor');  // <-- ADICIONE
     await prepararEcosDaSala(sala, idSala);
     if (String(secaoAtualId) !== String(idSala)) return; // jogador já saiu daqui, não sobrescreve a sala seguinte
     const salaDesc = document.getElementById('sala-desc');
