@@ -1779,7 +1779,7 @@ async function aplicarEcosNaSala(idSala) {
     const sala = mapaMundo?.[idSala];
     const salaDesc = document.getElementById('sala-desc');
     
-    // Pega o texto do DOM se sala.texto_logico estiver vazio
+    // Pega o texto puro da sala (sem HTML)
     const textoBase = sala?.texto_logico || (salaDesc ? salaDesc.innerText : "");
     
     if (!sala || !textoBase || !window.extratorSemantico) {
@@ -1787,7 +1787,7 @@ async function aplicarEcosNaSala(idSala) {
         return;
     }
     
-    // Garante que a sala tenha texto para o prepararEcosDaSala()
+    // Garante que a sala tenha texto
     if (!sala.texto_logico) {
         sala.texto_logico = textoBase;
     }
@@ -1803,11 +1803,16 @@ async function aplicarEcosNaSala(idSala) {
     
     if (!sala._ecos || Object.keys(sala._ecos).length === 0) {
         console.log('[ECOS] Nenhum eco encontrado');
+        // Mostra o texto sem modificações
+        salaDesc.innerHTML = textoBase;
         return;
     }
     
-    // Aplica no DOM usando o innerHTML atual
-    salaDesc.innerHTML = renderizarTextoComEcos(salaDesc.innerHTML, sala._ecos);
+    // ========== CORREÇÃO AQUI ==========
+    // APLICA os ECOS sobre o texto original (não sobre o HTML já existente)
+    const textoComEcos = renderizarTextoComEcos(textoBase, sala._ecos);
+    salaDesc.innerHTML = textoComEcos;
+    console.log('[ECOS] Aplicado com sucesso!', Object.keys(sala._ecos).length, 'ecos');
 }
 
 document.addEventListener('click', function (e) {
@@ -4564,13 +4569,14 @@ Retorne EXATAMENTE o JSON abaixo. Nenhuma palavra extra.`
     verificarEExpandirMundo();
 
     if (novaSala?.texto_logico) {
-        const textoFinal = prepararTextoChegada(novaSala.texto_logico, textoAcao || opcao.texto, parseInt(secaoAtualId), destino);
-        salaDesc.innerHTML = textoFinal;
-       setTimeout(() => {
-    if (window.extratorSemantico) {
-        aplicarEcosNaSala(secaoAtualId);
-    }
-}, 50);
+    const textoFinal = prepararTextoChegada(novaSala.texto_logico, textoAcao || opcao.texto, parseInt(secaoAtualId), destino);
+    salaDesc.innerHTML = textoFinal;
+    // Aguarda o DOM ser atualizado antes de aplicar os ECOS
+    setTimeout(() => {
+        if (window.extratorSemantico) {
+            aplicarEcosNaSala(secaoAtualId);
+        }
+    }, 50);
         historicoConversa.push({ role: 'user', content: `[Navegou para: ${textoAcao || opcao.texto}]` });
         historicoConversa.push({ role: 'assistant', content: novaSala.texto_logico });
         if (historicoConversa.length > 10) historicoConversa.splice(0, 2);
