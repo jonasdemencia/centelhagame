@@ -3147,28 +3147,64 @@ Retorne APENAS este JSON:
             }
         }
 
-        async function salvarEstadoJogador() {
-            if (!uidAtual) return;
-            try {
-                const dadosAtualizados = {
-                    turnos: turnosJogados,
-                    "energy.total": energia,
-                    "skill.total": jogadorStats.HABILIDADE,
-                    "charisma.total": jogadorStats.CARISMA,
-                    "luck.total": jogadorStats.SORTE,
-                    "magic.total": magiaAtual,
-                    mapaMundo: mapaMundo,
-                    secaoAtualId: secaoAtualId,
-                    dnaGlobal: dnaGlobal,
-                    zonaAtual: zonaAtual,
-                    historicoIND: historicoIND,
-                    salasVisitadas: [...salasVisitadas],
-                };
-                await updateDoc(doc(db, "players", uidAtual), dadosAtualizados);
-            } catch (e) {
-                console.error("Erro ao salvar estado do jogador:", e);
+    // Remove vetores matemáticos e caches locais antes de salvar no banco
+function limparDadosParaFirestore(obj) {
+    if (obj === null || typeof obj !== 'object') {
+        return obj;
+    }
+    
+    // Se for o vetor da IA, nós o destruímos (não vai pro Firebase)
+    if (obj instanceof Float32Array) {
+        return undefined; 
+    }
+    
+    if (Array.isArray(obj)) {
+        return obj.map(limparDadosParaFirestore).filter(item => item !== undefined);
+    }
+    
+    const novoObj = {};
+    for (const key in obj) {
+        if (Object.prototype.hasOwnProperty.call(obj, key)) {
+            // Ignora explicitamente as chaves pesadas geradas pelos Ecos
+            if (key === '_ecos' || key === 'embedding' || key === 'vetorSemantico' || key === '_fraseEmbeds' || key === '_fatosCache') {
+                continue; 
+            }
+            
+            const valorLimpo = limparDadosParaFirestore(obj[key]);
+            if (valorLimpo !== undefined) {
+                novoObj[key] = valorLimpo;
             }
         }
+    }
+    return novoObj;
+}
+
+        async function salvarEstadoJogador() {
+    if (!uidAtual) return;
+    try {
+        const dadosAtualizados = {
+            turnos: turnosJogados,
+            "energy.total": energia,
+            "skill.total": jogadorStats.HABILIDADE,
+            "charisma.total": jogadorStats.CARISMA,
+            "luck.total": jogadorStats.SORTE,
+            "magic.total": magiaAtual,
+            mapaMundo: mapaMundo,
+            secaoAtualId: secaoAtualId,
+            dnaGlobal: dnaGlobal,
+            zonaAtual: zonaAtual,
+            historicoIND: historicoIND,
+            salasVisitadas: [...salasVisitadas],
+        };
+        
+        // PASSO MÁGICO: Limpa a sujeira da IA!
+        const dadosSeguros = limparDadosParaFirestore(dadosAtualizados);
+        
+        await updateDoc(doc(db, "players", uidAtual), dadosSeguros);
+    } catch (e) {
+        console.error("Erro ao salvar estado do jogador:", e);
+    }
+}
 
         async function gerarMemoriaLonga(textoIntro) {
             if (memoriaLonga) return;
