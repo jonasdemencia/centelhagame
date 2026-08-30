@@ -1751,13 +1751,9 @@ async function prepararEcosDaSala(sala, idSala) {
     console.log('🔄 [prepararEcosDaSala] INICIANDO para sala:', idSala);
     console.log('🔄 [prepararEcosDaSala] sala._ecos já existe?', !!sala._ecos);
     
-    if (sala._ecosPreparados) {
-        console.log('🔄 [prepararEcosDaSala] ⏭️ Sala já preparada, pulando.');
-        return;
-    }
-    
-    sala._ecosPreparados = true;
-    console.log('🔄 [prepararEcosDaSala] Marcando como preparada.');
+    // REMOVA ESTA LINHA DAQUI:
+    // if (sala._ecosPreparados) { ... }
+    // sala._ecosPreparados = true;  <-- NÃO FAÇA ISSO AQUI!
     
     sala._ecos = {};
     console.log('🔄 [prepararEcosDaSala] Inicializando sala._ecos = {}');
@@ -1786,6 +1782,8 @@ async function prepararEcosDaSala(sala, idSala) {
         
         if (!candidatos || candidatos.length === 0) {
             console.log('🔄 [prepararEcosDaSala] ❌ Nenhum candidato extraído!');
+            // MARCA COMO PREPARADO MESMO ASSIM PARA NÃO REPETIR
+            sala._ecosPreparados = true;
             return;
         }
         
@@ -1823,9 +1821,15 @@ async function prepararEcosDaSala(sala, idSala) {
         
         console.log('🔄 [prepararEcosDaSala] FINALIZADO. ECOS gerados:', Object.keys(sala._ecos).length);
         
+        // ========== AGORA SIM MARCA COMO PREPARADO ==========
+        sala._ecosPreparados = true;
+        console.log('🔄 [prepararEcosDaSala] Marcado como preparado.');
+        
     } catch (e) {
         console.error('🔄 [prepararEcosDaSala] ❌ ERRO GRAVE:', e);
         console.error('🔄 [prepararEcosDaSala] Stack trace:', e.stack);
+        // EM CASO DE ERRO, MARCA COMO PREPARADO PARA NÃO TRAVAR O JOGO
+        sala._ecosPreparados = true;
     }
 }
 
@@ -1858,7 +1862,6 @@ async function aplicarEcosNaSala(idSala) {
     const sala = mapaMundo?.[idSala];
     const salaDesc = document.getElementById('sala-desc');
     
-    // Pega o texto atual do DOM
     const textoAtualDOM = salaDesc ? salaDesc.innerText : "";
     const textoBase = sala?.texto_logico || textoAtualDOM;
     
@@ -1873,11 +1876,11 @@ async function aplicarEcosNaSala(idSala) {
         return;
     }
     
-    // Garante que a sala tenha texto
     if (!sala.texto_logico) {
         sala.texto_logico = textoBase;
     }
     
+    // REMOVA O CHECK DE sala._ecosPreparados AQUI - DEIXE A FUNÇÃO PREPARAR DECIDIR
     await prepararEcosDaSala(sala, idSala);
     
     if (String(secaoAtualId) !== String(idSala)) {
@@ -1894,13 +1897,11 @@ async function aplicarEcosNaSala(idSala) {
         return;
     }
     
-    // MOSTRA OS ECOS NO CONSOLE
     console.log('7. Lista de ECOS:');
     for (const [termo, eco] of Object.entries(sala._ecos)) {
         console.log(`   - "${termo}" -> "${eco.texto}" (fontes: ${eco.fontes?.join(', ') || 'desconhecida'})`);
     }
     
-    // APLICA OS ECOS
     const textoComEcos = renderizarTextoComEcos(textoBase, sala._ecos);
     console.log('8. Texto após renderizar com ECOS:', textoComEcos);
     console.log('9. Contém span .eco-clicavel?', textoComEcos.includes('eco-clicavel'));
@@ -1909,6 +1910,7 @@ async function aplicarEcosNaSala(idSala) {
     console.log('========== ECOS DEBUG FIM ==========');
 }
 
+    
 document.addEventListener('click', function (e) {
     const alvo = e.target.closest('.eco-clicavel');
     if (!alvo) return;
