@@ -1532,11 +1532,20 @@ window._ecosUsadosRecentes = []; // vetores dos últimos cut-ups mostrados (anti
 
 // ---------- Extração de candidatos (heurística genérica, não é lista fixa) ----------
 function extrairCandidatosEcos(texto) {
-    if (!texto) return [];
+    console.log('🔍 [extrairCandidatosEcos] Texto recebido:', texto);
+    if (!texto) {
+        console.log('🔍 [extrairCandidatosEcos] ❌ Texto vazio!');
+        return [];
+    }
+    
     const textoLimpo = texto.replace(/<[^>]+>/g, ' ');
+    console.log('🔍 [extrairCandidatosEcos] Texto limpo:', textoLimpo);
+    
     const regexSintagma = /\b(?:um|uma|uns|umas|o|a|os|as)\s+([a-zà-ÿ]+(?:\s+(?:de|da|do|das|dos)\s+[a-zà-ÿ]+)?)/gi;
     const candidatos = new Map();
     let m;
+    
+    let encontrados = 0;
     while ((m = regexSintagma.exec(textoLimpo)) !== null) {
         const palavras = m[1].trim().split(/\s+/).filter(p => !ECOS_STOPWORDS_PT.has(p.toLowerCase()));
         if (palavras.length === 0) continue;
@@ -1544,8 +1553,13 @@ function extrairCandidatosEcos(texto) {
         const chave = termo.toLowerCase();
         if (chave.length < 4 || candidatos.has(chave)) continue;
         candidatos.set(chave, termo);
+        encontrados++;
+        console.log(`🔍 [extrairCandidatosEcos] Encontrou: "${termo}" (chave: "${chave}")`);
     }
-    return Array.from(candidatos.values()).slice(0, 10); // teto por sala (custo de embedding)
+    
+    const resultado = Array.from(candidatos.values()).slice(0, 10);
+    console.log(`🔍 [extrairCandidatosEcos] Total encontrado: ${encontrados}, após filtro: ${resultado.length}`);
+    return resultado;
 }
 
 // ---------- Fonte 1: ressonância entre salas já visitadas ----------
@@ -1734,31 +1748,84 @@ function comporEcos(achadoMundo, achadoDNA, achadoEstrutural, achadoCutUp, seedN
 
 // ---------- Orquestração por sala ----------
 async function prepararEcosDaSala(sala, idSala) {
-    if (sala._ecosPreparados) return;
-    sala._ecosPreparados = true; // trava mesmo se algo falhar, pra não reprocessar em loop
+    console.log('🔄 [prepararEcosDaSala] INICIANDO para sala:', idSala);
+    console.log('🔄 [prepararEcosDaSala] sala._ecos já existe?', !!sala._ecos);
+    
+    if (sala._ecosPreparados) {
+        console.log('🔄 [prepararEcosDaSala] ⏭️ Sala já preparada, pulando.');
+        return;
+    }
+    
+    sala._ecosPreparados = true;
+    console.log('🔄 [prepararEcosDaSala] Marcando como preparada.');
+    
     sala._ecos = {};
+    console.log('🔄 [prepararEcosDaSala] Inicializando sala._ecos = {}');
+    
     try {
+        console.log('🔄 [prepararEcosDaSala] Chamando garantirCorpusDNA()...');
         await garantirCorpusDNA();
+        console.log('🔄 [prepararEcosDaSala] ✅ garantirCorpusDNA() concluído.');
+        
+        console.log('🔄 [prepararEcosDaSala] Chamando garantirCorpusCutUp()...');
         await garantirCorpusCutUp();
+        console.log('🔄 [prepararEcosDaSala] ✅ garantirCorpusCutUp() concluído.');
+        
+        console.log('🔄 [prepararEcosDaSala] Chamando indexarSalaNoCorpusMundo()...');
         await indexarSalaNoCorpusMundo(sala, idSala);
-
+        console.log('🔄 [prepararEcosDaSala] ✅ indexarSalaNoCorpusMundo() concluído.');
+        
         const limiteZonaFim = zonaAtual * SALAS_POR_ZONA;
         const idRaizZona = (zonaAtual - 1) * SALAS_POR_ZONA + 1;
         const totalSalasZona = Object.keys(mapaMundo).filter(k => Number(k) >= idRaizZona && Number(k) <= limiteZonaFim).length;
         const profundidade = calcularProfundidadeBFS(idSala, idRaizZona, mapaMundo, limiteZonaFim);
-
-        for (const termo of extrairCandidatosEcos(sala.texto_logico)) {
-            const vetorTermo = (await window.extratorSemantico(termo, { pooling: 'mean', normalize: true })).data;
-            const achadoMundo = buscarNoCorpusMundo(vetorTermo, idSala);
-            const achadoDNA = buscarNoCorpusDNA(vetorTermo);
-            const achadoCutUp = buscarCutUp(vetorTermo, termo);
-            const achadoEstrutural = inferenciaEstrutural(termo, { profundidade, totalSalasZona, idSala: String(idSala) });
-            const seedNumerica = String(idSala).split('').reduce((a, c) => a + c.charCodeAt(0), 0) + termo.length;
-            const resultado = comporEcos(achadoMundo, achadoDNA, achadoEstrutural, achadoCutUp, seedNumerica);
-            if (resultado) sala._ecos[termo.toLowerCase()] = resultado;
+        console.log('🔄 [prepararEcosDaSala] Profundidade calculada:', profundidade);
+        
+        const candidatos = extrairCandidatosEcos(sala.texto_logico);
+        console.log('🔄 [prepararEcosDaSala] Candidatos extraídos:', candidatos);
+        
+        if (!candidatos || candidatos.length === 0) {
+            console.log('🔄 [prepararEcosDaSala] ❌ Nenhum candidato extraído!');
+            return;
         }
+        
+        for (const termo of candidatos) {
+            console.log(`🔄 [prepararEcosDaSala] Processando termo: "${termo}"`);
+            
+            try {
+                const vetorTermo = (await window.extratorSemantico(termo, { pooling: 'mean', normalize: true })).data;
+                console.log(`🔄 [prepararEcosDaSala] ✅ Vetor gerado para "${termo}"`);
+                
+                const achadoMundo = buscarNoCorpusMundo(vetorTermo, idSala);
+                const achadoDNA = buscarNoCorpusDNA(vetorTermo);
+                const achadoCutUp = buscarCutUp(vetorTermo, termo);
+                const achadoEstrutural = inferenciaEstrutural(termo, { profundidade, totalSalasZona, idSala: String(idSala) });
+                
+                console.log(`🔄 [prepararEcosDaSala] Resultados para "${termo}":`);
+                console.log(`   - achadoMundo: ${achadoMundo ? achadoMundo.texto : 'null'}`);
+                console.log(`   - achadoDNA: ${achadoDNA ? achadoDNA.texto : 'null'}`);
+                console.log(`   - achadoCutUp: ${achadoCutUp ? achadoCutUp.texto : 'null'}`);
+                console.log(`   - achadoEstrutural: ${achadoEstrutural || 'null'}`);
+                
+                const seedNumerica = String(idSala).split('').reduce((a, c) => a + c.charCodeAt(0), 0) + termo.length;
+                const resultado = comporEcos(achadoMundo, achadoDNA, achadoEstrutural, achadoCutUp, seedNumerica);
+                
+                if (resultado) {
+                    console.log(`🔄 [prepararEcosDaSala] ✅ ECO gerado para "${termo}": "${resultado.texto}"`);
+                    sala._ecos[termo.toLowerCase()] = resultado;
+                } else {
+                    console.log(`🔄 [prepararEcosDaSala] ❌ Nenhum eco composto para "${termo}"`);
+                }
+            } catch (err) {
+                console.error(`🔄 [prepararEcosDaSala] ❌ Erro ao processar termo "${termo}":`, err);
+            }
+        }
+        
+        console.log('🔄 [prepararEcosDaSala] FINALIZADO. ECOS gerados:', Object.keys(sala._ecos).length);
+        
     } catch (e) {
-        console.warn('[Ecos] Falha ao preparar ecos da sala (não crítico, jogo segue normal):', e);
+        console.error('🔄 [prepararEcosDaSala] ❌ ERRO GRAVE:', e);
+        console.error('🔄 [prepararEcosDaSala] Stack trace:', e.stack);
     }
 }
 
