@@ -1837,24 +1837,19 @@ async function prepararEcosDaSala(sala, idSala) {
 function escapeRegexEcos(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
 
 function renderizarTextoComEcos(textoAtualHTML, ecos) {
-    console.log('🔍 renderizarTextoComEcos - texto recebido:', textoAtualHTML);
-    console.log('🔍 renderizarTextoComEcos - ecos recebidos:', ecos);
-    
     if (!ecos) return textoAtualHTML;
     let resultado = textoAtualHTML;
     
     for (const termo of Object.keys(ecos)) {
-        const regex = new RegExp(`\\b(${escapeRegexEcos(termo)})\\b(?![^<]*>)`, 'i');
-        console.log(`🔍 Tentando encontrar "${termo}" no texto...`);
+        // Tenta encontrar com e sem preposição
+        const padrao = termo.replace(/\s+/g, '(?:\\s+(?:de|da|do|das|dos)\\s+|\\s+)');
+        const regex = new RegExp(`\\b(${padrao})\\b(?![^<]*>)`, 'i');
+        
         if (regex.test(resultado)) {
-            console.log(`✅ Encontrou "${termo}"! Substituindo...`);
             resultado = resultado.replace(regex, `<span class="eco-clicavel" data-termo="${termo}">$1</span>`);
-        } else {
-            console.log(`❌ NÃO encontrou "${termo}" no texto.`);
         }
     }
     
-    console.log('🔍 Resultado final:', resultado);
     return resultado;
 }
 
