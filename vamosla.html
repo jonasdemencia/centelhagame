@@ -1766,12 +1766,24 @@ async function prepararEcosDaSala(sala, idSala) {
 function escapeRegexEcos(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
 
 function renderizarTextoComEcos(textoAtualHTML, ecos) {
+    console.log('🔍 renderizarTextoComEcos - texto recebido:', textoAtualHTML);
+    console.log('🔍 renderizarTextoComEcos - ecos recebidos:', ecos);
+    
     if (!ecos) return textoAtualHTML;
     let resultado = textoAtualHTML;
+    
     for (const termo of Object.keys(ecos)) {
         const regex = new RegExp(`\\b(${escapeRegexEcos(termo)})\\b(?![^<]*>)`, 'i');
-        if (regex.test(resultado)) resultado = resultado.replace(regex, `<span class="eco-clicavel" data-termo="${termo}">$1</span>`);
+        console.log(`🔍 Tentando encontrar "${termo}" no texto...`);
+        if (regex.test(resultado)) {
+            console.log(`✅ Encontrou "${termo}"! Substituindo...`);
+            resultado = resultado.replace(regex, `<span class="eco-clicavel" data-termo="${termo}">$1</span>`);
+        } else {
+            console.log(`❌ NÃO encontrou "${termo}" no texto.`);
+        }
     }
+    
+    console.log('🔍 Resultado final:', resultado);
     return resultado;
 }
 
@@ -1779,11 +1791,18 @@ async function aplicarEcosNaSala(idSala) {
     const sala = mapaMundo?.[idSala];
     const salaDesc = document.getElementById('sala-desc');
     
-    // Pega o texto puro da sala (sem HTML)
-    const textoBase = sala?.texto_logico || (salaDesc ? salaDesc.innerText : "");
+    // Pega o texto atual do DOM
+    const textoAtualDOM = salaDesc ? salaDesc.innerText : "";
+    const textoBase = sala?.texto_logico || textoAtualDOM;
+    
+    console.log('========== ECOS DEBUG ==========');
+    console.log('1. Sala ID:', idSala);
+    console.log('2. Texto base (sala.texto_logico):', sala?.texto_logico);
+    console.log('3. Texto atual no DOM:', textoAtualDOM);
+    console.log('4. Motor semântico carregado?', !!window.extratorSemantico);
     
     if (!sala || !textoBase || !window.extratorSemantico) {
-        console.log('[ECOS] Pulando: sem sala, texto ou motor');
+        console.log('[ECOS] ❌ Pulando: sem sala, texto ou motor');
         return;
     }
     
@@ -1792,27 +1811,35 @@ async function aplicarEcosNaSala(idSala) {
         sala.texto_logico = textoBase;
     }
     
-    console.log(`[ECOS] Aplicando na sala: ${idSala}`);
-    
     await prepararEcosDaSala(sala, idSala);
     
     if (String(secaoAtualId) !== String(idSala)) {
-        console.log('[ECOS] Sala mudou, ignorando');
+        console.log('[ECOS] ❌ Sala mudou, ignorando');
         return;
     }
     
+    console.log('5. ECOS gerados para esta sala:', sala._ecos);
+    console.log('6. Número de ECOS:', Object.keys(sala._ecos || {}).length);
+    
     if (!sala._ecos || Object.keys(sala._ecos).length === 0) {
-        console.log('[ECOS] Nenhum eco encontrado');
-        // Mostra o texto sem modificações
+        console.log('[ECOS] ❌ Nenhum eco encontrado');
         salaDesc.innerHTML = textoBase;
         return;
     }
     
-    // ========== CORREÇÃO AQUI ==========
-    // APLICA os ECOS sobre o texto original (não sobre o HTML já existente)
+    // MOSTRA OS ECOS NO CONSOLE
+    console.log('7. Lista de ECOS:');
+    for (const [termo, eco] of Object.entries(sala._ecos)) {
+        console.log(`   - "${termo}" -> "${eco.texto}" (fontes: ${eco.fontes?.join(', ') || 'desconhecida'})`);
+    }
+    
+    // APLICA OS ECOS
     const textoComEcos = renderizarTextoComEcos(textoBase, sala._ecos);
+    console.log('8. Texto após renderizar com ECOS:', textoComEcos);
+    console.log('9. Contém span .eco-clicavel?', textoComEcos.includes('eco-clicavel'));
+    
     salaDesc.innerHTML = textoComEcos;
-    console.log('[ECOS] Aplicado com sucesso!', Object.keys(sala._ecos).length, 'ecos');
+    console.log('========== ECOS DEBUG FIM ==========');
 }
 
 document.addEventListener('click', function (e) {
@@ -4570,6 +4597,10 @@ Retorne EXATAMENTE o JSON abaixo. Nenhuma palavra extra.`
 
     if (novaSala?.texto_logico) {
     const textoFinal = prepararTextoChegada(novaSala.texto_logico, textoAcao || opcao.texto, parseInt(secaoAtualId), destino);
+
+        console.log('🔄 NAVEGAR: Texto final que será colocado no DOM:', textoFinal);
+    console.log('🔄 NAVEGAR: Texto original da sala:', novaSala.texto_logico);
+        
     salaDesc.innerHTML = textoFinal;
     // Aguarda o DOM ser atualizado antes de aplicar os ECOS
     setTimeout(() => {
