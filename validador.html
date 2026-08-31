@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Validador + Corretor de Prosa e Topologia</title>
+    <title>Validador + Corretor de Prosa, Topologia e Densidade</title>
     <style>
         body {
             background: #0a0a0a;
@@ -30,15 +30,9 @@
             border-color: #d9a441;
             background: #1a150a;
         }
-        .ok {
-            color: #4caf50;
-        }
-        .erro {
-            color: #e53935;
-        }
-        .aviso {
-            color: #d9a441;
-        }
+        .ok { color: #4caf50; }
+        .erro { color: #e53935; }
+        .aviso { color: #d9a441; }
         .sala {
             margin: 5px 0;
             padding: 8px 12px;
@@ -70,9 +64,7 @@
             font-family: inherit;
             font-size: 14px;
         }
-        .btn:hover {
-            background: #e0b050;
-        }
+        .btn:hover { background: #e0b050; }
         .stats {
             display: flex;
             gap: 20px;
@@ -95,15 +87,9 @@
             margin: 10px 0;
             border-radius: 4px;
         }
-        .logs .log-ok {
-            color: #4caf50;
-        }
-        .logs .log-erro {
-            color: #e53935;
-        }
-        .logs .log-info {
-            color: #888;
-        }
+        .logs .log-ok { color: #4caf50; }
+        .logs .log-erro { color: #e53935; }
+        .logs .log-info { color: #888; }
         .fonte {
             font-size: 11px;
             color: #666;
@@ -115,7 +101,7 @@
 </head>
 <body>
 
-    <h1>🧪 VALIDADOR + CORRETOR DE PROSA E TOPOLOGIA</h1>
+    <h1>🧪 VALIDADOR + CORRETOR DE PROSA, TOPOLOGIA E DENSIDADE</h1>
     <p>Arraste um arquivo JSON com os campos <code>plano</code> e <code>salas</code> para validar e corrigir automaticamente.</p>
 
     <div id="drop">
@@ -258,7 +244,7 @@
 
                 for (const saida of sala.saidas) {
                     const destino = saida.destino;
-                    if (destino > salaFim) continue; // ignora conexões para fora da zona
+                    if (destino > salaFim) continue;
 
                     const destinoPlano = plano[String(destino)];
                     if (!destinoPlano) {
@@ -266,7 +252,6 @@
                         continue;
                     }
 
-                    // Verifica volta (bidirecionalidade)
                     const temVolta = destinoPlano.saidas?.some(s => s.destino === id);
                     if (!temVolta) {
                         erros.push(`Sem volta: Sala ${destino} não retorna para Sala ${id}.`);
@@ -274,7 +259,7 @@
                 }
             }
 
-            // 3. Verifica conectividade total (BFS a partir da sala de entrada)
+            // 3. Conectividade total
             const visitados = new Set();
             const fila = [salaInicio];
             while (fila.length > 0) {
@@ -289,14 +274,13 @@
                     }
                 }
             }
-
             for (let i = salaInicio; i <= salaFim; i++) {
                 if (!visitados.has(i)) {
                     erros.push(`Sala ${i} inacessível a partir da entrada.`);
                 }
             }
 
-            // 4. Verifica presença de hub (sala com 3+ saídas para frente)
+            // 4. Hub
             const temHub = Object.values(plano).some(sala => {
                 const saidasParaFrente = (sala.saidas || []).filter(s => s.destino <= salaFim && s.destino > Number(Object.keys(plano).find(k => Number(k) === salaInicio)));
                 return saidasParaFrente.length >= 3;
@@ -305,7 +289,7 @@
                 erros.push('Nenhum hub encontrado. Mapa é linear — rejeitado.');
             }
 
-            // 5. Verifica fronteira única
+            // 5. Fronteira
             const salaFronteira = Object.entries(plano).find(([_, s]) => s.para_proxima_zona === true);
             if (!salaFronteira) {
                 erros.push(`Nenhuma sala de fronteira (para_proxima_zona: true).`);
@@ -313,9 +297,8 @@
                 erros.push(`Fronteira está em sala ${salaFronteira[0]}, deveria estar em ${salaFim}.`);
             }
 
-            // 6. Verifica ausência de ciclos (topologia em árvore)
-            let totalVertices = 0,
-                totalArestas = 0;
+            // 6. Ciclos
+            let totalVertices = 0, totalArestas = 0;
             for (const [idStr, sala] of Object.entries(plano)) {
                 const id = Number(idStr);
                 if (id >= salaInicio && id <= salaFim) {
@@ -329,6 +312,44 @@
             }
             if (totalArestas > totalVertices - 1) {
                 erros.push(`Falha Topológica 2D: O mapa gerou circuitos/anéis (${totalArestas} conexões para ${totalVertices} salas regulares). O layout deve ser uma árvore.`);
+            }
+
+            return erros;
+        }
+
+        // ------------------------------------------------------------
+        // 4. NOVO VALIDADOR DE DENSIDADE AMBIENTAL
+        // ------------------------------------------------------------
+        function validarDensidadeAmbiental(textoLogico, opcoes) {
+            const erros = [];
+            if (!textoLogico || !opcoes || opcoes.length === 0) return erros;
+
+            // Extrai os substantivos/núcleos das ações (ex: "Passar pela porta de madeira" → "porta de madeira")
+            for (const opcao of opcoes) {
+                const acao = opcao.acao || opcao.texto || '';
+                // Remove verbos iniciais e palavras comuns para isolar o substantivo principal
+                const nucleo = acao
+                    .toLowerCase()
+                    .replace(/^(subir|descer|atravessar|rastejar|passar|entrar|avançar|cruzar|caminhar|voltar|sair|abrir|fechar)\s+/i, '')
+                    .replace(/^(pela|pelo|para a|para o|na|no|em|uma|um)\s+/i, '')
+                    .trim();
+
+                if (!nucleo) continue;
+
+                // Verifica se o núcleo (ou parte dele) aparece no texto
+                const palavrasNucleo = nucleo.split(/\s+/);
+                let encontrado = false;
+                for (const palavra of palavrasNucleo) {
+                    if (palavra.length < 3) continue;
+                    if (textoLogico.toLowerCase().includes(palavra)) {
+                        encontrado = true;
+                        break;
+                    }
+                }
+
+                if (!encontrado) {
+                    erros.push(`caminho "${acao}" não está descrito no ambiente (elemento: "${nucleo}")`);
+                }
             }
 
             return erros;
@@ -362,6 +383,7 @@
                 let totalSalas = 0;
                 let salasComErro = 0;
                 let salasCorrigidas = 0;
+                let totalErrosDensidade = 0;
 
                 logsDiv.innerHTML = '';
                 resultado.innerHTML = '';
@@ -398,17 +420,17 @@
                     html += `<p class="aviso">⚠️ A topologia não pode ser corrigida automaticamente. Peça para a IA regenerar o plano.</p>`;
                 }
 
-                // 2. VALIDA E CORRIGE PROSA
-                html += `<h3>📝 Prosa</h3>`;
+                // 2. VALIDA PROSA (âncora + entry-point) E DENSIDADE
+                html += `<h3>📝 Prosa e Densidade</h3>`;
                 for (const [id, sala] of Object.entries(salas)) {
-                    const acao = plano[id]?.saidas?.[0]?.acao || null;
+                    const planoItem = plano[id];
+                    const opcoes = planoItem?.saidas || [];
+                    const acao = opcoes[0]?.acao || null;
 
-                    // Determina o tipo de âncora
                     let acaoChegada = acao;
                     if (id == salaInicio) {
                         acaoChegada = "SEM_ENTRADA";
                     } else {
-                        // Verifica se a sala tem múltiplas entradas
                         const entradas = Object.values(plano)
                             .flatMap(s => (s.saidas || []))
                             .filter(s => s.destino == id);
@@ -417,27 +439,35 @@
                         }
                     }
 
-                    const erros = validarTextoLogico(sala.texto_logico, acaoChegada);
-                    const status = erros.length === 0 ? '✅' : '❌';
-                    let statusClass = erros.length === 0 ? 'ok' : 'erro';
-                    html += `<div class="sala ${erros.length > 0 ? 'corrigido' : ''}">`;
+                    // Valida âncora + entry-point
+                    const errosAncora = validarTextoLogico(sala.texto_logico, acaoChegada);
+                    
+                    // Valida densidade ambiental
+                    const errosDensidade = validarDensidadeAmbiental(sala.texto_logico, opcoes);
+                    totalErrosDensidade += errosDensidade.length;
+
+                    const todosErros = [...errosAncora, ...errosDensidade];
+                    const status = todosErros.length === 0 ? '✅' : '❌';
+                    html += `<div class="sala ${todosErros.length > 0 ? 'corrigido' : ''}">`;
                     html += `<strong>Sala ${id}</strong> ${status} `;
 
-                    if (erros.length > 0) {
+                    if (todosErros.length > 0) {
                         salasComErro++;
-                        html += `<span class="erro">${erros.join('; ')}</span>`;
-                        log(`❌ Sala ${id}: ${erros.join('; ')}`, 'erro');
+                        html += `<span class="erro">${todosErros.join('; ')}</span>`;
+                        log(`❌ Sala ${id}: ${todosErros.join('; ')}`, 'erro');
 
-                        // CORRIGE AUTOMATICAMENTE
+                        // Tenta corrigir ancoragem (apenas isso é automático)
                         const textoCorrigido = corrigirAncoragem(sala.texto_logico, acaoChegada);
                         if (textoCorrigido !== sala.texto_logico) {
                             dadosCorrigidos.salas[id].texto_logico = textoCorrigido;
                             houveCorrecao = true;
                             salasCorrigidas++;
-                            html += ` <span class="ok">→ corrigido</span>`;
-                            log(`✅ Sala ${id} corrigida automaticamente.`, 'ok');
-                        } else {
-                            html += ` <span class="aviso">⚠️ não foi possível corrigir automaticamente</span>`;
+                            html += ` <span class="ok">→ ancoragem corrigida</span>`;
+                            log(`✅ Sala ${id} corrigida (ancoragem).`, 'ok');
+                        } else if (errosDensidade.length > 0) {
+                            // Densidade NÃO é corrigida automaticamente (a IA precisa regenerar)
+                            html += ` <span class="aviso">⚠️ densidade: descreva os caminhos no texto</span>`;
+                            log(`⚠️ Sala ${id}: descreva os caminhos no texto (densidade).`, 'aviso');
                         }
                     } else {
                         log(`✅ Sala ${id} aprovada.`, 'ok');
@@ -451,6 +481,7 @@
                     <span>${salasComErro === 0 ? '✅' : '❌'} Salas com erro: ${salasComErro}</span>
                     <span>🛠️ Salas corrigidas: ${salasCorrigidas}</span>
                     <span>${errosTopo.length === 0 ? '✅' : '❌'} Erros de topologia: ${errosTopo.length}</span>
+                    <span>${totalErrosDensidade === 0 ? '✅' : '❌'} Erros de densidade: ${totalErrosDensidade}</span>
                 `;
                 statsDiv.innerHTML = statsHTML;
 
@@ -461,10 +492,10 @@
                 } else if (errosTopo.length > 0) {
                     html = `<p class="erro">❌ ERROS DE TOPOLOGIA ENCONTRADOS. Corrija o plano manualmente.</p>` + html;
                 } else if (houveCorrecao && salasComErro === salasCorrigidas) {
-                    html = `<p class="ok">✅ TODAS AS SALAS CORRIGIDAS AUTOMATICAMENTE!</p>` + html;
-                    log('🎉 Todas as salas foram corrigidas automaticamente!', 'ok');
+                    html = `<p class="ok">✅ TODAS AS SALAS CORRIGIDAS AUTOMATICAMENTE (ancoragem)!</p>` + html;
+                    log('🎉 Todas as correções automáticas aplicadas.', 'ok');
                 } else {
-                    html = `<p class="aviso">⚠️ Algumas salas não puderam ser corrigidas automaticamente. Revise manualmente.</p>` + html;
+                    html = `<p class="aviso">⚠️ Erros de densidade: descreva os caminhos no texto da sala.</p>` + html;
                 }
 
                 // 5. EXIBE JSON CORRIGIDO (se houver correções)
@@ -546,7 +577,7 @@
         // ============================================================
 
         log('🔧 Validador pronto. Arraste um arquivo JSON para começar.', 'info');
-        log('📋 Validadores ativos: topologia (hub, ciclos, fronteira, bidirecionalidade) e prosa (ancoragem, entry-point leak).', 'info');
+        log('📋 Validadores ativos: topologia, ancoragem, entry-point leak e densidade ambiental.', 'info');
     </script>
 
 </body>
