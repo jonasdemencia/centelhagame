@@ -1526,9 +1526,7 @@ const ECOS_STOPWORDS_PT = new Set([
 ]);
 
 window._corpusMundoEcos = [];    // Fonte 1: [{texto, vetor, idSala}]
-window._corpusDNAEcos = null;    // Fonte 2: null = ainda não construído
-window._corpusCutUpEcos = null;  // Fonte 5: idem
-window._ecosUsadosRecentes = []; // vetores dos últimos cut-ups mostrados (anti-repetição)
+
 
 // ---------- Extração de candidatos (heurística genérica, não é lista fixa) ----------
 function extrairCandidatosEcos(texto) {
@@ -1583,34 +1581,7 @@ function buscarNoCorpusMundo(vetorTermo, idSalaAtual, limiar = 0.55) {
     return (melhor && melhorScore >= limiar) ? { texto: melhor.texto, score: melhorScore, fonte: 'mundo' } : null;
 }
 
-// ---------- Fonte 2: lore adormecida do dnaGlobal ----------
-async function garantirCorpusDNA() {
-    if (window._corpusDNAEcos !== null) return;
-    window._corpusDNAEcos = [];
-    if (!dnaGlobal || !window.extratorSemantico) return;
-    const entradas = [];
-    (dnaGlobal.objetos_transzonais || []).forEach(o => { if (o.o_que_desvela) entradas.push(o.o_que_desvela); });
-    (dnaGlobal.entidades || []).forEach(e => { if (e.natureza) entradas.push(e.natureza); });
-    (dnaGlobal.zonas || []).forEach(z => { if (z.segredo_local) entradas.push(z.segredo_local); });
-    (dnaGlobal.conspiracoes_reais || []).forEach(c => entradas.push(c));
-    for (const texto of entradas) {
-        try {
-            const vetor = (await window.extratorSemantico(texto, { pooling: 'mean', normalize: true })).data;
-            window._corpusDNAEcos.push({ texto, vetor });
-        } catch (e) { /* ignora entrada individual que falhar */ }
-    }
-    console.log(`[Ecos] Corpus de DNA pronto: ${window._corpusDNAEcos.length} entradas.`);
-}
 
-function buscarNoCorpusDNA(vetorTermo, limiar = 0.5) {
-    if (!window._corpusDNAEcos || window._corpusDNAEcos.length === 0) return null;
-    let melhor = null, melhorScore = 0;
-    for (const item of window._corpusDNAEcos) {
-        const score = cos_sim(vetorTermo, item.vetor);
-        if (score > melhorScore) { melhorScore = score; melhor = item; }
-    }
-    return (melhor && melhorScore >= limiar) ? { texto: melhor.texto, score: melhorScore, fonte: 'dna' } : null;
-}
 
 
 // ---------- Fonte 5: cut-up de cláusulas soltas do historicoIND ----------
@@ -1631,38 +1602,7 @@ function extrairClausulasSoltas(textoOrigem) {
     return resultado;
 }
 
-async function garantirCorpusCutUp() {
-    if (window._corpusCutUpEcos !== null) return;
-    window._corpusCutUpEcos = [];
-    if (!window.extratorSemantico) return;
-    const vistos = new Set();
-    for (const texto of (historicoIND || [])) {
-        for (const clausula of extrairClausulasSoltas(texto)) {
-            if (vistos.has(clausula.texto)) continue;
-            vistos.add(clausula.texto);
-            try {
-                const vetor = (await window.extratorSemantico(clausula.texto, { pooling: 'mean', normalize: true })).data;
-                window._corpusCutUpEcos.push({ ...clausula, vetor });
-            } catch (e) { /* ignora */ }
-        }
-    }
-    console.log(`[Ecos] Corpus cut-up pronto: ${window._corpusCutUpEcos.length} cláusulas (fonte: historicoIND).`);
-}
 
-function buscarCutUp(vetorTermo, termoOriginal, limiar = 0.42) {
-    if (!window._corpusCutUpEcos || window._corpusCutUpEcos.length === 0) return null;
-    let melhor = null, melhorScore = -Infinity;
-    for (const item of window._corpusCutUpEcos) {
-        let score = cos_sim(vetorTermo, item.vetor);
-        for (const usadoVetor of window._ecosUsadosRecentes) score -= 0.15 * cos_sim(item.vetor, usadoVetor);
-        if (score > melhorScore) { melhorScore = score; melhor = item; }
-    }
-    if (!melhor || melhorScore < limiar) return null;
-    window._ecosUsadosRecentes = window._ecosUsadosRecentes.slice(-19).concat([melhor.vetor]);
-    const termoCap = termoOriginal.charAt(0).toUpperCase() + termoOriginal.slice(1);
-    const texto = melhor.tipo === 'relativa' ? `${termoCap} ${melhor.texto}.` : `${termoCap} — ${melhor.texto}.`;
-    return { texto, score: melhorScore, fonte: 'cutup' };
-}
 
 // ---------- Fonte 4: composição entre fontes ----------
 const CONECTORES_ECO_COMPOSTO = [
@@ -1671,87 +1611,47 @@ const CONECTORES_ECO_COMPOSTO = [
     (a, b) => `${a} Isso ecoa algo visto antes: ${b}`
 ];
 
-function comporEcos(achadoMundo, achadoDNA, achadoCutUp, seedNumerica) {
-    const achadosTextuais = [achadoDNA, achadoCutUp, achadoMundo].filter(Boolean);
-    if (achadosTextuais.length === 0) {
-        return null;
-    }
-    if (achadosTextuais.length === 1) {
-        const unico = achadosTextuais[0];
-        return { texto: unico.texto, fontes: [unico.fonte] };
-    }
-    const [principal, secundario] = achadosTextuais.sort((a, b) => b.score - a.score);
-    const idx = Math.floor(pseudoRandom(seedNumerica) * CONECTORES_ECO_COMPOSTO.length);
-    return { texto: CONECTORES_ECO_COMPOSTO[idx](principal.texto, secundario.texto), fontes: [principal.fonte, secundario.fonte] };
-}
 
-// ---------- Orquestração por sala ----------
+
 async function prepararEcosDaSala(sala, idSala) {
     console.log('🔄 [prepararEcosDaSala] INICIANDO para sala:', idSala);
-    console.log('🔄 [prepararEcosDaSala] sala._ecos já existe?', !!sala._ecos);
-    
     sala._ecos = {};
-    console.log('🔄 [prepararEcosDaSala] Inicializando sala._ecos = {}');
     
     try {
-        console.log('🔄 [prepararEcosDaSala] Chamando garantirCorpusDNA()...');
-        await garantirCorpusDNA();
-        console.log('🔄 [prepararEcosDaSala] ✅ garantirCorpusDNA() concluído.');
-        
-        console.log('🔄 [prepararEcosDaSala] Chamando garantirCorpusCutUp()...');
-        await garantirCorpusCutUp();
-        console.log('🔄 [prepararEcosDaSala] ✅ garantirCorpusCutUp() concluído.');
-        
-        console.log('🔄 [prepararEcosDaSala] Chamando indexarSalaNoCorpusMundo()...');
+        console.log('🔄 [prepararEcosDaSala] Indexando sala no corpus mundo...');
         await indexarSalaNoCorpusMundo(sala, idSala);
-        console.log('🔄 [prepararEcosDaSala] ✅ indexarSalaNoCorpusMundo() concluído.');
+        console.log('🔄 [prepararEcosDaSala] ✅ Indexação concluída.');
         
         const candidatos = extrairCandidatosEcos(sala.texto_logico);
-        console.log('🔄 [prepararEcosDaSala] Candidatos extraídos:', candidatos);
+        console.log('🔄 [prepararEcosDaSala] Candidatos:', candidatos);
         
         if (!candidatos || candidatos.length === 0) {
-            console.log('🔄 [prepararEcosDaSala] ❌ Nenhum candidato extraído!');
             sala._ecosPreparados = true;
             return;
         }
         
         for (const termo of candidatos) {
-            console.log(`🔄 [prepararEcosDaSala] Processando termo: "${termo}"`);
-            
             try {
                 const vetorTermo = (await window.extratorSemantico(termo, { pooling: 'mean', normalize: true })).data;
-                console.log(`🔄 [prepararEcosDaSala] ✅ Vetor gerado para "${termo}"`);
-                
                 const achadoMundo = buscarNoCorpusMundo(vetorTermo, idSala);
-                const achadoDNA = buscarNoCorpusDNA(vetorTermo);
-                const achadoCutUp = buscarCutUp(vetorTermo, termo);
                 
-                console.log(`🔄 [prepararEcosDaSala] Resultados para "${termo}":`);
-                console.log(`   - achadoMundo: ${achadoMundo ? achadoMundo.texto : 'null'}`);
-                console.log(`   - achadoDNA: ${achadoDNA ? achadoDNA.texto : 'null'}`);
-                console.log(`   - achadoCutUp: ${achadoCutUp ? achadoCutUp.texto : 'null'}`);
-                
-                const seedNumerica = String(idSala).split('').reduce((a, c) => a + c.charCodeAt(0), 0) + termo.length;
-                const resultado = comporEcos(achadoMundo, achadoDNA, achadoCutUp, seedNumerica);
-                
-                if (resultado) {
-                    console.log(`🔄 [prepararEcosDaSala] ✅ ECO gerado para "${termo}": "${resultado.texto}"`);
-                    sala._ecos[termo.toLowerCase()] = resultado;
-                } else {
-                    console.log(`🔄 [prepararEcosDaSala] ❌ Nenhum eco composto para "${termo}"`);
+                if (achadoMundo) {
+                    sala._ecos[termo.toLowerCase()] = {
+                        texto: achadoMundo.texto,
+                        score: achadoMundo.score,
+                        fonte: 'mundo'
+                    };
+                    console.log(`✅ ECO: "${termo}" → "${achadoMundo.texto}"`);
                 }
             } catch (err) {
-                console.error(`🔄 [prepararEcosDaSala] ❌ Erro ao processar termo "${termo}":`, err);
+                console.error(`❌ Erro no termo "${termo}":`, err);
             }
         }
         
-        console.log('🔄 [prepararEcosDaSala] FINALIZADO. ECOS gerados:', Object.keys(sala._ecos).length);
         sala._ecosPreparados = true;
-        console.log('🔄 [prepararEcosDaSala] Marcado como preparado.');
-        
+        console.log('🔄 [prepararEcosDaSala] FINALIZADO. ECOS:', Object.keys(sala._ecos).length);
     } catch (e) {
-        console.error('🔄 [prepararEcosDaSala] ❌ ERRO GRAVE:', e);
-        console.error('🔄 [prepararEcosDaSala] Stack trace:', e.stack);
+        console.error('❌ ERRO GRAVE:', e);
         sala._ecosPreparados = true;
     }
 }
