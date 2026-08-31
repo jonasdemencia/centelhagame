@@ -10,72 +10,55 @@ Lore central: [INSIRA AQUI A LORE, EX: "Pacientes desaparecem e os funcionários
 ---
 
 REGRAS DE TOPOLOGIA (PLANO)
-1. A sala 1 é a entrada. A sala 10 é a fronteira (deve ter "para_proxima_zona": true).
-2. Cada sala deve ter de 1 a 3 saídas (opções de movimento).
-3. Pelo menos uma sala deve ter 3 ou mais saídas (hub).
-4. Para cada conexão de ida (A → B), deve existir uma conexão de volta (B → A) com ação inversa (ex: "Subir" ↔ "Descer").
-5. A estrutura deve ser uma árvore (sem ciclos).
+1. Sala 1 = entrada. Sala 10 = fronteira (com "para_proxima_zona": true).
+2. Cada sala tem de 1 a 3 saídas. Pelo menos uma sala tem 3+ (hub).
+3. Toda conexão de ida (A → B) tem uma de volta (B → A) com ação inversa (ex: "Subir" ↔ "Descer").
+4. A estrutura é uma árvore, sem ciclos.
 
 ---
 
-REGRAS DE PROSA PARA O "texto_logico" (DESCRIÇÃO DO AMBIENTE)
-6. Sala 1 (entrada): NÃO use "Depois de" ou "Ao avançar". Comece com a descrição direta do ambiente.
-7. Salas 2 a 9: A primeira frase DEVE começar com "Depois de [ação EXATA que levou a esta sala], você...".
-8. Sala 10 (fronteira): Se tiver múltiplas entradas, use "Ao avançar para este local, você...".
-9. PROIBIDO: "Você se encontra", "Você está", "Você nota" como primeira frase.
-10. PROIBIDO: Repetir palavras da ação de chegada na primeira frase (entry-point leak). Ex: se a ação é "Subir a escada", a palavra "escada" NÃO pode aparecer na primeira frase.
-11. Cada "texto_logico" DEVE descrever VISIVELMENTE todos os elementos físicos mencionados nas "opcoes" de saída daquela sala.
-    - Exemplo: se a sala tem a opção "Passar pela porta de madeira", a porta de madeira deve ser mencionada no texto.
-    - Exemplo: se tem "Subir a escada de caracol", a escada de caracol deve ser descrita.
-    - Exemplo: se tem "Caminhar pelo corredor estreito", o corredor estreito deve estar no texto.
-12. NUNCA crie uma opção que não esteja ancorada em um elemento visível descrito no texto.
-13. Cada "texto_logico" DEVE conter:
-    a) Pelo menos 3 elementos do cenário (chão, paredes, teto, móveis, objetos, portas, janelas).
-    b) Pelo menos 1 dado sensorial (cheiro, som, temperatura, textura, luz, umidade).
-    c) Uma âncora visual para cada saída — os caminhos devem ser descritos como parte do cenário.
-14. Use uma estrutura de frase que conecte os elementos visualmente, como no exemplo:
-    > "À frente, uma escada de madeira robusta se ergue... Ao lado, um corredor lateral se estende... No chão, um pedaço de papel amassado..."
-15. NUNCA liste os caminhos como "Você pode escolher entre X ou Y". Apenas descreva o ambiente.
+REGRAS DE PROSA PARA "texto_logico"
+5. Sala 1: descrição direta, sem "Depois de" ou "Ao avançar".
+6. Salas 2–9: primeira frase começa com "Depois de [ação EXATA que levou a esta sala], você...".
+7. Sala 10: se tiver múltiplas entradas, use "Ao avançar para este local, você...".
+8. PROIBIDO como primeira frase: "Você se encontra", "Você está", "Você nota".
+9. PROIBIDO repetir na primeira frase palavras da ação de chegada (entry-point leak).
+10. Todo elemento físico citado nas "opcoes" de saída DEVE estar visivelmente descrito no texto — nunca crie uma opção sem âncora visual no texto.
+11. Cada "texto_logico" precisa ter: (a) 3+ elementos do cenário, (b) 1+ dado sensorial (cheiro, som, temperatura, textura, luz, umidade), (c) uma âncora visual por saída, integrada à descrição do ambiente — nunca liste os caminhos como "você pode escolher entre X ou Y".
 
 ---
 
 REGRAS PARA CENAS E DILEMAS (ARQUITETO DE CENAS)
-Você deve selecionar aleatoriamente 2 a 3 salas entre as salas 2 a 9 para receber uma cena (evento + dilemas). As demais salas (incluindo 1 e 10) não terão cena (campo "cena" como null no JSON final).
 
-Para cada sala escolhida, crie:
+Selecione aleatoriamente 2 a 3 salas entre 2 e 9 para receber uma cena. As demais não têm cena.
 
-1. EVENTO SITUACIONAL ("texto_evento")
-- Descreva uma entidade, pessoa ou criatura presente na sala.
-- Foco no elemento de tensão.
-- O evento deve parecer que sempre esteve ali, esperando.
+Para cada sala escolhida, sorteie um TIPO:
+- **FÍSICO**: entidade/criatura ameaçadora presente na sala; o dilema gira em luta, fuga ou evasão.
+- **MORAL/EXISTENCIAL**: uma pessoa, objeto, documento ou situação que força uma escolha de valor, sacrifício ou dúvida sobre si mesmo — sem exigir uma criatura atacando.
 
-2. DILEMAS (array "dilemas")
-- Cada cena deve ter exatamente 1 dilema-pai com "ramificacoes" (abre um momento de bifurcação genuína) e os restantes (se houver) com "ramificacoes": null.
-- NUNCA mais de 1 dilema com ramificações por cena.
-- Design do dilema-pai:
-  - "opcao_texto": ação do jogador.
-  - "resultado_texto": ponte narrativa de 2–3 frases, com tensão aberta, sem dano ("dano": 0).
-  - "destino_id": pode ser null ou um dos destinos disponíveis nas opções da sala (use quando a ação implica atravessar um limiar físico – fuga, avanço forçado, entrada).
-  - "ramificacoes": array de 2–3 objetos, cada um com "opcao_texto", "resultado_texto", "dano" (inteiro 0–20) e "destino_id" (pode ser null ou destino válido).
-- Design das ramificações:
-  - Cada opção deve ter apelos diferentes e riscos diferentes (nunca "certo vs errado").
-  - Consequências assimétricas: opção A → risco físico e ganho; opção B → risco zero mas perda narrativa; opção C (se houver) → risco ambíguo.
-  - "resultado_texto": 1 frase específica e visceral sobre o ferimento/lesão produzida no jogador. Nunca escreva "você perde X de energia"; descreva a lesão.
-  - O "dano" deve refletir a gravidade:
-    - 1–4 → ferimento leve, contusão, arranhão.
-    - 5–9 → dano severo, sangue, fratura.
-    - 10–20 → brutal, quase letal.
-    - 50 → letal. 
-  - OBRIGATÓRIO: em cada cena, ao menos uma consequência ou ramificação DEVE causar dano Alto (8 a 20) no jogador.
-- Proibições adicionais:
-  - Opções sem "destino_id" com verbos de locomoção (sair, subir, descer, seguir, atravessar).
-  - Resultados que mencionam perda de energia diretamente.
-  - "resultado_texto" do pai descrevendo ação que o jogador não executou em "opcao_texto".
+**No máximo 1 das cenas da zona pode ser FÍSICO.** As demais devem ser MORAL/EXISTENCIAL. (Isso é deliberado: cenas de perseguição são fáceis de gerar e tendem a dominar se não forem limitadas.)
+
+1. **"texto_evento"** (3–4 frases): o elemento central deve parecer que sempre esteve ali, esperando.
+   - FÍSICO: descreva a entidade com foco na ameaça.
+   - MORAL/EXISTENCIAL: não precisa haver hostilidade — pode ser um pedido, uma descoberta, um vestígio que implica o jogador em algo.
+
+2. **"dilemas"**: exatamente 1 dilema-pai com "ramificacoes" (array de 2–3 objetos, bifurcação genuína); os demais dilemas da cena (se houver) com "ramificacoes": null.
+   - `resultado_texto` do pai: 2–3 frases, tensão aberta, `"dano": 0`. `destino_id` só é não-null se a ação cruzar um limiar físico (fuga, avanço, entrada) e deve existir nas saídas da sala.
+
+3. Cada ramificação tem um **CUSTO**, de um destes dois tipos — nunca misture os dois numa mesma ramificação:
+   - **a) Custo físico** (`dano` > 0): 1 frase visceral e específica sobre o ferimento. Gravidade: 1–4 leve, 5–9 severo, 10–20 brutal. Proibido escrever "perde X de energia" — descreva a lesão.
+   - **b) Custo moral** (`"dano": 0`, mas irreversível): nomeie concretamente o que se perde — alguém que fica pra trás, uma vantagem sacrificada, uma mentira que passa a sustentar, um limite cruzado sem volta. Proibidas frases genéricas ("você sente que perdeu algo").
+
+   - Em cenas **FÍSICO**: pelo menos 1 ramificação com custo físico alto (10–20).
+   - Em cenas **MORAL/EXISTENCIAL**: pelo menos 1 ramificação com custo moral de alta gravidade (perda irreversível e concreta). Nenhuma ramificação dessas cenas precisa ter `dano` > 0.
+
+**Proibições:** opções sem `destino_id` usando verbos de locomoção (sair, subir, atravessar); `resultado_texto` do pai descrevendo ação que o jogador não executou na `opcao_texto`; cenas MORAL/EXISTENCIAL onde toda ramificação termina em confronto físico.
 
 ---
 
 ESTRUTURA EXATA DO JSON
 
+```json
 {
   "plano": {
     "1": {
@@ -85,32 +68,20 @@ ESTRUTURA EXATA DO JSON
         {"destino": 3, "acao": "Outra ação"}
       ]
     },
-    "2": { ... },
-    ...
     "10": {
       "local_fisico": "Nome da fronteira",
-      "saidas": [
-        {"destino": 11, "acao": "Ação para a próxima zona"}
-      ],
+      "saidas": [{"destino": 11, "acao": "Ação para a próxima zona"}],
       "para_proxima_zona": true
     }
   },
   "salas": {
-    "1": {
-      "texto_logico": "Descrição direta do ambiente (sem âncora)."
-    },
-    "2": {
-      "texto_logico": "Depois de [ação exata], você [descrição ...]."
-    },
-    ...
-    "10": {
-      "texto_logico": "Ao avançar para este local, você [descrição ...]."
-    }
+    "1": { "texto_logico": "Descrição direta do ambiente (sem âncora)." },
+    "10": { "texto_logico": "Ao avançar para este local, você [...]." }
   },
   "cenas": [
     {
-      "sala_id": 2,
-      "titulo": "Título da cena (ex: O Eco Metálico)",
+      "sala_id": 7,
+      "titulo": "Título da cena",
       "texto_evento": "Evento situacional (3–4 frases).",
       "dilemas": [
         {
@@ -119,67 +90,63 @@ ESTRUTURA EXATA DO JSON
           "dano": 0,
           "destino_id": null,
           "ramificacoes": [
-            {
-              "opcao_texto": "...",
-              "resultado_texto": "...",
-              "dano": 14,
-              "destino_id": null
-            },
-            ...
+            {"opcao_texto": "...", "resultado_texto": "...", "dano": 0, "destino_id": null},
+            {"opcao_texto": "...", "resultado_texto": "...", "dano": 14, "destino_id": null}
           ]
-        },
-        ... (outros dilemas sem ramificações, se houver)
-      ]
-    },
-    ... (somente para as salas selecionadas aleatoriamente)
-  ]
-}
-
-- O campo "cenas" deve conter apenas as salas escolhidas (2 a 3 objetos). Para as demais, não inclua entrada no array.
-- O campo "dilemas" é um array – mesmo que haja apenas um dilema (o pai com ramificações), deve ser um array com um único objeto.
-- Todos os "destino_id" usados nos dilemas devem existir nas "saidas" daquela sala (ou ser null).
-- "dano" é sempre um número inteiro entre 0 e 20.
-
----
-
-EXEMPLO DE UMA CENA VÁLIDA (para uma sala 2)
-
-{
-  "sala_id": 2,
-  "titulo": "O Eco Metálico",
-  "texto_evento": "Do fundo do corredor, um rangido metálico se repete em intervalos regulares. Uma silhueta encapuzada arrasta uma corrente pesada, parando a cada poucos passos para inclinar a cabeça, como se ouvisse algo. Quando você pisa em um caco de vidro, a figura para e vira lentamente o rosto para sua direção.",
-  "dilemas": [
-    {
-      "opcao_texto": "Avançar devagar, pisando nas bordas para não fazer barulho",
-      "resultado_texto": "Você desvia dos detritos, mas o piso cede sob seu peso e um estalo ecoa. A figura se vira bruscamente e começa a correr em sua direção, a corrente arrastando faíscas no chão.",
-      "dano": 0,
-      "destino_id": null,
-      "ramificacoes": [
-        {
-          "opcao_texto": "Tentar derrubar a figura com um golpe na cabeça",
-          "resultado_texto": "Seu punho acerta o capuz, mas algo duro e frio corta sua mão. A corrente envolve seu braço e aperta, triturando os ossos do antebraço num estalo seco.",
-          "dano": 12,
-          "destino_id": null
-        },
-        {
-          "opcao_texto": "Correr para a saída e trancar a porta",
-          "resultado_texto": "Você alcança a porta de madeira e a empurra com o ombro, escapando por um triz. Do outro lado, ouve o impacto da corrente contra a madeira.",
-          "dano": 0,
-          "destino_id": 4
         }
       ]
     }
   ]
 }
+```
+
+- `cenas` contém apenas as 2–3 salas escolhidas. As demais não têm entrada.
+- `dilemas` é sempre um array, mesmo com um único objeto (o pai).
+- Todo `destino_id` usado existe nas `saidas` da sala, ou é `null`.
+- `dano` é sempre inteiro entre 0 e 20.
+
+---
+
+EXEMPLO DE CENA MORAL/EXISTENCIAL VÁLIDA (sala 7)
+
+```json
+{
+  "sala_id": 7,
+  "titulo": "A Voz Atrás da Grade",
+  "texto_evento": "Atrás de uma grade de metal enferrujada, uma mulher com o uniforme da instituição está sentada no escuro, imóvel há tanto tempo que a poeira se acumulou nos ombros. Ela sabe o caminho até a saída da ala — mas só vai indicar se você entregar o cartão de acesso que abre a porta trancada do necrotério, sua única forma de completar o que veio fazer nesta zona. Ela estende a mão através da grade e espera.",
+  "dilemas": [
+    {
+      "opcao_texto": "Perguntar por que ela está presa ali antes de decidir",
+      "resultado_texto": "Ela sorri, um gesto que não chega aos olhos, e diz que já respondeu essa pergunta pra outros três antes de você — e nenhum saiu vivo o bastante pra contar o que descobriu.",
+      "dano": 0,
+      "destino_id": null,
+      "ramificacoes": [
+        {
+          "opcao_texto": "Entregar o cartão de acesso e seguir a rota que ela indicar",
+          "resultado_texto": "Ela guarda o cartão sem dizer palavra. Você nunca vai saber o que estava atrás daquela porta trancada — e uma parte de você sabe que jamais vai ter outra chance de descobrir.",
+          "dano": 0,
+          "destino_id": 9
+        },
+        {
+          "opcao_texto": "Recusar e seguir sozinho pelo caminho que já conhece",
+          "resultado_texto": "Ela retrai a mão e volta ao escuro sem protestar, como se já esperasse isso. Ao se afastar, você ainda ouve o som da poeira caindo dos ombros dela, e não tem certeza se algum dia vai parar de ouvir.",
+          "dano": 0,
+          "destino_id": null
+        }
+      ]
+    }
+  ]
+}
+```
+
+Note: nenhuma ramificação tem `dano`, mas as duas custam algo concreto e irreversível — é esse padrão que as cenas MORAL/EXISTENCIAL devem seguir, não o de luta/fuga.
 
 ---
 
 IMPORTANTE
-- Entregue APENAS o JSON, sem texto adicional.
-- Respeite TODAS as regras acima.
-- O JSON deve ser válido (sem erros de sintaxe).
-- As ações de ida e volta devem ser simétricas (ex: "Subir" ↔ "Descer", "Passar" ↔ "Voltar").
-- As descrições do ambiente ("texto_logico") e os eventos ("texto_evento") devem ser complementares, sem repetição de informações físicas.
-- A seleção das salas para cenas deve ser aleatória (escolha 2 a 3 salas entre 2 e 9).
+- Entregue APENAS o JSON, sem texto adicional, sem erros de sintaxe.
+- Ações de ida e volta simétricas (ex: "Subir" ↔ "Descer").
+- `texto_logico` e `texto_evento` são complementares, sem repetir informação física.
+- A seleção de salas para cenas é aleatória (2 a 3, entre 2 e 9); o tipo de cada cena (FÍSICO/MORAL) também é sorteado, respeitando o limite de no máximo 1 FÍSICO por zona.
 
 Agora, gere o JSON completo para 10 salas.
