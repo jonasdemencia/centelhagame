@@ -80,7 +80,7 @@
 <body>
     <h1>🧩 Importador de Zonas (com Dilemas)</h1>
     <p>Cole o JSON corrigido do validador ou arraste um arquivo para importar diretamente no Firestore.<br>
-    <strong>Os dilemas (campo "cenas") serão injetados automaticamente nas salas.</strong></p>
+    <strong>As cenas (texto_evento + dilemas) serão injetadas automaticamente nas salas.</strong></p>
 
     <div class="file-input-wrapper" id="drop">
         📂 Arraste o arquivo JSON aqui ou clique para selecionar
@@ -117,7 +117,28 @@
         const db = firebase.firestore();
 
         // ============================================================
-        // FUNÇÃO DE IMPORTAÇÃO (COM INJEÇÃO DE DILEMAS)
+        // LIMPEZA DE VÍCIOS DE IA (idêntica à de vamosla.html)
+        // Precisa existir aqui também porque o importador é um arquivo
+        // separado do jogo e não tem acesso às funções dele.
+        // ============================================================
+        function expurgarViciosIA(texto) {
+            if (!texto) return texto;
+            let limpo = texto.replace(/(?:,\s*|\s+)\b(?:quase\s+)?como se\b[^.!?]*([.!?]|$)/gi, '$1');
+            limpo = limpo.replace(/(?:,\s*|\s+)\b(?:quase\s+)?como (?:um|uma)\b[^.!?]*([.!?]|$)/gi, '$1');
+            limpo = limpo.replace(/\b[Dd]e repente,?\s*/g, '');
+            return limpo.replace(/\s{2,}/g, ' ').trim();
+        }
+
+        // ============================================================
+        // FUNÇÃO DE IMPORTAÇÃO (COM INJEÇÃO DE TEXTO_EVENTO + DILEMAS)
+        //
+        // Replica fielmente aplicarArquitetoDeCenas() de vamosla.html,
+        // para que uma zona importada manualmente fique idêntica a uma
+        // gerada organicamente pelo Arquiteto de Cenas. Antes, esta
+        // função só injetava os dilemas e ignorava cena.texto_evento —
+        // por isso a descrição do evento (ex: "O Zelador Cego") nunca
+        // aparecia no jogo, mesmo com cena_titulo e a opção de dilema
+        // salvos corretamente no Firestore.
         // ============================================================
         async function importarParaFirestore(dados, uid) {
             const plano = dados.plano || {};
@@ -142,46 +163,98 @@
                 };
             }
 
-            // 2. Injetar os dilemas (cenas) nas salas correspondentes
+            // 2. Injetar as cenas (texto_evento + dilemas) nas salas correspondentes
             for (const cena of cenas) {
                 const salaId = String(cena.sala_id);
                 const sala = mapaMundo[salaId];
                 if (!sala) {
-                    console.warn(`⚠️ Cena para sala ${salaId} ignorada: sala não existe.`);
+                    log(`⚠️ Cena para sala ${salaId} ignorada: sala não existe.`, 'aviso');
                     continue;
                 }
 
-                // Se a sala não tiver opções, cria um array vazio
-                if (!sala.opcoes) sala.opcoes = [];
+                const titulo = (cena.titulo || 'Evento Inesperado').trim();
+                const textoEvento = expurgarViciosIA((cena.texto_evento || '').trim());
 
-                // Converte cada dilema em uma opção com dilema: true
-                for (const dilema of (cena.dilemas || [])) {
-                    const novaOpcao = {
-                        texto: dilema.opcao_texto,
-                        arquiteto: true,        // sinaliza que veio do arquiteto
-                        dilema: true,
-                        resultado_texto: dilema.resultado_texto,
-                        dano: dilema.dano || 0,
-                        destino: dilema.destino_id ? parseInt(dilema.destino_id) : null,
-                        disparado: false,
-                        ramificacoes: null
-                    };
-
-                    // Se houver ramificações, converte cada uma
-                    if (dilema.ramificacoes && Array.isArray(dilema.ramificacoes)) {
-                        novaOpcao.ramificacoes = dilema.ramificacoes.map(ram => ({
-                            opcao_texto: ram.opcao_texto,
-                            resultado_texto: ram.resultado_texto,
-                            dano: ram.dano || 0,
-                            destino: ram.destino_id ? parseInt(ram.destino_id) : null
-                        }));
-                    }
-
-                    sala.opcoes.push(novaOpcao);
+                if (!textoEvento) {
+                    // Mesmo comportamento do jogo: sem texto_evento, a cena
+                    // inteira (inclusive dilemas) é ignorada para esta sala.
+                    log(`⚠️ Cena "${titulo}" (sala ${salaId}) não tem "texto_evento" no JSON — nada foi injetado nesta sala.`, 'aviso');
+                    continue;
                 }
 
-                // Opcional: guardar o título da cena (não usado pelo jogo, mas pode ser útil)
-                sala.cena_titulo = cena.titulo || null;
+                // Funde o texto_evento no texto_logico, na mesma ordem/formatação do jogo
+                let textoBase = expurgarViciosIA((sala.texto_logico || '').trim());
+                sala.texto_logico = `${textoBase.replace(/[.\s]+$/, '')}. ${textoEvento}`;
+                sala.cena_titulo = titulo;
+                sala.cena_aplicada = true;
+
+                if (!sala.opcoes) sala.opcoes = [];
+
+                // Destinos "reais" já existentes na sala (saídas do plano),
+                // usados para validar para onde um dilema pode levar
+                const destinosValidos = new Set(
+                    (sala.opcoes || [])
+                        .filter(o => o.destino && !o.arquiteto)
+                        .map(o => String(o.destino))
+                );
+
+                const dilemas = Array.isArray(cena.dilemas) ? cena.dilemas : [];
+
+                for (const dilema of dilemas) {
+                    const opcaoTexto = (dilema.opcao_texto || 'Observar com cautela').trim();
+                    const narrativaBruta = expurgarViciosIA((dilema.resultado_texto || '').trim());
+                    if (!narrativaBruta) continue;
+
+                    const dano = typeof dilema.dano === 'number'
+                        ? Math.min(20, Math.max(0, Math.round(dilema.dano)))
+                        : 0;
+
+                    const resultadoTexto = dano > 0
+                        ? `${narrativaBruta.replace(/[.\s]+$/, '')}. Você perde ${dano} de energia.`
+                        : narrativaBruta;
+
+                    const destinoRaw = dilema.destino_id ? String(dilema.destino_id) : null;
+                    const destinoValidado = (destinoRaw && destinosValidos.has(destinoRaw))
+                        ? parseInt(destinoRaw)
+                        : null;
+
+                    // Valida e prepara ramificações, igual ao jogo
+                    const ramsRaw = Array.isArray(dilema.ramificacoes) ? dilema.ramificacoes : [];
+                    const ramificacoes = ramsRaw
+                        .filter(r => r.opcao_texto && r.resultado_texto)
+                        .map(r => {
+                            const rDano = typeof r.dano === 'number'
+                                ? Math.min(20, Math.max(0, Math.round(r.dano)))
+                                : 0;
+                            const rDestinoRaw = r.destino_id ? String(r.destino_id) : null;
+                            const rDestino = (rDestinoRaw && destinosValidos.has(rDestinoRaw))
+                                ? parseInt(rDestinoRaw)
+                                : null;
+                            const rNarrativaLimpa = expurgarViciosIA((r.resultado_texto || '').trim());
+
+                            return {
+                                opcao_texto: r.opcao_texto.trim(),
+                                resultado_texto: rDano > 0
+                                    ? `${rNarrativaLimpa.replace(/[.\s]+$/, '')}. Você perde ${rDano} de energia.`
+                                    : rNarrativaLimpa,
+                                dano: rDano,
+                                destino: rDestino
+                            };
+                        });
+
+                    sala.opcoes.push({
+                        texto: opcaoTexto,
+                        arquiteto: true,        // sinaliza que veio do arquiteto
+                        dilema: true,
+                        resultado_texto: resultadoTexto,
+                        dano,
+                        destino: destinoValidado,
+                        disparado: false,
+                        ramificacoes: ramificacoes.length > 0 ? ramificacoes : null
+                    });
+                }
+
+                log(`🎭 "${titulo}" → Sala ${salaId} | texto_evento injetado, ${dilemas.length} dilema(s) processado(s)`, 'ok');
             }
 
             // 3. Salvar no Firestore
@@ -302,7 +375,7 @@
         });
 
         log('🔧 Importador pronto. Cole o JSON ou arraste um arquivo.', 'info');
-        log('📌 Os dilemas (campo "cenas") serão injetados automaticamente.', 'info');
+        log('📌 O texto_evento de cada cena será fundido ao texto_logico da sala, e os dilemas serão injetados como opções.', 'info');
     </script>
 </body>
 </html>
