@@ -2,8 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Validador + Importador de Zonas</title>
+    <title>Validador + Corretor de Prosa, Topologia e Densidade</title>
     <style>
         body {
             background: #0a0a0a;
@@ -66,25 +65,6 @@
             font-size: 14px;
         }
         .btn:hover { background: #e0b050; }
-        .btn-secondary {
-            background: #333;
-            color: #ccc;
-            border: 1px solid #555;
-            padding: 12px 24px;
-            cursor: pointer;
-            font-weight: bold;
-            margin-top: 10px;
-            border-radius: 4px;
-            font-family: inherit;
-            font-size: 14px;
-            margin-left: 10px;
-        }
-        .btn-secondary:hover { background: #444; }
-        .btn-success {
-            background: #4caf50;
-            color: #000;
-        }
-        .btn-success:hover { background: #5cbf60; }
         .stats {
             display: flex;
             gap: 20px;
@@ -117,85 +97,33 @@
             border-top: 1px solid #1a1a1a;
             padding-top: 10px;
         }
-        .actions {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin: 15px 0;
-        }
-        textarea {
-            width: 100%;
-            height: 300px;
-            background: #111;
-            color: #ccc;
-            border: 1px solid #333;
-            padding: 10px;
-            font-family: 'Courier New', monospace;
-            font-size: 12px;
-            border-radius: 4px;
-            box-sizing: border-box;
-            margin-top: 10px;
-        }
-        .hidden { display: none; }
     </style>
 </head>
 <body>
 
-    <h1>🧪 VALIDADOR + IMPORTADOR DE ZONAS</h1>
-    <p>Arraste um arquivo JSON com os campos <code>plano</code> e <code>salas</code> para validar, corrigir e importar diretamente para o Firestore.</p>
+    <h1>🧪 VALIDADOR + CORRETOR DE PROSA, TOPOLOGIA E DENSIDADE</h1>
+    <p>Arraste um arquivo JSON com os campos <code>plano</code> e <code>salas</code> para validar e corrigir automaticamente.</p>
 
     <div id="drop">
         📂 Arraste o arquivo JSON aqui ou clique para selecionar
-        <input type="file" id="fileInput" accept=".json" style="display:none;">
-    </div>
-
-    <p>ou cole o JSON manualmente:</p>
-    <textarea id="jsonInput" placeholder='Cole aqui o JSON corrigido do validador...'></textarea>
-
-    <div class="actions">
-        <button class="btn" onclick="validarJSON()">🔍 Validar</button>
-        <button class="btn btn-success" onclick="importarJSON()" id="importBtn" disabled>🚀 Importar para Firestore</button>
-        <button class="btn btn-secondary" onclick="limparTudo()">🗑️ Limpar</button>
     </div>
 
     <div id="logs" class="logs"></div>
     <div id="stats" class="stats"></div>
     <div id="resultado"></div>
 
+    <input type="file" id="fileInput" accept=".json" style="display:none;">
+
     <div class="fonte">Validador baseado nas regras do jogo Centelha — usa os mesmos validadores do código fonte.</div>
 
-    <!-- Firebase compat -->
-    <script src="https://www.gstatic.com/firebasejs/11.4.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/11.4.0/firebase-auth-compat.js"></script>
-
     <script>
-        // ============================================================
-        // CONFIGURAÇÃO DO FIREBASE
-        // ============================================================
-        const firebaseConfig = {
-            apiKey: "AIzaSyC0XfvjonW2gd1eGAZX7NBYfPGMwI2siJw",
-            authDomain: "centelhagame-9d511.firebaseapp.com",
-            projectId: "centelhagame-9d511",
-            storageBucket: "centelhagame-9d511.appspot.com",
-            messagingSenderId: "700809803145",
-            appId: "1:700809803145:web:bff4c6a751ec9389919d58"
-        };
-
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-
-        // ============================================================
-        // ESTADO GLOBAL
-        // ============================================================
-        let dadosAtuais = null;
-        let dadosCorrigidos = null;
-        let usuarioLogado = null;
-
         // ============================================================
         // VALIDADORES REAIS (COPIADOS DO SEU CÓDIGO)
         // ============================================================
 
+        // ------------------------------------------------------------
+        // 1. VALIDADOR DE TEXTO LÓGICO (PROSA) — CÓDIGO ORIGINAL
+        // ------------------------------------------------------------
         function validarTextoLogico(textoLogico, acaoChegadaEsperada) {
             const erros = [];
             if (!textoLogico || textoLogico.trim() === '') {
@@ -203,6 +131,7 @@
                 return erros;
             }
 
+            // 1. Âncora de chegada
             if (acaoChegadaEsperada && acaoChegadaEsperada !== "MULTIPLAS_ENTRADAS" && acaoChegadaEsperada !== "SEM_ENTRADA") {
                 const padraoEsperado = new RegExp(`^Depois de ${acaoChegadaEsperada.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'i');
                 if (!padraoEsperado.test(textoLogico.trim()) && !/^Ao avançar para este local/i.test(textoLogico.trim())) {
@@ -218,6 +147,7 @@
                 }
             }
 
+            // 2. Vazamento de entry-point (se houver ação de chegada)
             if (acaoChegadaEsperada && acaoChegadaEsperada !== "MULTIPLAS_ENTRADAS" && acaoChegadaEsperada !== "SEM_ENTRADA") {
                 const stopwords = ['para', 'pela', 'pelo', 'com', 'como', 'sobre', 'entre', 'trás', 'frente', 'lado'];
                 const palavrasChave = acaoChegadaEsperada
@@ -241,6 +171,9 @@
             return erros;
         }
 
+        // ------------------------------------------------------------
+        // 2. CORRETOR DE ANCORAGEM — CÓDIGO ORIGINAL
+        // ------------------------------------------------------------
         function corrigirAncoragem(textoLogico, acaoChegada) {
             if (!textoLogico || textoLogico.trim() === '') {
                 return acaoChegada && acaoChegada !== "MULTIPLAS_ENTRADAS" && acaoChegada !== "SEM_ENTRADA" 
@@ -286,15 +219,20 @@
             return texto;
         }
 
+        // ------------------------------------------------------------
+        // 3. VALIDADOR DE TOPOLOGIA (PLANO) — CÓDIGO ORIGINAL
+        // ------------------------------------------------------------
         function validarPlanoTopologia(plano, salaInicio, salaFim) {
             const erros = [];
 
+            // 1. Verifica se todas as salas do intervalo existem
             for (let i = salaInicio; i <= salaFim; i++) {
                 if (!plano[String(i)]) {
                     erros.push(`Sala ${i} ausente no plano.`);
                 }
             }
 
+            // 2. Verifica bidirecionalidade e existência de destinos
             for (const [idStr, sala] of Object.entries(plano)) {
                 const id = Number(idStr);
                 if (id < salaInicio || id > salaFim) continue;
@@ -321,6 +259,7 @@
                 }
             }
 
+            // 3. Conectividade total
             const visitados = new Set();
             const fila = [salaInicio];
             while (fila.length > 0) {
@@ -341,6 +280,7 @@
                 }
             }
 
+            // 4. Hub
             const temHub = Object.values(plano).some(sala => {
                 const saidasParaFrente = (sala.saidas || []).filter(s => s.destino <= salaFim && s.destino > Number(Object.keys(plano).find(k => Number(k) === salaInicio)));
                 return saidasParaFrente.length >= 3;
@@ -349,6 +289,7 @@
                 erros.push('Nenhum hub encontrado. Mapa é linear — rejeitado.');
             }
 
+            // 5. Fronteira
             const salaFronteira = Object.entries(plano).find(([_, s]) => s.para_proxima_zona === true);
             if (!salaFronteira) {
                 erros.push(`Nenhuma sala de fronteira (para_proxima_zona: true).`);
@@ -356,6 +297,7 @@
                 erros.push(`Fronteira está em sala ${salaFronteira[0]}, deveria estar em ${salaFim}.`);
             }
 
+            // 6. Ciclos
             let totalVertices = 0, totalArestas = 0;
             for (const [idStr, sala] of Object.entries(plano)) {
                 const id = Number(idStr);
@@ -375,12 +317,17 @@
             return erros;
         }
 
+        // ------------------------------------------------------------
+        // 4. NOVO VALIDADOR DE DENSIDADE AMBIENTAL
+        // ------------------------------------------------------------
         function validarDensidadeAmbiental(textoLogico, opcoes) {
             const erros = [];
             if (!textoLogico || !opcoes || opcoes.length === 0) return erros;
 
+            // Extrai os substantivos/núcleos das ações (ex: "Passar pela porta de madeira" → "porta de madeira")
             for (const opcao of opcoes) {
                 const acao = opcao.acao || opcao.texto || '';
+                // Remove verbos iniciais e palavras comuns para isolar o substantivo principal
                 const nucleo = acao
                     .toLowerCase()
                     .replace(/^(subir|descer|atravessar|rastejar|passar|entrar|avançar|cruzar|caminhar|voltar|sair|abrir|fechar)\s+/i, '')
@@ -389,6 +336,7 @@
 
                 if (!nucleo) continue;
 
+                // Verifica se o núcleo (ou parte dele) aparece no texto
                 const palavrasNucleo = nucleo.split(/\s+/);
                 let encontrado = false;
                 for (const palavra of palavrasNucleo) {
@@ -416,8 +364,6 @@
         const resultado = document.getElementById('resultado');
         const logsDiv = document.getElementById('logs');
         const statsDiv = document.getElementById('stats');
-        const jsonInput = document.getElementById('jsonInput');
-        const importBtn = document.getElementById('importBtn');
 
         function log(mensagem, tipo = 'info') {
             const div = document.createElement('div');
@@ -427,237 +373,168 @@
             logsDiv.scrollTop = logsDiv.scrollHeight;
         }
 
-        function limparTudo() {
-            dadosAtuais = null;
-            dadosCorrigidos = null;
-            jsonInput.value = '';
-            resultado.innerHTML = '';
-            statsDiv.innerHTML = '';
-            logsDiv.innerHTML = '';
-            importBtn.disabled = true;
-            log('🗑️ Tudo limpo.', 'info');
-        }
-
-        window.limparTudo = limparTudo;
-
-        function validarJSON() {
-            const jsonStr = jsonInput.value.trim();
-            if (!jsonStr) {
-                alert('Cole o JSON ou arraste um arquivo primeiro.');
-                return;
-            }
-
+        function processarArquivo(json) {
             try {
-                const dados = JSON.parse(jsonStr);
-                dadosAtuais = dados;
-                processarValidacao(dados);
-            } catch (e) {
-                log(`❌ Erro no JSON: ${e.message}`, 'erro');
-                resultado.innerHTML = `<p class="erro">❌ Erro no JSON: ${e.message}</p>`;
-            }
-        }
-
-        window.validarJSON = validarJSON;
-
-        function processarValidacao(dados) {
-            const plano = dados.plano || {};
-            const salas = dados.salas || {};
-            let dadosCorrigidosLocal = JSON.parse(JSON.stringify(dados));
-            let houveCorrecao = false;
-            let totalSalas = 0;
-            let salasComErro = 0;
-            let salasCorrigidas = 0;
-            let totalErrosDensidade = 0;
-
-            resultado.innerHTML = '';
-            statsDiv.innerHTML = '';
-            importBtn.disabled = true;
-
-            log('📂 JSON carregado com sucesso.', 'info');
-
-            const ids = Object.keys(salas).map(Number).sort((a, b) => a - b);
-            if (ids.length === 0) {
-                log('❌ Nenhuma sala encontrada no campo "salas".', 'erro');
-                resultado.innerHTML = `<p class="erro">❌ Nenhuma sala encontrada no campo "salas".</p>`;
-                return;
-            }
-
-            const salaInicio = Math.min(...ids);
-            const salaFim = Math.max(...ids);
-            totalSalas = ids.length;
-
-            log('🔍 Validando topologia...', 'info');
-            const errosTopo = validarPlanoTopologia(plano, salaInicio, salaFim);
-            let html = '';
-
-            if (errosTopo.length === 0) {
-                html += `<p class="ok">✅ Topologia aprovada.</p>`;
-                log('✅ Topologia validada com sucesso.', 'ok');
-            } else {
-                html += `<p class="erro">❌ Topologia com ${errosTopo.length} erro(s):</p><ul>`;
-                for (const err of errosTopo) {
-                    html += `<li class="erro">${err}</li>`;
-                    log(`❌ Topologia: ${err}`, 'erro');
-                }
-                html += `</ul>`;
-                html += `<p class="aviso">⚠️ A topologia não pode ser corrigida automaticamente. Peça para a IA regenerar o plano.</p>`;
-                resultado.innerHTML = html;
-                return;
-            }
-
-            html += `<h3>📝 Prosa e Densidade</h3>`;
-            for (const [id, sala] of Object.entries(salas)) {
-                const planoItem = plano[id];
-                const opcoes = planoItem?.saidas || [];
-                const acao = opcoes[0]?.acao || null;
-
-                let acaoChegada = acao;
-                if (id == salaInicio) {
-                    acaoChegada = "SEM_ENTRADA";
-                } else {
-                    const entradas = Object.values(plano)
-                        .flatMap(s => (s.saidas || []))
-                        .filter(s => s.destino == id);
-                    if (entradas.length > 1) {
-                        acaoChegada = "MULTIPLAS_ENTRADAS";
-                    }
-                }
-
-                const errosAncora = validarTextoLogico(sala.texto_logico, acaoChegada);
-                const errosDensidade = validarDensidadeAmbiental(sala.texto_logico, opcoes);
-                totalErrosDensidade += errosDensidade.length;
-
-                const todosErros = [...errosAncora, ...errosDensidade];
-                const status = todosErros.length === 0 ? '✅' : '❌';
-                html += `<div class="sala ${todosErros.length > 0 ? 'corrigido' : ''}">`;
-                html += `<strong>Sala ${id}</strong> ${status} `;
-
-                if (todosErros.length > 0) {
-                    salasComErro++;
-                    html += `<span class="erro">${todosErros.join('; ')}</span>`;
-                    log(`❌ Sala ${id}: ${todosErros.join('; ')}`, 'erro');
-
-                    const textoCorrigido = corrigirAncoragem(sala.texto_logico, acaoChegada);
-                    if (textoCorrigido !== sala.texto_logico) {
-                        dadosCorrigidosLocal.salas[id].texto_logico = textoCorrigido;
-                        houveCorrecao = true;
-                        salasCorrigidas++;
-                        html += ` <span class="ok">→ ancoragem corrigida</span>`;
-                        log(`✅ Sala ${id} corrigida (ancoragem).`, 'ok');
-                    } else if (errosDensidade.length > 0) {
-                        html += ` <span class="aviso">⚠️ densidade: descreva os caminhos no texto</span>`;
-                        log(`⚠️ Sala ${id}: descreva os caminhos no texto (densidade).`, 'aviso');
-                    }
-                } else {
-                    log(`✅ Sala ${id} aprovada.`, 'ok');
-                }
-                html += `</div>`;
-            }
-
-            const statsHTML = `
-                <span>📊 Total de salas: ${totalSalas}</span>
-                <span>${salasComErro === 0 ? '✅' : '❌'} Salas com erro: ${salasComErro}</span>
-                <span>🛠️ Salas corrigidas: ${salasCorrigidas}</span>
-                <span>${errosTopo.length === 0 ? '✅' : '❌'} Erros de topologia: ${errosTopo.length}</span>
-                <span>${totalErrosDensidade === 0 ? '✅' : '❌'} Erros de densidade: ${totalErrosDensidade}</span>
-            `;
-            statsDiv.innerHTML = statsHTML;
-
-            if (errosTopo.length === 0 && salasComErro === 0) {
-                html = `<p class="ok">✅ TUDO APROVADO! Nenhuma correção necessária.</p>` + html;
-                log('🎉 Tudo aprovado!', 'ok');
-                dadosCorrigidos = dadosCorrigidosLocal;
-                importBtn.disabled = false;
-            } else if (errosTopo.length > 0) {
-                html = `<p class="erro">❌ ERROS DE TOPOLOGIA ENCONTRADOS. Corrija o plano manualmente.</p>` + html;
-                importBtn.disabled = true;
-            } else if (houveCorrecao && salasComErro === salasCorrigidas) {
-                html = `<p class="ok">✅ TODAS AS SALAS CORRIGIDAS AUTOMATICAMENTE (ancoragem)!</p>` + html;
-                log('🎉 Todas as correções automáticas aplicadas.', 'ok');
-                dadosCorrigidos = dadosCorrigidosLocal;
-                importBtn.disabled = false;
-            } else {
-                html = `<p class="aviso">⚠️ Erros de densidade: descreva os caminhos no texto da sala.</p>` + html;
-                importBtn.disabled = true;
-            }
-
-            if (houveCorrecao) {
-                html += `<h3>📄 JSON Corrigido</h3>`;
-                html += `<pre>${JSON.stringify(dadosCorrigidosLocal, null, 2)}</pre>`;
-                dadosCorrigidos = dadosCorrigidosLocal;
-            } else if (errosTopo.length === 0) {
-                html += `<h3>📄 JSON (original)</h3>`;
-                html += `<pre>${JSON.stringify(dados, null, 2)}</pre>`;
-                dadosCorrigidos = dados;
-            }
-
-            resultado.innerHTML = html;
-            log('✅ Validação concluída.', 'info');
-        }
-
-        // ============================================================
-        // IMPORTAÇÃO PARA FIRESTORE
-        // ============================================================
-
-        window.importarJSON = async function() {
-            if (!dadosCorrigidos) {
-                alert('Nenhum dado válido para importar. Valide o JSON primeiro.');
-                return;
-            }
-
-            if (!usuarioLogado) {
-                log('❌ Nenhum usuário logado. Faça login no jogo primeiro.', 'erro');
-                alert('Você precisa estar logado no jogo para importar.');
-                return;
-            }
-
-            try {
-                log('⏳ Importando para o Firestore...', 'info');
-                importBtn.disabled = true;
-                importBtn.textContent = '⏳ Importando...';
-
-                const dados = dadosCorrigidos;
+                const dados = JSON.parse(json);
                 const plano = dados.plano || {};
                 const salas = dados.salas || {};
+                let dadosCorrigidos = JSON.parse(JSON.stringify(dados));
+                let houveCorrecao = false;
+                let totalSalas = 0;
+                let salasComErro = 0;
+                let salasCorrigidas = 0;
+                let totalErrosDensidade = 0;
 
-                const mapaMundo = {};
-                for (const [id, sala] of Object.entries(salas)) {
-                    const planoItem = plano[id];
-                    if (!planoItem) continue;
-                    mapaMundo[id] = {
-                        nome: planoItem.local_fisico || `Sala ${id}`,
-                        texto_logico: sala.texto_logico || '',
-                        opcoes: (planoItem.saidas || []).map(s => ({
-                            texto: s.acao || s.texto || 'Avançar',
-                            destino: s.destino
-                        }))
-                    };
+                logsDiv.innerHTML = '';
+                resultado.innerHTML = '';
+                statsDiv.innerHTML = '';
+
+                log('📂 Arquivo carregado com sucesso.', 'info');
+
+                const ids = Object.keys(salas).map(Number).sort((a, b) => a - b);
+                if (ids.length === 0) {
+                    log('❌ Nenhuma sala encontrada no campo "salas".', 'erro');
+                    resultado.innerHTML = `<p class="erro">❌ Nenhuma sala encontrada no campo "salas".</p>`;
+                    return;
                 }
 
-                const docRef = db.collection('players').doc(usuarioLogado);
-                await docRef.update({
-                    mapaMundo: mapaMundo,
-                    zonaAtual: 1,
-                    secaoAtualId: '1'
-                });
+                const salaInicio = Math.min(...ids);
+                const salaFim = Math.max(...ids);
+                totalSalas = ids.length;
 
-                log('✅ Zona importada com sucesso!', 'ok');
-                log(`📊 ${Object.keys(mapaMundo).length} salas injetadas.`, 'ok');
-                alert('✅ Zona importada com sucesso! Recarregue o jogo para ver as mudanças.');
+                // 1. VALIDA TOPOLOGIA
+                log('🔍 Validando topologia...', 'info');
+                const errosTopo = validarPlanoTopologia(plano, salaInicio, salaFim);
+                let html = '';
 
-                importBtn.textContent = '✅ Importado!';
-                importBtn.disabled = true;
+                if (errosTopo.length === 0) {
+                    html += `<p class="ok">✅ Topologia aprovada.</p>`;
+                    log('✅ Topologia validada com sucesso.', 'ok');
+                } else {
+                    html += `<p class="erro">❌ Topologia com ${errosTopo.length} erro(s):</p><ul>`;
+                    for (const err of errosTopo) {
+                        html += `<li class="erro">${err}</li>`;
+                        log(`❌ Topologia: ${err}`, 'erro');
+                    }
+                    html += `</ul>`;
+                    html += `<p class="aviso">⚠️ A topologia não pode ser corrigida automaticamente. Peça para a IA regenerar o plano.</p>`;
+                }
 
-            } catch (e) {
-                log(`❌ Erro na importação: ${e.message}`, 'erro');
-                alert('❌ Erro na importação: ' + e.message);
-                importBtn.textContent = '🚀 Importar para Firestore';
-                importBtn.disabled = false;
+                // 2. VALIDA PROSA (âncora + entry-point) E DENSIDADE
+                html += `<h3>📝 Prosa e Densidade</h3>`;
+                for (const [id, sala] of Object.entries(salas)) {
+                    const planoItem = plano[id];
+                    const opcoes = planoItem?.saidas || [];
+                    const acao = opcoes[0]?.acao || null;
+
+                    let acaoChegada = acao;
+                    if (id == salaInicio) {
+                        acaoChegada = "SEM_ENTRADA";
+                    } else {
+                        const entradas = Object.values(plano)
+                            .flatMap(s => (s.saidas || []))
+                            .filter(s => s.destino == id);
+                        if (entradas.length > 1) {
+                            acaoChegada = "MULTIPLAS_ENTRADAS";
+                        }
+                    }
+
+                    // Valida âncora + entry-point
+                    const errosAncora = validarTextoLogico(sala.texto_logico, acaoChegada);
+                    
+                    // Valida densidade ambiental
+                    const errosDensidade = validarDensidadeAmbiental(sala.texto_logico, opcoes);
+                    totalErrosDensidade += errosDensidade.length;
+
+                    const todosErros = [...errosAncora, ...errosDensidade];
+                    const status = todosErros.length === 0 ? '✅' : '❌';
+                    html += `<div class="sala ${todosErros.length > 0 ? 'corrigido' : ''}">`;
+                    html += `<strong>Sala ${id}</strong> ${status} `;
+
+                    if (todosErros.length > 0) {
+                        salasComErro++;
+                        html += `<span class="erro">${todosErros.join('; ')}</span>`;
+                        log(`❌ Sala ${id}: ${todosErros.join('; ')}`, 'erro');
+
+                        // Tenta corrigir ancoragem (apenas isso é automático)
+                        const textoCorrigido = corrigirAncoragem(sala.texto_logico, acaoChegada);
+                        if (textoCorrigido !== sala.texto_logico) {
+                            dadosCorrigidos.salas[id].texto_logico = textoCorrigido;
+                            houveCorrecao = true;
+                            salasCorrigidas++;
+                            html += ` <span class="ok">→ ancoragem corrigida</span>`;
+                            log(`✅ Sala ${id} corrigida (ancoragem).`, 'ok');
+                        } else if (errosDensidade.length > 0) {
+                            // Densidade NÃO é corrigida automaticamente (a IA precisa regenerar)
+                            html += ` <span class="aviso">⚠️ densidade: descreva os caminhos no texto</span>`;
+                            log(`⚠️ Sala ${id}: descreva os caminhos no texto (densidade).`, 'aviso');
+                        }
+                    } else {
+                        log(`✅ Sala ${id} aprovada.`, 'ok');
+                    }
+                    html += `</div>`;
+                }
+
+                // 3. ESTATÍSTICAS
+                const statsHTML = `
+                    <span>📊 Total de salas: ${totalSalas}</span>
+                    <span>${salasComErro === 0 ? '✅' : '❌'} Salas com erro: ${salasComErro}</span>
+                    <span>🛠️ Salas corrigidas: ${salasCorrigidas}</span>
+                    <span>${errosTopo.length === 0 ? '✅' : '❌'} Erros de topologia: ${errosTopo.length}</span>
+                    <span>${totalErrosDensidade === 0 ? '✅' : '❌'} Erros de densidade: ${totalErrosDensidade}</span>
+                `;
+                statsDiv.innerHTML = statsHTML;
+
+                // 4. RESULTADO FINAL
+                if (errosTopo.length === 0 && salasComErro === 0) {
+                    html = `<p class="ok">✅ TUDO APROVADO! Nenhuma correção necessária.</p>` + html;
+                    log('🎉 Tudo aprovado!', 'ok');
+                } else if (errosTopo.length > 0) {
+                    html = `<p class="erro">❌ ERROS DE TOPOLOGIA ENCONTRADOS. Corrija o plano manualmente.</p>` + html;
+                } else if (houveCorrecao && salasComErro === salasCorrigidas) {
+                    html = `<p class="ok">✅ TODAS AS SALAS CORRIGIDAS AUTOMATICAMENTE (ancoragem)!</p>` + html;
+                    log('🎉 Todas as correções automáticas aplicadas.', 'ok');
+                } else {
+                    html = `<p class="aviso">⚠️ Erros de densidade: descreva os caminhos no texto da sala.</p>` + html;
+                }
+
+                // 5. EXIBE JSON CORRIGIDO (se houver correções)
+                if (houveCorrecao) {
+                    html += `<h3>📄 JSON Corrigido</h3>`;
+                    html += `<pre>${JSON.stringify(dadosCorrigidos, null, 2)}</pre>`;
+                    html += `<button class="btn" onclick="baixarCorrigido()">⬇️ Baixar JSON Corrigido</button>`;
+                    window._dadosCorrigidos = dadosCorrigidos;
+                } else if (errosTopo.length === 0) {
+                    html += `<h3>📄 JSON (original)</h3>`;
+                    html += `<pre>${JSON.stringify(dados, null, 2)}</pre>`;
+                }
+
+                resultado.innerHTML = html;
+                log('✅ Processamento concluído.', 'info');
+
+            } catch (err) {
+                resultado.innerHTML = `<p class="erro">❌ Erro no JSON: ${err.message}</p>`;
+                log(`❌ Erro no JSON: ${err.message}`, 'erro');
             }
-        };
+        }
+
+        function baixarCorrigido() {
+            if (!window._dadosCorrigidos) {
+                alert('Nenhum dado corrigido disponível.');
+                return;
+            }
+            const blob = new Blob([JSON.stringify(window._dadosCorrigidos, null, 2)], { type: 'application/json' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'dados_corrigidos.json';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(link.href);
+        }
 
         // ============================================================
-        // DRAG AND DROP
+        // DRAG AND DROP + CLICK
         // ============================================================
 
         drop.addEventListener('dragover', (e) => {
@@ -676,7 +553,10 @@
             if (file) lerArquivo(file);
         });
 
-        drop.addEventListener('click', () => fileInput.click());
+        drop.addEventListener('click', () => {
+            fileInput.click();
+        });
+
         fileInput.addEventListener('change', () => {
             if (fileInput.files[0]) lerArquivo(fileInput.files[0]);
         });
@@ -684,29 +564,19 @@
         function lerArquivo(file) {
             const reader = new FileReader();
             reader.onload = (e) => {
-                jsonInput.value = e.target.result;
-                log('📂 Arquivo carregado. Clique em "Validar" para processar.', 'info');
-                // Valida automaticamente
-                validarJSON();
+                processarArquivo(e.target.result);
+            };
+            reader.onerror = () => {
+                resultado.innerHTML = `<p class="erro">❌ Erro ao ler o arquivo.</p>`;
             };
             reader.readAsText(file);
         }
 
         // ============================================================
-        // AUTENTICAÇÃO
+        // MENSAGEM INICIAL
         // ============================================================
 
-        firebase.auth().onAuthStateChanged(user => {
-            if (user) {
-                usuarioLogado = user.uid;
-                log(`✅ Usuário autenticado: ${user.displayName || user.email || user.uid}`, 'ok');
-            } else {
-                usuarioLogado = null;
-                log('⚠️ Nenhum usuário logado. Abra o jogo primeiro e faça login.', 'aviso');
-            }
-        });
-
-        log('🔧 Validador + Importador pronto. Cole o JSON ou arraste um arquivo.', 'info');
+        log('🔧 Validador pronto. Arraste um arquivo JSON para começar.', 'info');
         log('📋 Validadores ativos: topologia, ancoragem, entry-point leak e densidade ambiental.', 'info');
     </script>
 
