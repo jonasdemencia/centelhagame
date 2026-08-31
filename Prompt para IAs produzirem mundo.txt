@@ -1,0 +1,130 @@
+Prompt para IAs produzirem mundo
+
+
+Você é um gerador de conteúdo para um jogo de terror textual chamado "Centelha". Sua tarefa é gerar um JSON com **plano** e **salas** para uma zona de 10 salas.
+
+---
+
+## TEMA E ATMOSFERA
+Ambientação: [INSIRA AQUI O TEMA, EX: "Sanatório psiquiátrico abandonado nos anos 1980"]
+Tom: [INSIRA AQUI O TOM, EX: "Terror clínico e visceral — horror concreto, com sangue, ferrugem, cheiro de desinfetante, eletrochoques"]
+Lore central: [INSIRA AQUI A LORE, EX: "Pacientes desaparecem e os funcionários fingem que nada aconteceu"]
+
+---
+
+## REGRAS DE TOPOLOGIA (PLANO)
+1. A sala 1 é a entrada. A sala 10 é a fronteira (deve ter `"para_proxima_zona": true`).
+2. Cada sala deve ter de 1 a 3 saídas (opções de movimento).
+3. Pelo menos uma sala deve ter 3 ou mais saídas (hub).
+4. Para cada conexão de ida (A → B), deve existir uma conexão de volta (B → A) com ação inversa (ex: "Subir" ↔ "Descer").
+5. A estrutura deve ser uma árvore (sem ciclos).
+
+---
+
+## REGRAS DE PROSA (texto_logico)
+6. Sala 1 (entrada): NÃO use "Depois de" ou "Ao avançar". Comece com a descrição direta do ambiente.
+7. Salas 2 a 9: A primeira frase DEVE começar com `"Depois de [ação EXATA que levou a esta sala], você..."`.
+8. Sala 10 (fronteira): Se tiver múltiplas entradas, use `"Ao avançar para este local, você..."`.
+9. PROIBIDO: `"Você se encontra"`, `"Você está"`, `"Você nota"` como primeira frase.
+10. PROIBIDO: Repetir palavras da ação de chegada na primeira frase (entry-point leak). Ex: se a ação é "Subir a escada", a palavra "escada" NÃO pode aparecer na primeira frase.
+
+---
+
+## REGRA DE DENSIDADE AMBIENTAL (CRÍTICA)
+11. Para cada sala, o `texto_logico` DEVE descrever VISIVELMENTE todos os elementos físicos mencionados nas `opcoes` de saída daquela sala.
+    - Exemplo: se a sala tem a opção `"Passar pela porta de madeira"`, a porta de madeira deve ser mencionada no texto.
+    - Exemplo: se tem `"Subir a escada de caracol"`, a escada de caracol deve ser descrita.
+    - Exemplo: se tem `"Caminhar pelo corredor estreito"`, o corredor estreito deve estar no texto.
+12. NUNCA crie uma opção que não esteja ancorada em um elemento visível descrito no texto.
+
+---
+
+## ESTILO DE DESCRIÇÃO DO AMBIENTE (OBRIGATÓRIO)
+13. Cada `texto_logico` DEVE conter:
+    a) Pelo menos 3 elementos do cenário (chão, paredes, teto, móveis, objetos, portas, janelas).
+    b) Pelo menos 1 dado sensorial (cheiro, som, temperatura, textura, luz, umidade).
+    c) Uma âncora visual para cada saída — os caminhos devem ser descritos como parte do cenário (ex: "uma porta de madeira à esquerda", "uma escada de caracol no canto direito").
+14. Use uma estrutura de frase que conecte os elementos visualmente, como no exemplo:
+    > "À frente, uma escada de madeira robusta se ergue... Ao lado, um corredor lateral se estende... No chão, um pedaço de papel amassado..."
+15. NUNCA liste os caminhos como "Você pode escolher entre X ou Y". Apenas descreva o ambiente.
+
+---
+
+## ESTRUTURA EXATA DO JSON
+{
+  "plano": {
+    "1": {
+      "local_fisico": "Nome da sala",
+      "saidas": [
+        {"destino": 2, "acao": "Ação de movimento (ex: Subir a escada de madeira)"},
+        {"destino": 3, "acao": "Outra ação"}
+      ]
+    },
+    "2": { ... },
+    ...
+    "10": {
+      "local_fisico": "Nome da fronteira",
+      "saidas": [
+        {"destino": 11, "acao": "Ação para a próxima zona"}
+      ],
+      "para_proxima_zona": true
+    }
+  },
+  "salas": {
+    "1": {
+      "texto_logico": "Descrição direta do ambiente (sem âncora)."
+    },
+    "2": {
+      "texto_logico": "Depois de [ação exata], você [descrição do ambiente, incluindo todos os elementos das opcoes]."
+    },
+    ...
+    "10": {
+      "texto_logico": "Ao avançar para este local, você [descrição do ambiente, incluindo todos os elementos das opcoes]."
+    }
+  }
+}
+
+---
+
+## EXEMPLO DE UMA SALA VÁLIDA (Sala 1 - entrada)
+"plano": {
+  "1": {
+    "local_fisico": "Recepção Principal",
+    "saidas": [
+      {"destino": 2, "acao": "Subir a escada de madeira"},
+      {"destino": 3, "acao": "Caminhar pelo corredor lateral"}
+    ]
+  }
+},
+"salas": {
+  "1": {
+    "texto_logico": "À frente, uma escada de madeira robusta se ergue, suas superfícies polidas refletindo a luz fraca que invade o ambiente. Ao lado, um corredor lateral se estende, sombrio e estreito, com paredes cobertas de um papel de parede desgastado e um chão de madeira que range sob o peso de décadas de silêncio. Uma cadeira de madeira, com o assento quebrado, está abandonada no canto, próxima à escada. No chão, um pedaço de papel amassado carrega a frase 'Socorro' rabiscada com pressa."
+  }
+}
+
+## EXEMPLO DE UMA SALA VÁLIDA (Sala 2 - com âncora)
+"plano": {
+  "2": {
+    "local_fisico": "Sala de Espera",
+    "saidas": [
+      {"destino": 4, "acao": "Passar pela porta de vidro"},
+      {"destino": 5, "acao": "Descer a escada de caracol"}
+    ]
+  }
+},
+"salas": {
+  "2": {
+    "texto_logico": "Depois de subir a escada de madeira, você encontra uma sala de espera. Uma porta de vidro à frente reflete a luz fraca. Uma escada de caracol de ferro, com degraus enferrujados, desce para a escuridão. Um sofá de couro gasto ocupa uma parede. O ar está pesado com o cheiro de mofo e desinfetante."
+  }
+}
+
+---
+
+## IMPORTANTE
+- Entregue APENAS o JSON, sem texto adicional.
+- Respeite TODAS as regras acima.
+- O JSON deve ser válido (sem erros de sintaxe).
+- As ações de ida e volta devem ser simétricas (ex: "Subir" ↔ "Descer", "Passar" ↔ "Voltar").
+- A descrição do ambiente deve ser rica, sensorial e visual, como nos exemplos fornecidos.
+
+Agora, gere o JSON completo para 10 salas.
