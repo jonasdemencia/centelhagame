@@ -1674,12 +1674,11 @@ const CONECTORES_ECO_COMPOSTO = [
 function comporEcos(achadoMundo, achadoDNA, achadoCutUp, seedNumerica) {
     const achadosTextuais = [achadoDNA, achadoCutUp, achadoMundo].filter(Boolean);
     if (achadosTextuais.length === 0) {
-        return null; // SEM FALLBACK ESTRUTURAL
+        return null;
     }
     if (achadosTextuais.length === 1) {
         const unico = achadosTextuais[0];
-        const texto = achadoEstrutural ? `${unico.texto} ${achadoEstrutural}` : unico.texto;
-        return { texto, fontes: achadoEstrutural ? [unico.fonte, 'estrutural'] : [unico.fonte] };
+        return { texto: unico.texto, fontes: [unico.fonte] };
     }
     const [principal, secundario] = achadosTextuais.sort((a, b) => b.score - a.score);
     const idx = Math.floor(pseudoRandom(seedNumerica) * CONECTORES_ECO_COMPOSTO.length);
@@ -1690,10 +1689,6 @@ function comporEcos(achadoMundo, achadoDNA, achadoCutUp, seedNumerica) {
 async function prepararEcosDaSala(sala, idSala) {
     console.log('🔄 [prepararEcosDaSala] INICIANDO para sala:', idSala);
     console.log('🔄 [prepararEcosDaSala] sala._ecos já existe?', !!sala._ecos);
-    
-    // REMOVA ESTA LINHA DAQUI:
-    // if (sala._ecosPreparados) { ... }
-    // sala._ecosPreparados = true;  <-- NÃO FAÇA ISSO AQUI!
     
     sala._ecos = {};
     console.log('🔄 [prepararEcosDaSala] Inicializando sala._ecos = {}');
@@ -1711,13 +1706,11 @@ async function prepararEcosDaSala(sala, idSala) {
         await indexarSalaNoCorpusMundo(sala, idSala);
         console.log('🔄 [prepararEcosDaSala] ✅ indexarSalaNoCorpusMundo() concluído.');
         
-        
         const candidatos = extrairCandidatosEcos(sala.texto_logico);
         console.log('🔄 [prepararEcosDaSala] Candidatos extraídos:', candidatos);
         
         if (!candidatos || candidatos.length === 0) {
             console.log('🔄 [prepararEcosDaSala] ❌ Nenhum candidato extraído!');
-            // MARCA COMO PREPARADO MESMO ASSIM PARA NÃO REPETIR
             sala._ecosPreparados = true;
             return;
         }
@@ -1737,7 +1730,6 @@ async function prepararEcosDaSala(sala, idSala) {
                 console.log(`   - achadoMundo: ${achadoMundo ? achadoMundo.texto : 'null'}`);
                 console.log(`   - achadoDNA: ${achadoDNA ? achadoDNA.texto : 'null'}`);
                 console.log(`   - achadoCutUp: ${achadoCutUp ? achadoCutUp.texto : 'null'}`);
-                console.log(`   - achadoEstrutural: ${achadoEstrutural || 'null'}`);
                 
                 const seedNumerica = String(idSala).split('').reduce((a, c) => a + c.charCodeAt(0), 0) + termo.length;
                 const resultado = comporEcos(achadoMundo, achadoDNA, achadoCutUp, seedNumerica);
@@ -1754,19 +1746,16 @@ async function prepararEcosDaSala(sala, idSala) {
         }
         
         console.log('🔄 [prepararEcosDaSala] FINALIZADO. ECOS gerados:', Object.keys(sala._ecos).length);
-        
-        // ========== AGORA SIM MARCA COMO PREPARADO ==========
         sala._ecosPreparados = true;
         console.log('🔄 [prepararEcosDaSala] Marcado como preparado.');
         
     } catch (e) {
         console.error('🔄 [prepararEcosDaSala] ❌ ERRO GRAVE:', e);
         console.error('🔄 [prepararEcosDaSala] Stack trace:', e.stack);
-        // EM CASO DE ERRO, MARCA COMO PREPARADO PARA NÃO TRAVAR O JOGO
         sala._ecosPreparados = true;
     }
 }
-
+    
 // ---------- Renderização e clique ----------
 function escapeRegexEcos(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
 
