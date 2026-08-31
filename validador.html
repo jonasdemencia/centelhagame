@@ -136,7 +136,7 @@
         // ============================================================
 
         // ------------------------------------------------------------
-        // 1. VALIDADOR DE TEXTO LÓGICO (PROSA)
+        // 1. VALIDADOR DE TEXTO LÓGICO (PROSA) — CÓDIGO ORIGINAL
         // ------------------------------------------------------------
         function validarTextoLogico(textoLogico, acaoChegadaEsperada) {
             const erros = [];
@@ -146,21 +146,16 @@
             }
 
             // 1. Âncora de chegada
-            if (acaoChegadaEsperada && acaoChegadaEsperada !== "MULTIPLAS_ENTRADAS") {
-                const padroesAncora = [
-                    new RegExp(`^Depois de ${acaoChegadaEsperada.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'i'),
-                    /^Ao avançar para este local/i
-                ];
-                const temAncora = padroesAncora.some(p => p.test(textoLogico.trim()));
-                if (!temAncora) {
+            if (acaoChegadaEsperada && acaoChegadaEsperada !== "MULTIPLAS_ENTRADAS" && acaoChegadaEsperada !== "SEM_ENTRADA") {
+                const padraoEsperado = new RegExp(`^Depois de ${acaoChegadaEsperada.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'i');
+                if (!padraoEsperado.test(textoLogico.trim()) && !/^Ao avançar para este local/i.test(textoLogico.trim())) {
                     erros.push(`âncora incorreta: deveria começar com "Depois de ${acaoChegadaEsperada}" ou "Ao avançar para este local"`);
                 }
             } else if (acaoChegadaEsperada === "MULTIPLAS_ENTRADAS") {
                 if (!/^Ao avançar para este local/i.test(textoLogico.trim())) {
                     erros.push('âncora incorreta: sala com múltiplas entradas deve começar com "Ao avançar para este local"');
                 }
-            } else {
-                // Sala de entrada: sem âncora específica
+            } else if (acaoChegadaEsperada === "SEM_ENTRADA") {
                 if (/^Depois de|^Ao avançar/i.test(textoLogico.trim())) {
                     erros.push('sala de entrada não deve ter âncora de chegada');
                 }
@@ -175,12 +170,14 @@
                     .split(/\s+/)
                     .filter(p => p.length > 3 && !stopwords.includes(p));
 
-                const primeiraSentenca = textoLogico.split(/[.!?]/)[0] || '';
-                const restoDoTexto = textoLogico.slice(primeiraSentenca.length);
+                if (palavrasChave.length > 0) {
+                    const primeiraSentenca = textoLogico.split(/[.!?]/)[0] || '';
+                    const restoDoTexto = textoLogico.slice(primeiraSentenca.length);
 
-                for (const palavra of palavrasChave) {
-                    if (new RegExp(`\\b${palavra}`, 'i').test(restoDoTexto)) {
-                        erros.push(`entry-point leak: "${palavra}" (da ação de chegada) reaparece após a primeira frase`);
+                    for (const palavra of palavrasChave) {
+                        if (new RegExp(`\\b${palavra}`, 'i').test(restoDoTexto)) {
+                            erros.push(`entry-point leak: "${palavra}" (da ação de chegada) reaparece após a primeira frase`);
+                        }
                     }
                 }
             }
@@ -189,11 +186,13 @@
         }
 
         // ------------------------------------------------------------
-        // 2. CORRETOR DE ANCORAGEM
+        // 2. CORRETOR DE ANCORAGEM — CÓDIGO ORIGINAL
         // ------------------------------------------------------------
         function corrigirAncoragem(textoLogico, acaoChegada) {
             if (!textoLogico || textoLogico.trim() === '') {
-                return acaoChegada ? `Depois de ${acaoChegada.toLowerCase()}, você observa o ambiente.` : 'Você observa o ambiente.';
+                return acaoChegada && acaoChegada !== "MULTIPLAS_ENTRADAS" && acaoChegada !== "SEM_ENTRADA" 
+                    ? `Depois de ${acaoChegada.toLowerCase()}, você observa o ambiente.` 
+                    : 'Você observa o ambiente.';
             }
 
             const texto = textoLogico.trim();
@@ -202,11 +201,9 @@
             if (acaoChegada && acaoChegada !== "MULTIPLAS_ENTRADAS" && acaoChegada !== "SEM_ENTRADA") {
                 if (ancoramentoGenerico.test(texto) || !/^Depois de|^Ao avançar/i.test(texto)) {
                     const verboCorrido = acaoChegada.toLowerCase();
-                    // Remove qualquer prefixo genérico existente
                     let limpo = texto.replace(/^(você (se encontra|está|fica|nota|percebe|avança|para diante)\s*[,.]?\s*)/i, '');
                     limpo = limpo.replace(/^(Depois de [^,.]+, você\s*)/i, '');
                     limpo = limpo.replace(/^(Ao avançar para este local, você\s*)/i, '');
-                    // Capitaliza a primeira letra
                     limpo = limpo.charAt(0).toUpperCase() + limpo.slice(1);
                     return `Depois de ${verboCorrido}, você ${limpo}`;
                 }
@@ -224,18 +221,20 @@
                 return texto;
             }
 
-            // Sala de entrada: remove âncora se existir
-            if (/^Depois de|^Ao avançar/i.test(texto)) {
-                let limpo = texto.replace(/^(Depois de [^,.]+, você\s*)/i, '');
-                limpo = limpo.replace(/^(Ao avançar para este local, você\s*)/i, '');
-                return limpo.charAt(0).toUpperCase() + limpo.slice(1);
+            if (acaoChegada === "SEM_ENTRADA") {
+                if (/^Depois de|^Ao avançar/i.test(texto)) {
+                    let limpo = texto.replace(/^(Depois de [^,.]+, você\s*)/i, '');
+                    limpo = limpo.replace(/^(Ao avançar para este local, você\s*)/i, '');
+                    return limpo.charAt(0).toUpperCase() + limpo.slice(1);
+                }
+                return texto;
             }
 
             return texto;
         }
 
         // ------------------------------------------------------------
-        // 3. VALIDADOR DE TOPOLOGIA (PLANO)
+        // 3. VALIDADOR DE TOPOLOGIA (PLANO) — CÓDIGO ORIGINAL
         // ------------------------------------------------------------
         function validarPlanoTopologia(plano, salaInicio, salaFim) {
             const erros = [];
