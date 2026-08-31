@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Validador + Corretor de Prosa, Topologia e Densidade</title>
+    <title>Validador + Corretor (Prosa, Topologia, Densidade e Dilemas)</title>
     <style>
         body {
             background: #0a0a0a;
@@ -33,14 +33,14 @@
         .ok { color: #4caf50; }
         .erro { color: #e53935; }
         .aviso { color: #d9a441; }
-        .sala {
+        .sala, .cena {
             margin: 5px 0;
             padding: 8px 12px;
             background: #111;
             border-left: 3px solid #333;
             border-radius: 4px;
         }
-        .sala.corrigido {
+        .sala.corrigido, .cena.corrigido {
             border-left-color: #d9a441;
         }
         pre {
@@ -89,6 +89,7 @@
         }
         .logs .log-ok { color: #4caf50; }
         .logs .log-erro { color: #e53935; }
+        .logs .log-aviso { color: #d9a441; }
         .logs .log-info { color: #888; }
         .fonte {
             font-size: 11px;
@@ -97,12 +98,18 @@
             border-top: 1px solid #1a1a1a;
             padding-top: 10px;
         }
+        .sub-item {
+            margin-left: 20px;
+            font-size: 0.9em;
+            border-left: 1px solid #333;
+            padding-left: 10px;
+        }
     </style>
 </head>
 <body>
 
-    <h1>🧪 VALIDADOR + CORRETOR DE PROSA, TOPOLOGIA E DENSIDADE</h1>
-    <p>Arraste um arquivo JSON com os campos <code>plano</code> e <code>salas</code> para validar e corrigir automaticamente.</p>
+    <h1>🧪 VALIDADOR + CORRETOR (PROSA, TOPOLOGIA, DENSIDADE E DILEMAS)</h1>
+    <p>Arraste um arquivo JSON com os campos <code>plano</code>, <code>salas</code> e <code>cenas</code> para validar e corrigir automaticamente.</p>
 
     <div id="drop">
         📂 Arraste o arquivo JSON aqui ou clique para selecionar
@@ -114,16 +121,14 @@
 
     <input type="file" id="fileInput" accept=".json" style="display:none;">
 
-    <div class="fonte">Validador baseado nas regras do jogo Centelha — usa os mesmos validadores do código fonte.</div>
+    <div class="fonte">Validador baseado nas regras do jogo Centelha — inclui validação de dilemas (Arquiteto de Cenas).</div>
 
     <script>
         // ============================================================
-        // VALIDADORES REAIS (COPIADOS DO SEU CÓDIGO)
+        // VALIDADORES (CÓDIGO ORIGINAL + NOVOS)
         // ============================================================
 
-        // ------------------------------------------------------------
-        // 1. VALIDADOR DE TEXTO LÓGICO (PROSA) — CÓDIGO ORIGINAL
-        // ------------------------------------------------------------
+        // ---------- VALIDADOR DE TEXTO LÓGICO (PROSA) ----------
         function validarTextoLogico(textoLogico, acaoChegadaEsperada) {
             const erros = [];
             if (!textoLogico || textoLogico.trim() === '') {
@@ -131,7 +136,6 @@
                 return erros;
             }
 
-            // 1. Âncora de chegada
             if (acaoChegadaEsperada && acaoChegadaEsperada !== "MULTIPLAS_ENTRADAS" && acaoChegadaEsperada !== "SEM_ENTRADA") {
                 const padraoEsperado = new RegExp(`^Depois de ${acaoChegadaEsperada.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'i');
                 if (!padraoEsperado.test(textoLogico.trim()) && !/^Ao avançar para este local/i.test(textoLogico.trim())) {
@@ -147,7 +151,6 @@
                 }
             }
 
-            // 2. Vazamento de entry-point (se houver ação de chegada)
             if (acaoChegadaEsperada && acaoChegadaEsperada !== "MULTIPLAS_ENTRADAS" && acaoChegadaEsperada !== "SEM_ENTRADA") {
                 const stopwords = ['para', 'pela', 'pelo', 'com', 'como', 'sobre', 'entre', 'trás', 'frente', 'lado'];
                 const palavrasChave = acaoChegadaEsperada
@@ -159,7 +162,6 @@
                 if (palavrasChave.length > 0) {
                     const primeiraSentenca = textoLogico.split(/[.!?]/)[0] || '';
                     const restoDoTexto = textoLogico.slice(primeiraSentenca.length);
-
                     for (const palavra of palavrasChave) {
                         if (new RegExp(`\\b${palavra}`, 'i').test(restoDoTexto)) {
                             erros.push(`entry-point leak: "${palavra}" (da ação de chegada) reaparece após a primeira frase`);
@@ -167,20 +169,16 @@
                     }
                 }
             }
-
             return erros;
         }
 
-        // ------------------------------------------------------------
-        // 2. CORRETOR DE ANCORAGEM — CÓDIGO ORIGINAL
-        // ------------------------------------------------------------
+        // ---------- CORRETOR DE ANCORAGEM ----------
         function corrigirAncoragem(textoLogico, acaoChegada) {
             if (!textoLogico || textoLogico.trim() === '') {
                 return acaoChegada && acaoChegada !== "MULTIPLAS_ENTRADAS" && acaoChegada !== "SEM_ENTRADA" 
                     ? `Depois de ${acaoChegada.toLowerCase()}, você observa o ambiente.` 
                     : 'Você observa o ambiente.';
             }
-
             const texto = textoLogico.trim();
             const ancoramentoGenerico = /^você (se encontra|está|fica|nota|percebe|avança|para diante)/i;
 
@@ -215,51 +213,34 @@
                 }
                 return texto;
             }
-
             return texto;
         }
 
-        // ------------------------------------------------------------
-        // 3. VALIDADOR DE TOPOLOGIA (PLANO) — CÓDIGO ORIGINAL
-        // ------------------------------------------------------------
+        // ---------- VALIDADOR DE TOPOLOGIA ----------
         function validarPlanoTopologia(plano, salaInicio, salaFim) {
             const erros = [];
-
-            // 1. Verifica se todas as salas do intervalo existem
             for (let i = salaInicio; i <= salaFim; i++) {
-                if (!plano[String(i)]) {
-                    erros.push(`Sala ${i} ausente no plano.`);
-                }
+                if (!plano[String(i)]) erros.push(`Sala ${i} ausente no plano.`);
             }
-
-            // 2. Verifica bidirecionalidade e existência de destinos
             for (const [idStr, sala] of Object.entries(plano)) {
                 const id = Number(idStr);
                 if (id < salaInicio || id > salaFim) continue;
-
                 if (!sala.saidas || !Array.isArray(sala.saidas)) {
                     erros.push(`Sala ${id} não tem saídas definidas.`);
                     continue;
                 }
-
                 for (const saida of sala.saidas) {
                     const destino = saida.destino;
                     if (destino > salaFim) continue;
-
                     const destinoPlano = plano[String(destino)];
                     if (!destinoPlano) {
                         erros.push(`Sala ${id} aponta para ${destino} que não existe.`);
                         continue;
                     }
-
                     const temVolta = destinoPlano.saidas?.some(s => s.destino === id);
-                    if (!temVolta) {
-                        erros.push(`Sem volta: Sala ${destino} não retorna para Sala ${id}.`);
-                    }
+                    if (!temVolta) erros.push(`Sem volta: Sala ${destino} não retorna para Sala ${id}.`);
                 }
             }
-
-            // 3. Conectividade total
             const visitados = new Set();
             const fila = [salaInicio];
             while (fila.length > 0) {
@@ -269,94 +250,263 @@
                 const sala = plano[String(atual)];
                 if (!sala) continue;
                 for (const saida of (sala.saidas || [])) {
-                    if (saida.destino <= salaFim && !visitados.has(saida.destino)) {
-                        fila.push(saida.destino);
-                    }
+                    if (saida.destino <= salaFim && !visitados.has(saida.destino)) fila.push(saida.destino);
                 }
             }
             for (let i = salaInicio; i <= salaFim; i++) {
-                if (!visitados.has(i)) {
-                    erros.push(`Sala ${i} inacessível a partir da entrada.`);
-                }
+                if (!visitados.has(i)) erros.push(`Sala ${i} inacessível a partir da entrada.`);
             }
-
-            // 4. Hub
             const temHub = Object.values(plano).some(sala => {
                 const saidasParaFrente = (sala.saidas || []).filter(s => s.destino <= salaFim && s.destino > Number(Object.keys(plano).find(k => Number(k) === salaInicio)));
                 return saidasParaFrente.length >= 3;
             });
-            if (!temHub) {
-                erros.push('Nenhum hub encontrado. Mapa é linear — rejeitado.');
-            }
-
-            // 5. Fronteira
+            if (!temHub) erros.push('Nenhum hub encontrado. Mapa é linear — rejeitado.');
             const salaFronteira = Object.entries(plano).find(([_, s]) => s.para_proxima_zona === true);
-            if (!salaFronteira) {
-                erros.push(`Nenhuma sala de fronteira (para_proxima_zona: true).`);
-            } else if (Number(salaFronteira[0]) !== salaFim) {
-                erros.push(`Fronteira está em sala ${salaFronteira[0]}, deveria estar em ${salaFim}.`);
-            }
-
-            // 6. Ciclos
+            if (!salaFronteira) erros.push(`Nenhuma sala de fronteira (para_proxima_zona: true).`);
+            else if (Number(salaFronteira[0]) !== salaFim) erros.push(`Fronteira está em sala ${salaFronteira[0]}, deveria estar em ${salaFim}.`);
             let totalVertices = 0, totalArestas = 0;
             for (const [idStr, sala] of Object.entries(plano)) {
                 const id = Number(idStr);
                 if (id >= salaInicio && id <= salaFim) {
                     totalVertices++;
                     for (const saida of (sala.saidas || [])) {
-                        if (saida.destino > id && saida.destino <= salaFim) {
-                            totalArestas++;
-                        }
+                        if (saida.destino > id && saida.destino <= salaFim) totalArestas++;
                     }
                 }
             }
             if (totalArestas > totalVertices - 1) {
                 erros.push(`Falha Topológica 2D: O mapa gerou circuitos/anéis (${totalArestas} conexões para ${totalVertices} salas regulares). O layout deve ser uma árvore.`);
             }
-
             return erros;
         }
 
-        // ------------------------------------------------------------
-        // 4. NOVO VALIDADOR DE DENSIDADE AMBIENTAL
-        // ------------------------------------------------------------
+        // ---------- VALIDADOR DE DENSIDADE AMBIENTAL ----------
         function validarDensidadeAmbiental(textoLogico, opcoes) {
             const erros = [];
             if (!textoLogico || !opcoes || opcoes.length === 0) return erros;
-
-            // Extrai os substantivos/núcleos das ações (ex: "Passar pela porta de madeira" → "porta de madeira")
             for (const opcao of opcoes) {
                 const acao = opcao.acao || opcao.texto || '';
-                // Remove verbos iniciais e palavras comuns para isolar o substantivo principal
                 const nucleo = acao
                     .toLowerCase()
                     .replace(/^(subir|descer|atravessar|rastejar|passar|entrar|avançar|cruzar|caminhar|voltar|sair|abrir|fechar)\s+/i, '')
                     .replace(/^(pela|pelo|para a|para o|na|no|em|uma|um)\s+/i, '')
                     .trim();
-
                 if (!nucleo) continue;
-
-                // Verifica se o núcleo (ou parte dele) aparece no texto
                 const palavrasNucleo = nucleo.split(/\s+/);
                 let encontrado = false;
                 for (const palavra of palavrasNucleo) {
                     if (palavra.length < 3) continue;
-                    if (textoLogico.toLowerCase().includes(palavra)) {
-                        encontrado = true;
-                        break;
-                    }
+                    if (textoLogico.toLowerCase().includes(palavra)) { encontrado = true; break; }
                 }
-
-                if (!encontrado) {
-                    erros.push(`caminho "${acao}" não está descrito no ambiente (elemento: "${nucleo}")`);
-                }
+                if (!encontrado) erros.push(`caminho "${acao}" não está descrito no ambiente (elemento: "${nucleo}")`);
             }
-
             return erros;
         }
 
+        // ---------- NOVO: VALIDADOR DE CENAS E DILEMAS ----------
+        function validarCenas(cenas, plano, salaInicio, salaFim) {
+            const erros = [];
+            const avisos = [];
+
+            if (!Array.isArray(cenas)) {
+                erros.push('campo "cenas" não é um array.');
+                return { erros, avisos };
+            }
+
+            // 1. Número de cenas deve ser entre 2 e 3 (salas internas 2..9)
+            const idsInternos = [];
+            for (let i = 2; i <= 9; i++) idsInternos.push(i);
+            const cenasPorSala = cenas.map(c => c.sala_id).filter(id => idsInternos.includes(id));
+            if (cenasPorSala.length < 2) {
+                avisos.push(`Número de cenas (${cenasPorSala.length}) é menor que 2. Recomenda-se 2-3.`);
+            } else if (cenasPorSala.length > 3) {
+                avisos.push(`Número de cenas (${cenasPorSala.length}) é maior que 3. Recomenda-se 2-3.`);
+            }
+
+            // 2. Valida cada cena
+            for (let idx = 0; idx < cenas.length; idx++) {
+                const cena = cenas[idx];
+                const prefixo = `Cena ${idx+1} (sala ${cena.sala_id || '?'})`;
+
+                // sala_id
+                if (!cena.sala_id || typeof cena.sala_id !== 'number') {
+                    erros.push(`${prefixo}: sala_id inválido ou ausente.`);
+                    continue;
+                }
+                const salaId = cena.sala_id;
+                if (!plano[String(salaId)]) {
+                    erros.push(`${prefixo}: sala_id ${salaId} não existe no plano.`);
+                    continue;
+                }
+                // sala deve estar entre 2 e 9 (não entrada nem fronteira)
+                if (salaId === 1 || salaId === salaFim) {
+                    erros.push(`${prefixo}: sala_id não pode ser entrada (1) ou fronteira (${salaFim}).`);
+                }
+
+                // titulo
+                if (!cena.titulo || typeof cena.titulo !== 'string' || cena.titulo.trim() === '') {
+                    erros.push(`${prefixo}: titulo ausente ou vazio.`);
+                }
+
+                // texto_evento
+                if (!cena.texto_evento || typeof cena.texto_evento !== 'string' || cena.texto_evento.trim() === '') {
+                    erros.push(`${prefixo}: texto_evento ausente ou vazio.`);
+                } else {
+                    const frases = cena.texto_evento.split(/[.!?]+/).filter(s => s.trim().length > 0);
+                    if (frases.length < 3 || frases.length > 5) {
+                        avisos.push(`${prefixo}: texto_evento deve ter 3-4 frases (tem ${frases.length}).`);
+                    }
+                    // Proibir clichês
+                    const cliches = [/de repente/i, /frio na espinha/i, /bilhete/i, /papel/i, /mensagem/i, /escrita/i];
+                    for (const cli of cliches) {
+                        if (cli.test(cena.texto_evento)) {
+                            erros.push(`${prefixo}: texto_evento contém clichê proibido: "${cli.source}"`);
+                        }
+                    }
+                    // Proibir metáforas de intenção (palavras como "ganha peso", "ganha vida", "espera por alguém")
+                    const metaforas = [/ganha peso/i, /ganha vida/i, /espera por alguém/i, /a escuridão/i];
+                    for (const meta of metaforas) {
+                        if (meta.test(cena.texto_evento)) {
+                            avisos.push(`${prefixo}: possível metáfora de intenção no texto_evento: "${meta.source}"`);
+                        }
+                    }
+                }
+
+                // dilemas
+                if (!cena.dilemas || !Array.isArray(cena.dilemas) || cena.dilemas.length === 0) {
+                    erros.push(`${prefixo}: dilemas deve ser um array não vazio.`);
+                    continue;
+                }
+
+                // Verificar quantos dilemas têm ramificacoes não nulas (deve ser exatamente 1)
+                let qtdRamificacoes = 0;
+                for (const dilema of cena.dilemas) {
+                    if (dilema.ramificacoes && Array.isArray(dilema.ramificacoes) && dilema.ramificacoes.length > 0) {
+                        qtdRamificacoes++;
+                    }
+                }
+                if (qtdRamificacoes !== 1) {
+                    erros.push(`${prefixo}: deve haver exatamente 1 dilema com ramificações (encontrado ${qtdRamificacoes}).`);
+                }
+
+                // Validar cada dilema
+                let hasHighDamage = false;
+                for (let dIdx = 0; dIdx < cena.dilemas.length; dIdx++) {
+                    const dilema = cena.dilemas[dIdx];
+                    const dp = `${prefixo} dilema ${dIdx+1}`;
+
+                    // opcao_texto
+                    if (!dilema.opcao_texto || typeof dilema.opcao_texto !== 'string' || dilema.opcao_texto.trim() === '') {
+                        erros.push(`${dp}: opcao_texto ausente ou vazio.`);
+                    }
+                    // resultado_texto
+                    if (!dilema.resultado_texto || typeof dilema.resultado_texto !== 'string' || dilema.resultado_texto.trim() === '') {
+                        erros.push(`${dp}: resultado_texto ausente ou vazio.`);
+                    } else {
+                        // Proibir "perde X de energia"
+                        if (/perde\s+\d+\s+de\s+energia/i.test(dilema.resultado_texto)) {
+                            erros.push(`${dp}: resultado_texto menciona perda de energia diretamente (proibido).`);
+                        }
+                    }
+                    // dano
+                    if (dilema.dano === undefined || typeof dilema.dano !== 'number' || dilema.dano < 0 || dilema.dano > 20) {
+                        erros.push(`${dp}: dano deve ser inteiro entre 0 e 20 (recebido ${dilema.dano}).`);
+                    }
+                    // destino_id
+                    if (dilema.destino_id !== null && typeof dilema.destino_id !== 'number') {
+                        erros.push(`${dp}: destino_id deve ser null ou número.`);
+                    } else if (dilema.destino_id !== null) {
+                        const dest = dilema.destino_id;
+                        // Verificar se destino existe nas saídas da sala
+                        const saidas = plano[String(salaId)]?.saidas || [];
+                        const destinosValidos = saidas.map(s => s.destino);
+                        if (!destinosValidos.includes(dest)) {
+                            erros.push(`${dp}: destino_id ${dest} não é uma saída válida da sala ${salaId}.`);
+                        }
+                        // Verificar se opcao_texto tem verbo de locomoção (proibido)
+                        const verbosLocomocao = /\b(sair|subir|descer|atravessar|seguir|caminhar|passar|entrar|voltar|rastejar|escalar|saltar)\b/i;
+                        if (verbosLocomocao.test(dilema.opcao_texto)) {
+                            erros.push(`${dp}: opção com destino_id contém verbo de locomoção (proibido).`);
+                        }
+                    }
+
+                    // ramificacoes
+                    const ram = dilema.ramificacoes;
+                    if (ram !== null && !Array.isArray(ram)) {
+                        erros.push(`${dp}: ramificacoes deve ser null ou array.`);
+                    } else if (Array.isArray(ram)) {
+                        if (ram.length < 2 || ram.length > 3) {
+                            avisos.push(`${dp}: ramificacoes deve ter 2-3 itens (tem ${ram.length}).`);
+                        }
+                        for (let rIdx = 0; rIdx < ram.length; rIdx++) {
+                            const r = ram[rIdx];
+                            const rp = `${dp} ramificação ${rIdx+1}`;
+                            if (!r.opcao_texto || typeof r.opcao_texto !== 'string' || r.opcao_texto.trim() === '') {
+                                erros.push(`${rp}: opcao_texto ausente ou vazio.`);
+                            }
+                            if (!r.resultado_texto || typeof r.resultado_texto !== 'string' || r.resultado_texto.trim() === '') {
+                                erros.push(`${rp}: resultado_texto ausente ou vazio.`);
+                            } else {
+                                if (/perde\s+\d+\s+de\s+energia/i.test(r.resultado_texto)) {
+                                    erros.push(`${rp}: resultado_texto menciona perda de energia diretamente (proibido).`);
+                                }
+                            }
+                            if (r.dano === undefined || typeof r.dano !== 'number' || r.dano < 0 || r.dano > 20) {
+                                erros.push(`${rp}: dano deve ser inteiro entre 0 e 20 (recebido ${r.dano}).`);
+                            } else if (r.dano >= 8) {
+                                hasHighDamage = true;
+                            }
+                            if (r.destino_id !== null && typeof r.destino_id !== 'number') {
+                                erros.push(`${rp}: destino_id deve ser null ou número.`);
+                            } else if (r.destino_id !== null) {
+                                const dest = r.destino_id;
+                                const saidas = plano[String(salaId)]?.saidas || [];
+                                const destinosValidos = saidas.map(s => s.destino);
+                                if (!destinosValidos.includes(dest)) {
+                                    erros.push(`${rp}: destino_id ${dest} não é uma saída válida da sala ${salaId}.`);
+                                }
+                                const verbosLocomocao = /\b(sair|subir|descer|atravessar|seguir|caminhar|passar|entrar|voltar|rastejar|escalar|saltar)\b/i;
+                                if (verbosLocomocao.test(r.opcao_texto)) {
+                                    erros.push(`${rp}: opção com destino_id contém verbo de locomoção (proibido).`);
+                                }
+                            }
+                        }
+                    }
+
+                    // Verificar se o dilema-pai tem dano 0 (regra: pai com ramificações deve ter dano 0)
+                    if (Array.isArray(ram) && ram.length > 0) {
+                        if (dilema.dano !== 0) {
+                            erros.push(`${dp}: dilema-pai com ramificações deve ter dano = 0 (tem ${dilema.dano}).`);
+                        }
+                        // Verificar se resultado_texto do pai tem 2-3 frases (ponte)
+                        const frasesPai = (dilema.resultado_texto || '').split(/[.!?]+/).filter(s => s.trim().length > 0);
+                        if (frasesPai.length < 2 || frasesPai.length > 4) {
+                            avisos.push(`${dp}: resultado_texto do pai deve ter 2-3 frases (tem ${frasesPai.length}).`);
+                        }
+                    }
+                }
+
+                // Verificar se pelo menos uma ramificação tem dano >= 8
+                if (!hasHighDamage) {
+                    erros.push(`${prefixo}: nenhuma ramificação ou consequência tem dano Alto (>=8) - obrigatório.`);
+                }
+
+                // Verificar se o texto_evento não repete elementos do ambiente (texto_logico da sala) - difícil automatizar, apenas aviso
+                const salaTexto = plano[String(salaId)]?.texto_logico || '';
+                if (salaTexto && cena.texto_evento) {
+                    // evitar que texto_evento descreva ambiente (proibido)
+                    const palavrasAmbiente = /(chão|parede|teto|porta|janela|móvel|objeto|corredor|escada|azulejo|gaveta|mesa|cadeira|sofá|armário|lâmpada|fio|canalização|vidro|ferro|madeira|pedra|concreto|tinta|papel|desinfetante|mofo|ferrugem|cheiro|sombra|luz|escuro|claro)/i;
+                    if (palavrasAmbiente.test(cena.texto_evento)) {
+                        avisos.push(`${prefixo}: texto_evento pode estar descrevendo ambiente (deveria focar na entidade/ação).`);
+                    }
+                }
+            }
+
+            return { erros, avisos };
+        }
+
         // ============================================================
-        // FUNÇÕES DE PROCESSAMENTO E UI
+        // PROCESSAMENTO PRINCIPAL
         // ============================================================
 
         const drop = document.getElementById('drop');
@@ -378,12 +528,15 @@
                 const dados = JSON.parse(json);
                 const plano = dados.plano || {};
                 const salas = dados.salas || {};
+                const cenas = dados.cenas || [];
                 let dadosCorrigidos = JSON.parse(JSON.stringify(dados));
                 let houveCorrecao = false;
                 let totalSalas = 0;
                 let salasComErro = 0;
                 let salasCorrigidas = 0;
                 let totalErrosDensidade = 0;
+                let errosCenas = 0;
+                let avisosCenas = 0;
 
                 logsDiv.innerHTML = '';
                 resultado.innerHTML = '';
@@ -420,7 +573,7 @@
                     html += `<p class="aviso">⚠️ A topologia não pode ser corrigida automaticamente. Peça para a IA regenerar o plano.</p>`;
                 }
 
-                // 2. VALIDA PROSA (âncora + entry-point) E DENSIDADE
+                // 2. VALIDA PROSA E DENSIDADE
                 html += `<h3>📝 Prosa e Densidade</h3>`;
                 for (const [id, sala] of Object.entries(salas)) {
                     const planoItem = plano[id];
@@ -434,15 +587,10 @@
                         const entradas = Object.values(plano)
                             .flatMap(s => (s.saidas || []))
                             .filter(s => s.destino == id);
-                        if (entradas.length > 1) {
-                            acaoChegada = "MULTIPLAS_ENTRADAS";
-                        }
+                        if (entradas.length > 1) acaoChegada = "MULTIPLAS_ENTRADAS";
                     }
 
-                    // Valida âncora + entry-point
                     const errosAncora = validarTextoLogico(sala.texto_logico, acaoChegada);
-                    
-                    // Valida densidade ambiental
                     const errosDensidade = validarDensidadeAmbiental(sala.texto_logico, opcoes);
                     totalErrosDensidade += errosDensidade.length;
 
@@ -456,7 +604,6 @@
                         html += `<span class="erro">${todosErros.join('; ')}</span>`;
                         log(`❌ Sala ${id}: ${todosErros.join('; ')}`, 'erro');
 
-                        // Tenta corrigir ancoragem (apenas isso é automático)
                         const textoCorrigido = corrigirAncoragem(sala.texto_logico, acaoChegada);
                         if (textoCorrigido !== sala.texto_logico) {
                             dadosCorrigidos.salas[id].texto_logico = textoCorrigido;
@@ -465,7 +612,6 @@
                             html += ` <span class="ok">→ ancoragem corrigida</span>`;
                             log(`✅ Sala ${id} corrigida (ancoragem).`, 'ok');
                         } else if (errosDensidade.length > 0) {
-                            // Densidade NÃO é corrigida automaticamente (a IA precisa regenerar)
                             html += ` <span class="aviso">⚠️ densidade: descreva os caminhos no texto</span>`;
                             log(`⚠️ Sala ${id}: descreva os caminhos no texto (densidade).`, 'aviso');
                         }
@@ -475,30 +621,60 @@
                     html += `</div>`;
                 }
 
-                // 3. ESTATÍSTICAS
+                // 3. VALIDA CENAS E DILEMAS
+                html += `<h3>🎭 Cenas e Dilemas</h3>`;
+                const validacaoCenas = validarCenas(cenas, plano, salaInicio, salaFim);
+                errosCenas = validacaoCenas.erros.length;
+                avisosCenas = validacaoCenas.avisos.length;
+
+                if (errosCenas === 0 && avisosCenas === 0) {
+                    html += `<p class="ok">✅ Cenas e dilemas validados com sucesso.</p>`;
+                    log('✅ Cenas e dilemas aprovados.', 'ok');
+                } else {
+                    if (errosCenas > 0) {
+                        html += `<p class="erro">❌ ${errosCenas} erro(s) nas cenas/dilemas:</p><ul>`;
+                        for (const err of validacaoCenas.erros) {
+                            html += `<li class="erro">${err}</li>`;
+                            log(`❌ Cena: ${err}`, 'erro');
+                        }
+                        html += `</ul>`;
+                    }
+                    if (avisosCenas > 0) {
+                        html += `<p class="aviso">⚠️ ${avisosCenas} aviso(s) nas cenas/dilemas:</p><ul>`;
+                        for (const aviso of validacaoCenas.avisos) {
+                            html += `<li class="aviso">${aviso}</li>`;
+                            log(`⚠️ Cena: ${aviso}`, 'aviso');
+                        }
+                        html += `</ul>`;
+                    }
+                }
+
+                // 4. ESTATÍSTICAS
                 const statsHTML = `
                     <span>📊 Total de salas: ${totalSalas}</span>
                     <span>${salasComErro === 0 ? '✅' : '❌'} Salas com erro: ${salasComErro}</span>
                     <span>🛠️ Salas corrigidas: ${salasCorrigidas}</span>
                     <span>${errosTopo.length === 0 ? '✅' : '❌'} Erros de topologia: ${errosTopo.length}</span>
                     <span>${totalErrosDensidade === 0 ? '✅' : '❌'} Erros de densidade: ${totalErrosDensidade}</span>
+                    <span>${errosCenas === 0 ? '✅' : '❌'} Erros em cenas: ${errosCenas}</span>
+                    <span>${avisosCenas === 0 ? '✅' : '⚠️'} Avisos em cenas: ${avisosCenas}</span>
                 `;
                 statsDiv.innerHTML = statsHTML;
 
-                // 4. RESULTADO FINAL
-                if (errosTopo.length === 0 && salasComErro === 0) {
+                // 5. RESULTADO FINAL
+                if (errosTopo.length === 0 && salasComErro === 0 && errosCenas === 0) {
                     html = `<p class="ok">✅ TUDO APROVADO! Nenhuma correção necessária.</p>` + html;
                     log('🎉 Tudo aprovado!', 'ok');
                 } else if (errosTopo.length > 0) {
                     html = `<p class="erro">❌ ERROS DE TOPOLOGIA ENCONTRADOS. Corrija o plano manualmente.</p>` + html;
-                } else if (houveCorrecao && salasComErro === salasCorrigidas) {
+                } else if (houveCorrecao && salasComErro === salasCorrigidas && errosCenas === 0) {
                     html = `<p class="ok">✅ TODAS AS SALAS CORRIGIDAS AUTOMATICAMENTE (ancoragem)!</p>` + html;
                     log('🎉 Todas as correções automáticas aplicadas.', 'ok');
                 } else {
-                    html = `<p class="aviso">⚠️ Erros de densidade: descreva os caminhos no texto da sala.</p>` + html;
+                    html = `<p class="aviso">⚠️ Existem erros (densidade ou cenas) que requerem revisão manual.</p>` + html;
                 }
 
-                // 5. EXIBE JSON CORRIGIDO (se houver correções)
+                // 6. EXIBE JSON CORRIGIDO (se houver correções)
                 if (houveCorrecao) {
                     html += `<h3>📄 JSON Corrigido</h3>`;
                     html += `<pre>${JSON.stringify(dadosCorrigidos, null, 2)}</pre>`;
@@ -541,22 +717,18 @@
             e.preventDefault();
             drop.classList.add('dragover');
         });
-
         drop.addEventListener('dragleave', () => {
             drop.classList.remove('dragover');
         });
-
         drop.addEventListener('drop', (e) => {
             e.preventDefault();
             drop.classList.remove('dragover');
             const file = e.dataTransfer.files[0];
             if (file) lerArquivo(file);
         });
-
         drop.addEventListener('click', () => {
             fileInput.click();
         });
-
         fileInput.addEventListener('change', () => {
             if (fileInput.files[0]) lerArquivo(fileInput.files[0]);
         });
@@ -572,13 +744,8 @@
             reader.readAsText(file);
         }
 
-        // ============================================================
-        // MENSAGEM INICIAL
-        // ============================================================
-
         log('🔧 Validador pronto. Arraste um arquivo JSON para começar.', 'info');
-        log('📋 Validadores ativos: topologia, ancoragem, entry-point leak e densidade ambiental.', 'info');
+        log('📋 Validadores ativos: topologia, ancoragem, entry-point leak, densidade e dilemas (Arquiteto de Cenas).', 'info');
     </script>
-
 </body>
 </html>
