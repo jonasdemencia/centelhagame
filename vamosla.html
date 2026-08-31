@@ -400,18 +400,6 @@
 .item-coletavel {
     display: none !important;
 }
-        .eco-clicavel {
-    cursor: pointer;
-    border-bottom: 1px dotted #6a4a0e;
-    color: inherit;
-    transition: 0.2s;
-}
-.eco-clicavel:hover { color: #d9a441; border-bottom-color: #d9a441; }
-.eco-clicavel.eco-revelado {
-    border-bottom-style: solid;
-    color: #8a7040;
-    cursor: default;
-}
     </style>
     <base target="_blank">
 </head>
@@ -968,21 +956,12 @@
             try {
                 const modelId = 'Xenova/paraphrase-multilingual-MiniLM-L12-v2';
                 window.extratorSemantico = await pipeline('feature-extraction', modelId, {
-    quantized: true,
-    use_fp16: false,
-    model_file_name: 'model_quantized.onnx',
-    base_url: 'https://huggingface.co/'
-});
-console.log("✅ Motor semântico carregado.");
-
-// FORÇA APLICAÇÃO DOS ECOS NA SALA ATUAL
-setTimeout(() => {
-    const salaAtual = mapaMundo?.[secaoAtualId];
-    const salaDesc = document.getElementById('sala-desc');
-    if (salaAtual && salaDesc && salaDesc.innerText.trim() !== "") {
-        aplicarEcosNaSala(secaoAtualId);
-    }
-}, 100);
+                    quantized: true,
+                    use_fp16: false,
+                    model_file_name: 'model_quantized.onnx',
+                    base_url: 'https://huggingface.co/'
+                });
+                console.log("✅ Motor semântico carregado.");
             } catch (erro) {
                 console.error("❌ Erro ao carregar o motor semântico:", erro);
                 window.extratorSemantico = null;
@@ -1080,29 +1059,34 @@ setTimeout(() => {
         //   antes de usar (bartowski é conversor GGUF de referência da
         //   comunidade, citado até pelo time oficial do LM Studio).
         const MODELOS_TIER3 = {
-    pequeno: {
-        rotuloBase: 'Skaios',
-        nomeTecnico: 'Llama-3.2-1B-Instruct-q4f16_1-MLC (WebLLM) / Llama-3.2-1B-Instruct-Q4_K_M.gguf (wllama)',
-        webllm: { id: 'Llama-3.2-1B-Instruct-q4f16_1-MLC' },
-        wllama: { repo: 'bartowski/Llama-3.2-1B-Instruct-GGUF', arquivo: 'Llama-3.2-1B-Instruct-Q4_K_M.gguf' }
-    },
-    medio: {
-        rotuloBase: 'Brutus',
-        nomeTecnico: 'Qwen2.5-1.5B-Instruct-q4f16_1-MLC (WebLLM) / Qwen2.5-1.5B-Instruct-GGUF (wllama)',
-        webllm: { id: 'Qwen2.5-1.5B-Instruct-q4f16_1-MLC' },
-        wllama: { repo: 'bartowski/Qwen2.5-1.5B-Instruct-GGUF', arquivo: 'Qwen2.5-1.5B-Instruct-Q4_K_M.gguf' }
-    },
-    grande: {
-        rotuloBase: 'Augustinus',
-        nomeTecnico: 'Llama-3.2-3B-Instruct-q4f16_1-MLC (WebLLM)',
-        webllm: { id: 'Llama-3.2-3B-Instruct-q4f16_1-MLC' }
-    },
-    semantico: {
-        rotuloBase: 'Johannes',
-        nomeTecnico: 'Xenova/paraphrase-multilingual-MiniLM-L12-v2 (embeddings)',
-        semanticoApenas: true
-    }
-};
+            pequeno: {
+                rotuloBase: 'Aulus Interpress',
+                webllm: { id: 'Llama-3.2-1B-Instruct-q4f16_1-MLC' },
+                wllama: { repo: 'bartowski/Llama-3.2-1B-Instruct-GGUF', arquivo: 'Llama-3.2-1B-Instruct-Q4_K_M.gguf' }
+            },
+            medio: {
+                rotuloBase: 'Ephraemus',
+                webllm: { id: 'Qwen2.5-1.5B-Instruct-q4f16_1-MLC' },
+                wllama: { repo: 'bartowski/Qwen2.5-1.5B-Instruct-GGUF', arquivo: 'Qwen2.5-1.5B-Instruct-Q4_K_M.gguf' }
+            },
+                        grande: {
+                rotuloBase: 'Skaios o estólido',
+                webllm: { id: 'Llama-3.2-3B-Instruct-q4f16_1-MLC' }
+                // Sem entrada wllama de propósito — 3B continua fora do mobile,
+                // regra explícita mantida da instrução original.
+            },
+            semantico: {
+                rotuloBase: 'Johannes',
+                semanticoApenas: true
+                // Sem webllm/wllama de propósito: não carrega NENHUM motor de
+                // geração de texto. O motor semântico (embeddings, usado pelo
+                // Tier 2/RAG e pela interceptação semântica) já roda à parte
+                // via iniciarMotorSemantico() e continua ativo aqui — só o
+                // Tier 3 (invenção de detalhes) fica mudo. É a opção mais leve
+                // possível: zero download extra, zero VRAM/RAM além do modelo
+                // de embeddings que já carrega de qualquer forma.
+            }
+        };
         const MODELO_PRODUCAO = 'pequeno'; // chave de fallback seguro se o escolhido falhar
 
         function motorAtivo() {
@@ -1291,46 +1275,42 @@ setTimeout(() => {
         // gerarComNarradorLocal detecta motor === 'semantico' e retorna
         // null direto, caindo no fallback padrão do jogo.
         async function carregarSemGeracao(chave) {
-            const nomeExibido = MODELOS_TIER3[chave].rotuloBase;
-const nomeTecnico = MODELOS_TIER3[chave].nomeTecnico;
-atualizarBadgeNarrador({ estado: 'pronto', texto: `✅ ${nomeExibido} (só semântica)`, progresso: 100 });
-logStatusNarrador(`Modo "${nomeExibido}" (${nomeTecnico}) ativo: nenhum LLM local carregado. Tier 3 (invenção de detalhes) fica indisponível; o motor semântico (Tier 2) continua funcionando normalmente.`, 'ok');
+            const rotulo = MODELOS_TIER3[chave].rotuloBase;
+            atualizarBadgeNarrador({ estado: 'pronto', texto: `✅ ${rotulo} (só semântica)`, progresso: 100 });
+            logStatusNarrador(`Modo "${rotulo}" ativo: nenhum LLM local carregado. Tier 3 (invenção de detalhes) fica indisponível; o motor semântico (Tier 2) continua funcionando normalmente.`, 'ok');
             return { motor: 'semantico', instancia: null };
         }
 
-       async function carregarViaWebLLM(chave) {
-    const registro = MODELOS_TIER3[chave];
-    const nomeExibido = MODELOS_TIER3[chave].rotuloBase;
-    const nomeTecnico = MODELOS_TIER3[chave].nomeTecnico;
-    const rotulo = `${nomeExibido} (${nomeTecnico})`; // <- CRIE ESTA LINHA
+        async function carregarViaWebLLM(chave) {
+            const registro = MODELOS_TIER3[chave];
+            const rotulo = rotuloComMotor(chave);
+            atualizarBadgeNarrador({ estado: 'carregando', texto: `${rotulo}: iniciando…`, progresso: 0 });
+            logStatusNarrador(`Carregando ${rotulo} (${registro.webllm.id}) via WebLLM…`, 'info');
 
-    atualizarBadgeNarrador({ estado: 'carregando', texto: `${rotulo}: iniciando…`, progresso: 0 });
-    logStatusNarrador(`Carregando ${rotulo} via WebLLM…`, 'info');
+            try {
+                const inicio = performance.now();
+                const appConfig = construirAppConfigComPrefillMenor(registro.webllm.id, 128);
+                const callbackProgresso = (info) => {
+                    const pct = Math.round((info.progress || 0) * 100);
+                    atualizarBadgeNarrador({ estado: 'carregando', texto: `${rotulo}: ${pct}%`, progresso: pct });
+                    if (info.text) logStatusNarrador(info.text, 'info');
+                };
 
-    try {
-        const inicio = performance.now();
-        const appConfig = construirAppConfigComPrefillMenor(registro.webllm.id, 128);
-        const callbackProgresso = (info) => {
-            const pct = Math.round((info.progress || 0) * 100);
-            atualizarBadgeNarrador({ estado: 'carregando', texto: `${rotulo}: ${pct}%`, progresso: pct });
-            if (info.text) logStatusNarrador(info.text, 'info');
-        };
+                const worker = criarWorkerWebLLM();
+                const engine = await webllm.CreateWebWorkerMLCEngine(worker, registro.webllm.id, { appConfig, initProgressCallback: callbackProgresso });
 
-        const worker = criarWorkerWebLLM();
-        const engine = await webllm.CreateWebWorkerMLCEngine(worker, registro.webllm.id, { appConfig, initProgressCallback: callbackProgresso });
+                atualizarBadgeNarrador({ estado: 'carregando', texto: `${rotulo}: aquecendo…`, progresso: 100 });
+                await engine.chat.completions.create({ messages: [{ role: 'user', content: 'Oi' }], max_tokens: 4, temperature: 0 });
 
-        atualizarBadgeNarrador({ estado: 'carregando', texto: `${rotulo}: aquecendo…`, progresso: 100 });
-        await engine.chat.completions.create({ messages: [{ role: 'user', content: 'Oi' }], max_tokens: 4, temperature: 0 });
-
-        const segundos = ((performance.now() - inicio) / 1000).toFixed(1);
-        logStatusNarrador(`Carregado e aquecido: ${rotulo} (${segundos}s).`, 'ok');
-        atualizarBadgeNarrador({ estado: 'pronto', texto: `✅ ${rotulo} pronto`, progresso: 100 });
-        return { motor: 'webllm', instancia: engine };
-    } catch (erro) {
-        logStatusNarrador(`Falhou carregar/aquecer ${rotulo}: ${erro.message}`, 'falha');
-        return null;
-    }
-}
+                const segundos = ((performance.now() - inicio) / 1000).toFixed(1);
+                logStatusNarrador(`Carregado e aquecido: ${rotulo} (${segundos}s).`, 'ok');
+                atualizarBadgeNarrador({ estado: 'pronto', texto: `✅ ${rotulo} pronto`, progresso: 100 });
+                return { motor: 'webllm', instancia: engine };
+            } catch (erro) {
+                logStatusNarrador(`Falhou carregar/aquecer ${rotulo}: ${erro.message}`, 'falha');
+                return null;
+            }
+        }
 
         // MOBILE — wllama: WASM puro, roda em CPU, zero dependência de
         // WebGPU. Elimina de vez os bugs que vínhamos batendo (JSEP, Worker,
@@ -1344,10 +1324,9 @@ logStatusNarrador(`Modo "${nomeExibido}" (${nomeTecnico}) ativo: nenhum LLM loca
         // não é instantâneo mas é legível em tempo real).
         async function carregarViaWllama(chave) {
             const registro = MODELOS_TIER3[chave];
-            const nomeExibido = MODELOS_TIER3[chave].rotuloBase;
-const nomeTecnico = MODELOS_TIER3[chave].nomeTecnico;
-            const rotulo = `${nomeExibido} (${nomeTecnico})`; // <- ADICIONE ESTA LINHA
-logStatusNarrador(`Carregando ${nomeExibido} (${nomeTecnico}) via wllama (WASM/CPU)…`, 'info');
+            const rotulo = rotuloComMotor(chave);
+            atualizarBadgeNarrador({ estado: 'carregando', texto: `${rotulo}: iniciando…`, progresso: 0 });
+            logStatusNarrador(`Carregando ${rotulo} (${registro.wllama.repo}/${registro.wllama.arquivo}) via wllama (WASM/CPU)…`, 'info');
 
             try {
                 const inicio = performance.now();
@@ -1388,10 +1367,8 @@ logStatusNarrador(`Carregando ${nomeExibido} (${nomeTecnico}) via wllama (WASM/C
                 atualizarBadgeNarrador({ estado: 'carregando', texto: `${rotulo}: aquecendo…`, progresso: 100 });
                 await instancia.createChatCompletion([{ role: 'user', content: 'Oi' }], { nPredict: 4, sampling: { temp: 0 } });
 
-                const nomeExibido = MODELOS_TIER3[chave].rotuloBase;
-const nomeTecnico = MODELOS_TIER3[chave].nomeTecnico;
-const segundos = ((performance.now() - inicio) / 1000).toFixed(1);
-logStatusNarrador(`Carregado e aquecido: ${nomeExibido} (${nomeTecnico}) (${segundos}s).`, 'ok');
+                const segundos = ((performance.now() - inicio) / 1000).toFixed(1);
+                logStatusNarrador(`Carregado e aquecido: ${rotulo} (${segundos}s).`, 'ok');
                 atualizarBadgeNarrador({ estado: 'pronto', texto: `✅ ${rotulo} pronto`, progresso: 100 });
                 return { motor: 'wllama', instancia };
             } catch (erro) {
@@ -1424,10 +1401,7 @@ logStatusNarrador(`Carregado e aquecido: ${nomeExibido} (${nomeTecnico}) (${segu
                 // (se ele ainda estiver entre os disponíveis e for diferente
                 // do que já falhou), em vez de deixar o Tier 3 inteiro morto.
                 if (!window.geradorLocal && CHAVE_MODELO_ATIVA !== MODELO_PRODUCAO && CHAVES_MODELO_DISPONIVEIS.includes(MODELO_PRODUCAO)) {
-                    const candNome = MODELOS_TIER3[CHAVE_MODELO_ATIVA].rotuloBase;
-const prodNome = MODELOS_TIER3[MODELO_PRODUCAO].rotuloBase;
-const prodTec = MODELOS_TIER3[MODELO_PRODUCAO].nomeTecnico;
-logStatusNarrador(`Candidato '${candNome}' não carregou. Caindo pro modelo de produção (${prodNome} = ${prodTec}).`, 'falha');
+                    logStatusNarrador(`Candidato '${MODELOS_TIER3[CHAVE_MODELO_ATIVA].rotuloBase}' não carregou. Caindo pro modelo de produção (${MODELOS_TIER3[MODELO_PRODUCAO].rotuloBase}).`, 'falha');
                     CHAVE_MODELO_ATIVA = MODELO_PRODUCAO;
                     window.geradorLocal = await carregarModeloLocal(MODELO_PRODUCAO);
                 }
@@ -1501,244 +1475,6 @@ logStatusNarrador(`Candidato '${candNome}' não carregou. Caindo pro modelo de p
             }
             return melhorFrase ? { frase: melhorFrase, score: melhorScore } : null;
         }
-
-    // ============================================================
-// MÓDULO DE ECOS — expansão simbólica sob demanda (só Tier 2)
-//
-// Não gera texto novo. Recupera/recombina o que o próprio jogo já
-// escreveu: texto_logico de outras salas (Fonte 1), campos
-// estruturados do dnaGlobal (Fonte 2), fatos de grafo já presentes
-// em mapaMundo/entityIndex (Fonte 3), cláusulas soltas extraídas de
-// historicoIND (Fonte 5) — e compõe (Fonte 4) quando mais de uma
-// fonte bate. Zero chamada a chamarGroq/chamarSambanova em tempo de
-// execução. Uma palavra só vira clicável se alguma fonte bateu acima
-// do limiar — nunca promete uma revelação que não pode entregar.
-// ============================================================
-
-const ECOS_STOPWORDS_PT = new Set([
-    'a','o','as','os','um','uma','uns','umas','de','do','da','dos','das',
-    'em','no','na','nos','nas','por','pelo','pela','pelos','pelas','com',
-    'sem','para','que','se','é','são','está','estão','ao','aos','à','às',
-    'e','ou','mas','como','seu','sua','seus','suas','este','esta','esse',
-    'essa','isso','isto','aquele','aquela','muito','muitos','muitas',
-    'pouco','poucos','já','ainda','também','apenas','mais','menos','você',
-    'sob','sobre','até','entre'
-]);
-
-window._corpusMundoEcos = [];    // Fonte 1: [{texto, vetor, idSala}]
-
-
-// ---------- Extração de candidatos (heurística genérica, não é lista fixa) ----------
-function extrairCandidatosEcos(texto) {
-    console.log('🔍 [extrairCandidatosEcos] Texto recebido:', texto);
-    if (!texto) {
-        console.log('🔍 [extrairCandidatosEcos] ❌ Texto vazio!');
-        return [];
-    }
-    
-    const textoLimpo = texto.replace(/<[^>]+>/g, ' ');
-    console.log('🔍 [extrairCandidatosEcos] Texto limpo:', textoLimpo);
-    
-    const regexSintagma = /\b(?:um|uma|uns|umas|o|a|os|as)\s+([a-zà-ÿ]+(?:\s+(?:de|da|do|das|dos)\s+[a-zà-ÿ]+)?)/gi;
-    const candidatos = new Map();
-    let m;
-    
-    let encontrados = 0;
-    while ((m = regexSintagma.exec(textoLimpo)) !== null) {
-        const palavras = m[1].trim().split(/\s+/).filter(p => !ECOS_STOPWORDS_PT.has(p.toLowerCase()));
-        if (palavras.length === 0) continue;
-        const termo = palavras.join(' ');
-        const chave = termo.toLowerCase();
-        if (chave.length < 4 || candidatos.has(chave)) continue;
-        candidatos.set(chave, termo);
-        encontrados++;
-        console.log(`🔍 [extrairCandidatosEcos] Encontrou: "${termo}" (chave: "${chave}")`);
-    }
-    
-    const resultado = Array.from(candidatos.values()).slice(0, 10);
-    console.log(`🔍 [extrairCandidatosEcos] Total encontrado: ${encontrados}, após filtro: ${resultado.length}`);
-    return resultado;
-}
-
-// ---------- Fonte 1: ressonância entre salas já visitadas ----------
-async function indexarSalaNoCorpusMundo(sala, idSala) {
-    if (sala._indexadaEcosMundo) return;
-    if (!salasVisitadas.has(String(idSala))) return; // só o que o jogador já viu — sem spoiler
-    sala._indexadaEcosMundo = true;
-    const frases = await obterFrasesEmbedadas(sala); // já existe, já cacheia em sala._fraseEmbeds
-    for (const f of frases) {
-        window._corpusMundoEcos.push({ texto: f.texto, vetor: f.vetor, idSala: String(idSala) });
-    }
-}
-
-function buscarNoCorpusMundo(vetorTermo, idSalaAtual, limiar = 0.75) {
-    let melhor = null, melhorScore = 0;
-    for (const item of window._corpusMundoEcos) {
-        if (item.idSala === String(idSalaAtual)) continue;
-        const score = cos_sim(vetorTermo, item.vetor);
-        if (score > melhorScore) { melhorScore = score; melhor = item; }
-    }
-    return (melhor && melhorScore >= limiar) ? { texto: melhor.texto, score: melhorScore, fonte: 'mundo' } : null;
-}
-
-
-
-
-// ---------- Fonte 5: cut-up de cláusulas soltas do historicoIND ----------
-function extrairClausulasSoltas(textoOrigem) {
-    const resultado = [];
-    const frases = textoOrigem.split(/(?<=[.!?])\s+/);
-    for (const frase of frases) {
-        for (const parte of frase.split(/,\s*/)) {
-            const limpa = parte.trim().replace(/[.!?]+$/, '');
-            if (limpa.length < 15 || limpa.length > 90) continue;
-            if (/\d/.test(limpa)) continue;
-            if (/^você\b/i.test(limpa)) continue;
-            if (/\bcujo\b|\bcuja\b/i.test(limpa)) continue; // exige concordância — fora do escopo seguro
-            if (/^que\b/i.test(limpa)) resultado.push({ texto: limpa, tipo: 'relativa' });
-            else if (/^(e|onde|enquanto)\b/i.test(limpa)) resultado.push({ texto: limpa, tipo: 'adjunto' });
-        }
-    }
-    return resultado;
-}
-
-
-
-// ---------- Fonte 4: composição entre fontes ----------
-const CONECTORES_ECO_COMPOSTO = [
-    (a, b) => `${a} O mesmo padrão aparece em outro lugar: ${b}`,
-    (a, b) => `${a} Não é a primeira vez que algo assim aparece: ${b}`,
-    (a, b) => `${a} Isso ecoa algo visto antes: ${b}`
-];
-
-
-
-async function prepararEcosDaSala(sala, idSala) {
-    console.log('🔄 [prepararEcosDaSala] INICIANDO para sala:', idSala);
-    sala._ecos = {};
-    
-    try {
-        console.log('🔄 [prepararEcosDaSala] Indexando sala no corpus mundo...');
-        await indexarSalaNoCorpusMundo(sala, idSala);
-        console.log('🔄 [prepararEcosDaSala] ✅ Indexação concluída.');
-        
-        const candidatos = extrairCandidatosEcos(sala.texto_logico);
-        console.log('🔄 [prepararEcosDaSala] Candidatos:', candidatos);
-        
-        if (!candidatos || candidatos.length === 0) {
-            sala._ecosPreparados = true;
-            return;
-        }
-        
-        for (const termo of candidatos) {
-            try {
-                const vetorTermo = (await window.extratorSemantico(termo, { pooling: 'mean', normalize: true })).data;
-                const achadoMundo = buscarNoCorpusMundo(vetorTermo, idSala);
-                
-                if (achadoMundo) {
-                    sala._ecos[termo.toLowerCase()] = {
-                        texto: achadoMundo.texto,
-                        score: achadoMundo.score,
-                        fonte: 'mundo'
-                    };
-                    console.log(`✅ ECO: "${termo}" → "${achadoMundo.texto}"`);
-                }
-            } catch (err) {
-                console.error(`❌ Erro no termo "${termo}":`, err);
-            }
-        }
-        
-        sala._ecosPreparados = true;
-        console.log('🔄 [prepararEcosDaSala] FINALIZADO. ECOS:', Object.keys(sala._ecos).length);
-    } catch (e) {
-        console.error('❌ ERRO GRAVE:', e);
-        sala._ecosPreparados = true;
-    }
-}
-    
-// ---------- Renderização e clique ----------
-function escapeRegexEcos(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
-
-function renderizarTextoComEcos(textoAtualHTML, ecos) {
-    if (!ecos) return textoAtualHTML;
-    let resultado = textoAtualHTML;
-    
-    for (const termo of Object.keys(ecos)) {
-        // Tenta encontrar com e sem preposição
-        const padrao = termo.replace(/\s+/g, '(?:\\s+(?:de|da|do|das|dos)\\s+|\\s+)');
-        const regex = new RegExp(`\\b(${padrao})\\b(?![^<]*>)`, 'i');
-        
-        if (regex.test(resultado)) {
-            resultado = resultado.replace(regex, `<span class="eco-clicavel" data-termo="${termo}">$1</span>`);
-        }
-    }
-    
-    return resultado;
-}
-
-async function aplicarEcosNaSala(idSala) {
-    const sala = mapaMundo?.[idSala];
-    const salaDesc = document.getElementById('sala-desc');
-    
-    const textoAtualDOM = salaDesc ? salaDesc.innerText : "";
-    const textoBase = sala?.texto_logico || textoAtualDOM;
-    
-    console.log('========== ECOS DEBUG ==========');
-    console.log('1. Sala ID:', idSala);
-    console.log('2. Texto base (sala.texto_logico):', sala?.texto_logico);
-    console.log('3. Texto atual no DOM:', textoAtualDOM);
-    console.log('4. Motor semântico carregado?', !!window.extratorSemantico);
-    
-    if (!sala || !textoBase || !window.extratorSemantico) {
-        console.log('[ECOS] ❌ Pulando: sem sala, texto ou motor');
-        return;
-    }
-    
-    if (!sala.texto_logico) {
-        sala.texto_logico = textoBase;
-    }
-    
-    // REMOVA O CHECK DE sala._ecosPreparados AQUI - DEIXE A FUNÇÃO PREPARAR DECIDIR
-    await prepararEcosDaSala(sala, idSala);
-    
-    if (String(secaoAtualId) !== String(idSala)) {
-        console.log('[ECOS] ❌ Sala mudou, ignorando');
-        return;
-    }
-    
-    console.log('5. ECOS gerados para esta sala:', sala._ecos);
-    console.log('6. Número de ECOS:', Object.keys(sala._ecos || {}).length);
-    
-    if (!sala._ecos || Object.keys(sala._ecos).length === 0) {
-        console.log('[ECOS] ❌ Nenhum eco encontrado');
-        salaDesc.innerHTML = textoBase;
-        return;
-    }
-    
-    console.log('7. Lista de ECOS:');
-    for (const [termo, eco] of Object.entries(sala._ecos)) {
-        console.log(`   - "${termo}" -> "${eco.texto}" (fontes: ${eco.fontes?.join(', ') || 'desconhecida'})`);
-    }
-    
-    const textoComEcos = renderizarTextoComEcos(textoBase, sala._ecos);
-    console.log('8. Texto após renderizar com ECOS:', textoComEcos);
-    console.log('9. Contém span .eco-clicavel?', textoComEcos.includes('eco-clicavel'));
-    
-    salaDesc.innerHTML = textoComEcos;
-    console.log('========== ECOS DEBUG FIM ==========');
-}
-
-    
-document.addEventListener('click', function (e) {
-    const alvo = e.target.closest('.eco-clicavel');
-    if (!alvo) return;
-    const termo = alvo.dataset.termo;
-    const sala = mapaMundo?.[secaoAtualId];
-    if (!sala || !sala._ecos || !sala._ecos[termo] || alvo.dataset.revelado === '1') return;
-    alvo.dataset.revelado = '1';
-    alvo.classList.add('eco-revelado');
-    adicionarMensagem(`🔍 ${sala._ecos[termo].texto}`, 'system');
-});
 
         // ============================================================
         // CACHE DE FATOS IMPROVISADOS — quando o Tier 3 inventa um detalhe
@@ -3066,64 +2802,28 @@ Retorne APENAS este JSON:
             }
         }
 
-    // Remove vetores matemáticos e caches locais antes de salvar no banco
-function limparDadosParaFirestore(obj) {
-    if (obj === null || typeof obj !== 'object') {
-        return obj;
-    }
-    
-    // Se for o vetor da IA, nós o destruímos (não vai pro Firebase)
-    if (obj instanceof Float32Array) {
-        return undefined; 
-    }
-    
-    if (Array.isArray(obj)) {
-        return obj.map(limparDadosParaFirestore).filter(item => item !== undefined);
-    }
-    
-    const novoObj = {};
-    for (const key in obj) {
-        if (Object.prototype.hasOwnProperty.call(obj, key)) {
-            // Ignora explicitamente as chaves pesadas geradas pelos Ecos
-            if (key === '_ecos' || key === 'embedding' || key === 'vetorSemantico' || key === '_fraseEmbeds' || key === '_fatosCache') {
-                continue; 
-            }
-            
-            const valorLimpo = limparDadosParaFirestore(obj[key]);
-            if (valorLimpo !== undefined) {
-                novoObj[key] = valorLimpo;
+        async function salvarEstadoJogador() {
+            if (!uidAtual) return;
+            try {
+                const dadosAtualizados = {
+                    turnos: turnosJogados,
+                    "energy.total": energia,
+                    "skill.total": jogadorStats.HABILIDADE,
+                    "charisma.total": jogadorStats.CARISMA,
+                    "luck.total": jogadorStats.SORTE,
+                    "magic.total": magiaAtual,
+                    mapaMundo: mapaMundo,
+                    secaoAtualId: secaoAtualId,
+                    dnaGlobal: dnaGlobal,
+                    zonaAtual: zonaAtual,
+                    historicoIND: historicoIND,
+                    salasVisitadas: [...salasVisitadas],
+                };
+                await updateDoc(doc(db, "players", uidAtual), dadosAtualizados);
+            } catch (e) {
+                console.error("Erro ao salvar estado do jogador:", e);
             }
         }
-    }
-    return novoObj;
-}
-
-        async function salvarEstadoJogador() {
-    if (!uidAtual) return;
-    try {
-        const dadosAtualizados = {
-            turnos: turnosJogados,
-            "energy.total": energia,
-            "skill.total": jogadorStats.HABILIDADE,
-            "charisma.total": jogadorStats.CARISMA,
-            "luck.total": jogadorStats.SORTE,
-            "magic.total": magiaAtual,
-            mapaMundo: mapaMundo,
-            secaoAtualId: secaoAtualId,
-            dnaGlobal: dnaGlobal,
-            zonaAtual: zonaAtual,
-            historicoIND: historicoIND,
-            salasVisitadas: [...salasVisitadas],
-        };
-        
-        // PASSO MÁGICO: Limpa a sujeira da IA!
-        const dadosSeguros = limparDadosParaFirestore(dadosAtualizados);
-        
-        await updateDoc(doc(db, "players", uidAtual), dadosSeguros);
-    } catch (e) {
-        console.error("Erro ao salvar estado do jogador:", e);
-    }
-}
 
         async function gerarMemoriaLonga(textoIntro) {
             if (memoriaLonga) return;
@@ -4483,18 +4183,8 @@ Retorne EXATAMENTE o JSON abaixo. Nenhuma palavra extra.`
     verificarEExpandirMundo();
 
     if (novaSala?.texto_logico) {
-    const textoFinal = prepararTextoChegada(novaSala.texto_logico, textoAcao || opcao.texto, parseInt(secaoAtualId), destino);
-
-        console.log('🔄 NAVEGAR: Texto final que será colocado no DOM:', textoFinal);
-    console.log('🔄 NAVEGAR: Texto original da sala:', novaSala.texto_logico);
-        
-    salaDesc.innerHTML = textoFinal;
-    // Aguarda o DOM ser atualizado antes de aplicar os ECOS
-    setTimeout(() => {
-        if (window.extratorSemantico) {
-            aplicarEcosNaSala(secaoAtualId);
-        }
-    }, 50);
+        const textoFinal = prepararTextoChegada(novaSala.texto_logico, textoAcao || opcao.texto, parseInt(secaoAtualId), destino);
+        salaDesc.innerHTML = textoFinal;
         historicoConversa.push({ role: 'user', content: `[Navegou para: ${textoAcao || opcao.texto}]` });
         historicoConversa.push({ role: 'assistant', content: novaSala.texto_logico });
         if (historicoConversa.length > 10) historicoConversa.splice(0, 2);
@@ -4676,11 +4366,6 @@ async function executarDilemaComRamificacao(pai, ram, silent = false) {
 
     if (salaDesc.innerHTML === '') {
         salaDesc.innerHTML = sala.texto_logico || "A escuridão domina este lugar...";
-        setTimeout(() => {
-    if (window.extratorSemantico) {
-        aplicarEcosNaSala(secaoAtualId);
-    }
-}, 50);
     }
 
     if (!sala.opcoes) return;
@@ -4857,11 +4542,6 @@ ANSWER:`
                 const salaAtual = mapaMundo[secaoAtualId];
                 if (salaAtual?.texto_logico) {
                     document.getElementById('sala-desc').innerHTML = salaAtual.texto_logico;
-                    setTimeout(() => {
-    if (window.extratorSemantico) {
-        aplicarEcosNaSala(secaoAtualId);
-    }
-}, 50);
                     document.getElementById('chat-box').innerHTML = '';
                     adicionarMensagem('⚔️ A escuridão recorda sua presença...', 'system');
                     atualizarBotoesNavegacao();
