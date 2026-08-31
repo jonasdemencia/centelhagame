@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Importador de Zonas</title>
+    <title>Importador de Zonas (com Dilemas)</title>
     <style>
         body {
             background: #0a0a0a;
@@ -78,8 +78,9 @@
     </style>
 </head>
 <body>
-    <h1>🧩 Importador de Zonas</h1>
-    <p>Cole o JSON corrigido do validador ou arraste um arquivo para importar diretamente no Firestore.</p>
+    <h1>🧩 Importador de Zonas (com Dilemas)</h1>
+    <p>Cole o JSON corrigido do validador ou arraste um arquivo para importar diretamente no Firestore.<br>
+    <strong>Os dilemas (campo "cenas") serão injetados automaticamente nas salas.</strong></p>
 
     <div class="file-input-wrapper" id="drop">
         📂 Arraste o arquivo JSON aqui ou clique para selecionar
@@ -116,27 +117,74 @@
         const db = firebase.firestore();
 
         // ============================================================
-        // FUNÇÃO DE IMPORTAÇÃO
+        // FUNÇÃO DE IMPORTAÇÃO (COM INJEÇÃO DE DILEMAS)
         // ============================================================
         async function importarParaFirestore(dados, uid) {
             const plano = dados.plano || {};
             const salas = dados.salas || {};
+            const cenas = dados.cenas || [];
 
-            // Converte para o formato do jogo
+            // 1. Construir mapaMundo básico com as saídas do plano
             const mapaMundo = {};
             for (const [id, sala] of Object.entries(salas)) {
                 const planoItem = plano[id];
                 if (!planoItem) continue;
+
+                const opcoes = (planoItem.saidas || []).map(s => ({
+                    texto: s.acao || s.texto || 'Avançar',
+                    destino: s.destino
+                }));
+
                 mapaMundo[id] = {
                     nome: planoItem.local_fisico || `Sala ${id}`,
                     texto_logico: sala.texto_logico || '',
-                    opcoes: (planoItem.saidas || []).map(s => ({
-                        texto: s.acao || s.texto || 'Avançar',
-                        destino: s.destino
-                    }))
+                    opcoes: opcoes
                 };
             }
 
+            // 2. Injetar os dilemas (cenas) nas salas correspondentes
+            for (const cena of cenas) {
+                const salaId = String(cena.sala_id);
+                const sala = mapaMundo[salaId];
+                if (!sala) {
+                    console.warn(`⚠️ Cena para sala ${salaId} ignorada: sala não existe.`);
+                    continue;
+                }
+
+                // Se a sala não tiver opções, cria um array vazio
+                if (!sala.opcoes) sala.opcoes = [];
+
+                // Converte cada dilema em uma opção com dilema: true
+                for (const dilema of (cena.dilemas || [])) {
+                    const novaOpcao = {
+                        texto: dilema.opcao_texto,
+                        arquiteto: true,        // sinaliza que veio do arquiteto
+                        dilema: true,
+                        resultado_texto: dilema.resultado_texto,
+                        dano: dilema.dano || 0,
+                        destino: dilema.destino_id ? parseInt(dilema.destino_id) : null,
+                        disparado: false,
+                        ramificacoes: null
+                    };
+
+                    // Se houver ramificações, converte cada uma
+                    if (dilema.ramificacoes && Array.isArray(dilema.ramificacoes)) {
+                        novaOpcao.ramificacoes = dilema.ramificacoes.map(ram => ({
+                            opcao_texto: ram.opcao_texto,
+                            resultado_texto: ram.resultado_texto,
+                            dano: ram.dano || 0,
+                            destino: ram.destino_id ? parseInt(ram.destino_id) : null
+                        }));
+                    }
+
+                    sala.opcoes.push(novaOpcao);
+                }
+
+                // Opcional: guardar o título da cena (não usado pelo jogo, mas pode ser útil)
+                sala.cena_titulo = cena.titulo || null;
+            }
+
+            // 3. Salvar no Firestore
             const docRef = db.collection('players').doc(uid);
             await docRef.update({
                 mapaMundo: mapaMundo,
@@ -171,6 +219,11 @@
             try {
                 const dados = JSON.parse(jsonStr);
                 log('📂 JSON carregado com sucesso.', 'ok');
+
+                // Verifica se o JSON contém cenas e avisa
+                if (dados.cenas && dados.cenas.length > 0) {
+                    log(`🎭 ${dados.cenas.length} cenas encontradas. Serão injetadas como dilemas.`, 'info');
+                }
 
                 // Pega o UID do usuário (versão compat)
                 const auth = firebase.auth();
@@ -249,6 +302,7 @@
         });
 
         log('🔧 Importador pronto. Cole o JSON ou arraste um arquivo.', 'info');
+        log('📌 Os dilemas (campo "cenas") serão injetados automaticamente.', 'info');
     </script>
 </body>
 </html>
