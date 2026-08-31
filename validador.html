@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Validador + Corretor de Prosa e Topologia</title>
+    <style>
+        body {
+            background: #0a0a0a;
+            color: #ccc;
+            font-family: 'Courier New', monospace;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #d9a441;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+        }
+        #drop {
+            border: 2px dashed #444;
+            padding: 40px;
+            text-align: center;
+            margin: 20px 0;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: 0.3s;
+        }
+        #drop.dragover {
+            border-color: #d9a441;
+            background: #1a150a;
+        }
+        .ok {
+            color: #4caf50;
+        }
+        .erro {
+            color: #e53935;
+        }
+        .aviso {
+            color: #d9a441;
+        }
+        .sala {
+            margin: 5px 0;
+            padding: 8px 12px;
+            background: #111;
+            border-left: 3px solid #333;
+            border-radius: 4px;
+        }
+        .sala.corrigido {
+            border-left-color: #d9a441;
+        }
+        pre {
+            background: #0a0a0a;
+            padding: 15px;
+            border: 1px solid #222;
+            overflow: auto;
+            max-height: 400px;
+            font-size: 12px;
+            border-radius: 4px;
+        }
+        .btn {
+            background: #d9a441;
+            color: #000;
+            border: none;
+            padding: 12px 24px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 10px;
+            border-radius: 4px;
+            font-family: inherit;
+            font-size: 14px;
+        }
+        .btn:hover {
+            background: #e0b050;
+        }
+        .stats {
+            display: flex;
+            gap: 20px;
+            margin: 10px 0;
+            flex-wrap: wrap;
+        }
+        .stats span {
+            background: #111;
+            padding: 4px 12px;
+            border-radius: 4px;
+            border: 1px solid #222;
+        }
+        .logs {
+            background: #0a0a0a;
+            padding: 10px;
+            border: 1px solid #222;
+            max-height: 200px;
+            overflow: auto;
+            font-size: 12px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .logs .log-ok {
+            color: #4caf50;
+        }
+        .logs .log-erro {
+            color: #e53935;
+        }
+        .logs .log-info {
+            color: #888;
+        }
+        .fonte {
+            font-size: 11px;
+            color: #666;
+            margin-top: 20px;
+            border-top: 1px solid #1a1a1a;
+            padding-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>🧪 VALIDADOR + CORRETOR DE PROSA E TOPOLOGIA</h1>
+    <p>Arraste um arquivo JSON com os campos <code>plano</code> e <code>salas</code> para validar e corrigir automaticamente.</p>
+
+    <div id="drop">
+        📂 Arraste o arquivo JSON aqui ou clique para selecionar
+    </div>
+
+    <div id="logs" class="logs"></div>
+    <div id="stats" class="stats"></div>
+    <div id="resultado"></div>
+
+    <input type="file" id="fileInput" accept=".json" style="display:none;">
+
+    <div class="fonte">Validador baseado nas regras do jogo Centelha — usa os mesmos validadores do código fonte.</div>
+
+    <script>
+        // ============================================================
+        // VALIDADORES REAIS (COPIADOS DO SEU CÓDIGO)
+        // ============================================================
+
+        // ------------------------------------------------------------
+        // 1. VALIDADOR DE TEXTO LÓGICO (PROSA)
+        // ------------------------------------------------------------
+        function validarTextoLogico(textoLogico, acaoChegadaEsperada) {
+            const erros = [];
+            if (!textoLogico || textoLogico.trim() === '') {
+                erros.push('texto vazio ou nulo');
+                return erros;
+            }
+
+            // 1. Âncora de chegada
+            if (acaoChegadaEsperada && acaoChegadaEsperada !== "MULTIPLAS_ENTRADAS") {
+                const padroesAncora = [
+                    new RegExp(`^Depois de ${acaoChegadaEsperada.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'i'),
+                    /^Ao avançar para este local/i
+                ];
+                const temAncora = padroesAncora.some(p => p.test(textoLogico.trim()));
+                if (!temAncora) {
+                    erros.push(`âncora incorreta: deveria começar com "Depois de ${acaoChegadaEsperada}" ou "Ao avançar para este local"`);
+                }
+            } else if (acaoChegadaEsperada === "MULTIPLAS_ENTRADAS") {
+                if (!/^Ao avançar para este local/i.test(textoLogico.trim())) {
+                    erros.push('âncora incorreta: sala com múltiplas entradas deve começar com "Ao avançar para este local"');
+                }
+            } else {
+                // Sala de entrada: sem âncora específica
+                if (/^Depois de|^Ao avançar/i.test(textoLogico.trim())) {
+                    erros.push('sala de entrada não deve ter âncora de chegada');
+                }
+            }
+
+            // 2. Vazamento de entry-point (se houver ação de chegada)
+            if (acaoChegadaEsperada && acaoChegadaEsperada !== "MULTIPLAS_ENTRADAS" && acaoChegadaEsperada !== "SEM_ENTRADA") {
+                const stopwords = ['para', 'pela', 'pelo', 'com', 'como', 'sobre', 'entre', 'trás', 'frente', 'lado'];
+                const palavrasChave = acaoChegadaEsperada
+                    .toLowerCase()
+                    .replace(/^(subir|descer|atravessar|rastejar|passar|entrar|avançar|cruzar|caminhar|voltar)\s+/i, '')
+                    .split(/\s+/)
+                    .filter(p => p.length > 3 && !stopwords.includes(p));
+
+                const primeiraSentenca = textoLogico.split(/[.!?]/)[0] || '';
+                const restoDoTexto = textoLogico.slice(primeiraSentenca.length);
+
+                for (const palavra of palavrasChave) {
+                    if (new RegExp(`\\b${palavra}`, 'i').test(restoDoTexto)) {
+                        erros.push(`entry-point leak: "${palavra}" (da ação de chegada) reaparece após a primeira frase`);
+                    }
+                }
+            }
+
+            return erros;
+        }
+
+        // ------------------------------------------------------------
+        // 2. CORRETOR DE ANCORAGEM
+        // ------------------------------------------------------------
+        function corrigirAncoragem(textoLogico, acaoChegada) {
+            if (!textoLogico || textoLogico.trim() === '') {
+                return acaoChegada ? `Depois de ${acaoChegada.toLowerCase()}, você observa o ambiente.` : 'Você observa o ambiente.';
+            }
+
+            const texto = textoLogico.trim();
+            const ancoramentoGenerico = /^você (se encontra|está|fica|nota|percebe|avança|para diante)/i;
+
+            if (acaoChegada && acaoChegada !== "MULTIPLAS_ENTRADAS" && acaoChegada !== "SEM_ENTRADA") {
+                if (ancoramentoGenerico.test(texto) || !/^Depois de|^Ao avançar/i.test(texto)) {
+                    const verboCorrido = acaoChegada.toLowerCase();
+                    // Remove qualquer prefixo genérico existente
+                    let limpo = texto.replace(/^(você (se encontra|está|fica|nota|percebe|avança|para diante)\s*[,.]?\s*)/i, '');
+                    limpo = limpo.replace(/^(Depois de [^,.]+, você\s*)/i, '');
+                    limpo = limpo.replace(/^(Ao avançar para este local, você\s*)/i, '');
+                    // Capitaliza a primeira letra
+                    limpo = limpo.charAt(0).toUpperCase() + limpo.slice(1);
+                    return `Depois de ${verboCorrido}, você ${limpo}`;
+                }
+                return texto;
+            }
+
+            if (acaoChegada === "MULTIPLAS_ENTRADAS") {
+                if (!/^Ao avançar para este local/i.test(texto)) {
+                    let limpo = texto.replace(/^(você (se encontra|está|fica|nota|percebe|avança|para diante)\s*[,.]?\s*)/i, '');
+                    limpo = limpo.replace(/^(Depois de [^,.]+, você\s*)/i, '');
+                    limpo = limpo.replace(/^(Ao avançar para este local, você\s*)/i, '');
+                    limpo = limpo.charAt(0).toUpperCase() + limpo.slice(1);
+                    return `Ao avançar para este local, você ${limpo}`;
+                }
+                return texto;
+            }
+
+            // Sala de entrada: remove âncora se existir
+            if (/^Depois de|^Ao avançar/i.test(texto)) {
+                let limpo = texto.replace(/^(Depois de [^,.]+, você\s*)/i, '');
+                limpo = limpo.replace(/^(Ao avançar para este local, você\s*)/i, '');
+                return limpo.charAt(0).toUpperCase() + limpo.slice(1);
+            }
+
+            return texto;
+        }
+
+        // ------------------------------------------------------------
+        // 3. VALIDADOR DE TOPOLOGIA (PLANO)
+        // ------------------------------------------------------------
+        function validarPlanoTopologia(plano, salaInicio, salaFim) {
+            const erros = [];
+
+            // 1. Verifica se todas as salas do intervalo existem
+            for (let i = salaInicio; i <= salaFim; i++) {
+                if (!plano[String(i)]) {
+                    erros.push(`Sala ${i} ausente no plano.`);
+                }
+            }
+
+            // 2. Verifica bidirecionalidade e existência de destinos
+            for (const [idStr, sala] of Object.entries(plano)) {
+                const id = Number(idStr);
+                if (id < salaInicio || id > salaFim) continue;
+
+                if (!sala.saidas || !Array.isArray(sala.saidas)) {
+                    erros.push(`Sala ${id} não tem saídas definidas.`);
+                    continue;
+                }
+
+                for (const saida of sala.saidas) {
+                    const destino = saida.destino;
+                    if (destino > salaFim) continue; // ignora conexões para fora da zona
+
+                    const destinoPlano = plano[String(destino)];
+                    if (!destinoPlano) {
+                        erros.push(`Sala ${id} aponta para ${destino} que não existe.`);
+                        continue;
+                    }
+
+                    // Verifica volta (bidirecionalidade)
+                    const temVolta = destinoPlano.saidas?.some(s => s.destino === id);
+                    if (!temVolta) {
+                        erros.push(`Sem volta: Sala ${destino} não retorna para Sala ${id}.`);
+                    }
+                }
+            }
+
+            // 3. Verifica conectividade total (BFS a partir da sala de entrada)
+            const visitados = new Set();
+            const fila = [salaInicio];
+            while (fila.length > 0) {
+                const atual = fila.shift();
+                if (visitados.has(atual)) continue;
+                visitados.add(atual);
+                const sala = plano[String(atual)];
+                if (!sala) continue;
+                for (const saida of (sala.saidas || [])) {
+                    if (saida.destino <= salaFim && !visitados.has(saida.destino)) {
+                        fila.push(saida.destino);
+                    }
+                }
+            }
+
+            for (let i = salaInicio; i <= salaFim; i++) {
+                if (!visitados.has(i)) {
+                    erros.push(`Sala ${i} inacessível a partir da entrada.`);
+                }
+            }
+
+            // 4. Verifica presença de hub (sala com 3+ saídas para frente)
+            const temHub = Object.values(plano).some(sala => {
+                const saidasParaFrente = (sala.saidas || []).filter(s => s.destino <= salaFim && s.destino > Number(Object.keys(plano).find(k => Number(k) === salaInicio)));
+                return saidasParaFrente.length >= 3;
+            });
+            if (!temHub) {
+                erros.push('Nenhum hub encontrado. Mapa é linear — rejeitado.');
+            }
+
+            // 5. Verifica fronteira única
+            const salaFronteira = Object.entries(plano).find(([_, s]) => s.para_proxima_zona === true);
+            if (!salaFronteira) {
+                erros.push(`Nenhuma sala de fronteira (para_proxima_zona: true).`);
+            } else if (Number(salaFronteira[0]) !== salaFim) {
+                erros.push(`Fronteira está em sala ${salaFronteira[0]}, deveria estar em ${salaFim}.`);
+            }
+
+            // 6. Verifica ausência de ciclos (topologia em árvore)
+            let totalVertices = 0,
+                totalArestas = 0;
+            for (const [idStr, sala] of Object.entries(plano)) {
+                const id = Number(idStr);
+                if (id >= salaInicio && id <= salaFim) {
+                    totalVertices++;
+                    for (const saida of (sala.saidas || [])) {
+                        if (saida.destino > id && saida.destino <= salaFim) {
+                            totalArestas++;
+                        }
+                    }
+                }
+            }
+            if (totalArestas > totalVertices - 1) {
+                erros.push(`Falha Topológica 2D: O mapa gerou circuitos/anéis (${totalArestas} conexões para ${totalVertices} salas regulares). O layout deve ser uma árvore.`);
+            }
+
+            return erros;
+        }
+
+        // ============================================================
+        // FUNÇÕES DE PROCESSAMENTO E UI
+        // ============================================================
+
+        const drop = document.getElementById('drop');
+        const fileInput = document.getElementById('fileInput');
+        const resultado = document.getElementById('resultado');
+        const logsDiv = document.getElementById('logs');
+        const statsDiv = document.getElementById('stats');
+
+        function log(mensagem, tipo = 'info') {
+            const div = document.createElement('div');
+            div.className = `log-${tipo}`;
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${mensagem}`;
+            logsDiv.appendChild(div);
+            logsDiv.scrollTop = logsDiv.scrollHeight;
+        }
+
+        function processarArquivo(json) {
+            try {
+                const dados = JSON.parse(json);
+                const plano = dados.plano || {};
+                const salas = dados.salas || {};
+                let dadosCorrigidos = JSON.parse(JSON.stringify(dados));
+                let houveCorrecao = false;
+                let totalSalas = 0;
+                let salasComErro = 0;
+                let salasCorrigidas = 0;
+
+                logsDiv.innerHTML = '';
+                resultado.innerHTML = '';
+                statsDiv.innerHTML = '';
+
+                log('📂 Arquivo carregado com sucesso.', 'info');
+
+                const ids = Object.keys(salas).map(Number).sort((a, b) => a - b);
+                if (ids.length === 0) {
+                    log('❌ Nenhuma sala encontrada no campo "salas".', 'erro');
+                    resultado.innerHTML = `<p class="erro">❌ Nenhuma sala encontrada no campo "salas".</p>`;
+                    return;
+                }
+
+                const salaInicio = Math.min(...ids);
+                const salaFim = Math.max(...ids);
+                totalSalas = ids.length;
+
+                // 1. VALIDA TOPOLOGIA
+                log('🔍 Validando topologia...', 'info');
+                const errosTopo = validarPlanoTopologia(plano, salaInicio, salaFim);
+                let html = '';
+
+                if (errosTopo.length === 0) {
+                    html += `<p class="ok">✅ Topologia aprovada.</p>`;
+                    log('✅ Topologia validada com sucesso.', 'ok');
+                } else {
+                    html += `<p class="erro">❌ Topologia com ${errosTopo.length} erro(s):</p><ul>`;
+                    for (const err of errosTopo) {
+                        html += `<li class="erro">${err}</li>`;
+                        log(`❌ Topologia: ${err}`, 'erro');
+                    }
+                    html += `</ul>`;
+                    html += `<p class="aviso">⚠️ A topologia não pode ser corrigida automaticamente. Peça para a IA regenerar o plano.</p>`;
+                }
+
+                // 2. VALIDA E CORRIGE PROSA
+                html += `<h3>📝 Prosa</h3>`;
+                for (const [id, sala] of Object.entries(salas)) {
+                    const acao = plano[id]?.saidas?.[0]?.acao || null;
+
+                    // Determina o tipo de âncora
+                    let acaoChegada = acao;
+                    if (id == salaInicio) {
+                        acaoChegada = "SEM_ENTRADA";
+                    } else {
+                        // Verifica se a sala tem múltiplas entradas
+                        const entradas = Object.values(plano)
+                            .flatMap(s => (s.saidas || []))
+                            .filter(s => s.destino == id);
+                        if (entradas.length > 1) {
+                            acaoChegada = "MULTIPLAS_ENTRADAS";
+                        }
+                    }
+
+                    const erros = validarTextoLogico(sala.texto_logico, acaoChegada);
+                    const status = erros.length === 0 ? '✅' : '❌';
+                    let statusClass = erros.length === 0 ? 'ok' : 'erro';
+                    html += `<div class="sala ${erros.length > 0 ? 'corrigido' : ''}">`;
+                    html += `<strong>Sala ${id}</strong> ${status} `;
+
+                    if (erros.length > 0) {
+                        salasComErro++;
+                        html += `<span class="erro">${erros.join('; ')}</span>`;
+                        log(`❌ Sala ${id}: ${erros.join('; ')}`, 'erro');
+
+                        // CORRIGE AUTOMATICAMENTE
+                        const textoCorrigido = corrigirAncoragem(sala.texto_logico, acaoChegada);
+                        if (textoCorrigido !== sala.texto_logico) {
+                            dadosCorrigidos.salas[id].texto_logico = textoCorrigido;
+                            houveCorrecao = true;
+                            salasCorrigidas++;
+                            html += ` <span class="ok">→ corrigido</span>`;
+                            log(`✅ Sala ${id} corrigida automaticamente.`, 'ok');
+                        } else {
+                            html += ` <span class="aviso">⚠️ não foi possível corrigir automaticamente</span>`;
+                        }
+                    } else {
+                        log(`✅ Sala ${id} aprovada.`, 'ok');
+                    }
+                    html += `</div>`;
+                }
+
+                // 3. ESTATÍSTICAS
+                const statsHTML = `
+                    <span>📊 Total de salas: ${totalSalas}</span>
+                    <span>${salasComErro === 0 ? '✅' : '❌'} Salas com erro: ${salasComErro}</span>
+                    <span>🛠️ Salas corrigidas: ${salasCorrigidas}</span>
+                    <span>${errosTopo.length === 0 ? '✅' : '❌'} Erros de topologia: ${errosTopo.length}</span>
+                `;
+                statsDiv.innerHTML = statsHTML;
+
+                // 4. RESULTADO FINAL
+                if (errosTopo.length === 0 && salasComErro === 0) {
+                    html = `<p class="ok">✅ TUDO APROVADO! Nenhuma correção necessária.</p>` + html;
+                    log('🎉 Tudo aprovado!', 'ok');
+                } else if (errosTopo.length > 0) {
+                    html = `<p class="erro">❌ ERROS DE TOPOLOGIA ENCONTRADOS. Corrija o plano manualmente.</p>` + html;
+                } else if (houveCorrecao && salasComErro === salasCorrigidas) {
+                    html = `<p class="ok">✅ TODAS AS SALAS CORRIGIDAS AUTOMATICAMENTE!</p>` + html;
+                    log('🎉 Todas as salas foram corrigidas automaticamente!', 'ok');
+                } else {
+                    html = `<p class="aviso">⚠️ Algumas salas não puderam ser corrigidas automaticamente. Revise manualmente.</p>` + html;
+                }
+
+                // 5. EXIBE JSON CORRIGIDO (se houver correções)
+                if (houveCorrecao) {
+                    html += `<h3>📄 JSON Corrigido</h3>`;
+                    html += `<pre>${JSON.stringify(dadosCorrigidos, null, 2)}</pre>`;
+                    html += `<button class="btn" onclick="baixarCorrigido()">⬇️ Baixar JSON Corrigido</button>`;
+                    window._dadosCorrigidos = dadosCorrigidos;
+                } else if (errosTopo.length === 0) {
+                    html += `<h3>📄 JSON (original)</h3>`;
+                    html += `<pre>${JSON.stringify(dados, null, 2)}</pre>`;
+                }
+
+                resultado.innerHTML = html;
+                log('✅ Processamento concluído.', 'info');
+
+            } catch (err) {
+                resultado.innerHTML = `<p class="erro">❌ Erro no JSON: ${err.message}</p>`;
+                log(`❌ Erro no JSON: ${err.message}`, 'erro');
+            }
+        }
+
+        function baixarCorrigido() {
+            if (!window._dadosCorrigidos) {
+                alert('Nenhum dado corrigido disponível.');
+                return;
+            }
+            const blob = new Blob([JSON.stringify(window._dadosCorrigidos, null, 2)], { type: 'application/json' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'dados_corrigidos.json';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(link.href);
+        }
+
+        // ============================================================
+        // DRAG AND DROP + CLICK
+        // ============================================================
+
+        drop.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            drop.classList.add('dragover');
+        });
+
+        drop.addEventListener('dragleave', () => {
+            drop.classList.remove('dragover');
+        });
+
+        drop.addEventListener('drop', (e) => {
+            e.preventDefault();
+            drop.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            if (file) lerArquivo(file);
+        });
+
+        drop.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files[0]) lerArquivo(fileInput.files[0]);
+        });
+
+        function lerArquivo(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                processarArquivo(e.target.result);
+            };
+            reader.onerror = () => {
+                resultado.innerHTML = `<p class="erro">❌ Erro ao ler o arquivo.</p>`;
+            };
+            reader.readAsText(file);
+        }
+
+        // ============================================================
+        // MENSAGEM INICIAL
+        // ============================================================
+
+        log('🔧 Validador pronto. Arraste um arquivo JSON para começar.', 'info');
+        log('📋 Validadores ativos: topologia (hub, ciclos, fronteira, bidirecionalidade) e prosa (ancoragem, entry-point leak).', 'info');
+    </script>
+
+</body>
+</html>
