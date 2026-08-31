@@ -1571,7 +1571,7 @@ async function indexarSalaNoCorpusMundo(sala, idSala) {
     }
 }
 
-function buscarNoCorpusMundo(vetorTermo, idSalaAtual, limiar = 0.55) {
+function buscarNoCorpusMundo(vetorTermo, idSalaAtual, limiar = 0.75) {
     let melhor = null, melhorScore = 0;
     for (const item of window._corpusMundoEcos) {
         if (item.idSala === String(idSalaAtual)) continue;
