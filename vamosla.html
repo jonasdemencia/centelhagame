@@ -4782,7 +4782,7 @@ ANSWER:`
                         adicionarMensagem(`🔍 ${fatoExtraido}`, 'system');
                     } else {
                         // Fallback 100% local, sem chamada a LM Studio ou Groq
-                        adicionarMensagem("Você examina o local, mas não encontra nada que se destaque.", 'system');
+                        adicionarMensagem("Sua ação não produz nenhum efeito perceptível.", 'system');
                     }
 
                     sendBtn.disabled = false;
@@ -4795,7 +4795,7 @@ ANSWER:`
                     // Fallback de emergência: remove o loading e avisa o jogador
                     clearInterval(intervaloAnimacao);
                     document.getElementById(tempId)?.remove();
-                    adicionarMensagem("Você olha ao redor, mas o ambiente parece indiferente.", 'system');
+                    adicionarMensagem("Você tenta agir, mas o ambiente parece indiferente.", 'system');
                     sendBtn.disabled = false;
                     userInput.disabled = false;
                     userInput.focus();
