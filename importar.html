@@ -144,22 +144,12 @@
         // aparecia no jogo, mesmo com cena_titulo e a opção de dilema
         // salvos corretamente no Firestore.
         // ============================================================
-        // ============================================================
-        // FUNÇÃO DE IMPORTAÇÃO (COM INJEÇÃO INTELIGENTE DE PERIGOS)
-        // ============================================================
         async function importarParaFirestore(dados, uid) {
             const plano = dados.plano || {};
             const salas = dados.salas || {};
             const cenas = dados.cenas || [];
-            const perigos = Array.isArray(dados.perigos) ? dados.perigos : [];
 
-            const docRef = db.collection('players').doc(uid);
-            
-            // BUSCA O ESTADO ATUAL NO FIRESTORE PARA MESCLAGEM INTELIGENTE
-            const docSnap = await docRef.get();
-            const mapaMundoAtual = docSnap.exists ? (docSnap.data().mapaMundo || {}) : {};
-
-            // 1. Construir mapaMundo básico com as saídas do plano (se enviado no JSON)
+            // 1. Construir mapaMundo básico com as saídas do plano
             const mapaMundo = {};
             for (const [id, sala] of Object.entries(salas)) {
                 const planoItem = plano[id];
@@ -190,10 +180,13 @@
                 const textoEvento = expurgarViciosIA((cena.texto_evento || '').trim());
 
                 if (!textoEvento) {
+                    // Mesmo comportamento do jogo: sem texto_evento, a cena
+                    // inteira (inclusive dilemas) é ignorada para esta sala.
                     log(`⚠️ Cena "${titulo}" (sala ${salaId}) não tem "texto_evento" no JSON — nada foi injetado nesta sala.`, 'aviso');
                     continue;
                 }
 
+                // Funde o texto_evento no texto_logico, na mesma ordem/formatação do jogo
                 let textoBase = expurgarViciosIA((sala.texto_logico || '').trim());
                 sala.texto_logico = `${textoBase.replace(/[.\s]+$/, '')}. ${textoEvento}`;
                 sala.cena_titulo = titulo;
@@ -201,6 +194,8 @@
 
                 if (!sala.opcoes) sala.opcoes = [];
 
+                // Destinos "reais" já existentes na sala (saídas do plano),
+                // usados para validar para onde um dilema pode levar
                 const destinosValidos = new Set(
                     (sala.opcoes || [])
                         .filter(o => o.destino && !o.arquiteto)
@@ -227,6 +222,7 @@
                         ? parseInt(destinoRaw)
                         : null;
 
+                    // Valida e prepara ramificações, igual ao jogo
                     const ramsRaw = Array.isArray(dilema.ramificacoes) ? dilema.ramificacoes : [];
                     const ramificacoes = ramsRaw
                         .filter(r => r.opcao_texto && r.resultado_texto)
@@ -252,7 +248,7 @@
 
                     sala.opcoes.push({
                         texto: opcaoTexto,
-                        arquiteto: true,
+                        arquiteto: true,        // sinaliza que veio do arquiteto
                         dilema: true,
                         resultado_texto: resultadoTexto,
                         dano,
@@ -265,50 +261,29 @@
                 log(`🎭 "${titulo}" → Sala ${salaId} | texto_evento injetado, ${dilemas.length} dilema(s) processado(s)`, 'ok');
             }
 
-            // 3. INTELIGÊNCIA DOS PERIGOS: Preparar e limpar as salas alvo (Firestore ou JSON local)
-            const salasRecebendoPerigos = new Set(perigos.map(p => String(p.sala_id)));
-
-            for (const salaId of salasRecebendoPerigos) {
-                // Se a sala não veio no JSON colado (ex: importando SÓ perigos), puxa do Firestore
-                if (!mapaMundo[salaId]) {
-                    if (mapaMundoAtual[salaId]) {
-                        // Cópia profunda para trabalhar com segurança sem mutar o cache do Firestore
-                        mapaMundo[salaId] = JSON.parse(JSON.stringify(mapaMundoAtual[salaId]));
-                        log(`📥 Sala ${salaId} recuperada do Firestore para mesclar novos perigos.`, 'info');
-                    } else {
-                        log(`⚠️ Perigo para sala ${salaId} ignorado: sala não existe no JSON nem no Firestore.`, 'aviso');
-                        continue;
-                    }
-                }
-
-                const sala = mapaMundo[salaId];
-                if (!sala.opcoes) sala.opcoes = [];
-
-                // LIMPEZA DOS PERIGOS ANTIGOS: Apaga os antigos para dar lugar aos novos
-                // A) Remove as 'nova_opcao' (opções que vieram do arquiteto mas não são dilemas)
-                sala.opcoes = sala.opcoes.filter(opcao => {
-                    const isPerigoNovaOpcao = opcao.arquiteto === true && !opcao.dilema;
-                    return !isPerigoNovaOpcao; // Retorna true (mantém) se NÃO for um perigo
-                });
-
-                // B) Remove os 'interceptores' pendurados nas opções de navegação
-                sala.opcoes.forEach(opcao => {
-                    if (opcao.interceptor_arquiteto) {
-                        delete opcao.interceptor_arquiteto;
-                    }
-                });
-            }
-
-            // 4. Injetar os perigos novos
+            // 3. Injetar os perigos (interceptor / nova_opcao) nas salas restantes
+            //
+            // Replica aplicarArquitetoDePerigos() de vamosla.html. No jogo, a
+            // exclusão mútua entre Cena e Perigo é garantida ao vivo (Cenas só
+            // escolhe salas que Perigos ainda não tocou). Aqui a ordem é
+            // invertida por design — Cenas já veio pronta no JSON, e é o
+            // próprio prompt de Perigos que deve evitar as salas com cena.
+            // Por isso, se um perigo aparecer numa sala que já tem cena, o
+            // importador AVISA (não bloqueia) — é sinal de erro na geração,
+            // não motivo pra travar a importação.
             const salasComCena = new Set(cenas.map(c => String(c.sala_id)));
+            const perigos = Array.isArray(dados.perigos) ? dados.perigos : [];
 
             for (const perigo of perigos) {
                 const salaId = String(perigo.sala_id);
                 const sala = mapaMundo[salaId];
-                if (!sala) continue; // Já filtrado e avisado no loop anterior
+                if (!sala) {
+                    log(`⚠️ Perigo para sala ${salaId} ignorado: sala não existe.`, 'aviso');
+                    continue;
+                }
 
                 if (salasComCena.has(salaId)) {
-                    log(`⚠️ Sala ${salaId} tem cena E perigo no mesmo JSON. Injetando o perigo mesmo assim.`, 'aviso');
+                    log(`⚠️ Sala ${salaId} tem cena E perigo no mesmo JSON — não deveria acontecer pelo design. Injetando o perigo mesmo assim.`, 'aviso');
                 }
 
                 const narrativaBruta = (perigo.resultado_texto || '').trim();
@@ -327,7 +302,12 @@
 
                 const tipoResultado = perigo.tipo_resultado || 'neutro';
 
+                if (!sala.opcoes) sala.opcoes = [];
+
                 if (perigo.tipo === 'nova_opcao') {
+                    // Ação de exame que SURGE na sala. Fica oculta igual às opções
+                    // de navegação — o jogador só a encontra digitando uma ação
+                    // que corresponda a algo já descrito no texto_logico.
                     sala.opcoes.push({
                         texto: perigo.opcao_texto || 'Examinar anomalia',
                         arquiteto: true,
@@ -336,8 +316,11 @@
                         tipo_resultado: tipoResultado,
                         disparado: false
                     });
-                    log(`☠️ Nova opção "${perigo.opcao_texto}" (dano ${dano}) → Sala ${salaId} (sobrescrevendo antigos se havia)`, 'ok');
+                    log(`☠️ Nova opção "${perigo.opcao_texto}" (dano ${dano}) → Sala ${salaId}`, 'ok');
                 } else if (perigo.tipo === 'interceptor') {
+                    // Emboscada NO TRAJETO de uma saída já existente — precisa
+                    // bater exatamente com o texto de uma opção de navegação
+                    // original (não outra já injetada pelo arquiteto).
                     const opcaoAlvo = sala.opcoes.find(o =>
                         o.texto === perigo.opcao_texto && o.destino && !o.arquiteto
                     );
@@ -349,8 +332,10 @@
                             tipo_resultado: tipoResultado,
                             disparado: false
                         };
-                        log(`☠️ Interceptor em "${perigo.opcao_texto}" (dano ${dano}) → Sala ${salaId} (sobrescrevendo antigos se havia)`, 'ok');
+                        log(`☠️ Interceptor em "${perigo.opcao_texto}" (dano ${dano}) → Sala ${salaId}`, 'ok');
                     } else {
+                        // Mesmo fallback do jogo: se o texto não bateu com
+                        // nenhuma saída existente, vira uma opção nova.
                         sala.opcoes.push({
                             texto: perigo.opcao_texto || 'Investigar caminho obstruído',
                             arquiteto: true,
@@ -366,25 +351,34 @@
                 }
             }
 
-            // 5. Trava de segurança atualizada
+            // 4. Trava de segurança: nunca grava um mapaMundo vazio no Firestore.
+            // Foi exatamente isso que causou "0 salas injetadas" antes — o JSON
+            // colado não tinha "plano"/"salas" (só os perigos), e mesmo assim a
+            // importação seguiu e sobrescreveu o documento do jogador com um
+            // mapaMundo vazio. Agora isso aborta ANTES de tocar no Firestore.
             if (Object.keys(mapaMundo).length === 0) {
-                throw new Error('Nenhuma sala válida foi montada ou recuperada do Firestore. Verifique os dados fornecidos.');
+                throw new Error('Nenhuma sala válida foi montada a partir do JSON colado (faltam "plano" e/ou "salas"). NADA foi salvo no Firestore — confira se o JSON completo da zona está na caixa principal, não só os perigos.');
             }
 
-            // 6. Salvar no Firestore de forma incremental (Dot Notation)
-            const updatePayload = {};
-            for (const [id, sala] of Object.entries(mapaMundo)) {
-                updatePayload[`mapaMundo.${id}`] = sala;
-            }
+            // 5. Salvar no Firestore de forma incremental (Dot Notation)
+const docRef = db.collection('players').doc(uid);
+const updatePayload = {};
 
-            if (mapaMundo["1"]) {
-                updatePayload["zonaAtual"] = 1;
-                updatePayload["secaoAtualId"] = "1";
-            }
+// Adiciona apenas as chaves das salas novas, sem apagar o que já existe no Firestore
+for (const [id, sala] of Object.entries(mapaMundo)) {
+    updatePayload[`mapaMundo.${id}`] = sala;
+}
 
-            await docRef.update(updatePayload);
-            return { mapaMundo };
-        }
+// Se for a primeira importação (Sala 1), seta a posição inicial. Se não, apenas injeta as salas novas.
+if (mapaMundo["1"]) {
+    updatePayload["zonaAtual"] = 1;
+    updatePayload["secaoAtualId"] = "1";
+}
+
+await docRef.update(updatePayload);
+
+            return { mapaMundo }; // <-- Adicione o retorno
+} // <-- Adicione a chave de fechamento da função
         
         // ============================================================
         // UI
