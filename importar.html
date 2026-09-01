@@ -377,6 +377,9 @@ if (mapaMundo["1"]) {
 
 await docRef.update(updatePayload);
 
+            return { mapaMundo }; // <-- Adicione o retorno
+} // <-- Adicione a chave de fechamento da função
+        
         // ============================================================
         // UI
         // ============================================================
