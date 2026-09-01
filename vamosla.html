@@ -400,6 +400,18 @@
 .item-coletavel {
     display: none !important;
 }
+.btn-continuar {
+    background: #1a2a1a;
+    color: #4caf50;
+    border: 1px solid #4caf50;
+    padding: 8px 16px;
+    font-family: 'VT323', monospace;
+    font-size: 16px;
+    cursor: pointer;
+    display: block; /* redundante, mas seguro */
+    margin: 8px auto;
+}
+        
     </style>
     <base target="_blank">
 </head>
@@ -4109,7 +4121,8 @@ Retorne EXATAMENTE o JSON abaixo. Nenhuma palavra extra.`
         const botoesAtuais = document.querySelectorAll('#map-controls .nav-btn');
         botoesAtuais.forEach(btn => { btn.disabled = true; });
         const btnContinuar = document.createElement('button');
-        btnContinuar.className = 'nav-btn';
+        btnContinuar.className = 'btn-continuar';
+        btnContinuar.style.display = 'block';
         btnContinuar.innerText = '> CONTINUAR';
         btnContinuar.style.background = '#1a2a1a';
         btnContinuar.style.borderColor = '#4caf50';
@@ -4277,7 +4290,8 @@ Retorne EXATAMENTE o JSON abaixo. Nenhuma palavra extra.`
         const container = document.getElementById('map-controls');
         container.innerHTML = '';
         const btnContinuar = document.createElement('button');
-        btnContinuar.className = 'nav-btn';
+        btnContinuar.className = 'btn-continuar';
+        btnContinuar.style.display = 'block';
         btnContinuar.innerText = '> CONTINUAR';
         btnContinuar.style.background = '#1a2a1a';
         btnContinuar.style.borderColor = '#4caf50';
