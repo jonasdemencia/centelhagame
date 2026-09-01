@@ -89,7 +89,11 @@
 
     <p>ou</p>
 
-    <textarea id="jsonInput" placeholder='Cole aqui o JSON corrigido do validador...'></textarea>
+    <textarea id="jsonInput" placeholder='Cole aqui o JSON da zona (topologia + prosa + dilemas, com ou sem perigos já embutidos)...'></textarea>
+
+    <p style="margin-top:20px;">📦 Perigos gerados em uma chamada separada? Cole só o <code>{"perigos": [...]}</code> aqui (opcional — deixe em branco se os perigos já vierem dentro do JSON acima):</p>
+    <textarea id="perigosInput" style="height:120px;" placeholder='Opcional: cole aqui apenas {"perigos": [...]} se você gerou os perigos numa chamada separada da IA...'></textarea>
+
     <button class="btn" onclick="importarJSON()">🚀 Importar para o Firestore</button>
 
     <div id="status"></div>
@@ -374,14 +378,37 @@
 
         window.importarJSON = async function() {
             const jsonStr = document.getElementById('jsonInput').value.trim();
+            const perigosStr = document.getElementById('perigosInput').value.trim();
+
             if (!jsonStr) {
-                alert('Cole o JSON corrigido ou arraste um arquivo.');
+                alert('Cole o JSON da zona ou arraste um arquivo.');
                 return;
             }
 
             try {
                 const dados = JSON.parse(jsonStr);
-                log('📂 JSON carregado com sucesso.', 'ok');
+                log('📂 JSON da zona carregado com sucesso.', 'ok');
+
+                // Se veio um JSON de perigos separado, faz o merge aqui —
+                // assim o Gemini nunca precisa reproduzir de volta a zona
+                // inteira (topologia+prosa+dilemas) só pra anexar perigos,
+                // o que evita risco de ele alterar algo sem querer no que
+                // já estava pronto.
+                if (perigosStr) {
+                    let dadosPerigos;
+                    try {
+                        dadosPerigos = JSON.parse(perigosStr);
+                    } catch (e) {
+                        log(`❌ O JSON de perigos não é válido: ${e.message}`, 'erro');
+                        return;
+                    }
+                    if (!Array.isArray(dadosPerigos.perigos)) {
+                        log('❌ O JSON de perigos precisa ter a forma {"perigos": [...]}.', 'erro');
+                        return;
+                    }
+                    dados.perigos = dadosPerigos.perigos;
+                    log(`☠️ ${dados.perigos.length} perigos (JSON separado) mesclados na zona.`, 'ok');
+                }
 
                 // Verifica se o JSON contém cenas e/ou perigos e avisa
                 if (dados.cenas && dados.cenas.length > 0) {
