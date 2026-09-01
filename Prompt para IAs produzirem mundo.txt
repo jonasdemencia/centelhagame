@@ -1,3 +1,38 @@
+DNA DO MUNDO
+
+Siga o documento de planejamento ao criar as salas:
+
+**Zona 1 (Salas 1 a 10):** Triagem e Recepção Geral
+**Zona 2 (Salas 11 a 20):** Enfermarias de Baixo Risco e Salas de Recreação
+**Zona 3 (Salas 21 a 30):** Refeitório, Cozinhas Industriais e Despensas Apodrecidas
+**Zona 4 (Salas 31 a 40):** Arquivo Morto e Administração Interna
+**Zona 5 (Salas 41 a 50):** Enfermaria Geral Masculina
+**Zona 6 (Salas 51 a 60):** Enfermaria Geral Feminina
+**Zona 7 (Salas 61 a 70):** Ala Pediátrica e Brinquedoteca Abandonada
+**Zona 8 (Salas 71 a 80):** Pavilhão de Isolamento e Doenças Contagiosas
+**Zona 9 (Salas 81 a 90):** Laboratório de Análises e Sala de Raio-X
+**Zona 10 (Salas 91 a 100):** Centro Cirúrgico e Sala de Recuperação Pós-Anestésica
+**Zona 11 (Salas 101 a 110):** Unidade de Terapia Intensiva (UTI) e Monitoramento
+**Zona 12 (Salas 111 a 120):** Ala Psiquiátrica de Baixa Periculosidade
+**Zona 13 (Salas 121 a 130):** Ala Psiquiátrica de Média Segurança
+**Zona 14 (Salas 131 a 140):** Ala Psiquiátrica de Alta Segurança (Os Insondáveis)
+**Zona 15 (Salas 141 a 150):** Ala de Eletrochoque e Hidroterapia
+**Zona 16 (Salas 151 a 160):** Sala de Terapia Ocupacional e Oficinas de Artesanato
+**Zona 17 (Salas 161 a 170):** Farmácia Central e Depósito de Medicamentos Vencidos
+**Zona 18 (Salas 171 a 180):** Lavanderia Industrial e Rouparia
+**Zona 19 (Salas 181 a 190):** Sala de Caldeiras, Geradores e Manutenção Elétrica
+**Zona 20 (Salas 191 a 200):** Necrotério Provisório e Sala de Autópsias
+**Zona 21 (Salas 201 a 210):** Capela Ecumênica e Sala de Velório
+**Zona 22 (Salas 211 a 220):** Alojamento dos Funcionários (Enfermeiros e Seguranças)
+**Zona 23 (Salas 221 a 230):** Central de Vigilância e Sala de Controle de Acesso
+**Zona 24 (Salas 231 a 240):** Depósito de Resíduos Biológicos e Seringas Usadas
+**Zona 25 (Salas 241 a 250):** Sala de Experimentos Pré-Frontais (Lobotomia)
+**Zona 26 (Salas 251 a 260):** Corredor dos Espelhos e Sala de Estimulação Sensorial
+**Zona 27 (Salas 261 a 270):** Sala de Eletroencefalograma e Mapeamento Cerebral
+**Zona 28 (Salas 271 a 280):** Ala dos Pacientes Esquecidos (Isolamento Perpétuo)
+**Zona 29 (Salas 281 a 290):** Sala de Interrogatórios e Confinamento Solitário
+**Zona 30 (Salas 291 a 300):** As Catacumbas Médicas e o Crematório Oculto
+
 ______________________________________________________________________________________________________________________
 TOPOLOGIA, PROSA E DILEMAS
 
@@ -6,7 +41,7 @@ SALA_INICIAL =
 SALA_FINAL = 
 TEMA: [INSIRA AQUI O TEMA, EX: "Sanatório psiquiátrico abandonado nos anos 1980"]
 TOM: [INSIRA AQUI O TOM, EX: "Terror clínico e visceral — horror concreto, com sangue, ferrugem, cheiro de desinfetante, eletrochoques"]
-LORE CENTRAL: [INSIRA AQUI A LORE, EX: "Pacientes desaparecem e os funcionários fingem que nada aconteceu"]
+LORE CENTRAL: [INSIRA AQUI A LORE, EX: "COmplexo sanitário onde as conspirações mais bizarras ocorrem"]
 
 TOPOLOGIA, PROSA E DILEMAS
 
