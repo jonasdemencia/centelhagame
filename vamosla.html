@@ -393,25 +393,32 @@
     .bar-top { top: 0; border-bottom: 1px solid #1a1a14; }
     .bar-bottom { bottom: 0; border-top: 1px solid #1a1a14; }
 
-    #map-controls,
+    /* Oculta apenas os botões de navegação normais, mas mantém o contêiner visível */
 #map-controls .nav-btn,
 #map-controls .nav-btn--dilema,
 #map-controls .nav-btn--ramificacao,
 .item-coletavel {
     display: none !important;
 }
-.btn-continuar {
-    background: #1a2a1a !important;
-    color: #4caf50 !important;
-    border: 1px solid #4caf50 !important;
-    padding: 8px 16px !important;
-    font-family: 'VT323', monospace !important;
-    font-size: 16px !important;
-    cursor: pointer !important;
-    display: block !important;
-    margin: 8px auto !important;
+
+/* Exceção – botão "CONTINUAR" (interceptor e destino) */
+#map-controls .btn-continuar-interceptor {
+    display: inline-block !important;
+    background: #111;
+    color: #aaa;
+    border: 1px solid #444;
+    padding: 8px 12px;
+    font-size: 14px;
+    font-family: 'Courier Prime', monospace;
+    cursor: pointer;
+    transition: 0.2s;
+    text-transform: uppercase;
 }
-        
+#map-controls .btn-continuar-interceptor:hover {
+    background: #ccc;
+    color: #000;
+    border-color: #fff;
+}
     </style>
     <base target="_blank">
 </head>
@@ -4118,23 +4125,14 @@ Retorne EXATAMENTE o JSON abaixo. Nenhuma palavra extra.`
             }
         }
 
-                const botoesAtuais = document.querySelectorAll('#map-controls .nav-btn');
+        const botoesAtuais = document.querySelectorAll('#map-controls .nav-btn');
         botoesAtuais.forEach(btn => { btn.disabled = true; });
         const btnContinuar = document.createElement('button');
+        btnContinuar.className = 'btn-continuar-interceptor';
         btnContinuar.innerText = '> CONTINUAR';
-        btnContinuar.style.cssText = `
-            background: #1a2a1a !important;
-            color: #4caf50 !important;
-            border: 1px solid #4caf50 !important;
-            padding: 8px 16px !important;
-            font-family: 'VT323', monospace !important;
-            font-size: 16px !important;
-            cursor: pointer !important;
-            display: block !important;
-            margin: 8px auto !important;
-            position: relative !important;
-            z-index: 9999 !important;
-        `;
+        btnContinuar.style.background = '#1a2a1a';
+        btnContinuar.style.borderColor = '#4caf50';
+        btnContinuar.style.color = '#4caf50';
         container.appendChild(btnContinuar);
         container.style.pointerEvents = 'auto';
         await new Promise(resolve => {
@@ -4295,23 +4293,14 @@ Retorne EXATAMENTE o JSON abaixo. Nenhuma palavra extra.`
     }
 
     if (opcao.destino) {
-                const container = document.getElementById('map-controls');
+        const container = document.getElementById('map-controls');
         container.innerHTML = '';
         const btnContinuar = document.createElement('button');
+        btnContinuar.className = 'nav-btn';
         btnContinuar.innerText = '> CONTINUAR';
-        btnContinuar.style.cssText = `
-            background: #1a2a1a !important;
-            color: #4caf50 !important;
-            border: 1px solid #4caf50 !important;
-            padding: 8px 16px !important;
-            font-family: 'VT323', monospace !important;
-            font-size: 16px !important;
-            cursor: pointer !important;
-            display: block !important;
-            margin: 8px auto !important;
-            position: relative !important;
-            z-index: 9999 !important;
-        `;
+        btnContinuar.style.background = '#1a2a1a';
+        btnContinuar.style.borderColor = '#4caf50';
+        btnContinuar.style.color = '#4caf50';
         container.appendChild(btnContinuar);
         container.style.pointerEvents = 'auto';
         const mainScroll = document.getElementById('main-scroll-area');
