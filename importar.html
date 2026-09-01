@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Importador de Zonas (com Dilemas)</title>
+    <title>Importador de Zonas (Cenas + Perigos)</title>
     <style>
         body {
             background: #0a0a0a;
@@ -78,9 +78,9 @@
     </style>
 </head>
 <body>
-    <h1>🧩 Importador de Zonas (com Dilemas)</h1>
+    <h1>🧩 Importador de Zonas (Cenas + Perigos)</h1>
     <p>Cole o JSON corrigido do validador ou arraste um arquivo para importar diretamente no Firestore.<br>
-    <strong>As cenas (texto_evento + dilemas) serão injetadas automaticamente nas salas.</strong></p>
+    <strong>As cenas (texto_evento + dilemas) e os perigos (interceptor + nova_opcao) serão injetados automaticamente nas salas.</strong></p>
 
     <div class="file-input-wrapper" id="drop">
         📂 Arraste o arquivo JSON aqui ou clique para selecionar
@@ -257,7 +257,97 @@
                 log(`🎭 "${titulo}" → Sala ${salaId} | texto_evento injetado, ${dilemas.length} dilema(s) processado(s)`, 'ok');
             }
 
-            // 3. Salvar no Firestore
+            // 3. Injetar os perigos (interceptor / nova_opcao) nas salas restantes
+            //
+            // Replica aplicarArquitetoDePerigos() de vamosla.html. No jogo, a
+            // exclusão mútua entre Cena e Perigo é garantida ao vivo (Cenas só
+            // escolhe salas que Perigos ainda não tocou). Aqui a ordem é
+            // invertida por design — Cenas já veio pronta no JSON, e é o
+            // próprio prompt de Perigos que deve evitar as salas com cena.
+            // Por isso, se um perigo aparecer numa sala que já tem cena, o
+            // importador AVISA (não bloqueia) — é sinal de erro na geração,
+            // não motivo pra travar a importação.
+            const salasComCena = new Set(cenas.map(c => String(c.sala_id)));
+            const perigos = Array.isArray(dados.perigos) ? dados.perigos : [];
+
+            for (const perigo of perigos) {
+                const salaId = String(perigo.sala_id);
+                const sala = mapaMundo[salaId];
+                if (!sala) {
+                    log(`⚠️ Perigo para sala ${salaId} ignorado: sala não existe.`, 'aviso');
+                    continue;
+                }
+
+                if (salasComCena.has(salaId)) {
+                    log(`⚠️ Sala ${salaId} tem cena E perigo no mesmo JSON — não deveria acontecer pelo design. Injetando o perigo mesmo assim.`, 'aviso');
+                }
+
+                const narrativaBruta = (perigo.resultado_texto || '').trim();
+                if (!narrativaBruta) {
+                    log(`⚠️ Perigo na sala ${salaId} sem "resultado_texto" — ignorado.`, 'aviso');
+                    continue;
+                }
+
+                const dano = typeof perigo.dano === 'number'
+                    ? Math.min(50, Math.max(0, Math.round(perigo.dano)))
+                    : 0;
+
+                const resultadoTexto = dano > 0
+                    ? `${narrativaBruta.replace(/[.\s]+$/, '')}. Você perde ${dano} de energia.`
+                    : narrativaBruta;
+
+                const tipoResultado = perigo.tipo_resultado || 'neutro';
+
+                if (!sala.opcoes) sala.opcoes = [];
+
+                if (perigo.tipo === 'nova_opcao') {
+                    // Ação de exame que SURGE na sala. Fica oculta igual às opções
+                    // de navegação — o jogador só a encontra digitando uma ação
+                    // que corresponda a algo já descrito no texto_logico.
+                    sala.opcoes.push({
+                        texto: perigo.opcao_texto || 'Examinar anomalia',
+                        arquiteto: true,
+                        resultado_texto: resultadoTexto,
+                        dano,
+                        tipo_resultado: tipoResultado,
+                        disparado: false
+                    });
+                    log(`☠️ Nova opção "${perigo.opcao_texto}" (dano ${dano}) → Sala ${salaId}`, 'ok');
+                } else if (perigo.tipo === 'interceptor') {
+                    // Emboscada NO TRAJETO de uma saída já existente — precisa
+                    // bater exatamente com o texto de uma opção de navegação
+                    // original (não outra já injetada pelo arquiteto).
+                    const opcaoAlvo = sala.opcoes.find(o =>
+                        o.texto === perigo.opcao_texto && o.destino && !o.arquiteto
+                    );
+
+                    if (opcaoAlvo) {
+                        opcaoAlvo.interceptor_arquiteto = {
+                            resultado_texto: resultadoTexto,
+                            dano,
+                            tipo_resultado: tipoResultado,
+                            disparado: false
+                        };
+                        log(`☠️ Interceptor em "${perigo.opcao_texto}" (dano ${dano}) → Sala ${salaId}`, 'ok');
+                    } else {
+                        // Mesmo fallback do jogo: se o texto não bateu com
+                        // nenhuma saída existente, vira uma opção nova.
+                        sala.opcoes.push({
+                            texto: perigo.opcao_texto || 'Investigar caminho obstruído',
+                            arquiteto: true,
+                            resultado_texto: resultadoTexto,
+                            dano,
+                            tipo_resultado: tipoResultado,
+                            disparado: false
+                        });
+                        log(`⚠️ Interceptor "${perigo.opcao_texto}" não bateu com nenhuma saída da sala ${salaId} — injetado como opção nova (fallback).`, 'aviso');
+                    }
+                } else {
+                    log(`⚠️ Perigo na sala ${salaId} com "tipo" desconhecido ("${perigo.tipo}") — ignorado.`, 'aviso');
+                }
+            }
+
+            // 4. Salvar no Firestore
             const docRef = db.collection('players').doc(uid);
             await docRef.update({
                 mapaMundo: mapaMundo,
@@ -293,9 +383,12 @@
                 const dados = JSON.parse(jsonStr);
                 log('📂 JSON carregado com sucesso.', 'ok');
 
-                // Verifica se o JSON contém cenas e avisa
+                // Verifica se o JSON contém cenas e/ou perigos e avisa
                 if (dados.cenas && dados.cenas.length > 0) {
                     log(`🎭 ${dados.cenas.length} cenas encontradas. Serão injetadas como dilemas.`, 'info');
+                }
+                if (dados.perigos && dados.perigos.length > 0) {
+                    log(`☠️ ${dados.perigos.length} perigos encontrados. Serão injetados como interceptor/nova_opcao.`, 'info');
                 }
 
                 // Pega o UID do usuário (versão compat)
@@ -375,7 +468,7 @@
         });
 
         log('🔧 Importador pronto. Cole o JSON ou arraste um arquivo.', 'info');
-        log('📌 O texto_evento de cada cena será fundido ao texto_logico da sala, e os dilemas serão injetados como opções.', 'info');
+        log('📌 O texto_evento de cada cena será fundido ao texto_logico da sala, os dilemas viram opções, e os perigos (interceptor/nova_opcao) são injetados nas salas restantes.', 'info');
     </script>
 </body>
 </html>
