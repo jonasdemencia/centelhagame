@@ -3,84 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Importador de Zonas (Cenas + Perigos)</title>
+    <title>Importador de Zonas (Cenas + Perigos) Inteligente</title>
     <style>
-        body {
-            background: #0a0a0a;
-            color: #ccc;
-            font-family: 'Courier New', monospace;
-            padding: 20px;
-            max-width: 800px;
-            margin: 0 auto;
-        }
-        .ok { color: #4caf50; }
-        .erro { color: #e53935; }
-        .aviso { color: #d9a441; }
-        textarea {
-            width: 100%;
-            height: 300px;
-            background: #111;
-            color: #ccc;
-            border: 1px solid #333;
-            padding: 10px;
-            font-family: 'Courier New', monospace;
-            font-size: 12px;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-        .btn {
-            background: #d9a441;
-            color: #000;
-            border: none;
-            padding: 12px 24px;
-            cursor: pointer;
-            font-weight: bold;
-            border-radius: 4px;
-            margin-top: 10px;
-            font-family: inherit;
-        }
+        /* ... (estilos mantidos exatamente como no original) ... */
+        body { background: #0a0a0a; color: #ccc; font-family: 'Courier New', monospace; padding: 20px; max-width: 800px; margin: 0 auto; }
+        .ok { color: #4caf50; } .erro { color: #e53935; } .aviso { color: #d9a441; }
+        textarea { width: 100%; height: 300px; background: #111; color: #ccc; border: 1px solid #333; padding: 10px; font-family: 'Courier New', monospace; font-size: 12px; border-radius: 4px; box-sizing: border-box; }
+        .btn { background: #d9a441; color: #000; border: none; padding: 12px 24px; cursor: pointer; font-weight: bold; border-radius: 4px; margin-top: 10px; font-family: inherit; }
         .btn:hover { background: #e0b050; }
-        .file-input-wrapper {
-            margin: 20px 0;
-            padding: 20px;
-            border: 2px dashed #444;
-            border-radius: 8px;
-            text-align: center;
-            cursor: pointer;
-        }
-        .file-input-wrapper.dragover {
-            border-color: #d9a441;
-            background: #1a150a;
-        }
-        pre {
-            background: #0a0a0a;
-            padding: 10px;
-            border: 1px solid #222;
-            overflow: auto;
-            max-height: 200px;
-            font-size: 11px;
-            border-radius: 4px;
-        }
-        #status {
-            margin: 10px 0;
-            padding: 10px;
-            background: #0a0a0a;
-            border: 1px solid #222;
-            max-height: 200px;
-            overflow: auto;
-            font-size: 12px;
-            border-radius: 4px;
-        }
-        #status .ok { color: #4caf50; }
-        #status .erro { color: #e53935; }
-        #status .aviso { color: #d9a441; }
-        #status .info { color: #888; }
+        .file-input-wrapper { margin: 20px 0; padding: 20px; border: 2px dashed #444; border-radius: 8px; text-align: center; cursor: pointer; }
+        .file-input-wrapper.dragover { border-color: #d9a441; background: #1a150a; }
+        pre { background: #0a0a0a; padding: 10px; border: 1px solid #222; overflow: auto; max-height: 200px; font-size: 11px; border-radius: 4px; }
+        #status { margin: 10px 0; padding: 10px; background: #0a0a0a; border: 1px solid #222; max-height: 200px; overflow: auto; font-size: 12px; border-radius: 4px; }
+        #status .ok { color: #4caf50; } #status .erro { color: #e53935; } #status .aviso { color: #d9a441; } #status .info { color: #888; }
     </style>
 </head>
 <body>
-    <h1>🧩 Importador de Zonas (Cenas + Perigos)</h1>
+    <h1>🧩 Importador de Zonas (Cenas + Perigos) Inteligente</h1>
     <p>Cole o JSON corrigido do validador ou arraste um arquivo para importar diretamente no Firestore.<br>
-    <strong>As cenas (texto_evento + dilemas) e os perigos (interceptor + nova_opcao) serão injetados automaticamente nas salas.</strong></p>
+    <strong>As cenas (texto_evento + dilemas) e os perigos (interceptor + nova_opcao) serão injetados automaticamente nas salas.</strong><br>
+    <em>Para perigos: se a sala já tiver perigos no Firestore, eles serão substituídos; caso contrário, os novos serão adicionados sem apagar nada.</em></p>
 
     <div class="file-input-wrapper" id="drop">
         📂 Arraste o arquivo da zona OU dos perigos aqui — o importador identifica o conteúdo e coloca no campo certo
@@ -99,7 +41,6 @@
     <div id="status"></div>
     <div id="resultado"></div>
 
-    <!-- Firebase compat (versão que suporta firebase.auth()) -->
     <script src="https://www.gstatic.com/firebasejs/11.4.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/11.4.0/firebase-auth-compat.js"></script>
@@ -122,8 +63,6 @@
 
         // ============================================================
         // LIMPEZA DE VÍCIOS DE IA (idêntica à de vamosla.html)
-        // Precisa existir aqui também porque o importador é um arquivo
-        // separado do jogo e não tem acesso às funções dele.
         // ============================================================
         function expurgarViciosIA(texto) {
             if (!texto) return texto;
@@ -134,15 +73,8 @@
         }
 
         // ============================================================
-        // FUNÇÃO DE IMPORTAÇÃO (COM INJEÇÃO DE TEXTO_EVENTO + DILEMAS)
-        //
-        // Replica fielmente aplicarArquitetoDeCenas() de vamosla.html,
-        // para que uma zona importada manualmente fique idêntica a uma
-        // gerada organicamente pelo Arquiteto de Cenas. Antes, esta
-        // função só injetava os dilemas e ignorava cena.texto_evento —
-        // por isso a descrição do evento (ex: "O Zelador Cego") nunca
-        // aparecia no jogo, mesmo com cena_titulo e a opção de dilema
-        // salvos corretamente no Firestore.
+        // FUNÇÃO DE IMPORTAÇÃO (COM INJEÇÃO DE TEXTO_EVENTO + DILEMAS
+        // E AGORA COM FUSÃO INTELIGENTE PARA PERIGOS)
         // ============================================================
         async function importarParaFirestore(dados, uid) {
             const plano = dados.plano || {};
@@ -180,13 +112,10 @@
                 const textoEvento = expurgarViciosIA((cena.texto_evento || '').trim());
 
                 if (!textoEvento) {
-                    // Mesmo comportamento do jogo: sem texto_evento, a cena
-                    // inteira (inclusive dilemas) é ignorada para esta sala.
                     log(`⚠️ Cena "${titulo}" (sala ${salaId}) não tem "texto_evento" no JSON — nada foi injetado nesta sala.`, 'aviso');
                     continue;
                 }
 
-                // Funde o texto_evento no texto_logico, na mesma ordem/formatação do jogo
                 let textoBase = expurgarViciosIA((sala.texto_logico || '').trim());
                 sala.texto_logico = `${textoBase.replace(/[.\s]+$/, '')}. ${textoEvento}`;
                 sala.cena_titulo = titulo;
@@ -194,8 +123,6 @@
 
                 if (!sala.opcoes) sala.opcoes = [];
 
-                // Destinos "reais" já existentes na sala (saídas do plano),
-                // usados para validar para onde um dilema pode levar
                 const destinosValidos = new Set(
                     (sala.opcoes || [])
                         .filter(o => o.destino && !o.arquiteto)
@@ -222,7 +149,6 @@
                         ? parseInt(destinoRaw)
                         : null;
 
-                    // Valida e prepara ramificações, igual ao jogo
                     const ramsRaw = Array.isArray(dilema.ramificacoes) ? dilema.ramificacoes : [];
                     const ramificacoes = ramsRaw
                         .filter(r => r.opcao_texto && r.resultado_texto)
@@ -248,7 +174,7 @@
 
                     sala.opcoes.push({
                         texto: opcaoTexto,
-                        arquiteto: true,        // sinaliza que veio do arquiteto
+                        arquiteto: true,
                         dilema: true,
                         resultado_texto: resultadoTexto,
                         dano,
@@ -262,17 +188,10 @@
             }
 
             // 3. Injetar os perigos (interceptor / nova_opcao) nas salas restantes
-            //
-            // Replica aplicarArquitetoDePerigos() de vamosla.html. No jogo, a
-            // exclusão mútua entre Cena e Perigo é garantida ao vivo (Cenas só
-            // escolhe salas que Perigos ainda não tocou). Aqui a ordem é
-            // invertida por design — Cenas já veio pronta no JSON, e é o
-            // próprio prompt de Perigos que deve evitar as salas com cena.
-            // Por isso, se um perigo aparecer numa sala que já tem cena, o
-            // importador AVISA (não bloqueia) — é sinal de erro na geração,
-            // não motivo pra travar a importação.
+            // Agora também registramos as salas que recebem perigos para a fusão inteligente.
             const salasComCena = new Set(cenas.map(c => String(c.sala_id)));
             const perigos = Array.isArray(dados.perigos) ? dados.perigos : [];
+            const salasComPerigos = new Set(); // <-- NOVO: guarda os IDs das salas que receberam perigos
 
             for (const perigo of perigos) {
                 const salaId = String(perigo.sala_id);
@@ -281,6 +200,8 @@
                     log(`⚠️ Perigo para sala ${salaId} ignorado: sala não existe.`, 'aviso');
                     continue;
                 }
+
+                salasComPerigos.add(salaId); // marca a sala como tendo perigo processado
 
                 if (salasComCena.has(salaId)) {
                     log(`⚠️ Sala ${salaId} tem cena E perigo no mesmo JSON — não deveria acontecer pelo design. Injetando o perigo mesmo assim.`, 'aviso');
@@ -305,9 +226,6 @@
                 if (!sala.opcoes) sala.opcoes = [];
 
                 if (perigo.tipo === 'nova_opcao') {
-                    // Ação de exame que SURGE na sala. Fica oculta igual às opções
-                    // de navegação — o jogador só a encontra digitando uma ação
-                    // que corresponda a algo já descrito no texto_logico.
                     sala.opcoes.push({
                         texto: perigo.opcao_texto || 'Examinar anomalia',
                         arquiteto: true,
@@ -318,9 +236,6 @@
                     });
                     log(`☠️ Nova opção "${perigo.opcao_texto}" (dano ${dano}) → Sala ${salaId}`, 'ok');
                 } else if (perigo.tipo === 'interceptor') {
-                    // Emboscada NO TRAJETO de uma saída já existente — precisa
-                    // bater exatamente com o texto de uma opção de navegação
-                    // original (não outra já injetada pelo arquiteto).
                     const opcaoAlvo = sala.opcoes.find(o =>
                         o.texto === perigo.opcao_texto && o.destino && !o.arquiteto
                     );
@@ -334,8 +249,6 @@
                         };
                         log(`☠️ Interceptor em "${perigo.opcao_texto}" (dano ${dano}) → Sala ${salaId}`, 'ok');
                     } else {
-                        // Mesmo fallback do jogo: se o texto não bateu com
-                        // nenhuma saída existente, vira uma opção nova.
                         sala.opcoes.push({
                             texto: perigo.opcao_texto || 'Investigar caminho obstruído',
                             arquiteto: true,
@@ -352,33 +265,71 @@
             }
 
             // 4. Trava de segurança: nunca grava um mapaMundo vazio no Firestore.
-            // Foi exatamente isso que causou "0 salas injetadas" antes — o JSON
-            // colado não tinha "plano"/"salas" (só os perigos), e mesmo assim a
-            // importação seguiu e sobrescreveu o documento do jogador com um
-            // mapaMundo vazio. Agora isso aborta ANTES de tocar no Firestore.
             if (Object.keys(mapaMundo).length === 0) {
                 throw new Error('Nenhuma sala válida foi montada a partir do JSON colado (faltam "plano" e/ou "salas"). NADA foi salvo no Firestore — confira se o JSON completo da zona está na caixa principal, não só os perigos.');
             }
 
-            // 5. Salvar no Firestore de forma incremental (Dot Notation)
-const docRef = db.collection('players').doc(uid);
-const updatePayload = {};
+            // 5. Salvar no Firestore com LÓGICA INTELIGENTE PARA PERIGOS
+            const docRef = db.collection('players').doc(uid);
+            const docSnap = await docRef.get();
+            const dadosAtuais = docSnap.data() || {};
+            const mapaMundoAtual = dadosAtuais.mapaMundo || {};
 
-// Adiciona apenas as chaves das salas novas, sem apagar o que já existe no Firestore
-for (const [id, sala] of Object.entries(mapaMundo)) {
-    updatePayload[`mapaMundo.${id}`] = sala;
-}
+            const updatePayload = {};
 
-// Se for a primeira importação (Sala 1), seta a posição inicial. Se não, apenas injeta as salas novas.
-if (mapaMundo["1"]) {
-    updatePayload["zonaAtual"] = 1;
-    updatePayload["secaoAtualId"] = "1";
-}
+            for (const [id, sala] of Object.entries(mapaMundo)) {
+                // Se esta sala está recebendo perigos E já existe no Firestore,
+                // fazemos uma fusão que substitui apenas os perigos antigos.
+                if (salasComPerigos.has(id) && mapaMundoAtual[id]) {
+                    const salaAntiga = JSON.parse(JSON.stringify(mapaMundoAtual[id])); // deep clone
 
-await docRef.update(updatePayload);
+                    // Remove todos os perigos antigos (opções de arquiteto que não são dilemas)
+                    if (salaAntiga.opcoes) {
+                        salaAntiga.opcoes = salaAntiga.opcoes.filter(op => !(op.arquiteto === true && !op.dilema));
+                        // Remove interceptors antigos
+                        salaAntiga.opcoes.forEach(op => {
+                            if (op.interceptor_arquiteto) {
+                                delete op.interceptor_arquiteto;
+                            }
+                        });
+                    }
 
-            return { mapaMundo }; // <-- Adicione o retorno
-} // <-- Adicione a chave de fechamento da função
+                    // Agora adiciona os novos perigos extraídos de 'sala' (construída do zero)
+                    const novasOpcoesPerigo = sala.opcoes.filter(op => op.arquiteto === true && !op.dilema);
+                    salaAntiga.opcoes = salaAntiga.opcoes || [];
+                    salaAntiga.opcoes.push(...novasOpcoesPerigo);
+
+                    // Aplica interceptors novos às opções correspondentes
+                    for (const op of sala.opcoes) {
+                        if (op.interceptor_arquiteto) {
+                            const alvo = salaAntiga.opcoes.find(o => o.texto === op.texto && o.destino && !o.arquiteto);
+                            if (alvo) {
+                                alvo.interceptor_arquiteto = op.interceptor_arquiteto;
+                            }
+                        }
+                    }
+
+                    updatePayload[`mapaMundo.${id}`] = salaAntiga;
+                    log(`🔄 Sala ${id}: perigos substituídos preservando o restante (textos, saídas, dilemas).`, 'info');
+                } else {
+                    // Sala nova (sem existir no Firestore) ou sem perigos (substituição total como antes)
+                    updatePayload[`mapaMundo.${id}`] = sala;
+                    if (salasComPerigos.has(id)) {
+                        log(`➕ Sala ${id}: nova no Firestore, perigos adicionados.`, 'info');
+                    }
+                }
+            }
+
+            // Se for a primeira importação (Sala 1), seta a posição inicial
+            if (mapaMundo["1"] && !dadosAtuais.zonaAtual) {
+                updatePayload["zonaAtual"] = 1;
+                updatePayload["secaoAtualId"] = "1";
+            }
+
+            await docRef.update(updatePayload);
+
+            return { mapaMundo };
+        }
         
         // ============================================================
         // UI
@@ -407,11 +358,6 @@ await docRef.update(updatePayload);
                 const dados = JSON.parse(jsonStr);
                 log('📂 JSON da zona carregado com sucesso.', 'ok');
 
-                // Se veio um JSON de perigos separado, faz o merge aqui —
-                // assim o Gemini nunca precisa reproduzir de volta a zona
-                // inteira (topologia+prosa+dilemas) só pra anexar perigos,
-                // o que evita risco de ele alterar algo sem querer no que
-                // já estava pronto.
                 if (perigosStr) {
                     let dadosPerigos;
                     try {
@@ -428,7 +374,6 @@ await docRef.update(updatePayload);
                     log(`☠️ ${dados.perigos.length} perigos (JSON separado) mesclados na zona.`, 'ok');
                 }
 
-                // Verifica se o JSON contém cenas e/ou perigos e avisa
                 if (dados.cenas && dados.cenas.length > 0) {
                     log(`🎭 ${dados.cenas.length} cenas encontradas. Serão injetadas como dilemas.`, 'info');
                 }
@@ -436,7 +381,6 @@ await docRef.update(updatePayload);
                     log(`☠️ ${dados.perigos.length} perigos encontrados. Serão injetados como interceptor/nova_opcao.`, 'info');
                 }
 
-                // Pega o UID do usuário (versão compat)
                 const auth = firebase.auth();
                 const user = auth.currentUser;
 
@@ -497,10 +441,6 @@ await docRef.update(updatePayload);
             reader.onload = (e) => {
                 const texto = e.target.result;
 
-                // Detecta pelo conteúdo se é a zona ou só os perigos, e joga
-                // no campo certo — assim não importa a ordem em que você
-                // arrasta os dois arquivos, nem risco de um sobrescrever o
-                // outro sem querer (foi isso que zerou o mapaMundo antes).
                 let destino = 'jsonInput';
                 let rotulo = 'zona (campo principal)';
                 try {
@@ -512,7 +452,7 @@ await docRef.update(updatePayload);
                         rotulo = 'perigos (campo separado)';
                     }
                 } catch (err) {
-                    // não parseou ainda (arquivo parcial/inválido) — mantém no campo principal
+                    // mantém no campo principal
                 }
 
                 document.getElementById(destino).value = texto;
@@ -533,7 +473,7 @@ await docRef.update(updatePayload);
         });
 
         log('🔧 Importador pronto. Cole o JSON ou arraste um arquivo.', 'info');
-        log('📌 O texto_evento de cada cena será fundido ao texto_logico da sala, os dilemas viram opções, e os perigos (interceptor/nova_opcao) são injetados nas salas restantes.', 'info');
+        log('📌 O texto_evento de cada cena será fundido ao texto_logico da sala, os dilemas viram opções, e os perigos (interceptor/nova_opcao) são injetados com lógica inteligente de substituição quando necessário.', 'info');
     </script>
 </body>
 </html>
