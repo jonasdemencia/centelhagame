@@ -401,15 +401,15 @@
     display: none !important;
 }
 .btn-continuar {
-    background: #1a2a1a;
-    color: #4caf50;
-    border: 1px solid #4caf50;
-    padding: 8px 16px;
-    font-family: 'VT323', monospace;
-    font-size: 16px;
-    cursor: pointer;
-    display: block; /* redundante, mas seguro */
-    margin: 8px auto;
+    background: #1a2a1a !important;
+    color: #4caf50 !important;
+    border: 1px solid #4caf50 !important;
+    padding: 8px 16px !important;
+    font-family: 'VT323', monospace !important;
+    font-size: 16px !important;
+    cursor: pointer !important;
+    display: block !important;
+    margin: 8px auto !important;
 }
         
     </style>
@@ -4118,15 +4118,23 @@ Retorne EXATAMENTE o JSON abaixo. Nenhuma palavra extra.`
             }
         }
 
-        const botoesAtuais = document.querySelectorAll('#map-controls .nav-btn');
+                const botoesAtuais = document.querySelectorAll('#map-controls .nav-btn');
         botoesAtuais.forEach(btn => { btn.disabled = true; });
         const btnContinuar = document.createElement('button');
-        btnContinuar.className = 'btn-continuar';
-        btnContinuar.style.display = 'block';
         btnContinuar.innerText = '> CONTINUAR';
-        btnContinuar.style.background = '#1a2a1a';
-        btnContinuar.style.borderColor = '#4caf50';
-        btnContinuar.style.color = '#4caf50';
+        btnContinuar.style.cssText = `
+            background: #1a2a1a !important;
+            color: #4caf50 !important;
+            border: 1px solid #4caf50 !important;
+            padding: 8px 16px !important;
+            font-family: 'VT323', monospace !important;
+            font-size: 16px !important;
+            cursor: pointer !important;
+            display: block !important;
+            margin: 8px auto !important;
+            position: relative !important;
+            z-index: 9999 !important;
+        `;
         container.appendChild(btnContinuar);
         container.style.pointerEvents = 'auto';
         await new Promise(resolve => {
@@ -4287,15 +4295,23 @@ Retorne EXATAMENTE o JSON abaixo. Nenhuma palavra extra.`
     }
 
     if (opcao.destino) {
-        const container = document.getElementById('map-controls');
+                const container = document.getElementById('map-controls');
         container.innerHTML = '';
         const btnContinuar = document.createElement('button');
-        btnContinuar.className = 'btn-continuar';
-        btnContinuar.style.display = 'block';
         btnContinuar.innerText = '> CONTINUAR';
-        btnContinuar.style.background = '#1a2a1a';
-        btnContinuar.style.borderColor = '#4caf50';
-        btnContinuar.style.color = '#4caf50';
+        btnContinuar.style.cssText = `
+            background: #1a2a1a !important;
+            color: #4caf50 !important;
+            border: 1px solid #4caf50 !important;
+            padding: 8px 16px !important;
+            font-family: 'VT323', monospace !important;
+            font-size: 16px !important;
+            cursor: pointer !important;
+            display: block !important;
+            margin: 8px auto !important;
+            position: relative !important;
+            z-index: 9999 !important;
+        `;
         container.appendChild(btnContinuar);
         container.style.pointerEvents = 'auto';
         const mainScroll = document.getElementById('main-scroll-area');
