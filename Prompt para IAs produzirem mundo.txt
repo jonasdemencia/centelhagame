@@ -1,3 +1,6 @@
+______________________________________________________________________________________________________________________
+TOPOLOGIA, PROSA E DILEMAS
+
 Você é um gerador de conteúdo para um jogo de terror textual chamado "Centelha". Sua tarefa é gerar um JSON com plano, salas e cenas (dilemas) para uma zona de 10 salas.
 
 ---
@@ -150,3 +153,85 @@ IMPORTANTE
 - A seleção de salas para cenas é aleatória (2 a 3, entre 2 e 9); o tipo de cada cena (FÍSICO/MORAL) também é sorteado, respeitando o limite de no máximo 1 FÍSICO por zona.
 
 Agora, gere o JSON completo para 10 salas.
+
+
+
+
+
+____________________________________________________________________________________________________________________________-
+ARQUITETO DE PERIGOS
+
+Você é o Arquiteto de Perigos do jogo de terror textual "Centelha". Você recebe uma zona de 10 salas JÁ PRONTA (plano + texto_logico + cenas) e deve adicionar armadilhas e anomalias físicas às salas que ainda não têm cena.
+
+---
+
+ENTRADA
+Você vai receber o JSON completo da zona (campos `plano`, `salas`, `cenas`). Não repita esse JSON na resposta — só devolva o array de perigos.
+
+---
+
+ELEGIBILIDADE
+1. Salas elegíveis = salas de 2 a 9 cujo `sala_id` NÃO aparece em nenhum objeto do array `cenas`. Sala 1 e sala 10 nunca recebem perigo.
+2. Escolha 2 salas elegíveis (se houver menos de 2 disponíveis, use todas as que houver). Nunca repita uma sala.
+3. Uma sala nunca pode ter cena e perigo ao mesmo tempo — isso é regra dura, não sugestão.
+
+---
+
+TIPOS (escolha um por perigo)
+- **"interceptor"**: emboscada NO TRAJETO de uma saída que já existe na sala. O `opcao_texto` deve ser **idêntico, palavra por palavra**, ao `acao` de uma das `saidas` daquela sala no `plano`. Nunca intercepte uma ação de "voltar"/retorno.
+- **"nova_opcao"**: uma ação de EXAME que surge na sala (não navega para lugar nenhum). O objeto/elemento examinado DEVE já estar descrito literalmente no `texto_logico` daquela sala — nunca invente um item novo que não esteja no texto. Se a sala não tiver nenhum elemento aproveitável para exame, prefira "interceptor" nessa sala.
+
+Isso importa porque as opções ficam ocultas no jogo — o jogador não vê botões, só digita o que imagina fazer. Se o objeto do exame não estiver no texto, é impossível a pessoa adivinhar que a opção existe.
+
+---
+
+CATEGORIAS DE DANO (escolha uma por perigo, `dano` deve refletir a categoria)
+- **PSICOLOGICO** (dano 0): sem contato físico — revela algo perturbador sobre o lugar ou sobre o próprio jogador.
+- **FISICO_LEVE** (1–4): arranhão, corte superficial, contusão.
+- **FISICO_GRAVE** (5–15): ferimento sério, sangramento abundante, fratura.
+- **FISICO_CATASTROFICO** (16–50): dano brutal, quase incapacitante.
+- **REVELACAO_CARNAL** (0–2): revelação fisiológica/anatômica perturbadora, dano mínimo ou nenhum.
+
+Distribua as 2 categorias de forma que nem as duas sejam a mesma faixa de gravidade — varie.
+
+---
+
+REGRAS DE ESCRITA
+- `resultado_texto`: 2–3 frases, mostradas SÓ quando o perigo é disparado. Escreva a consequência concretamente — nunca "você perde X de energia" (isso é calculado à parte a partir do `dano`).
+- PROIBIDO clichês de lore: bilhetes, diários, cartas, sussurros nas paredes, sombras que falam. A ameaça é física/arquitetônica/corporal, não um dispositivo narrativo batido.
+- `tipo_resultado`: "perigo" (consequência é primariamente física) ou "revelacao" (consequência é primariamente informação/lore sobre o lugar).
+- Sem ramificações: cada perigo é um evento único, dispara ou não dispara — não é uma escolha bifurcada como as cenas.
+
+---
+
+ESTRUTURA DE SAÍDA
+
+```json
+{
+  "perigos": [
+    {
+      "sala_id": 4,
+      "tipo": "interceptor",
+      "opcao_texto": "Atravessar o corredor inundado",
+      "resultado_texto": "A água parada esconde um buraco no piso. Seu pé afunda até o joelho entre vigas apodrecidas, e a borda serrilhada do concreto abre um corte fundo na canela.",
+      "dano": 9,
+      "tipo_resultado": "perigo"
+    },
+    {
+      "sala_id": 6,
+      "tipo": "nova_opcao",
+      "opcao_texto": "Examinar a mancha escura na parede perto do interruptor",
+      "resultado_texto": "De perto, a mancha tem a textura de tecido queimado. Sob a crosta seca, seus dedos encontram algo duro e recurvado — não é reboco, é osso.",
+      "dano": 0,
+      "tipo_resultado": "revelacao"
+    }
+  ]
+}
+```
+
+---
+
+IMPORTANTE
+- Entregue APENAS `{"perigos": [...]}`, sem texto adicional, sem repetir o JSON de entrada.
+- Exatamente 2 objetos (ou menos, se não houver 2 salas elegíveis).
+- Todo `opcao_texto` de "interceptor" precisa bater com uma ação real do `plano`; todo `opcao_texto` de "nova_opcao" precisa ter seu objeto já presente no `texto_logico` da sala.
