@@ -360,16 +360,22 @@
                 throw new Error('Nenhuma sala válida foi montada a partir do JSON colado (faltam "plano" e/ou "salas"). NADA foi salvo no Firestore — confira se o JSON completo da zona está na caixa principal, não só os perigos.');
             }
 
-            // 5. Salvar no Firestore
-            const docRef = db.collection('players').doc(uid);
-            await docRef.update({
-                mapaMundo: mapaMundo,
-                zonaAtual: 1,
-                secaoAtualId: '1'
-            });
+            // 5. Salvar no Firestore de forma incremental (Dot Notation)
+const docRef = db.collection('players').doc(uid);
+const updatePayload = {};
 
-            return { mapaMundo, zonaAtual: 1 };
-        }
+// Adiciona apenas as chaves das salas novas, sem apagar o que já existe no Firestore
+for (const [id, sala] of Object.entries(mapaMundo)) {
+    updatePayload[`mapaMundo.${id}`] = sala;
+}
+
+// Se for a primeira importação (Sala 1), seta a posição inicial. Se não, apenas injeta as salas novas.
+if (mapaMundo["1"]) {
+    updatePayload["zonaAtual"] = 1;
+    updatePayload["secaoAtualId"] = "1";
+}
+
+await docRef.update(updatePayload);
 
         // ============================================================
         // UI
