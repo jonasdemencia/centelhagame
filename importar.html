@@ -83,7 +83,7 @@
     <strong>As cenas (texto_evento + dilemas) e os perigos (interceptor + nova_opcao) serão injetados automaticamente nas salas.</strong></p>
 
     <div class="file-input-wrapper" id="drop">
-        📂 Arraste o arquivo JSON aqui ou clique para selecionar
+        📂 Arraste o arquivo da zona OU dos perigos aqui — o importador identifica o conteúdo e coloca no campo certo
         <input type="file" id="fileInput" accept=".json" style="display:none;">
     </div>
 
@@ -351,7 +351,16 @@
                 }
             }
 
-            // 4. Salvar no Firestore
+            // 4. Trava de segurança: nunca grava um mapaMundo vazio no Firestore.
+            // Foi exatamente isso que causou "0 salas injetadas" antes — o JSON
+            // colado não tinha "plano"/"salas" (só os perigos), e mesmo assim a
+            // importação seguiu e sobrescreveu o documento do jogador com um
+            // mapaMundo vazio. Agora isso aborta ANTES de tocar no Firestore.
+            if (Object.keys(mapaMundo).length === 0) {
+                throw new Error('Nenhuma sala válida foi montada a partir do JSON colado (faltam "plano" e/ou "salas"). NADA foi salvo no Firestore — confira se o JSON completo da zona está na caixa principal, não só os perigos.');
+            }
+
+            // 5. Salvar no Firestore
             const docRef = db.collection('players').doc(uid);
             await docRef.update({
                 mapaMundo: mapaMundo,
@@ -477,8 +486,28 @@
         function lerArquivo(file) {
             const reader = new FileReader();
             reader.onload = (e) => {
-                document.getElementById('jsonInput').value = e.target.result;
-                log('📂 Arquivo carregado. Clique em "Importar" para enviar.', 'info');
+                const texto = e.target.result;
+
+                // Detecta pelo conteúdo se é a zona ou só os perigos, e joga
+                // no campo certo — assim não importa a ordem em que você
+                // arrasta os dois arquivos, nem risco de um sobrescrever o
+                // outro sem querer (foi isso que zerou o mapaMundo antes).
+                let destino = 'jsonInput';
+                let rotulo = 'zona (campo principal)';
+                try {
+                    const parsed = JSON.parse(texto);
+                    const temZona = parsed && (parsed.plano || parsed.salas || parsed.cenas);
+                    const soPerigos = parsed && Array.isArray(parsed.perigos) && !temZona;
+                    if (soPerigos) {
+                        destino = 'perigosInput';
+                        rotulo = 'perigos (campo separado)';
+                    }
+                } catch (err) {
+                    // não parseou ainda (arquivo parcial/inválido) — mantém no campo principal
+                }
+
+                document.getElementById(destino).value = texto;
+                log(`📂 Arquivo carregado no campo de ${rotulo}. Clique em "Importar" para enviar.`, 'info');
             };
             reader.readAsText(file);
         }
