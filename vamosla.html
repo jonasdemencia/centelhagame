@@ -5320,7 +5320,6 @@ REGRA DE FIDELIDADE: Se o botão cita uma porta, janela ou item, certifique-se d
     // Se já existe estado salvo, NÃO gerar novamente
     if (window.sistemaChaves && Object.keys(window.sistemaChaves.portasTrancadas).length > 0) {
         console.log("[Chaves] Usando estado existente (persistido no Firestore):", window.sistemaChaves);
-        // Log apenas para debug
         for (const [key, info] of Object.entries(window.sistemaChaves.portasTrancadas)) {
             console.log(`[Chaves] Porta trancada: "${info.texto}" na sala ${info.salaId}`);
         }
@@ -5332,7 +5331,6 @@ REGRA DE FIDELIDADE: Se o botão cita uma porta, janela ou item, certifique-se d
 
     console.log("[Chaves] Inicializando sistema de portas trancadas e chaves (primeira vez)...");
 
-    // Reinicia o objeto
     window.sistemaChaves = {
         portasTrancadas: {},
         chavesAnexadas: {}
@@ -5362,7 +5360,19 @@ REGRA DE FIDELIDADE: Se o botão cita uma porta, janela ou item, certifique-se d
             const sala = mapaMundo[salaId];
             if (!sala) return;
 
-            if (ehNomePorta(textoNav) && navOpt.destino && navOpt.destino > parseInt(salaId)) {
+            const opcoes = sala.opcoes || [];
+            opcoes.forEach((navOpt, idx) => {
+                const textoNav = navOpt.texto || navOpt.opcao_texto || "";
+                // SÓ TRANCAR PORTAS EM SENTIDO ASCENDENTE (destino > sala atual)
+                if (ehNomePorta(textoNav) && navOpt.destino && navOpt.destino > parseInt(salaId)) {
+                    portasElegiveis.push({
+                        salaId: salaId,
+                        numSala: numSala,
+                        navOpt: navOpt,
+                        texto: textoNav,
+                        keyState: `${salaId}_${navOpt.destino}`
+                    });
+                }
             });
         });
 
@@ -5432,11 +5442,9 @@ REGRA DE FIDELIDADE: Se o botão cita uma porta, janela ou item, certifique-se d
         }
     }
 
-    // Salva o estado gerado no Firestore
     salvarEstadoJogador();
     console.log(`[Chaves] ${Object.keys(window.sistemaChaves.portasTrancadas).length} portas trancadas configuradas e salvas.`);
 }
-
         // ============================================================
         // RECALCULAR COORDENADAS PARA MAPA
         // ============================================================
