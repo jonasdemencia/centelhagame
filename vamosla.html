@@ -5350,18 +5350,31 @@ REGRA DE FIDELIDADE: Se o botão cita uma porta, janela ou item, certifique-se d
         function inicializarPortasEChaves() {
     if (!mapaMundo) return;
 
-    // Se já existe estado salvo, NÃO gerar novamente
+    // Se já existe estado salvo, RESTAURAR as flags nas opções
     if (window.sistemaChaves && Object.keys(window.sistemaChaves.portasTrancadas).length > 0) {
         console.log("[Chaves] Usando estado existente (persistido no Firestore):", window.sistemaChaves);
+        // Restaurar as chaves anexadas nas opções de exame
+        for (const [key, info] of Object.entries(window.sistemaChaves.chavesAnexadas)) {
+            const [salaId, idxStr] = key.split('_');
+            const idx = parseInt(idxStr, 10);
+            const sala = mapaMundo[salaId];
+            if (sala && sala.opcoes && sala.opcoes[idx]) {
+                const opcao = sala.opcoes[idx];
+                opcao.temChaveAnexada = true;
+                opcao._chaveAnexadaKey = key;
+                console.log(`[Chaves] Restaurada flag de chave na opção "${opcao.texto}" (sala ${salaId})`);
+            } else {
+                console.warn(`[Chaves] Opção de chave não encontrada: ${key}`);
+            }
+        }
+        // Logs das portas trancadas
         for (const [key, info] of Object.entries(window.sistemaChaves.portasTrancadas)) {
             console.log(`[Chaves] Porta trancada: "${info.texto}" na sala ${info.salaId}`);
         }
-        for (const [key, info] of Object.entries(window.sistemaChaves.chavesAnexadas)) {
-            console.log(`[Chaves] Chave anexada à opção na sala ${info.salaId}`);
-        }
-        return;
+        return; // Não recria o sistema, apenas restaura
     }
 
+    // Se não há estado, inicializa do zero (código original)
     console.log("[Chaves] Inicializando sistema de portas trancadas e chaves (primeira vez)...");
 
     window.sistemaChaves = {
