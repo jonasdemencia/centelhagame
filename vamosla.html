@@ -4689,142 +4689,118 @@ ANSWER:`
                 }
 
                 if (!isInitial) {
-                    const salaAtual = mapaMundo[secaoAtualId];
-                    let melhorMatch = null;
-                    let maiorSimilaridade = 0;
-                    const limiteAceitacao = 0.65;
+    const salaAtual = mapaMundo[secaoAtualId];
+    let melhorMatch = null;
+    let maiorSimilaridade = 0;
+    const limiteAceitacao = 0.65;
 
-                    if (window.extratorSemantico && salaAtual) {
-    // Monta uma lista de "opções de busca" que inclui ramificações, sem modificar os originais
-    const opcoesBusca = [];
-    if (salaAtual.opcoes) {
-        for (const opcao of salaAtual.opcoes) {
-            // Opção principal
-            opcoesBusca.push({
-                tipo: 'opcao',
-                opcaoOriginal: opcao,
-                textoBusca: opcao.texto || opcao.opcao_texto || '',
-                paiDilema: null, // não é ramificação
-                isRamificacao: false
-            });
-            // Se tem ramificações, adiciona cada uma
-            if (opcao.dilema && opcao.ramificacoes && opcao.ramificacoes.length > 0) {
-                for (const ram of opcao.ramificacoes) {
-                    opcoesBusca.push({
-                        tipo: 'ramificacao',
-                        opcaoOriginal: ram,
-                        textoBusca: ram.opcao_texto || '',
-                        paiDilema: opcao,
-                        isRamificacao: true
-                    });
+    if (window.extratorSemantico && salaAtual) {
+        const opcoesBusca = [];
+        if (salaAtual.opcoes) {
+            for (const opcao of salaAtual.opcoes) {
+                opcoesBusca.push({
+                    tipo: 'opcao',
+                    opcaoOriginal: opcao,
+                    textoBusca: opcao.texto || opcao.opcao_texto || '',
+                    paiDilema: null,
+                    isRamificacao: false
+                });
+                if (opcao.dilema && opcao.ramificacoes && opcao.ramificacoes.length > 0) {
+                    for (const ram of opcao.ramificacoes) {
+                        opcoesBusca.push({
+                            tipo: 'ramificacao',
+                            opcaoOriginal: ram,
+                            textoBusca: ram.opcao_texto || '',
+                            paiDilema: opcao,
+                            isRamificacao: true
+                        });
+                    }
+                }
+            }
+        }
+
+        if (opcoesBusca.length > 0) {
+            const vetorJogador = await window.extratorSemantico(pergunta, { pooling: 'mean', normalize: true });
+            for (const item of opcoesBusca) {
+                const textoAlvo = item.textoBusca;
+                if (textoAlvo) {
+                    const vetorAcao = await window.extratorSemantico(textoAlvo, { pooling: 'mean', normalize: true });
+                    const similaridade = cos_sim(vetorJogador.data, vetorAcao.data);
+                    console.log(`🔍 Comparando: "${pergunta}" com "${textoAlvo}" -> similaridade: ${similaridade.toFixed(4)}`);
+                    if (similaridade > maiorSimilaridade) {
+                        maiorSimilaridade = similaridade;
+                        melhorMatch = item;
+                    }
                 }
             }
         }
     }
-
-    if (opcoesBusca.length > 0) {
-        const vetorJogador = await window.extratorSemantico(pergunta, { pooling: 'mean', normalize: true });
-        for (const item of opcoesBusca) {
-            const textoAlvo = item.textoBusca;
-            if (textoAlvo) {
-                const vetorAcao = await window.extratorSemantico(textoAlvo, { pooling: 'mean', normalize: true });
-                const similaridade = cos_sim(vetorJogador.data, vetorAcao.data);
-                console.log(`🔍 Comparando: "${pergunta}" com "${textoAlvo}" -> similaridade: ${similaridade.toFixed(4)}`);
-                if (similaridade > maiorSimilaridade) {
-                    maiorSimilaridade = similaridade;
-                    melhorMatch = item; // Agora melhorMatch é um objeto de busca, não a opção original
-                }
-            }
-        }
-    }
-}
-
-                  if (maiorSimilaridade >= limiteAceitacao && melhorMatch) {
-    console.log("🔥 MATCH SEMÂNTICO ENCONTRADO! 🔥");
-    console.log("Jogador digitou:", pergunta);
-    console.log("Opção oculta equivalente:", melhorMatch);
-    console.log("Grau de Similaridade:", maiorSimilaridade);
-
-                      console.log("[Chaves] Tipo de ação:", melhorMatch.tipo, "isRamificacao:", melhorMatch.isRamificacao, "tem destino:", !!melhorMatch.opcaoOriginal.destino);
-
-    clearInterval(intervaloAnimacao);
-    const tempElement = document.getElementById(tempId);
-    if (tempElement) tempElement.remove();
-
-    // Exibe a ação executada (apenas uma vez)
-    const textoExibido = melhorMatch.tipo === 'ramificacao' 
-        ? melhorMatch.opcaoOriginal.opcao_texto 
-        : (melhorMatch.opcaoOriginal.texto || melhorMatch.opcaoOriginal.opcao_texto || "Prosseguir");
-    adicionarMensagem(">> Ação executada: " + textoExibido, "system");
 
     if (maiorSimilaridade >= limiteAceitacao && melhorMatch) {
-    console.log("🔥 MATCH SEMÂNTICO ENCONTRADO! 🔥");
-    console.log("Jogador digitou:", pergunta);
-    console.log("Opção oculta equivalente:", melhorMatch);
-    console.log("Grau de Similaridade:", maiorSimilaridade);
+        console.log("🔥 MATCH SEMÂNTICO ENCONTRADO! 🔥");
+        console.log("Jogador digitou:", pergunta);
+        console.log("Opção oculta equivalente:", melhorMatch);
+        console.log("Grau de Similaridade:", maiorSimilaridade);
+        console.log("[Chaves] Tipo de ação:", melhorMatch.tipo, "isRamificacao:", melhorMatch.isRamificacao, "tem destino:", !!melhorMatch.opcaoOriginal.destino);
 
-    clearInterval(intervaloAnimacao);
-    const tempElement = document.getElementById(tempId);
-    if (tempElement) tempElement.remove();
+        clearInterval(intervaloAnimacao);
+        const tempElement = document.getElementById(tempId);
+        if (tempElement) tempElement.remove();
 
-    const textoExibido = melhorMatch.tipo === 'ramificacao' 
-        ? melhorMatch.opcaoOriginal.opcao_texto 
-        : (melhorMatch.opcaoOriginal.texto || melhorMatch.opcaoOriginal.opcao_texto || "Prosseguir");
-    adicionarMensagem(">> Ação executada: " + textoExibido, "system");
+        const textoExibido = melhorMatch.tipo === 'ramificacao' 
+            ? melhorMatch.opcaoOriginal.opcao_texto 
+            : (melhorMatch.opcaoOriginal.texto || melhorMatch.opcaoOriginal.opcao_texto || "Prosseguir");
+        adicionarMensagem(">> Ação executada: " + textoExibido, "system");
 
-    // Executa conforme o tipo
-    if (melhorMatch.isRamificacao) {
-        await executarDilemaComRamificacao(melhorMatch.paiDilema, melhorMatch.opcaoOriginal, true);
-    } else if (melhorMatch.opcaoOriginal.destino !== undefined && !melhorMatch.opcaoOriginal.dilema) {
-        await navegarPara(melhorMatch.opcaoOriginal.destino, melhorMatch.opcaoOriginal.texto, melhorMatch.opcaoOriginal, true);
-    } else {
-        // Opção de exame simples (arquiteto, sem destino)
-        const opcao = melhorMatch.opcaoOriginal;
-        opcao.disparado = true;
-        adicionarMensagem(`> ${opcao.texto}`, 'user');
-        
-        let perigoBloqueado = false;
-        if (opcao.dano > 10) {
-            const resultadoTeste = await realizarTestePerigo();
-            if (resultadoTeste === 'SUCESSO') perigoBloqueado = true;
-        }
-        
-        if (!perigoBloqueado) {
-            const resultDiv = document.createElement('div');
-            resultDiv.className = 'result-message';
-            resultDiv.innerText = opcao.resultado_texto;
-            chatBox.appendChild(resultDiv);
-            chatBox.scrollTop = chatBox.scrollHeight;
+        // Executa conforme o tipo
+        if (melhorMatch.isRamificacao) {
+            await executarDilemaComRamificacao(melhorMatch.paiDilema, melhorMatch.opcaoOriginal, true);
+        } else if (melhorMatch.opcaoOriginal.destino !== undefined && !melhorMatch.opcaoOriginal.dilema) {
+            await navegarPara(melhorMatch.opcaoOriginal.destino, melhorMatch.opcaoOriginal.texto, melhorMatch.opcaoOriginal, true);
+        } else {
+            // Opção de exame simples (arquiteto, sem destino)
+            const opcao = melhorMatch.opcaoOriginal;
+            opcao.disparado = true;
+            adicionarMensagem(`> ${opcao.texto}`, 'user');
             
-            if (opcao.dano > 0) {
-                energia = Math.max(0, energia - opcao.dano);
-                document.getElementById('energia-span').innerText = `🩸 ${energia}/10`;
-                await salvarEstadoJogador();
+            let perigoBloqueado = false;
+            if (opcao.dano > 10) {
+                const resultadoTeste = await realizarTestePerigo();
+                if (resultadoTeste === 'SUCESSO') perigoBloqueado = true;
             }
             
-            console.log("[Chaves] ANTES de processarResultadoExame - temChaveAnexada =", opcao.temChaveAnexada);
-            
-            if (opcao.temChaveAnexada) {
-                await processarResultadoExame(opcao);
+            if (!perigoBloqueado) {
+                const resultDiv = document.createElement('div');
+                resultDiv.className = 'result-message';
+                resultDiv.innerText = opcao.resultado_texto;
+                chatBox.appendChild(resultDiv);
+                chatBox.scrollTop = chatBox.scrollHeight;
+                
+                if (opcao.dano > 0) {
+                    energia = Math.max(0, energia - opcao.dano);
+                    document.getElementById('energia-span').innerText = `🩸 ${energia}/10`;
+                    await salvarEstadoJogador();
+                }
+                
+                console.log("[Chaves] ANTES de processarResultadoExame - temChaveAnexada =", opcao.temChaveAnexada);
+                if (opcao.temChaveAnexada) {
+                    await processarResultadoExame(opcao);
+                }
+                console.log("[Chaves] DEPOIS de processarResultadoExame - loot area innerHTML:", document.getElementById('loot-area')?.innerHTML);
             }
             
-            console.log("[Chaves] DEPOIS de processarResultadoExame - loot area innerHTML:", document.getElementById('loot-area')?.innerHTML);
+            console.log("[Chaves] ANTES de atualizarLootRoom - loot area innerHTML:", document.getElementById('loot-area')?.innerHTML);
+            atualizarBotoesNavegacao();
+            atualizarLootRoom();
+            console.log("[Chaves] DEPOIS de atualizarLootRoom - loot area innerHTML:", document.getElementById('loot-area')?.innerHTML);
         }
-        
-        console.log("[Chaves] ANTES de atualizarLootRoom - loot area innerHTML:", document.getElementById('loot-area')?.innerHTML);
-        
-        atualizarBotoesNavegacao();
-        atualizarLootRoom();
-        
-        console.log("[Chaves] DEPOIS de atualizarLootRoom - loot area innerHTML:", document.getElementById('loot-area')?.innerHTML);
+
+        sendBtn.disabled = false;
+        userInput.disabled = false;
+        userInput.focus();
+        return;
     }
-
-    sendBtn.disabled = false;
-    userInput.disabled = false;
-    userInput.focus();
-    return;
-}
-
+} // Fim do if (!isInitial)
                                // ================= NOVO TIER 2 + 3: Extrator 0.6B (sem LM Studio) =================
                 // Este bloco substitui completamente a chamada remota para responder perguntas livres.
                 try {
