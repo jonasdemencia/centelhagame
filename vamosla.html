@@ -4100,16 +4100,8 @@ Retorne EXATAMENTE o JSON abaixo. Nenhuma palavra extra.`
         // ============================================================
 
         async function navegarPara(destino, textoAcao, opcao, silent = false) {
-    if (window._transicaoEmAndamento) return;
-    window._transicaoEmAndamento = true;
-
-    // ============================================================
-    // NOVO: PROCESSAR CHAVE ANEXADA (se presente na opção)
-    // ============================================================
-    if (opcao && opcao.temChaveAnexada) {
-        console.log("[Chaves] 🔑 navegarPara detectou chave anexada. Processando...");
-        await processarResultadoExame(opcao);
-    }
+            if (window._transicaoEmAndamento) return;
+            window._transicaoEmAndamento = true;
 
             // ============================================================
             // VERIFICAÇÃO DE PORTA TRANCADA (SISTEMA DE CHAVES)
@@ -4268,14 +4260,6 @@ Retorne EXATAMENTE o JSON abaixo. Nenhuma palavra extra.`
         async function executarDilema(opcao, silent = false) {
     if (window._transicaoEmAndamento) return;
     window._transicaoEmAndamento = true;
-
-    // ============================================================
-    // NOVO: PROCESSAR CHAVE ANEXADA (também para opções sem destino)
-    // ============================================================
-    if (opcao && opcao.temChaveAnexada) {
-        console.log("[Chaves] 🔑 executarDilema detectou chave anexada. Processando...");
-        await processarResultadoExame(opcao);
-    }
 
     opcao.disparado = true;
     const salaAtual = mapaMundo[secaoAtualId];
@@ -5287,39 +5271,22 @@ REGRA DE FIDELIDADE: Se o botão cita uma porta, janela ou item, certifique-se d
         }
 
         // Função chamada após a execução de uma opção de exame (tipo_resultado: revelacao/perigo)
-      async function processarResultadoExame(opcao) {
-    console.log("[Chaves] 🔍 processarResultadoExame chamado. opcao:", opcao);
-    if (opcao && opcao.temChaveAnexada) {
-        console.log("[Chaves] ✅ opcao.temChaveAnexada é TRUE. Iniciando revelação.");
-        const salaAtual = mapaMundo[secaoAtualId];
-        if (salaAtual) {
-            if (!salaAtual.itens) salaAtual.itens = [];
-            if (!salaAtual.itens.includes("chavedeferro")) {
-                salaAtual.itens.push("chavedeferro");
-                console.log("[Chaves] ➕ Chave adicionada ao array de itens. Itens agora:", salaAtual.itens);
-                await salvarEstadoJogador();
-            } else {
-                console.log("[Chaves] ⚠️ Chave já estava no array.");
+        async function processarResultadoExame(opcao) {
+            if (opcao && opcao.temChaveAnexada) {
+                // Revela a chave na área de loot
+                await revelarChaveNoLootArea();
+                // Marca como já revelada para não aparecer de novo
+                opcao.temChaveAnexada = false;
+                // Se houver um identificador de chave no sistema, remove do registro de anexação
+                if (opcao._chaveAnexadaKey && window.sistemaChaves.chavesAnexadas[opcao._chaveAnexadaKey]) {
+                    delete window.sistemaChaves.chavesAnexadas[opcao._chaveAnexadaKey];
+                }
             }
-        } else {
-            console.log("[Chaves] ❌ Sala atual não encontrada.");
         }
-        opcao.temChaveAnexada = false;
-        if (opcao._chaveAnexadaKey && window.sistemaChaves.chavesAnexadas[opcao._chaveAnexadaKey]) {
-            delete window.sistemaChaves.chavesAnexadas[opcao._chaveAnexadaKey];
-        }
-        // Atualiza a UI imediatamente
-        atualizarLootRoom();
-    } else {
-        console.log("[Chaves] ❌ opcao.temChaveAnexada é FALSE ou opcao nulo.");
-    }
-}
 
         async function revelarChaveNoLootArea() {
-    console.log("[Chaves] 🔍 revelarChaveNoLootArea() iniciada.");
-    const lootArea = document.getElementById('loot-area');
-    console.log("[Chaves] lootArea encontrado?", !!lootArea);
-    if (!lootArea) return;
+            const lootArea = document.getElementById('loot-area');
+            if (!lootArea) return;
 
             const chaveData = ITENS_DB["chavedeferro"];
             if (!chaveData) return;
@@ -5353,31 +5320,18 @@ REGRA DE FIDELIDADE: Se o botão cita uma porta, janela ou item, certifique-se d
         function inicializarPortasEChaves() {
     if (!mapaMundo) return;
 
-    // Se já existe estado salvo, RESTAURAR as flags nas opções
+    // Se já existe estado salvo, NÃO gerar novamente
     if (window.sistemaChaves && Object.keys(window.sistemaChaves.portasTrancadas).length > 0) {
         console.log("[Chaves] Usando estado existente (persistido no Firestore):", window.sistemaChaves);
-        // Restaurar as chaves anexadas nas opções de exame
-        for (const [key, info] of Object.entries(window.sistemaChaves.chavesAnexadas)) {
-            const [salaId, idxStr] = key.split('_');
-            const idx = parseInt(idxStr, 10);
-            const sala = mapaMundo[salaId];
-            if (sala && sala.opcoes && sala.opcoes[idx]) {
-                const opcao = sala.opcoes[idx];
-                opcao.temChaveAnexada = true;
-                opcao._chaveAnexadaKey = key;
-                console.log(`[Chaves] Restaurada flag de chave na opção "${opcao.texto}" (sala ${salaId})`);
-            } else {
-                console.warn(`[Chaves] Opção de chave não encontrada: ${key}`);
-            }
-        }
-        // Logs das portas trancadas
         for (const [key, info] of Object.entries(window.sistemaChaves.portasTrancadas)) {
             console.log(`[Chaves] Porta trancada: "${info.texto}" na sala ${info.salaId}`);
         }
-        return; // Não recria o sistema, apenas restaura
+        for (const [key, info] of Object.entries(window.sistemaChaves.chavesAnexadas)) {
+            console.log(`[Chaves] Chave anexada à opção na sala ${info.salaId}`);
+        }
+        return;
     }
 
-    // Se não há estado, inicializa do zero (código original)
     console.log("[Chaves] Inicializando sistema de portas trancadas e chaves (primeira vez)...");
 
     window.sistemaChaves = {
