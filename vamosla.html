@@ -5362,18 +5362,7 @@ REGRA DE FIDELIDADE: Se o botão cita uma porta, janela ou item, certifique-se d
             const sala = mapaMundo[salaId];
             if (!sala) return;
 
-            const opcoes = sala.opcoes || [];
-            opcoes.forEach((navOpt, idx) => {
-                const textoNav = navOpt.texto || navOpt.opcao_texto || "";
-                if (ehNomePorta(textoNav) && navOpt.destino) {
-                    portasElegiveis.push({
-                        salaId: salaId,
-                        numSala: numSala,
-                        navOpt: navOpt,
-                        texto: textoNav,
-                        keyState: `${salaId}_${navOpt.destino}`
-                    });
-                }
+            if (ehNomePorta(textoNav) && navOpt.destino && navOpt.destino > parseInt(salaId)) {
             });
         });
 
