@@ -5284,11 +5284,10 @@ REGRA DE FIDELIDADE: Se o botão cita uma porta, janela ou item, certifique-se d
         }
 
         // Função chamada após a execução de uma opção de exame (tipo_resultado: revelacao/perigo)
-       async function processarResultadoExame(opcao) {
+      async function processarResultadoExame(opcao) {
     console.log("[Chaves] 🔍 processarResultadoExame chamado. opcao:", opcao);
     if (opcao && opcao.temChaveAnexada) {
         console.log("[Chaves] ✅ opcao.temChaveAnexada é TRUE. Iniciando revelação.");
-        // --- CORREÇÃO: adicionar chave ao array de itens da sala ---
         const salaAtual = mapaMundo[secaoAtualId];
         if (salaAtual) {
             if (!salaAtual.itens) salaAtual.itens = [];
@@ -5302,16 +5301,11 @@ REGRA DE FIDELIDADE: Se o botão cita uma porta, janela ou item, certifique-se d
         } else {
             console.log("[Chaves] ❌ Sala atual não encontrada.");
         }
-        // --- FIM DA CORREÇÃO ---
-
-        // (opcional) mantenha a chamada antiga se quiser, mas não é mais necessária
-        // await revelarChaveNoLootArea();
-
         opcao.temChaveAnexada = false;
         if (opcao._chaveAnexadaKey && window.sistemaChaves.chavesAnexadas[opcao._chaveAnexadaKey]) {
             delete window.sistemaChaves.chavesAnexadas[opcao._chaveAnexadaKey];
         }
-        // Atualiza o loot para exibir a chave (já que agora está no array)
+        // Atualiza a UI imediatamente
         atualizarLootRoom();
     } else {
         console.log("[Chaves] ❌ opcao.temChaveAnexada é FALSE ou opcao nulo.");
