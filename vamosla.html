@@ -4097,8 +4097,16 @@ Retorne EXATAMENTE o JSON abaixo. Nenhuma palavra extra.`
         // ============================================================
 
         async function navegarPara(destino, textoAcao, opcao, silent = false) {
-            if (window._transicaoEmAndamento) return;
-            window._transicaoEmAndamento = true;
+    if (window._transicaoEmAndamento) return;
+    window._transicaoEmAndamento = true;
+
+    // ============================================================
+    // NOVO: PROCESSAR CHAVE ANEXADA (se presente na opção)
+    // ============================================================
+    if (opcao && opcao.temChaveAnexada) {
+        console.log("[Chaves] 🔑 navegarPara detectou chave anexada. Processando...");
+        await processarResultadoExame(opcao);
+    }
 
             // ============================================================
             // VERIFICAÇÃO DE PORTA TRANCADA (SISTEMA DE CHAVES)
@@ -4257,6 +4265,14 @@ Retorne EXATAMENTE o JSON abaixo. Nenhuma palavra extra.`
         async function executarDilema(opcao, silent = false) {
     if (window._transicaoEmAndamento) return;
     window._transicaoEmAndamento = true;
+
+    // ============================================================
+    // NOVO: PROCESSAR CHAVE ANEXADA (também para opções sem destino)
+    // ============================================================
+    if (opcao && opcao.temChaveAnexada) {
+        console.log("[Chaves] 🔑 executarDilema detectou chave anexada. Processando...");
+        await processarResultadoExame(opcao);
+    }
 
     opcao.disparado = true;
     const salaAtual = mapaMundo[secaoAtualId];
