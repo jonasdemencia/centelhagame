@@ -1937,6 +1937,7 @@
         };
 
         function atualizarLootRoom() {
+            console.log("[Chaves] atualizarLootRoom chamado. Limpando loot area.");
             const lootContainer = document.getElementById('loot-area');
             lootContainer.innerHTML = '';
             if (!mapaMundo || !mapaMundo[secaoAtualId]) return;
@@ -4744,6 +4745,8 @@ ANSWER:`
     console.log("Opção oculta equivalente:", melhorMatch);
     console.log("Grau de Similaridade:", maiorSimilaridade);
 
+                      console.log("[Chaves] Tipo de ação:", melhorMatch.tipo, "isRamificacao:", melhorMatch.isRamificacao, "tem destino:", !!melhorMatch.opcaoOriginal.destino);
+
     clearInterval(intervaloAnimacao);
     const tempElement = document.getElementById(tempId);
     if (tempElement) tempElement.remove();
@@ -4761,38 +4764,51 @@ ANSWER:`
         await navegarPara(melhorMatch.opcaoOriginal.destino, melhorMatch.opcaoOriginal.texto, melhorMatch.opcaoOriginal, true);
     } else {
         // Opção de exame simples (arquiteto, sem destino)
-        const opcao = melhorMatch.opcaoOriginal;
-        opcao.disparado = true;
-        adicionarMensagem(`> ${opcao.texto}`, 'user');
-        
-        let perigoBloqueado = false;
-        if (opcao.dano > 10) {
-            const resultadoTeste = await realizarTestePerigo();
-            if (resultadoTeste === 'SUCESSO') perigoBloqueado = true;
-        }
-        
-        if (!perigoBloqueado) {
-            const resultDiv = document.createElement('div');
-            resultDiv.className = 'result-message';
-            resultDiv.innerText = opcao.resultado_texto;
-            chatBox.appendChild(resultDiv);
-            chatBox.scrollTop = chatBox.scrollHeight;
-            
-            if (opcao.dano > 0) {
-                energia = Math.max(0, energia - opcao.dano);
-                document.getElementById('energia-span').innerText = `🩸 ${energia}/10`;
-                await salvarEstadoJogador();
-            }
-            
-            // PROCESSAR CHAVE ANEXADA
-            if (opcao.temChaveAnexada) {
-                await processarResultadoExame(opcao);
-            }
-        }
-        
-        atualizarBotoesNavegacao();
-        atualizarLootRoom();
+        } else {
+    // Opção de exame simples (arquiteto, sem destino)
+    const opcao = melhorMatch.opcaoOriginal;
+    opcao.disparado = true;
+    adicionarMensagem(`> ${opcao.texto}`, 'user');
+    
+    let perigoBloqueado = false;
+    if (opcao.dano > 10) {
+        const resultadoTeste = await realizarTestePerigo();
+        if (resultadoTeste === 'SUCESSO') perigoBloqueado = true;
     }
+    
+    if (!perigoBloqueado) {
+        const resultDiv = document.createElement('div');
+        resultDiv.className = 'result-message';
+        resultDiv.innerText = opcao.resultado_texto;
+        chatBox.appendChild(resultDiv);
+        chatBox.scrollTop = chatBox.scrollHeight;
+        
+        if (opcao.dano > 0) {
+            energia = Math.max(0, energia - opcao.dano);
+            document.getElementById('energia-span').innerText = `🩸 ${energia}/10`;
+            await salvarEstadoJogador();
+        }
+        
+        // ---- LOG ANTES DE processarResultadoExame ----
+        console.log("[Chaves] ANTES de processarResultadoExame - temChaveAnexada =", opcao.temChaveAnexada);
+        
+        if (opcao.temChaveAnexada) {
+            await processarResultadoExame(opcao);
+        }
+        
+        // ---- LOG DEPOIS DE processarResultadoExame ----
+        console.log("[Chaves] DEPOIS de processarResultadoExame - loot area innerHTML:", document.getElementById('loot-area')?.innerHTML);
+    }
+    
+    // ---- LOG ANTES DE atualizarLootRoom ----
+    console.log("[Chaves] ANTES de atualizarLootRoom - loot area innerHTML:", document.getElementById('loot-area')?.innerHTML);
+    
+    atualizarBotoesNavegacao();
+    atualizarLootRoom();
+    
+    // ---- LOG DEPOIS DE atualizarLootRoom ----
+    console.log("[Chaves] DEPOIS de atualizarLootRoom - loot area innerHTML:", document.getElementById('loot-area')?.innerHTML);
+}
 
     sendBtn.disabled = false;
     userInput.disabled = false;
