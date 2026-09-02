@@ -900,7 +900,7 @@
             "estatuetacreliquia": { id: "estatuetacreliquia", content: "Estatueta C. Relíquia", uuid: "extra-estatuetacreliquia", description: "Um deus feito de marfim. Antiquário de valor incomum.", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/estatuetacreliquia.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thuestatuetacreliquia.png" },
             "pequenabolsaouro": { id: "pequenabolsaouro", content: "Pequena Bolsa de Ouro", uuid: "extra-pequenabolsaouro", stackable: false, consumable: true, description: "Uma quantia modesta de Dracmas.", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/pequenabolsaouro.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thupequenabolsaouro.png" },
             "corda": { id: "corda", content: "Corda", uuid: "extra-corda", description: "Corda resistente para escaladas.", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/corda.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thucorda.png" },
-            "chavedeferro": { id: "chavedeferro", content: "Chave de ferro", consumable: true, uuid: "extra-chavedeferro", description: "Uma chave enferrujada comum.", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/chavedeferro.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thuchavedeferro.png" },
+            "chavedeferro": { id: "chavedeferro", content: "Chave de ferro", uuid: "extra-chavedeferro", description: "Uma chave enferrujada comum.", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/chavedeferro.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thuchavedeferro.png" },
             "esqueiro": { id: "esqueiro", content: "Esqueiro", uuid: "extra-esqueiro", description: "Produz chama contínua.", image: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/esqueiro.png", thumbnailImage: "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thuesqueiro.png" }
         };
 
@@ -2428,7 +2428,6 @@ Siga o tom literário e a estrutura do Exemplo abaixo. O exemplo abaixo mostra a
       ]
     }
   ]
-}
 }`;
 
             const systemPrompt = 'Você é o Arquiteto de Cenas de um RPG de horror textual visceral. O texto deve ter gramática impecável em Português do Brasil, vocabulário rico e nativo. Zero estrangeirismos ou palavras inventadas. Retorne APENAS JSON válido. Zero markdown. Dano: integer (0 a 20).';
@@ -4092,136 +4091,162 @@ Retorne EXATAMENTE o JSON abaixo. Nenhuma palavra extra.`
         // ============================================================
 
         async function navegarPara(destino, textoAcao, opcao, silent = false) {
-    if (window._transicaoEmAndamento) return;
-    window._transicaoEmAndamento = true;
+            if (window._transicaoEmAndamento) return;
+            window._transicaoEmAndamento = true;
 
-    const container = document.getElementById('map-controls');
-    const salaDesc = document.getElementById('sala-desc');
-
-    document.getElementById('controls').style.pointerEvents = 'none';
-    container.style.pointerEvents = 'none';
-
-    const interceptor = opcao.interceptor_arquiteto;
-    if (interceptor && !interceptor.disparado) {
-        interceptor.disparado = true;
-        if (!silent) {
-            adicionarMensagem(`> ${textoAcao || opcao.texto}`, 'user');
-        }
-
-        let perigoBloqueadoInterceptor = false;
-        if (interceptor.dano > 10) {
-            const resultadoTeste = await realizarTestePerigo();
-            if (resultadoTeste === 'SUCESSO') perigoBloqueadoInterceptor = true;
-        }
-        if (!perigoBloqueadoInterceptor) {
-            const resultDiv = document.createElement('div');
-            resultDiv.className = 'result-message';
-            resultDiv.innerText = interceptor.resultado_texto;
-            chatBox.appendChild(resultDiv);
-            chatBox.scrollTop = chatBox.scrollHeight;
-            if (interceptor.dano > 0) {
-                energia = Math.max(0, energia - interceptor.dano);
-                document.getElementById('energia-span').innerText = `🩸 ${energia}/10`;
-                await salvarEstadoJogador();
+            // ============================================================
+            // VERIFICAÇÃO DE PORTA TRANCADA (SISTEMA DE CHAVES)
+            // ============================================================
+            const salaAtualObj = mapaMundo?.[secaoAtualId];
+            if (salaAtualObj && opcao && opcao.texto && ehNomePorta(opcao.texto)) {
+                const keyState = `${secaoAtualId}_${opcao.destino || opcao.texto}`;
+                const portaInfo = window.sistemaChaves?.portasTrancadas?.[keyState];
+                if (portaInfo && portaInfo.trancada) {
+                    // Verifica se o jogador tem a chave
+                    const temChave = await verificarItemNoInventarioFirestore("chavedeferro");
+                    if (!temChave) {
+                        adicionarMensagem(`A ${portaInfo.texto.toLowerCase()} está trancada.`, 'system');
+                        window._transicaoEmAndamento = false;
+                        return;
+                    } else {
+                        // Usa a chave, consome e destranca
+                        await removerItemDoInventarioFirestore("chavedeferro");
+                        portaInfo.trancada = false;
+                        adicionarMensagem(`Você usou Chave de ferro`, 'system');
+                        // Atualiza o estado da porta no sistema
+                        await salvarEstadoJogador(); // Salva o estado do mapa (porta destrancada)
+                    }
+                }
             }
-        }
+            // ============================================================
 
-        const botoesAtuais = document.querySelectorAll('#map-controls .nav-btn');
-        botoesAtuais.forEach(btn => { btn.disabled = true; });
-        const btnContinuar = document.createElement('button');
-        btnContinuar.className = 'btn-continuar-interceptor';
-        btnContinuar.innerText = '> CONTINUAR';
-        btnContinuar.style.background = '#1a2a1a';
-        btnContinuar.style.borderColor = '#4caf50';
-        btnContinuar.style.color = '#4caf50';
-        container.appendChild(btnContinuar);
-        container.style.pointerEvents = 'auto';
-        await new Promise(resolve => {
-            btnContinuar.onclick = () => {
-                btnContinuar.remove();
-                botoesAtuais.forEach(btn => { btn.disabled = false; });
-                container.style.pointerEvents = 'none';
-                resolve();
-            };
-        });
-    }
+            const container = document.getElementById('map-controls');
+            const salaDesc = document.getElementById('sala-desc');
 
-    const overlay = document.createElement('div');
-    overlay.className = 'fade-overlay';
-    document.body.appendChild(overlay);
-    setTimeout(() => overlay.classList.add('active'), 10);
-    await new Promise(resolve => setTimeout(resolve, 500));
+            document.getElementById('controls').style.pointerEvents = 'none';
+            container.style.pointerEvents = 'none';
 
-    try {
-        const audio = new Audio(opcao.som || 'https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/passos.mp3');
-        await audio.play();
-        await new Promise(resolve => setTimeout(resolve, 1500));
-    } catch (error) {}
+            const interceptor = opcao.interceptor_arquiteto;
+            if (interceptor && !interceptor.disparado) {
+                interceptor.disparado = true;
+                if (!silent) {
+                    adicionarMensagem(`> ${textoAcao || opcao.texto}`, 'user');
+                }
 
-    container.innerHTML = '';
-    document.getElementById('chat-box').innerHTML = '';
+                let perigoBloqueadoInterceptor = false;
+                if (interceptor.dano > 10) {
+                    const resultadoTeste = await realizarTestePerigo();
+                    if (resultadoTeste === 'SUCESSO') perigoBloqueadoInterceptor = true;
+                }
+                if (!perigoBloqueadoInterceptor) {
+                    const resultDiv = document.createElement('div');
+                    resultDiv.className = 'result-message';
+                    resultDiv.innerText = interceptor.resultado_texto;
+                    chatBox.appendChild(resultDiv);
+                    chatBox.scrollTop = chatBox.scrollHeight;
+                    if (interceptor.dano > 0) {
+                        energia = Math.max(0, energia - interceptor.dano);
+                        document.getElementById('energia-span').innerText = `🩸 ${energia}/10`;
+                        await salvarEstadoJogador();
+                    }
+                }
 
-    const destinoStr = destino.toString();
+                const botoesAtuais = document.querySelectorAll('#map-controls .nav-btn');
+                botoesAtuais.forEach(btn => { btn.disabled = true; });
+                const btnContinuar = document.createElement('button');
+                btnContinuar.className = 'btn-continuar-interceptor';
+                btnContinuar.innerText = '> CONTINUAR';
+                btnContinuar.style.background = '#1a2a1a';
+                btnContinuar.style.borderColor = '#4caf50';
+                btnContinuar.style.color = '#4caf50';
+                container.appendChild(btnContinuar);
+                container.style.pointerEvents = 'auto';
+                await new Promise(resolve => {
+                    btnContinuar.onclick = () => {
+                        btnContinuar.remove();
+                        botoesAtuais.forEach(btn => { btn.disabled = false; });
+                        container.style.pointerEvents = 'none';
+                        resolve();
+                    };
+                });
+            }
 
-    if (!mapaMundo[destinoStr]) {
-        const zonaAlvo = Math.ceil(destino / SALAS_POR_ZONA);
-        const idLoading = adicionarMensagem(`[SISTEMA] Processando dados da Zona ${zonaAlvo}...`, "system", true);
-        window._expansaoEmAndamento = true;
-        await gerarZona(zonaAlvo, null);
-        window._expansaoEmAndamento = false;
-        document.getElementById(idLoading)?.remove();
-    }
+            const overlay = document.createElement('div');
+            overlay.className = 'fade-overlay';
+            document.body.appendChild(overlay);
+            setTimeout(() => overlay.classList.add('active'), 10);
+            await new Promise(resolve => setTimeout(resolve, 500));
 
-    secaoAtualId = destinoStr;
-    salasVisitadas.add(destinoStr);
-    if (parseInt(secaoAtualId) < 10000) {
-        zonaAtual = Math.ceil(parseInt(secaoAtualId) / SALAS_POR_ZONA);
-    }
-    await salvarEstadoJogador();
+            try {
+                const audio = new Audio(opcao.som || 'https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/sons/passos.mp3');
+                await audio.play();
+                await new Promise(resolve => setTimeout(resolve, 1500));
+            } catch (error) {}
 
-    const novaSala = mapaMundo[secaoAtualId];
+            container.innerHTML = '';
+            document.getElementById('chat-box').innerHTML = '';
 
-    if (novaSala && novaSala.opcoes) {
-        novaSala.opcoes.forEach(o => { if (o.dilema) o.disparado = false; });
-    }
+            const destinoStr = destino.toString();
 
-    if (novaSala && novaSala.ind_disponivel) {
-        novaSala.ind_disponivel = false;
-        await salvarEstadoJogador();
-        const idLoadingIND = adicionarMensagem(`[SISTEMA] Anomalia detectada...`, "system", true);
-        try {
-            const textoIND = await gerarIND(secaoAtualId);
-            document.getElementById(idLoadingIND)?.remove();
-            historicoIND.push(textoIND);
+            if (!mapaMundo[destinoStr]) {
+                const zonaAlvo = Math.ceil(destino / SALAS_POR_ZONA);
+                const idLoading = adicionarMensagem(`[SISTEMA] Processando dados da Zona ${zonaAlvo}...`, "system", true);
+                window._expansaoEmAndamento = true;
+                await gerarZona(zonaAlvo, null);
+                window._expansaoEmAndamento = false;
+                document.getElementById(idLoading)?.remove();
+            }
+
+            secaoAtualId = destinoStr;
+            salasVisitadas.add(destinoStr);
+            if (parseInt(secaoAtualId) < 10000) {
+                zonaAtual = Math.ceil(parseInt(secaoAtualId) / SALAS_POR_ZONA);
+            }
             await salvarEstadoJogador();
-            await exibirModalIND(textoIND);
-        } catch (error) {
-            document.getElementById(idLoadingIND)?.remove();
+
+            const novaSala = mapaMundo[secaoAtualId];
+
+            if (novaSala && novaSala.opcoes) {
+                novaSala.opcoes.forEach(o => { if (o.dilema) o.disparado = false; });
+            }
+
+            if (novaSala && novaSala.ind_disponivel) {
+                novaSala.ind_disponivel = false;
+                await salvarEstadoJogador();
+                const idLoadingIND = adicionarMensagem(`[SISTEMA] Anomalia detectada...`, "system", true);
+                try {
+                    const textoIND = await gerarIND(secaoAtualId);
+                    document.getElementById(idLoadingIND)?.remove();
+                    historicoIND.push(textoIND);
+                    await salvarEstadoJogador();
+                    await exibirModalIND(textoIND);
+                } catch (error) {
+                    document.getElementById(idLoadingIND)?.remove();
+                }
+            }
+
+            verificarEExpandirMundo();
+
+            if (novaSala?.texto_logico) {
+                const textoFinal = prepararTextoChegada(novaSala.texto_logico, textoAcao || opcao.texto, parseInt(secaoAtualId), destino);
+                salaDesc.innerHTML = textoFinal;
+                historicoConversa.push({ role: 'user', content: `[Navegou para: ${textoAcao || opcao.texto}]` });
+                historicoConversa.push({ role: 'assistant', content: novaSala.texto_logico });
+                if (historicoConversa.length > 10) historicoConversa.splice(0, 2);
+            }
+
+            atualizarBotoesNavegacao();
+            atualizarLootRoom();
+
+            overlay.classList.remove('active');
+            setTimeout(() => {
+                overlay.remove();
+                window._transicaoEmAndamento = false;
+                document.getElementById('controls').style.pointerEvents = 'auto';
+                const novoContainer = document.getElementById('map-controls');
+                if (novoContainer) novoContainer.style.pointerEvents = 'auto';
+            }, 1200);
         }
-    }
-
-    verificarEExpandirMundo();
-
-    if (novaSala?.texto_logico) {
-        const textoFinal = prepararTextoChegada(novaSala.texto_logico, textoAcao || opcao.texto, parseInt(secaoAtualId), destino);
-        salaDesc.innerHTML = textoFinal;
-        historicoConversa.push({ role: 'user', content: `[Navegou para: ${textoAcao || opcao.texto}]` });
-        historicoConversa.push({ role: 'assistant', content: novaSala.texto_logico });
-        if (historicoConversa.length > 10) historicoConversa.splice(0, 2);
-    }
-
-    atualizarBotoesNavegacao();
-    atualizarLootRoom();
-
-    overlay.classList.remove('active');
-    setTimeout(() => {
-        overlay.remove();
-        window._transicaoEmAndamento = false;
-        document.getElementById('controls').style.pointerEvents = 'auto';
-        const novoContainer = document.getElementById('map-controls');
-        if (novoContainer) novoContainer.style.pointerEvents = 'auto';
-    }, 1200);
-}
 
         async function executarDilema(opcao, silent = false) {
     if (window._transicaoEmAndamento) return;
@@ -4252,7 +4277,7 @@ Retorne EXATAMENTE o JSON abaixo. Nenhuma palavra extra.`
             document.getElementById('energia-span').innerText = `🩸 ${energia}/10`;
             await salvarEstadoJogador();
         }
-        opcao._ponteExibida = true; // NOVO
+        opcao._ponteExibida = true;
 
         const container = document.getElementById('map-controls');
         container.innerHTML = '';
@@ -4447,6 +4472,14 @@ async function executarDilemaComRamificacao(pai, ram, silent = false) {
                         document.getElementById('energia-span').innerText = `🩸 ${energia}/10`;
                         await salvarEstadoJogador();
                     }
+
+                    // ============================================================
+                    // PROCESSAR CHAVE ANEXADA (SISTEMA DE CHAVES)
+                    // ============================================================
+                    if (opcao.temChaveAnexada) {
+                        await processarResultadoExame(opcao);
+                    }
+                    // ============================================================
                 }
 
                 atualizarBotoesNavegacao();
@@ -5163,7 +5196,241 @@ REGRA DE FIDELIDADE: Se o botão cita uma porta, janela ou item, certifique-se d
 
 
 
-    
+        // ============================================================
+        // SISTEMA DE PORTAS TRANCADAS E CHAVES (Integrado)
+        // ============================================================
+
+        window.sistemaChaves = {
+            portasTrancadas: {},
+            chavesAnexadas: {}
+        };
+
+        function ehNomePorta(texto) {
+            if (!texto) return false;
+            const txt = texto.toLowerCase();
+            return txt.includes("porta") || txt.includes("grade") || txt.includes("portão") || txt.includes("portao");
+        }
+
+        function getNumeroSala(salaId) {
+            const num = parseInt(salaId, 10);
+            return isNaN(num) ? 0 : num;
+        }
+
+        async function verificarItemNoInventarioFirestore(itemId) {
+            if (!uidAtual) return false;
+            try {
+                const docRef = doc(db, "players", uidAtual);
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    const inventory = data.inventory || { itemsInChest: [] };
+                    const chest = inventory.itemsInChest || [];
+                    return chest.some(item => item.id === itemId);
+                }
+                return false;
+            } catch (e) {
+                console.error("Erro ao verificar item no inventário:", e);
+                return false;
+            }
+        }
+
+        async function removerItemDoInventarioFirestore(itemId) {
+            if (!uidAtual) return false;
+            try {
+                const docRef = doc(db, "players", uidAtual);
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    const inventory = data.inventory || { itemsInChest: [] };
+                    const chest = inventory.itemsInChest || [];
+                    const idx = chest.findIndex(item => item.id === itemId);
+                    if (idx !== -1) {
+                        chest.splice(idx, 1);
+                        await setDoc(docRef, { inventory: { ...inventory, itemsInChest: chest } }, { merge: true });
+                        // Atualiza a interface do inventário (se existir)
+                        if (typeof window.atualizarInterfaceInventario === 'function') {
+                            window.atualizarInterfaceInventario();
+                        }
+                        return true;
+                    }
+                }
+                return false;
+            } catch (e) {
+                console.error("Erro ao remover item do inventário:", e);
+                return false;
+            }
+        }
+
+        // Função chamada após a execução de uma opção de exame (tipo_resultado: revelacao/perigo)
+        async function processarResultadoExame(opcao) {
+            if (opcao && opcao.temChaveAnexada) {
+                // Revela a chave na área de loot
+                await revelarChaveNoLootArea();
+                // Marca como já revelada para não aparecer de novo
+                opcao.temChaveAnexada = false;
+                // Se houver um identificador de chave no sistema, remove do registro de anexação
+                if (opcao._chaveAnexadaKey && window.sistemaChaves.chavesAnexadas[opcao._chaveAnexadaKey]) {
+                    delete window.sistemaChaves.chavesAnexadas[opcao._chaveAnexadaKey];
+                }
+            }
+        }
+
+        async function revelarChaveNoLootArea() {
+            const lootArea = document.getElementById('loot-area');
+            if (!lootArea) return;
+
+            const chaveData = ITENS_DB["chavedeferro"];
+            if (!chaveData) return;
+
+            // Verifica se a chave já está visível para evitar duplicação
+            if (lootArea.querySelector('.item-chave-dourada')) return;
+
+            const btnChave = document.createElement('span');
+            btnChave.className = 'item-coletavel item-chave-dourada';
+            btnChave.style.cssText = "color: #d9a441 !important; border-color: #d9a441; background: #1a1408; font-weight: bold; display: inline-block !important;";
+            btnChave.innerText = `🔑 ${chaveData.content}`;
+
+            btnChave.onclick = async function() {
+                const sucesso = await adicionarItem("chavedeferro");
+                if (sucesso) {
+                    adicionarMensagem(`[VOCÊ GUARDOU: ${chaveData.content}]`, 'system');
+                    btnChave.remove();
+                    // Atualiza o inventário local (se existir)
+                    if (typeof window.atualizarInterfaceInventario === 'function') {
+                        window.atualizarInterfaceInventario();
+                    }
+                } else {
+                    adicionarMensagem(`Seus bolsos estão pesados. Não foi possível guardar ${chaveData.content}.`, 'system');
+                }
+            };
+
+            lootArea.appendChild(btnChave);
+            lootArea.style.display = 'flex';
+        }
+
+        function inicializarPortasEChaves() {
+            if (!mapaMundo) return;
+            console.log("[Chaves] Inicializando sistema de portas trancadas e chaves...");
+
+            window.sistemaChaves = {
+                portasTrancadas: {},
+                chavesAnexadas: {}
+            };
+
+            const salaIds = Object.keys(mapaMundo).sort((a, b) => getNumeroSala(a) - getNumeroSala(b));
+            if (salaIds.length === 0) return;
+
+            const maxSalaNum = getNumeroSala(salaIds[salaIds.length - 1]);
+            const numBlocos = Math.ceil(maxSalaNum / SALAS_POR_ZONA);
+
+            for (let b = 0; b < numBlocos; b++) {
+                const minSala = b * SALAS_POR_ZONA + 1;
+                const maxSala = (b + 1) * SALAS_POR_ZONA;
+
+                const salasBloco = salaIds.filter(id => {
+                    const num = getNumeroSala(id);
+                    return num >= minSala && num <= maxSala;
+                });
+
+                let portasElegiveis = [];
+
+                // Coleta botões de portas nas salas do bloco (exceto sala 1)
+                salasBloco.forEach(salaId => {
+                    const numSala = getNumeroSala(salaId);
+                    if (numSala === 1) return; // Regra: A primeira sala nunca pode ter porta trancada
+
+                    const sala = mapaMundo[salaId];
+                    if (!sala) return;
+
+                    const opcoes = sala.opcoes || [];
+                    opcoes.forEach((navOpt, idx) => {
+                        const textoNav = navOpt.texto || navOpt.opcao_texto || "";
+                        if (ehNomePorta(textoNav) && navOpt.destino) {
+                            portasElegiveis.push({
+                                salaId: salaId,
+                                numSala: numSala,
+                                navOpt: navOpt,
+                                texto: textoNav,
+                                keyState: `${salaId}_${navOpt.destino}`
+                            });
+                        }
+                    });
+                });
+
+                if (portasElegiveis.length === 0) continue;
+
+                // Sorteia 1 a 2 portas por bloco de 10 salas
+                const quantidadeDesejada = Math.min(
+                    portasElegiveis.length,
+                    Math.floor(Math.random() * 2) + 1
+                );
+
+                portasElegiveis.sort(() => Math.random() - 0.5);
+                let portasTrancadasComSucesso = 0;
+
+                for (let portaCandidate of portasElegiveis) {
+                    if (portasTrancadasComSucesso >= quantidadeDesejada) break;
+
+                    const numSalaPorta = portaCandidate.numSala;
+                    const minSalaChave = Math.max(1, numSalaPorta - 15); // Limite de até 15 salas anteriores
+
+                    let examesElegiveis = [];
+
+                    // Busca exames elegíveis em salas anteriores
+                    salaIds.forEach(sId => {
+                        const numS = getNumeroSala(sId);
+                        if (numS < numSalaPorta && numS >= minSalaChave) {
+                            const sData = mapaMundo[sId];
+                            if (!sData) return;
+
+                            const opcoes = sData.opcoes || [];
+                            opcoes.forEach((exOpt, exIdx) => {
+                                // Verifica se é uma opção de exame (arquiteto) com tipo_resultado revelacao/perigo
+                                if (exOpt.arquiteto && (exOpt.tipo_resultado === "revelacao" || exOpt.tipo_resultado === "perigo")) {
+                                    // Verifica se já não possui uma chave anexada
+                                    if (!exOpt.temChaveAnexada) {
+                                        const chaveOpcao = `${sId}_${exIdx}`;
+                                        examesElegiveis.push({
+                                            salaId: sId,
+                                            exIdx: exIdx,
+                                            exOpt: exOpt,
+                                            chaveOpcao: chaveOpcao
+                                        });
+                                    }
+                                }
+                            });
+                        }
+                    });
+
+                    // Se encontrou local elegível, anexa a chave e tranca a porta
+                    if (examesElegiveis.length > 0) {
+                        const exameEscolhido = examesElegiveis[Math.floor(Math.random() * examesElegiveis.length)];
+
+                        // Marca a opção com a chave
+                        exameEscolhido.exOpt.temChaveAnexada = true;
+                        exameEscolhido.exOpt._chaveAnexadaKey = exameEscolhido.chaveOpcao;
+
+                        window.sistemaChaves.chavesAnexadas[exameEscolhido.chaveOpcao] = {
+                            salaId: exameEscolhido.salaId,
+                            opcaoRef: exameEscolhido.exOpt,
+                            revelada: false
+                        };
+
+                        window.sistemaChaves.portasTrancadas[portaCandidate.keyState] = {
+                            salaId: portaCandidate.salaId,
+                            texto: portaCandidate.texto,
+                            destino: portaCandidate.navOpt.destino,
+                            trancada: true
+                        };
+
+                        portasTrancadasComSucesso++;
+                        console.log(`[Chaves] Porta trancada: "${portaCandidate.texto}" na sala ${portaCandidate.salaId}, chave anexada à opção "${exameEscolhido.exOpt.texto}" na sala ${exameEscolhido.salaId}`);
+                    }
+                }
+            }
+            console.log(`[Chaves] ${Object.keys(window.sistemaChaves.portasTrancadas).length} portas trancadas configuradas.`);
+        }
+
         // ============================================================
         // RECALCULAR COORDENADAS PARA MAPA
         // ============================================================
@@ -5593,6 +5860,12 @@ REGRA DE FIDELIDADE: Se o botão cita uma porta, janela ou item, certifique-se d
                     } else if (!dnaGlobal) {
                         await gerarDNAGlobal("Reconstrução de DNA");
                     }
+
+                    // ============================================================
+                    // INICIALIZAR SISTEMA DE PORTAS TRANCADAS E CHAVES (APÓS MAPA CARREGADO)
+                    // ============================================================
+                    inicializarPortasEChaves();
+                    // ============================================================
 
                     atualizarBotoesNavegacao(); 
                     atualizarLootRoom();
