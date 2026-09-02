@@ -2798,6 +2798,11 @@ Retorne APENAS este JSON:
                     if (data.dnaGlobal) dnaGlobal = data.dnaGlobal;
                     if (data.zonaAtual) zonaAtual = data.zonaAtual;
                     if (data.historicoIND) historicoIND = data.historicoIND;
+                    if (data.sistemaChaves) {
+    window.sistemaChaves = data.sistemaChaves;
+} else {
+    window.sistemaChaves = { portasTrancadas: {}, chavesAnexadas: {} };
+}
                 } else {
                     const dadosPadrao = {
                         energy: { total: 40, initial: 40 },
@@ -2827,6 +2832,7 @@ Retorne APENAS este JSON:
                 const dadosAtualizados = {
                     turnos: turnosJogados,
                     "energy.total": energia,
+                    sistemaChaves: window.sistemaChaves,  // adicione esta linha
                     "skill.total": jogadorStats.HABILIDADE,
                     "charisma.total": jogadorStats.CARISMA,
                     "luck.total": jogadorStats.SORTE,
@@ -5309,127 +5315,138 @@ REGRA DE FIDELIDADE: Se o botão cita uma porta, janela ou item, certifique-se d
         }
 
         function inicializarPortasEChaves() {
-            if (!mapaMundo) return;
-            console.log("[Chaves] Inicializando sistema de portas trancadas e chaves...");
+    if (!mapaMundo) return;
 
-            window.sistemaChaves = {
-                portasTrancadas: {},
-                chavesAnexadas: {}
-            };
-
-            const salaIds = Object.keys(mapaMundo).sort((a, b) => getNumeroSala(a) - getNumeroSala(b));
-            if (salaIds.length === 0) return;
-
-            const maxSalaNum = getNumeroSala(salaIds[salaIds.length - 1]);
-            const numBlocos = Math.ceil(maxSalaNum / SALAS_POR_ZONA);
-
-            for (let b = 0; b < numBlocos; b++) {
-                const minSala = b * SALAS_POR_ZONA + 1;
-                const maxSala = (b + 1) * SALAS_POR_ZONA;
-
-                const salasBloco = salaIds.filter(id => {
-                    const num = getNumeroSala(id);
-                    return num >= minSala && num <= maxSala;
-                });
-
-                let portasElegiveis = [];
-
-                // Coleta botões de portas nas salas do bloco (exceto sala 1)
-                salasBloco.forEach(salaId => {
-                    const numSala = getNumeroSala(salaId);
-                    if (numSala === 1) return; // Regra: A primeira sala nunca pode ter porta trancada
-
-                    const sala = mapaMundo[salaId];
-                    if (!sala) return;
-
-                    const opcoes = sala.opcoes || [];
-                    opcoes.forEach((navOpt, idx) => {
-                        const textoNav = navOpt.texto || navOpt.opcao_texto || "";
-                        if (ehNomePorta(textoNav) && navOpt.destino) {
-                            portasElegiveis.push({
-                                salaId: salaId,
-                                numSala: numSala,
-                                navOpt: navOpt,
-                                texto: textoNav,
-                                keyState: `${salaId}_${navOpt.destino}`
-                            });
-                        }
-                    });
-                });
-
-                if (portasElegiveis.length === 0) continue;
-
-                // Sorteia 1 a 2 portas por bloco de 10 salas
-                const quantidadeDesejada = Math.min(
-                    portasElegiveis.length,
-                    Math.floor(Math.random() * 2) + 1
-                );
-
-                portasElegiveis.sort(() => Math.random() - 0.5);
-                let portasTrancadasComSucesso = 0;
-
-                for (let portaCandidate of portasElegiveis) {
-                    if (portasTrancadasComSucesso >= quantidadeDesejada) break;
-
-                    const numSalaPorta = portaCandidate.numSala;
-                    const minSalaChave = Math.max(1, numSalaPorta - 15); // Limite de até 15 salas anteriores
-
-                    let examesElegiveis = [];
-
-                    // Busca exames elegíveis em salas anteriores
-                    salaIds.forEach(sId => {
-                        const numS = getNumeroSala(sId);
-                        if (numS < numSalaPorta && numS >= minSalaChave) {
-                            const sData = mapaMundo[sId];
-                            if (!sData) return;
-
-                            const opcoes = sData.opcoes || [];
-                            opcoes.forEach((exOpt, exIdx) => {
-                                // Verifica se é uma opção de exame (arquiteto) com tipo_resultado revelacao/perigo
-                                if (exOpt.arquiteto && (exOpt.tipo_resultado === "revelacao" || exOpt.tipo_resultado === "perigo")) {
-                                    // Verifica se já não possui uma chave anexada
-                                    if (!exOpt.temChaveAnexada) {
-                                        const chaveOpcao = `${sId}_${exIdx}`;
-                                        examesElegiveis.push({
-                                            salaId: sId,
-                                            exIdx: exIdx,
-                                            exOpt: exOpt,
-                                            chaveOpcao: chaveOpcao
-                                        });
-                                    }
-                                }
-                            });
-                        }
-                    });
-
-                    // Se encontrou local elegível, anexa a chave e tranca a porta
-                    if (examesElegiveis.length > 0) {
-                        const exameEscolhido = examesElegiveis[Math.floor(Math.random() * examesElegiveis.length)];
-
-                        // Marca a opção com a chave
-                        exameEscolhido.exOpt.temChaveAnexada = true;
-                        exameEscolhido.exOpt._chaveAnexadaKey = exameEscolhido.chaveOpcao;
-
-                        window.sistemaChaves.chavesAnexadas[exameEscolhido.chaveOpcao] = {
-                            salaId: exameEscolhido.salaId,
-                            opcaoRef: exameEscolhido.exOpt,
-                            revelada: false
-                        };
-
-                        window.sistemaChaves.portasTrancadas[portaCandidate.keyState] = {
-                            salaId: portaCandidate.salaId,
-                            texto: portaCandidate.texto,
-                            destino: portaCandidate.navOpt.destino,
-                            trancada: true
-                        };
-
-                        portasTrancadasComSucesso++;
-                        console.log(`[Chaves] Porta trancada: "${portaCandidate.texto}" na sala ${portaCandidate.salaId}, chave anexada à opção "${exameEscolhido.exOpt.texto}" na sala ${exameEscolhido.salaId}`);
-                    }
-                }
-            }
-            console.log(`[Chaves] ${Object.keys(window.sistemaChaves.portasTrancadas).length} portas trancadas configuradas.`);
+    // Se já existe estado salvo, NÃO gerar novamente
+    if (window.sistemaChaves && Object.keys(window.sistemaChaves.portasTrancadas).length > 0) {
+        console.log("[Chaves] Usando estado existente (persistido no Firestore):", window.sistemaChaves);
+        // Log apenas para debug
+        for (const [key, info] of Object.entries(window.sistemaChaves.portasTrancadas)) {
+            console.log(`[Chaves] Porta trancada: "${info.texto}" na sala ${info.salaId}`);
         }
+        for (const [key, info] of Object.entries(window.sistemaChaves.chavesAnexadas)) {
+            console.log(`[Chaves] Chave anexada à opção na sala ${info.salaId}`);
+        }
+        return;
+    }
+
+    console.log("[Chaves] Inicializando sistema de portas trancadas e chaves (primeira vez)...");
+
+    // Reinicia o objeto
+    window.sistemaChaves = {
+        portasTrancadas: {},
+        chavesAnexadas: {}
+    };
+
+    const salaIds = Object.keys(mapaMundo).sort((a, b) => getNumeroSala(a) - getNumeroSala(b));
+    if (salaIds.length === 0) return;
+
+    const maxSalaNum = getNumeroSala(salaIds[salaIds.length - 1]);
+    const numBlocos = Math.ceil(maxSalaNum / SALAS_POR_ZONA);
+
+    for (let b = 0; b < numBlocos; b++) {
+        const minSala = b * SALAS_POR_ZONA + 1;
+        const maxSala = (b + 1) * SALAS_POR_ZONA;
+
+        const salasBloco = salaIds.filter(id => {
+            const num = getNumeroSala(id);
+            return num >= minSala && num <= maxSala;
+        });
+
+        let portasElegiveis = [];
+
+        salasBloco.forEach(salaId => {
+            const numSala = getNumeroSala(salaId);
+            if (numSala === 1) return;
+
+            const sala = mapaMundo[salaId];
+            if (!sala) return;
+
+            const opcoes = sala.opcoes || [];
+            opcoes.forEach((navOpt, idx) => {
+                const textoNav = navOpt.texto || navOpt.opcao_texto || "";
+                if (ehNomePorta(textoNav) && navOpt.destino) {
+                    portasElegiveis.push({
+                        salaId: salaId,
+                        numSala: numSala,
+                        navOpt: navOpt,
+                        texto: textoNav,
+                        keyState: `${salaId}_${navOpt.destino}`
+                    });
+                }
+            });
+        });
+
+        if (portasElegiveis.length === 0) continue;
+
+        const quantidadeDesejada = Math.min(
+            portasElegiveis.length,
+            Math.floor(Math.random() * 2) + 1
+        );
+
+        portasElegiveis.sort(() => Math.random() - 0.5);
+        let portasTrancadasComSucesso = 0;
+
+        for (let portaCandidate of portasElegiveis) {
+            if (portasTrancadasComSucesso >= quantidadeDesejada) break;
+
+            const numSalaPorta = portaCandidate.numSala;
+            const minSalaChave = Math.max(1, numSalaPorta - 15);
+
+            let examesElegiveis = [];
+
+            salaIds.forEach(sId => {
+                const numS = getNumeroSala(sId);
+                if (numS < numSalaPorta && numS >= minSalaChave) {
+                    const sData = mapaMundo[sId];
+                    if (!sData) return;
+
+                    const opcoes = sData.opcoes || [];
+                    opcoes.forEach((exOpt, exIdx) => {
+                        if (exOpt.arquiteto && (exOpt.tipo_resultado === "revelacao" || exOpt.tipo_resultado === "perigo")) {
+                            if (!exOpt.temChaveAnexada) {
+                                const chaveOpcao = `${sId}_${exIdx}`;
+                                examesElegiveis.push({
+                                    salaId: sId,
+                                    exIdx: exIdx,
+                                    exOpt: exOpt,
+                                    chaveOpcao: chaveOpcao
+                                });
+                            }
+                        }
+                    });
+                }
+            });
+
+            if (examesElegiveis.length > 0) {
+                const exameEscolhido = examesElegiveis[Math.floor(Math.random() * examesElegiveis.length)];
+
+                exameEscolhido.exOpt.temChaveAnexada = true;
+                exameEscolhido.exOpt._chaveAnexadaKey = exameEscolhido.chaveOpcao;
+
+                window.sistemaChaves.chavesAnexadas[exameEscolhido.chaveOpcao] = {
+                    salaId: exameEscolhido.salaId,
+                    opcaoRef: exameEscolhido.exOpt,
+                    revelada: false
+                };
+
+                window.sistemaChaves.portasTrancadas[portaCandidate.keyState] = {
+                    salaId: portaCandidate.salaId,
+                    texto: portaCandidate.texto,
+                    destino: portaCandidate.navOpt.destino,
+                    trancada: true
+                };
+
+                portasTrancadasComSucesso++;
+                console.log(`[Chaves] Porta trancada: "${portaCandidate.texto}" na sala ${portaCandidate.salaId}, chave anexada à opção "${exameEscolhido.exOpt.texto}" na sala ${exameEscolhido.salaId}`);
+            }
+        }
+    }
+
+    // Salva o estado gerado no Firestore
+    salvarEstadoJogador();
+    console.log(`[Chaves] ${Object.keys(window.sistemaChaves.portasTrancadas).length} portas trancadas configuradas e salvas.`);
+}
 
         // ============================================================
         // RECALCULAR COORDENADAS PARA MAPA
