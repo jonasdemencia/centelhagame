@@ -5269,6 +5269,7 @@ REGRA DE FIDELIDADE: Se o botão cita uma porta, janela ou item, certifique-se d
 
         // Função chamada após a execução de uma opção de exame (tipo_resultado: revelacao/perigo)
         async function processarResultadoExame(opcao) {
+            console.log("[Chaves] processarResultadoExame chamado para opção:", opcao);  // <--- ADICIONE ESTA LINHA
             if (opcao && opcao.temChaveAnexada) {
                 // Revela a chave na área de loot
                 await revelarChaveNoLootArea();
@@ -5282,6 +5283,7 @@ REGRA DE FIDELIDADE: Se o botão cita uma porta, janela ou item, certifique-se d
         }
 
         async function revelarChaveNoLootArea() {
+                console.log("[Chaves] Revelando chave na loot area");  // <--- ADICIONE ESTA LINHA
             const lootArea = document.getElementById('loot-area');
             if (!lootArea) return;
 
