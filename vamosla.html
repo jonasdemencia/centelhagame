@@ -5268,22 +5268,45 @@ REGRA DE FIDELIDADE: Se o botão cita uma porta, janela ou item, certifique-se d
         }
 
         // Função chamada após a execução de uma opção de exame (tipo_resultado: revelacao/perigo)
-        async function processarResultadoExame(opcao) {
-            if (opcao && opcao.temChaveAnexada) {
-                // Revela a chave na área de loot
-                await revelarChaveNoLootArea();
-                // Marca como já revelada para não aparecer de novo
-                opcao.temChaveAnexada = false;
-                // Se houver um identificador de chave no sistema, remove do registro de anexação
-                if (opcao._chaveAnexadaKey && window.sistemaChaves.chavesAnexadas[opcao._chaveAnexadaKey]) {
-                    delete window.sistemaChaves.chavesAnexadas[opcao._chaveAnexadaKey];
-                }
+       async function processarResultadoExame(opcao) {
+    console.log("[Chaves] 🔍 processarResultadoExame chamado. opcao:", opcao);
+    if (opcao && opcao.temChaveAnexada) {
+        console.log("[Chaves] ✅ opcao.temChaveAnexada é TRUE. Iniciando revelação.");
+        // --- CORREÇÃO: adicionar chave ao array de itens da sala ---
+        const salaAtual = mapaMundo[secaoAtualId];
+        if (salaAtual) {
+            if (!salaAtual.itens) salaAtual.itens = [];
+            if (!salaAtual.itens.includes("chavedeferro")) {
+                salaAtual.itens.push("chavedeferro");
+                console.log("[Chaves] ➕ Chave adicionada ao array de itens. Itens agora:", salaAtual.itens);
+                await salvarEstadoJogador();
+            } else {
+                console.log("[Chaves] ⚠️ Chave já estava no array.");
             }
+        } else {
+            console.log("[Chaves] ❌ Sala atual não encontrada.");
         }
+        // --- FIM DA CORREÇÃO ---
+
+        // (opcional) mantenha a chamada antiga se quiser, mas não é mais necessária
+        // await revelarChaveNoLootArea();
+
+        opcao.temChaveAnexada = false;
+        if (opcao._chaveAnexadaKey && window.sistemaChaves.chavesAnexadas[opcao._chaveAnexadaKey]) {
+            delete window.sistemaChaves.chavesAnexadas[opcao._chaveAnexadaKey];
+        }
+        // Atualiza o loot para exibir a chave (já que agora está no array)
+        atualizarLootRoom();
+    } else {
+        console.log("[Chaves] ❌ opcao.temChaveAnexada é FALSE ou opcao nulo.");
+    }
+}
 
         async function revelarChaveNoLootArea() {
-            const lootArea = document.getElementById('loot-area');
-            if (!lootArea) return;
+    console.log("[Chaves] 🔍 revelarChaveNoLootArea() iniciada.");
+    const lootArea = document.getElementById('loot-area');
+    console.log("[Chaves] lootArea encontrado?", !!lootArea);
+    if (!lootArea) return;
 
             const chaveData = ITENS_DB["chavedeferro"];
             if (!chaveData) return;
