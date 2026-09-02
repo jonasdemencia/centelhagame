@@ -4755,13 +4755,40 @@ ANSWER:`
     adicionarMensagem(">> Ação executada: " + textoExibido, "system");
 
     // Executa conforme o tipo, passando silent=true
-    if (melhorMatch.isRamificacao) {
-        await executarDilemaComRamificacao(melhorMatch.paiDilema, melhorMatch.opcaoOriginal, true);
-    } else if (melhorMatch.opcaoOriginal.destino !== undefined && !melhorMatch.opcaoOriginal.dilema) {
-        await navegarPara(melhorMatch.opcaoOriginal.destino, melhorMatch.opcaoOriginal.texto, melhorMatch.opcaoOriginal, true);
     } else {
-        await executarDilema(melhorMatch.opcaoOriginal, true);
+    // Opção de exame simples (arquiteto, sem destino)
+    const opcao = melhorMatch.opcaoOriginal;
+    opcao.disparado = true;
+    adicionarMensagem(`> ${opcao.texto}`, 'user');
+    
+    let perigoBloqueado = false;
+    if (opcao.dano > 10) {
+        const resultadoTeste = await realizarTestePerigo();
+        if (resultadoTeste === 'SUCESSO') perigoBloqueado = true;
     }
+    
+    if (!perigoBloqueado) {
+        const resultDiv = document.createElement('div');
+        resultDiv.className = 'result-message';
+        resultDiv.innerText = opcao.resultado_texto;
+        chatBox.appendChild(resultDiv);
+        chatBox.scrollTop = chatBox.scrollHeight;
+        
+        if (opcao.dano > 0) {
+            energia = Math.max(0, energia - opcao.dano);
+            document.getElementById('energia-span').innerText = `🩸 ${energia}/10`;
+            await salvarEstadoJogador();
+        }
+        
+        // PROCESSAR CHAVE ANEXADA
+        if (opcao.temChaveAnexada) {
+            await processarResultadoExame(opcao);
+        }
+    }
+    
+    atualizarBotoesNavegacao();
+    atualizarLootRoom();
+}
 
     sendBtn.disabled = false;
     userInput.disabled = false;
