@@ -1941,6 +1941,8 @@
 
         function atualizarLootRoom() {
     const lootContainer = document.getElementById('loot-area');
+    if (!lootContainer) return;
+    
     lootContainer.innerHTML = '';
     if (!mapaMundo || !mapaMundo[secaoAtualId]) return;
     const salaAtual = mapaMundo[secaoAtualId];
@@ -1961,25 +1963,32 @@
     }
 
     // 2) Chaves reveladas (ainda não coletadas) – reaparecem mesmo após limpeza
-    // Verifica se há alguma opção na sala atual com temChaveAnexada === true
     if (salaAtual.opcoes) {
         for (let op of salaAtual.opcoes) {
-            if (op.temChaveAnexada) {
+            if (op.temChaveAnexada && op._chaveAnexadaKey) {
+                
+                // VERIFICAÇÃO CRUCIAL: A chave só aparece no chão se o jogador JÁ examinou a opção
+                const estadoChave = window.sistemaChaves.chavesAnexadas[op._chaveAnexadaKey];
+                if (!estadoChave || !estadoChave.revelada) {
+                    continue; // Pula esta chave, ela ainda está escondida na opção!
+                }
+
                 // Re-cria o botão dourado
                 const chaveData = ITENS_DB["chavedeferro"];
                 if (!chaveData) continue;
+                
                 const btnChave = document.createElement('span');
                 btnChave.className = 'item-coletavel item-chave-dourada';
                 btnChave.style.cssText = "color: #d9a441 !important; border-color: #d9a441; background: #1a1408; font-weight: bold; display: inline-block !important;";
                 btnChave.innerText = `🔑 ${chaveData.content}`;
-                // O onclick será o mesmo que definimos em revelarChaveNoLootArea,
-                // mas precisamos redefinir aqui também.
+                
                 btnChave.onclick = async function() {
                     const sucesso = await adicionarItem("chavedeferro");
                     if (sucesso) {
                         adicionarMensagem(`[VOCÊ GUARDOU: ${chaveData.content}]`, 'system');
                         btnChave.remove();
-                        // Mutar estado e persistir (igual ao onclick original)
+                        
+                        // Mutar estado para remover a chave da sala de vez
                         if (salaAtual && salaAtual.opcoes) {
                             for (let op2 of salaAtual.opcoes) {
                                 if (op2.temChaveAnexada && op2._chaveAnexadaKey) {
@@ -2000,7 +2009,7 @@
                     }
                 };
                 lootContainer.appendChild(btnChave);
-                break; // só uma chave por sala (ou ajuste se quiser múltiplas)
+                break; // Apenas uma chave anexada visível por vez nesta lógica
             }
         }
     }
@@ -2012,7 +2021,6 @@
         lootContainer.style.display = 'flex';
     }
 }
-
         // ============================================================
         // SISTEMA IND (CINEMATICS) E API
         // ============================================================
@@ -5325,12 +5333,33 @@ REGRA DE FIDELIDADE: Se o botão cita uma porta, janela ou item, certifique-se d
         }
 
         // Função chamada após a execução de uma opção de exame (tipo_resultado: revelacao/perigo)
-        async function processarResultadoExame(opcao) {
-    // Apenas revela a chave, SEM alterar flags ou deletar chavesAnexadas
+async function processarResultadoExame(opcao) {
     if (opcao && opcao.temChaveAnexada) {
+        
+        // 1. Marca a chave como revelada no sistema de chaves
+        if (opcao._chaveAnexadaKey && window.sistemaChaves.chavesAnexadas[opcao._chaveAnexadaKey]) {
+            window.sistemaChaves.chavesAnexadas[opcao._chaveAnexadaKey].revelada = true;
+            await salvarEstadoJogador(); // Salva para o jogo lembrar que a chave já está no chão
+        }
+
+        // 2. Injeta a recompensa narrativa no texto da sala
+        // Substitua 'texto-sala' pelo ID real da div onde a história principal do seu jogo aparece
+        const containerTexto = document.getElementById('texto-sala'); 
+        if (containerTexto) {
+            const paragrafoRevelacao = document.createElement('p');
+            paragrafoRevelacao.style.cssText = "color: #d9a441; font-style: italic; margin-top: 15px; text-shadow: 0 0 5px rgba(217, 164, 65, 0.3);";
+            paragrafoRevelacao.innerHTML = "Sua coragem rendeu frutos. Entre os escombros daquilo que você acabou de examinar, algo metálico e antigo reflete a pouca luz do ambiente. Você encontrou uma chave!";
+            containerTexto.appendChild(paragrafoRevelacao);
+            
+            // Opcional: Rola a tela para baixo para o jogador ler a nova linha e ver o loot
+            containerTexto.scrollTop = containerTexto.scrollHeight; 
+        } else {
+            // Fallback caso use um sistema de mensagens de log
+            adicionarMensagem("Sua coragem rendeu frutos. Você encontrou uma chave no exame!", "system");
+        }
+
+        // 3. Revela visualmente na Loot Area
         await revelarChaveNoLootArea();
-        // NÃO faz opcao.temChaveAnexada = false
-        // NÃO deleta de chavesAnexadas
     }
 }
 
