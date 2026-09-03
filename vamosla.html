@@ -1945,7 +1945,7 @@
     if (!mapaMundo || !mapaMundo[secaoAtualId]) return;
     const salaAtual = mapaMundo[secaoAtualId];
 
-    // 1) Itens normais da sala (via distribuirItens)
+    // 1) Itens normais da sala
     if (salaAtual.itens && salaAtual.itens.length > 0) {
         salaAtual.itens.forEach(idItem => {
             const itemDados = ITENS_DB[idItem];
@@ -1960,30 +1960,26 @@
         });
     }
 
-    // 2) Chaves reveladas (ainda não coletadas) – reaparecem mesmo após limpeza
-    // Verifica se há alguma opção na sala atual com temChaveAnexada === true
+    // 2) Chaves reveladas (só se já tiverem sido reveladas pelo exame)
     if (salaAtual.opcoes) {
         for (let op of salaAtual.opcoes) {
-            if (op.temChaveAnexada) {
-                // Re-cria o botão dourado
+            if (op.temChaveAnexada && op._revelado) {  // <-- verifica _revelado
                 const chaveData = ITENS_DB["chavedeferro"];
                 if (!chaveData) continue;
                 const btnChave = document.createElement('span');
                 btnChave.className = 'item-coletavel item-chave-dourada';
                 btnChave.style.cssText = "color: #d9a441 !important; border-color: #d9a441; background: #1a1408; font-weight: bold; display: inline-block !important;";
                 btnChave.innerText = `🔑 ${chaveData.content}`;
-                // O onclick será o mesmo que definimos em revelarChaveNoLootArea,
-                // mas precisamos redefinir aqui também.
                 btnChave.onclick = async function() {
                     const sucesso = await adicionarItem("chavedeferro");
                     if (sucesso) {
                         adicionarMensagem(`[VOCÊ GUARDOU: ${chaveData.content}]`, 'system');
                         btnChave.remove();
-                        // Mutar estado e persistir (igual ao onclick original)
                         if (salaAtual && salaAtual.opcoes) {
                             for (let op2 of salaAtual.opcoes) {
                                 if (op2.temChaveAnexada && op2._chaveAnexadaKey) {
                                     op2.temChaveAnexada = false;
+                                    op2._revelado = false;  // <-- limpa a revelação após coletar
                                     if (window.sistemaChaves.chavesAnexadas[op2._chaveAnexadaKey]) {
                                         delete window.sistemaChaves.chavesAnexadas[op2._chaveAnexadaKey];
                                     }
@@ -2000,19 +1996,17 @@
                     }
                 };
                 lootContainer.appendChild(btnChave);
-                break; // só uma chave por sala (ou ajuste se quiser múltiplas)
+                break; // apenas uma chave por sala
             }
         }
     }
 
-    // Se não houver nada, esconde a área
     if (lootContainer.children.length === 0) {
         lootContainer.style.display = 'none';
     } else {
         lootContainer.style.display = 'flex';
     }
 }
-
         // ============================================================
         // SISTEMA IND (CINEMATICS) E API
         // ============================================================
@@ -5326,11 +5320,9 @@ REGRA DE FIDELIDADE: Se o botão cita uma porta, janela ou item, certifique-se d
 
         // Função chamada após a execução de uma opção de exame (tipo_resultado: revelacao/perigo)
         async function processarResultadoExame(opcao) {
-    // Apenas revela a chave, SEM alterar flags ou deletar chavesAnexadas
     if (opcao && opcao.temChaveAnexada) {
         await revelarChaveNoLootArea();
-        // NÃO faz opcao.temChaveAnexada = false
-        // NÃO deleta de chavesAnexadas
+        opcao._revelado = true;  // <-- marca que a chave foi revelada
     }
 }
 
@@ -5341,7 +5333,6 @@ REGRA DE FIDELIDADE: Se o botão cita uma porta, janela ou item, certifique-se d
     const chaveData = ITENS_DB["chavedeferro"];
     if (!chaveData) return;
 
-    // Evita duplicação
     if (lootArea.querySelector('.item-chave-dourada')) return;
 
     const btnChave = document.createElement('span');
@@ -5355,12 +5346,12 @@ REGRA DE FIDELIDADE: Se o botão cita uma porta, janela ou item, certifique-se d
             adicionarMensagem(`[VOCÊ GUARDOU: ${chaveData.content}]`, 'system');
             btnChave.remove();
 
-            // Agora que a chave FOI guardada, marcar como coletada e persistir
             const salaAtual = mapaMundo?.[secaoAtualId];
             if (salaAtual && salaAtual.opcoes) {
                 for (let op of salaAtual.opcoes) {
                     if (op.temChaveAnexada && op._chaveAnexadaKey) {
                         op.temChaveAnexada = false;
+                        op._revelado = false;
                         if (window.sistemaChaves.chavesAnexadas[op._chaveAnexadaKey]) {
                             delete window.sistemaChaves.chavesAnexadas[op._chaveAnexadaKey];
                         }
@@ -5375,7 +5366,6 @@ REGRA DE FIDELIDADE: Se o botão cita uma porta, janela ou item, certifique-se d
             }
         } else {
             adicionarMensagem(`Seus bolsos estão pesados. Não foi possível guardar ${chaveData.content}.`, 'system');
-            // Não muta nada – a chave permanece no chão
         }
     };
 
@@ -5386,7 +5376,6 @@ REGRA DE FIDELIDADE: Se o botão cita uma porta, janela ou item, certifique-se d
         function inicializarPortasEChaves() {
     if (!mapaMundo) return;
 
-    // Se já existe estado salvo, NÃO gerar novamente
     if (window.sistemaChaves && Object.keys(window.sistemaChaves.portasTrancadas).length > 0) {
         console.log("[Chaves] Usando estado existente (persistido no Firestore):", window.sistemaChaves);
         for (const [key, info] of Object.entries(window.sistemaChaves.portasTrancadas)) {
@@ -5490,6 +5479,7 @@ REGRA DE FIDELIDADE: Se o botão cita uma porta, janela ou item, certifique-se d
 
                 exameEscolhido.exOpt.temChaveAnexada = true;
                 exameEscolhido.exOpt._chaveAnexadaKey = exameEscolhido.chaveOpcao;
+                // _revelado não é setado aqui, então permanece undefined/false
 
                 window.sistemaChaves.chavesAnexadas[exameEscolhido.chaveOpcao] = {
                     salaId: exameEscolhido.salaId,
@@ -5510,7 +5500,7 @@ REGRA DE FIDELIDADE: Se o botão cita uma porta, janela ou item, certifique-se d
         }
     }
 
-    // ===== Sincroniza sistemaChaves com o mapaMundo (para logs corretos) =====
+    // Sincronização
     for (let salaId in mapaMundo) {
         const sala = mapaMundo[salaId];
         if (sala && sala.opcoes) {
@@ -5528,7 +5518,6 @@ REGRA DE FIDELIDADE: Se o botão cita uma porta, janela ou item, certifique-se d
             });
         }
     }
-    // ===== Fim da sincronização =====
 
     salvarEstadoJogador();
     console.log(`[Chaves] ${Object.keys(window.sistemaChaves.portasTrancadas).length} portas trancadas configuradas e salvas.`);
