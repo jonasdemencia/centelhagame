@@ -4430,27 +4430,31 @@ async function executarDilemaComRamificacao(pai, ram, silent = false) {
             .forEach(o => { o.disparado = true; });
     }
 
-    // Se não for silencioso, exibe a mensagem do pai (mas geralmente já foi exibida pela interceptação)
-    // Vamos pular a mensagem do pai, pois a ação já foi mostrada como ">> Ação executada".
-    // Se quiser manter a mensagem do pai em outros contextos, pode usar um parâmetro, mas aqui vamos suprimir.
-    // Para evitar duplicação, não adicionamos a mensagem do usuário.
-
     if (!pai._ponteExibida) {
-    if (pai.resultado_texto) {
-        const bridgeDiv = document.createElement('div');
-        bridgeDiv.className = 'result-message';
-        bridgeDiv.innerText = pai.resultado_texto;
-        chatBox.appendChild(bridgeDiv);
-        chatBox.scrollTop = chatBox.scrollHeight;
+        if (pai.resultado_texto) {
+            const bridgeDiv = document.createElement('div');
+            bridgeDiv.className = 'result-message';
+            bridgeDiv.innerText = pai.resultado_texto;
+            chatBox.appendChild(bridgeDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+        if (pai.dano > 0) {
+            energia = Math.max(0, energia - pai.dano);
+            document.getElementById('energia-span').innerText = `🩸 ${energia}/10`;
+            await salvarEstadoJogador();
+        }
+        
+        // ============================================================
+        // INJEÇÃO 3: VERIFICA SE A CHAVE ESTAVA PRESA NO PAI DO DILEMA
+        // ============================================================
+        if (pai.temChaveAnexada) {
+            await processarResultadoExame(pai);
+        }
+        // ============================================================
+        
+        pai._ponteExibida = true;
     }
-    if (pai.dano > 0) {
-        energia = Math.max(0, energia - pai.dano);
-        document.getElementById('energia-span').innerText = `🩸 ${energia}/10`;
-        await salvarEstadoJogador();
-    }
-    pai._ponteExibida = true;
-}
-    // Exibe o resultado da ramificação
+    
     const resultDiv = document.createElement('div');
     resultDiv.className = 'result-message';
     resultDiv.innerText = ram.resultado_texto;
@@ -4463,8 +4467,16 @@ async function executarDilemaComRamificacao(pai, ram, silent = false) {
         await salvarEstadoJogador();
     }
 
+    // ============================================================
+    // INJEÇÃO 4: VERIFICA SE A CHAVE ESTÁ PRESA NESTA RAMIFICAÇÃO
+    // ============================================================
+    if (ram.temChaveAnexada) {
+        await processarResultadoExame(ram);
+    }
+    // ============================================================
+
     if (ram.destino) {
-        await navegarPara(ram.destino, ram.opcao_texto, { texto: ram.opcao_texto }, true); // silent=true
+        await navegarPara(ram.destino, ram.opcao_texto, { texto: ram.opcao_texto }, true); 
     } else {
         atualizarBotoesNavegacao();
         atualizarLootRoom();
