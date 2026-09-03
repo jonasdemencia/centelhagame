@@ -4611,7 +4611,6 @@ async function executarAcaoOpcao(opcao) {
     window._transicaoEmAndamento = true;
 
     opcao.disparado = true;
-    adicionarMensagem(`> ${opcao.texto}`, 'user');
 
     let perigoBloqueado = false;
     if (opcao.dano > 10) {
