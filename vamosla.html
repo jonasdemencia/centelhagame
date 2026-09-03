@@ -968,6 +968,16 @@
             ]
         };
 
+    const MENSAGENS_CHAVE_FALTANDO = [
+    "É necessário um meio adequado para liberar o acesso.",
+    "O acesso está bloqueado. Falta o item necessário.",
+    "Não adianta forçar — é necessário o meio correto para liberar o acesso.",
+    "Você tenta, mas não consegue prosseguir. Falta o item adequado.",
+    "O acesso permanece bloqueado. Procure o que é necessário para liberá-lo.",
+    "É necessário possuir o item correto para liberar o acesso.",
+    "O mecanismo não responde. Falta o meio adequado para acioná-lo."
+];
+
         // ============================================================
         // MOTOR SEMÂNTICO
         // ============================================================
@@ -1160,6 +1170,7 @@
             }
         }
 
+    
                function modelosDisponiveisParaUI(capacidade) {
             const motor = motorAtivo();
             let chaves = motor === 'wllama'
@@ -4187,22 +4198,22 @@ Retorne EXATAMENTE o JSON abaixo. Nenhuma palavra extra.`
             if (salaAtualObj && opcao && opcao.texto && ehNomePorta(opcao.texto)) {
                 const keyState = `${secaoAtualId}_${opcao.destino || opcao.texto}`;
                 const portaInfo = window.sistemaChaves?.portasTrancadas?.[keyState];
-                if (portaInfo && portaInfo.trancada) {
-                    // Verifica se o jogador tem a chave
-                    const temChave = await verificarItemNoInventarioFirestore("chavedeferro");
-                    if (!temChave) {
-                        adicionarMensagem(`A ${portaInfo.texto.toLowerCase()} está trancada.`, 'system');
-                        window._transicaoEmAndamento = false;
-                        return;
-                    } else {
-                        // Usa a chave, consome e destranca
-                        await removerItemDoInventarioFirestore("chavedeferro");
-                        portaInfo.trancada = false;
-                        adicionarMensagem(`Você usou Chave de ferro`, 'system');
-                        // Atualiza o estado da porta no sistema
-                        await salvarEstadoJogador(); // Salva o estado do mapa (porta destrancada)
-                    }
-                }
+if (portaInfo && portaInfo.trancada) {
+    const temChave = await verificarItemNoInventarioFirestore("chavedeferro");
+    if (!temChave) {
+        // Escolhe uma mensagem aleatória do array
+        const indice = Math.floor(Math.random() * MENSAGENS_CHAVE_FALTANDO.length);
+        const mensagem = MENSAGENS_CHAVE_FALTANDO[indice];
+        adicionarMensagem(mensagem, 'system');
+        window._transicaoEmAndamento = false;
+        return;
+    } else {
+        await removerItemDoInventarioFirestore("chavedeferro");
+        portaInfo.trancada = false;
+        adicionarMensagem(`Você usou Chave de ferro`, 'system');
+        await salvarEstadoJogador();
+    }
+}
             }
             // ============================================================
 
