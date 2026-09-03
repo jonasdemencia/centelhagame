@@ -1755,43 +1755,64 @@
         // SISTEMA DE INVENTÁRIO (PONTE)
         // ============================================================
         async function adicionarItem(itemId) {
-            if (!uidAtual) return false;
-            const docRef = doc(db, "players", uidAtual);
-            const docSnap = await getDoc(docRef);
-            if (docSnap.exists()) {
-                const playerData = docSnap.data();
-                const inventory = playerData.inventory || { inventorySpaces: 50, itemsInChest: [] };
-                const chest = inventory.itemsInChest || [];
-                const itemData = ITENS_DB[itemId];
-                if (!itemData) return false;
-                const totalSlots = inventory.inventorySpaces || 50;
-                const slotsNecessarios = itemData.large ? 2 : 1;
-                let slotsOcupados = 0;
-                chest.forEach(item => {
-                    const itemInfo = ITENS_DB[item.id] || item;
-                    slotsOcupados += itemInfo?.large ? 2 : 1;
-                });
-                if (slotsOcupados + slotsNecessarios > totalSlots) return false;
-                if (itemData.stackable === true) {
-                    const existeItem = chest.find(item => item.id === itemId);
-                    if (existeItem) {
-                        existeItem.quantity = (existeItem.quantity || 1) + 1;
-                    } else {
-                        chest.push({ ...itemData, quantity: 1, uuid: crypto.randomUUID() });
-                    }
-                } else {
-                    const novoItem = { ...itemData, uuid: crypto.randomUUID() };
-                    if (itemId === "pequenabolsaouro") {
-                        novoItem.goldValue = Math.floor(Math.random() * 10) + 1;
-                    }
-                    chest.push(novoItem);
-                }
-                await setDoc(docRef, { inventory: { ...inventory, itemsInChest: chest } }, { merge: true });
-                return true;
-            }
+    console.log("[addItem] 🔍 Iniciando para:", itemId, "UID:", uidAtual);
+    if (!uidAtual) {
+        console.log("[addItem] ❌ Sem UID, retornando false");
+        return false;
+    }
+    const docRef = doc(db, "players", uidAtual);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+        const playerData = docSnap.data();
+        const inventory = playerData.inventory || { inventorySpaces: 50, itemsInChest: [] };
+        const chest = inventory.itemsInChest || [];
+        const itemData = ITENS_DB[itemId];
+        if (!itemData) {
+            console.log("[addItem] ❌ Item não encontrado no ITENS_DB:", itemId);
+            return false;
+        }
+        const totalSlots = inventory.inventorySpaces || 50;
+        const slotsNecessarios = itemData.large ? 2 : 1;
+        console.log("[addItem] 📊 totalSlots:", totalSlots, "slotsNecessarios:", slotsNecessarios);
+
+        let slotsOcupados = 0;
+        chest.forEach(item => {
+            const itemInfo = ITENS_DB[item.id] || item;
+            slotsOcupados += itemInfo?.large ? 2 : 1;
+        });
+        console.log("[addItem] 📊 slotsOcupados (calculado):", slotsOcupados);
+        console.log("[addItem] 📊 Soma (ocupados + necessarios):", slotsOcupados + slotsNecessarios);
+
+        if (slotsOcupados + slotsNecessarios > totalSlots) {
+            console.log("[addItem] ❌ ESPAÇO INSUFICIENTE! Retornando false.");
             return false;
         }
 
+        console.log("[addItem] ✅ Espaço OK, prosseguindo com adição.");
+        if (itemData.stackable === true) {
+            const existeItem = chest.find(item => item.id === itemId);
+            if (existeItem) {
+                existeItem.quantity = (existeItem.quantity || 1) + 1;
+                console.log("[addItem] 📦 Item stackable incrementado para:", existeItem.quantity);
+            } else {
+                chest.push({ ...itemData, quantity: 1, uuid: crypto.randomUUID() });
+                console.log("[addItem] 📦 Novo item stackable adicionado.");
+            }
+        } else {
+            const novoItem = { ...itemData, uuid: crypto.randomUUID() };
+            if (itemId === "pequenabolsaouro") {
+                novoItem.goldValue = Math.floor(Math.random() * 10) + 1;
+            }
+            chest.push(novoItem);
+            console.log("[addItem] 📦 Item não-stackable adicionado:", novoItem.content);
+        }
+        await setDoc(docRef, { inventory: { ...inventory, itemsInChest: chest } }, { merge: true });
+        console.log("[addItem] ✅ Salvo no Firestore com sucesso!");
+        return true;
+    }
+    console.log("[addItem] ❌ Documento do jogador não existe.");
+    return false;
+}
         window.abrirInventarioSemItem = function() {
             if(window.narrativeActionInProgress) return;
             window.narrativeActionInProgress = true;
@@ -1975,30 +1996,32 @@
                 // O onclick será o mesmo que definimos em revelarChaveNoLootArea,
                 // mas precisamos redefinir aqui também.
                 btnChave.onclick = async function() {
-                    const sucesso = await adicionarItem("chavedeferro");
-                    if (sucesso) {
-                        adicionarMensagem(`[VOCÊ GUARDOU: ${chaveData.content}]`, 'system');
-                        btnChave.remove();
-                        // Mutar estado e persistir (igual ao onclick original)
-                        if (salaAtual && salaAtual.opcoes) {
-                            for (let op2 of salaAtual.opcoes) {
-                                if (op2.temChaveAnexada && op2._chaveAnexadaKey) {
-                                    op2.temChaveAnexada = false;
-                                    if (window.sistemaChaves.chavesAnexadas[op2._chaveAnexadaKey]) {
-                                        delete window.sistemaChaves.chavesAnexadas[op2._chaveAnexadaKey];
-                                    }
-                                    break;
-                                }
-                            }
-                        }
-                        await salvarEstadoJogador();
-                        if (typeof window.atualizarInterfaceInventario === 'function') {
-                            window.atualizarInterfaceInventario();
-                        }
-                    } else {
-                        adicionarMensagem(`Seus bolsos estão pesados. Não foi possível guardar ${chaveData.content}.`, 'system');
+    console.log("[CHAVE_CLICK (lootRoom)] 🖱️ CLIQUE DETECTADO!");
+    const sucesso = await adicionarItem("chavedeferro");
+    console.log("[CHAVE_CLICK (lootRoom)] 📦 Resultado:", sucesso);
+    if (sucesso) {
+        adicionarMensagem(`[VOCÊ GUARDOU: ${chaveData.content}]`, 'system');
+        btnChave.remove();
+        if (salaAtual && salaAtual.opcoes) {
+            for (let op2 of salaAtual.opcoes) {
+                if (op2.temChaveAnexada && op2._chaveAnexadaKey) {
+                    op2.temChaveAnexada = false;
+                    if (window.sistemaChaves.chavesAnexadas[op2._chaveAnexadaKey]) {
+                        delete window.sistemaChaves.chavesAnexadas[op2._chaveAnexadaKey];
                     }
-                };
+                    break;
+                }
+            }
+        }
+        await salvarEstadoJogador();
+        if (typeof window.atualizarInterfaceInventario === 'function') {
+            window.atualizarInterfaceInventario();
+        }
+    } else {
+        console.log("[CHAVE_CLICK (lootRoom)] ❌ FALHA (inventário cheio?)");
+        adicionarMensagem(`Seus bolsos estão pesados. Não foi possível guardar ${chaveData.content}.`, 'system');
+    }
+};
                 lootContainer.appendChild(btnChave);
                 break; // só uma chave por sala (ou ajuste se quiser múltiplas)
             }
@@ -5343,20 +5366,63 @@ REGRA DE FIDELIDADE: Se o botão cita uma porta, janela ou item, certifique-se d
 }
 
         async function revelarChaveNoLootArea() {
-    const salaAtual = mapaMundo?.[secaoAtualId];
-    if (!salaAtual) return;
+    console.log("[revelarChave] 🔍 Função chamada.");
+    const lootArea = document.getElementById('loot-area');
+    if (!lootArea) {
+        console.log("[revelarChave] ❌ loot-area não encontrada.");
+        return;
+    }
+    const chaveData = ITENS_DB["chavedeferro"];
+    if (!chaveData) {
+        console.log("[revelarChave] ❌ chaveData não encontrada.");
+        return;
+    }
+    if (lootArea.querySelector('.item-chave-dourada')) {
+        console.log("[revelarChave] ⚠️ Chave já está no loot, ignorando.");
+        return;
+    }
+    console.log("[revelarChave] ✅ Criando botão da chave...");
+    const btnChave = document.createElement('span');
+    btnChave.className = 'item-coletavel item-chave-dourada';
+    btnChave.style.cssText = "color: #d9a441 !important; border-color: #d9a441; background: #1a1408; font-weight: bold; display: inline-block !important;";
+    btnChave.innerText = `🔑 ${chaveData.content}`;
 
-    for (let op of salaAtual.opcoes) {
-        if (op.temChaveAnexada && !op.chaveRevelada) {
-            op.chaveRevelada = true;
-            if (op._chaveAnexadaKey && window.sistemaChaves.chavesAnexadas[op._chaveAnexadaKey]) {
-                window.sistemaChaves.chavesAnexadas[op._chaveAnexadaKey].revelada = true;
+    btnChave.onclick = async function() {
+        console.log("[CHAVE_CLICK] 🖱️ CLIQUE DETECTADO no botão da chave!");
+        const sucesso = await adicionarItem("chavedeferro");
+        console.log("[CHAVE_CLICK] 📦 Resultado de adicionarItem:", sucesso);
+
+        if (sucesso) {
+            console.log("[CHAVE_CLICK] ✅ Coletada com sucesso!");
+            adicionarMensagem(`[VOCÊ GUARDOU: ${chaveData.content}]`, 'system');
+            btnChave.remove();
+
+            const salaAtual = mapaMundo?.[secaoAtualId];
+            if (salaAtual && salaAtual.opcoes) {
+                for (let op of salaAtual.opcoes) {
+                    if (op.temChaveAnexada && op._chaveAnexadaKey) {
+                        op.temChaveAnexada = false;
+                        if (window.sistemaChaves.chavesAnexadas[op._chaveAnexadaKey]) {
+                            delete window.sistemaChaves.chavesAnexadas[op._chaveAnexadaKey];
+                        }
+                        console.log("[CHAVE_CLICK] 🔓 Estado da chave removido da sala.");
+                        break;
+                    }
+                }
             }
             await salvarEstadoJogador();
-            break;
+            if (typeof window.atualizarInterfaceInventario === 'function') {
+                window.atualizarInterfaceInventario();
+            }
+        } else {
+            console.log("[CHAVE_CLICK] ❌ FALHA ao adicionar (inventário cheio ou erro).");
+            adicionarMensagem(`Seus bolsos estão pesados. Não foi possível guardar ${chaveData.content}.`, 'system');
         }
-    }
-    atualizarLootRoom();
+    };
+
+    lootArea.appendChild(btnChave);
+    lootArea.style.display = 'flex';
+    console.log("[revelarChave] ✅ Botão da chave anexado ao DOM.");
 }
 
         function inicializarPortasEChaves() {
