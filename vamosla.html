@@ -1940,24 +1940,78 @@
         };
 
         function atualizarLootRoom() {
-            const lootContainer = document.getElementById('loot-area');
-            lootContainer.innerHTML = '';
-            if (!mapaMundo || !mapaMundo[secaoAtualId]) return;
-            const salaAtual = mapaMundo[secaoAtualId];
-            if (salaAtual.itens && salaAtual.itens.length > 0) {
-                salaAtual.itens.forEach(idItem => {
-                    const itemDados = ITENS_DB[idItem];
-                    if (!itemDados) return;
-                    const span = document.createElement('span');
-                    span.className = 'item-coletavel';
-                    span.innerHTML = `⟡ ${itemDados.content}`;
-                    span.onclick = () => {
-                        abrirInventarioComItem(idItem, span, secaoAtualId);
-                    };
-                    lootContainer.appendChild(span);
-                });
+    const lootContainer = document.getElementById('loot-area');
+    lootContainer.innerHTML = '';
+    if (!mapaMundo || !mapaMundo[secaoAtualId]) return;
+    const salaAtual = mapaMundo[secaoAtualId];
+
+    // 1) Itens normais da sala (via distribuirItens)
+    if (salaAtual.itens && salaAtual.itens.length > 0) {
+        salaAtual.itens.forEach(idItem => {
+            const itemDados = ITENS_DB[idItem];
+            if (!itemDados) return;
+            const span = document.createElement('span');
+            span.className = 'item-coletavel';
+            span.innerHTML = `⟡ ${itemDados.content}`;
+            span.onclick = () => {
+                abrirInventarioComItem(idItem, span, secaoAtualId);
+            };
+            lootContainer.appendChild(span);
+        });
+    }
+
+    // 2) Chaves reveladas (ainda não coletadas) – reaparecem mesmo após limpeza
+    // Verifica se há alguma opção na sala atual com temChaveAnexada === true
+    if (salaAtual.opcoes) {
+        for (let op of salaAtual.opcoes) {
+            if (op.temChaveAnexada) {
+                // Re-cria o botão dourado
+                const chaveData = ITENS_DB["chavedeferro"];
+                if (!chaveData) continue;
+                const btnChave = document.createElement('span');
+                btnChave.className = 'item-coletavel item-chave-dourada';
+                btnChave.style.cssText = "color: #d9a441 !important; border-color: #d9a441; background: #1a1408; font-weight: bold; display: inline-block !important;";
+                btnChave.innerText = `🔑 ${chaveData.content}`;
+                // O onclick será o mesmo que definimos em revelarChaveNoLootArea,
+                // mas precisamos redefinir aqui também.
+                btnChave.onclick = async function() {
+                    const sucesso = await adicionarItem("chavedeferro");
+                    if (sucesso) {
+                        adicionarMensagem(`[VOCÊ GUARDOU: ${chaveData.content}]`, 'system');
+                        btnChave.remove();
+                        // Mutar estado e persistir (igual ao onclick original)
+                        if (salaAtual && salaAtual.opcoes) {
+                            for (let op2 of salaAtual.opcoes) {
+                                if (op2.temChaveAnexada && op2._chaveAnexadaKey) {
+                                    op2.temChaveAnexada = false;
+                                    if (window.sistemaChaves.chavesAnexadas[op2._chaveAnexadaKey]) {
+                                        delete window.sistemaChaves.chavesAnexadas[op2._chaveAnexadaKey];
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                        await salvarEstadoJogador();
+                        if (typeof window.atualizarInterfaceInventario === 'function') {
+                            window.atualizarInterfaceInventario();
+                        }
+                    } else {
+                        adicionarMensagem(`Seus bolsos estão pesados. Não foi possível guardar ${chaveData.content}.`, 'system');
+                    }
+                };
+                lootContainer.appendChild(btnChave);
+                break; // só uma chave por sala (ou ajuste se quiser múltiplas)
             }
         }
+    }
+
+    // Se não houver nada, esconde a área
+    if (lootContainer.children.length === 0) {
+        lootContainer.style.display = 'none';
+    } else {
+        lootContainer.style.display = 'flex';
+    }
+}
 
         // ============================================================
         // SISTEMA IND (CINEMATICS) E API
@@ -5272,50 +5326,62 @@ REGRA DE FIDELIDADE: Se o botão cita uma porta, janela ou item, certifique-se d
 
         // Função chamada após a execução de uma opção de exame (tipo_resultado: revelacao/perigo)
         async function processarResultadoExame(opcao) {
-            if (opcao && opcao.temChaveAnexada) {
-                // Revela a chave na área de loot
-                await revelarChaveNoLootArea();
-                // Marca como já revelada para não aparecer de novo
-                opcao.temChaveAnexada = false;
-                // Se houver um identificador de chave no sistema, remove do registro de anexação
-                if (opcao._chaveAnexadaKey && window.sistemaChaves.chavesAnexadas[opcao._chaveAnexadaKey]) {
-                    delete window.sistemaChaves.chavesAnexadas[opcao._chaveAnexadaKey];
-                }
-            }
-        }
+    // Apenas revela a chave, SEM alterar flags ou deletar chavesAnexadas
+    if (opcao && opcao.temChaveAnexada) {
+        await revelarChaveNoLootArea();
+        // NÃO faz opcao.temChaveAnexada = false
+        // NÃO deleta de chavesAnexadas
+    }
+}
 
         async function revelarChaveNoLootArea() {
-            const lootArea = document.getElementById('loot-area');
-            if (!lootArea) return;
+    const lootArea = document.getElementById('loot-area');
+    if (!lootArea) return;
 
-            const chaveData = ITENS_DB["chavedeferro"];
-            if (!chaveData) return;
+    const chaveData = ITENS_DB["chavedeferro"];
+    if (!chaveData) return;
 
-            // Verifica se a chave já está visível para evitar duplicação
-            if (lootArea.querySelector('.item-chave-dourada')) return;
+    // Evita duplicação
+    if (lootArea.querySelector('.item-chave-dourada')) return;
 
-            const btnChave = document.createElement('span');
-            btnChave.className = 'item-coletavel item-chave-dourada';
-            btnChave.style.cssText = "color: #d9a441 !important; border-color: #d9a441; background: #1a1408; font-weight: bold; display: inline-block !important;";
-            btnChave.innerText = `🔑 ${chaveData.content}`;
+    const btnChave = document.createElement('span');
+    btnChave.className = 'item-coletavel item-chave-dourada';
+    btnChave.style.cssText = "color: #d9a441 !important; border-color: #d9a441; background: #1a1408; font-weight: bold; display: inline-block !important;";
+    btnChave.innerText = `🔑 ${chaveData.content}`;
 
-            btnChave.onclick = async function() {
-                const sucesso = await adicionarItem("chavedeferro");
-                if (sucesso) {
-                    adicionarMensagem(`[VOCÊ GUARDOU: ${chaveData.content}]`, 'system');
-                    btnChave.remove();
-                    // Atualiza o inventário local (se existir)
-                    if (typeof window.atualizarInterfaceInventario === 'function') {
-                        window.atualizarInterfaceInventario();
+    btnChave.onclick = async function() {
+        const sucesso = await adicionarItem("chavedeferro");
+        if (sucesso) {
+            adicionarMensagem(`[VOCÊ GUARDOU: ${chaveData.content}]`, 'system');
+            btnChave.remove();
+
+            // Agora que a chave FOI guardada, marcar como coletada e persistir
+            const salaAtual = mapaMundo?.[secaoAtualId];
+            if (salaAtual && salaAtual.opcoes) {
+                for (let op of salaAtual.opcoes) {
+                    if (op.temChaveAnexada && op._chaveAnexadaKey) {
+                        op.temChaveAnexada = false;
+                        if (window.sistemaChaves.chavesAnexadas[op._chaveAnexadaKey]) {
+                            delete window.sistemaChaves.chavesAnexadas[op._chaveAnexadaKey];
+                        }
+                        break;
                     }
-                } else {
-                    adicionarMensagem(`Seus bolsos estão pesados. Não foi possível guardar ${chaveData.content}.`, 'system');
                 }
-            };
+            }
+            await salvarEstadoJogador();
 
-            lootArea.appendChild(btnChave);
-            lootArea.style.display = 'flex';
+            if (typeof window.atualizarInterfaceInventario === 'function') {
+                window.atualizarInterfaceInventario();
+            }
+        } else {
+            adicionarMensagem(`Seus bolsos estão pesados. Não foi possível guardar ${chaveData.content}.`, 'system');
+            // Não muta nada – a chave permanece no chão
         }
+    };
+
+    lootArea.appendChild(btnChave);
+    lootArea.style.display = 'flex';
+}
 
         function inicializarPortasEChaves() {
     if (!mapaMundo) return;
@@ -5366,7 +5432,6 @@ REGRA DE FIDELIDADE: Se o botão cita uma porta, janela ou item, certifique-se d
             const opcoes = sala.opcoes || [];
             opcoes.forEach((navOpt, idx) => {
                 const textoNav = navOpt.texto || navOpt.opcao_texto || "";
-                // SÓ TRANCAR PORTAS EM SENTIDO ASCENDENTE (destino > sala atual)
                 if (ehNomePorta(textoNav) && navOpt.destino && navOpt.destino > parseInt(salaId)) {
                     portasElegiveis.push({
                         salaId: salaId,
@@ -5444,6 +5509,26 @@ REGRA DE FIDELIDADE: Se o botão cita uma porta, janela ou item, certifique-se d
             }
         }
     }
+
+    // ===== Sincroniza sistemaChaves com o mapaMundo (para logs corretos) =====
+    for (let salaId in mapaMundo) {
+        const sala = mapaMundo[salaId];
+        if (sala && sala.opcoes) {
+            sala.opcoes.forEach((op, idx) => {
+                if (op.temChaveAnexada) {
+                    const key = `${salaId}_${idx}`;
+                    if (!window.sistemaChaves.chavesAnexadas[key]) {
+                        window.sistemaChaves.chavesAnexadas[key] = {
+                            salaId: salaId,
+                            opcaoRef: op,
+                            revelada: false
+                        };
+                    }
+                }
+            });
+        }
+    }
+    // ===== Fim da sincronização =====
 
     salvarEstadoJogador();
     console.log(`[Chaves] ${Object.keys(window.sistemaChaves.portasTrancadas).length} portas trancadas configuradas e salvas.`);
