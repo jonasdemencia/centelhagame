@@ -150,28 +150,30 @@ Todo destino_id usado existe nas saidas da sala, ou é null.
 
 dano é sempre inteiro entre 0 e 20.
 
+opcao_texto: ações de 2 a 4 palavras, com verbo forte + objeto/alvo. 
+
 EXEMPLO DE CENA MORAL/EXISTENCIAL VÁLIDA (Ilustrando uma sala intermediária qualquer)
 
 JSON
 {
-  "sala_id": [UM ID DE SALA INTERMEDIÁRIA QUALQUER],
+  "sala_id": [ID],
   "titulo": "A Voz Atrás da Grade",
   "texto_evento": "<i>Atrás de uma grade de metal enferrujada, uma mulher com o uniforme da instituição está sentada no escuro, imóvel há tanto tempo que a poeira se acumulou nos ombros. Ela sabe o caminho até a saída da ala — mas só vai indicar se você entregar o cartão de acesso que abre a porta trancada do necrotério, sua única forma de completar o que veio fazer nesta zona. Ela estende a mão através da grade e espera.</i>",
   "dilemas": [
     {
-      "opcao_texto": "Perguntar por que ela está presa ali antes de decidir",
-      "resultado_texto": "Ela sorri, um gesto que não chega aos olhos, e diz que já respondeu essa pergunta pra outros três antes de você — e nenhum saiu vivo o bastante pra contar o que descobriu. <i>O que deseja fazer?</i>",
+      "opcao_texto": "Questionar a mulher",
+      "resultado_texto": "Ela sorri, um gesto que não chega aos olhos, e diz que já respondeu essa pergunta pra outros três antes de você — e nenhum saiu vivo o bastante pra contar o que descobriu.",
       "dano": 0,
       "destino_id": null,
       "ramificacoes": [
         {
-          "opcao_texto": "Entregar o cartão de acesso e seguir a rota que ela indicar",
+          "opcao_texto": "Entregar cartão",
           "resultado_texto": "Ela guarda o cartão sem dizer palavra. Você nunca vai saber o que estava atrás daquela porta trancada — e uma parte de você sabe que jamais vai ter outra chance de descobrir. <i>O que você fará agora?</i>",
           "dano": 0,
-          "destino_id": [O ID DE UMA SAÍDA VÁLIDA DESTA SALA]
+          "destino_id": [ID_VÁLIDO]
         },
         {
-          "opcao_texto": "Recusar e seguir sozinho pelo caminho que já conhece",
+          "opcao_texto": "Recusar ajuda",
           "resultado_texto": "Ela retrai a mão e volta ao escuro sem protestar, como se já esperasse isso. Ao se afastar, você ainda ouve o som da poeira caindo dos ombros dela, e não tem certeza se algum dia vai parar de ouvir. <i>O que deseja fazer?</i>",
           "dano": 0,
           "destino_id": null
