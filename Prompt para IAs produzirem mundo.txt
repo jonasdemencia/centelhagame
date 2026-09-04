@@ -158,7 +158,7 @@ JSON
 {
   "sala_id": [ID],
   "titulo": "A Voz Atrás da Grade",
-  "texto_evento": "<i>Atrás de uma grade de metal enferrujada, uma mulher com o uniforme da instituição está sentada no escuro, imóvel há tanto tempo que a poeira se acumulou nos ombros. Ela sabe o caminho até a saída da ala — mas só vai indicar se você entregar o cartão de acesso que abre a porta trancada do necrotério, sua única forma de completar o que veio fazer nesta zona. Ela estende a mão através da grade e espera.</i>",
+  "texto_evento": "Atrás de uma grade de metal enferrujada, uma mulher com o uniforme da instituição está sentada no escuro, imóvel há tanto tempo que a poeira se acumulou nos ombros. Ela sabe o caminho até a saída da ala — mas só vai indicar se você entregar o cartão de acesso que abre a porta trancada do necrotério, sua única forma de completar o que veio fazer nesta zona. Ela estende a mão através da grade e espera.",
   "dilemas": [
     {
       "opcao_texto": "Questionar a mulher",
