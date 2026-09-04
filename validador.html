@@ -229,7 +229,7 @@
             const cenas = dados.cenas || [];
             let modificado = false;
             const logs = [];
-            const corAmarela = '#d4a017'; // tom suave, envelhecido
+            const corAmarela = '#e8d9b0'; // ou #d4c4a0
 
             for (let cena of cenas) {
                 // Fator 2: Cor amarela sutil no texto_evento (em vez de itálico)
@@ -248,7 +248,7 @@
 
                 // Fator 3: Pergunta final nas ramificações (mantém itálico na pergunta, ou pode ser amarelo também? Deixarei como antes)
                 if (cena.dilemas && Array.isArray(cena.dilemas)) {
-                    const pergunta = ' <i>O que você fará agora?</i>';
+                    const pergunta = ' <span style="color: #e8d9b0;">O que você fará agora?</span>';
                     let ramModificada = false;
                     for (let dilema of cena.dilemas) {
                         if (dilema.ramificacoes && Array.isArray(dilema.ramificacoes)) {
