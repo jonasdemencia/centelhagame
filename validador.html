@@ -219,6 +219,9 @@
                         // ============================================================
         // CORREÇÃO AUTOMÁTICA PARA CENAS (FATOR 2 E 3)
         // ============================================================
+                // ============================================================
+        // CORREÇÃO AUTOMÁTICA PARA CENAS (FATOR 2 - APENAS COR)
+        // ============================================================
         function aplicarCorrecoesCenas(dados) {
             const cenas = dados.cenas || [];
             let modificado = false;
@@ -234,32 +237,6 @@
                     cena.texto_evento = `<span style="color: ${corAmarela};">${texto}</span>`;
                     modificado = true;
                     logs.push(`✅ Cena ${cena.sala_id}: cor amarela aplicada ao texto_evento.`);
-                }
-
-                // Fator 3: Pergunta final nas ramificações (sem tags HTML!)
-                if (cena.dilemas && Array.isArray(cena.dilemas)) {
-                    const pergunta = ' O que você fará agora?'; // texto puro
-                    let ramModificada = false;
-                    for (let dilema of cena.dilemas) {
-                        if (dilema.ramificacoes && Array.isArray(dilema.ramificacoes)) {
-                            for (let ram of dilema.ramificacoes) {
-                                if (ram.resultado_texto) {
-                                    let texto = ram.resultado_texto.trim();
-                                    // Remove qualquer tag HTML residual
-                                    texto = texto.replace(/<[^>]*>/g, '').trim();
-                                    if (!texto.endsWith('O que você fará agora?')) {
-                                        texto = texto.replace(/[.!?]+$/, '').trim();
-                                        ram.resultado_texto = `${texto}${pergunta}`;
-                                        modificado = true;
-                                        ramModificada = true;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    if (ramModificada) {
-                        logs.push(`✅ Cena ${cena.sala_id}: pergunta final adicionada às ramificações (sem formatação).`);
-                    }
                 }
             }
             return { modificado, logs };
