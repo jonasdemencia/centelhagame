@@ -222,23 +222,31 @@
                 // ============================================================
         // CORREÇÃO AUTOMÁTICA PARA CENAS (FATOR 2 E 3)
         // ============================================================
+                // ============================================================
+        // CORREÇÃO AUTOMÁTICA PARA CENAS (FATOR 2 E 3)
+        // ============================================================
         function aplicarCorrecoesCenas(dados) {
             const cenas = dados.cenas || [];
             let modificado = false;
             const logs = [];
+            const corAmarela = '#d4a017'; // tom suave, envelhecido
 
             for (let cena of cenas) {
-                // Fator 2: Itálico no texto_evento
+                // Fator 2: Cor amarela sutil no texto_evento (em vez de itálico)
                 if (cena.texto_evento) {
                     let texto = cena.texto_evento.trim();
-                    if (!texto.startsWith('<i>') || !texto.endsWith('</i>')) {
-                        cena.texto_evento = `<i>${texto}</i>`;
+                    // Verifica se já está envolto com a cor desejada
+                    const padraoCor = /<span[^>]*style="[^"]*color:\s*#d4a017[^"]*"[^>]*>/i;
+                    if (!padraoCor.test(texto)) {
+                        // Remove tags anteriores (como <i> ou spans antigos)
+                        texto = texto.replace(/<\/?i>/g, '').replace(/<span[^>]*>/g, '').replace(/<\/span>/g, '');
+                        cena.texto_evento = `<span style="color: ${corAmarela};">${texto}</span>`;
                         modificado = true;
-                        logs.push(`✅ Cena ${cena.sala_id}: itálico aplicado ao texto_evento.`);
+                        logs.push(`✅ Cena ${cena.sala_id}: cor amarela aplicada ao texto_evento.`);
                     }
                 }
 
-                // Fator 3: Pergunta final nas ramificações
+                // Fator 3: Pergunta final nas ramificações (mantém itálico na pergunta, ou pode ser amarelo também? Deixarei como antes)
                 if (cena.dilemas && Array.isArray(cena.dilemas)) {
                     const pergunta = ' <i>O que você fará agora?</i>';
                     let ramModificada = false;
@@ -264,7 +272,6 @@
             }
             return { modificado, logs };
         }
-
         // ---------- VALIDADOR DE TOPOLOGIA ----------
         function validarPlanoTopologia(plano, salaInicio, salaFim) {
             const erros = [];
