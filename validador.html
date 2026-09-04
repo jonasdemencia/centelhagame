@@ -219,9 +219,13 @@
                 // ============================================================
         // CORREÇÃO AUTOMÁTICA PARA CENAS (FATOR 2 E 3)
         // ============================================================
+                // ============================================================
+        // CORREÇÃO AUTOMÁTICA PARA CENAS (FATOR 2 E 3)
+        // ============================================================
         function aplicarCorrecoesCenas(dados) {
             const cenas = dados.cenas || [];
             let modificado = false;
+            const logs = [];
 
             for (let cena of cenas) {
                 // Fator 2: Itálico no texto_evento
@@ -230,30 +234,35 @@
                     if (!texto.startsWith('<i>') || !texto.endsWith('</i>')) {
                         cena.texto_evento = `<i>${texto}</i>`;
                         modificado = true;
+                        logs.push(`✅ Cena ${cena.sala_id}: itálico aplicado ao texto_evento.`);
                     }
                 }
 
                 // Fator 3: Pergunta final nas ramificações
                 if (cena.dilemas && Array.isArray(cena.dilemas)) {
                     const pergunta = ' <i>O que você fará agora?</i>';
+                    let ramModificada = false;
                     for (let dilema of cena.dilemas) {
                         if (dilema.ramificacoes && Array.isArray(dilema.ramificacoes)) {
                             for (let ram of dilema.ramificacoes) {
                                 if (ram.resultado_texto) {
                                     let texto = ram.resultado_texto.trim();
                                     if (!texto.endsWith(pergunta)) {
-                                        // Remove pontuação final desnecessária antes de adicionar
                                         texto = texto.replace(/[.!?]+$/, '').trim();
                                         ram.resultado_texto = `${texto}${pergunta}`;
                                         modificado = true;
+                                        ramModificada = true;
                                     }
                                 }
                             }
                         }
                     }
+                    if (ramModificada) {
+                        logs.push(`✅ Cena ${cena.sala_id}: pergunta final adicionada às ramificações.`);
+                    }
                 }
             }
-            return modificado;
+            return { modificado, logs };
         }
 
         // ---------- VALIDADOR DE TOPOLOGIA ----------
@@ -571,7 +580,8 @@
                 const cenas = dados.cenas || [];
                 let dadosCorrigidos = JSON.parse(JSON.stringify(dados));
                     // Aplica correções automáticas de itálico e pergunta final
-    aplicarCorrecoesCenas(dadosCorrigidos);
+                    const resultadoCorrecao = aplicarCorrecoesCenas(dadosCorrigidos);
+                let houveCorrecao = resultadoCorrecao.modificado;
                 let houveCorrecao = false;
                 let totalSalas = 0;
                 let salasComErro = 0;
@@ -691,6 +701,18 @@
                     }
                 }
 
+                                // 3.5. EXIBE CORREÇÕES AUTOMÁTICAS (Itálico e Pergunta)
+                if (resultadoCorrecao.logs.length > 0) {
+                    html += `<h3>🔧 Correções automáticas aplicadas</h3><ul>`;
+                    for (let logMsg of resultadoCorrecao.logs) {
+                        html += `<li class="ok">${logMsg}</li>`;
+                        log(logMsg, 'ok');
+                    }
+                    html += `</ul>`;
+                } else {
+                    html += `<p class="ok">✅ Nenhuma correção de itálico/pergunta necessária.</p>`;
+                }
+
                 // 4. ESTATÍSTICAS
                 const statsHTML = `
                     <span>📊 Total de salas: ${totalSalas}</span>
@@ -700,6 +722,7 @@
                     <span>${totalErrosDensidade === 0 ? '✅' : '❌'} Erros de densidade: ${totalErrosDensidade}</span>
                     <span>${errosCenas === 0 ? '✅' : '❌'} Erros em cenas: ${errosCenas}</span>
                     <span>${avisosCenas === 0 ? '✅' : '⚠️'} Avisos em cenas: ${avisosCenas}</span>
+                                        <span>🔧 Corrigidas (Itálico/Pergunta): ${resultadoCorrecao.logs.length}</span>
                 `;
                 statsDiv.innerHTML = statsHTML;
 
