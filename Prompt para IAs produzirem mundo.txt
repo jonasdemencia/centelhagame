@@ -73,8 +73,8 @@ Para cada sala escolhida, sorteie um TIPO:
 
 No máximo 1 das cenas da zona pode ser FÍSICO. As demais devem ser MORAL/EXISTENCIAL. (Isso é deliberado: cenas de perseguição são fáceis de gerar e tendem a dominar se não forem limitadas.)
 
-SINCRONIA LÉXICA (ALINHAMENTO DE AÇÕES):
-As palavras exatas usadas em cada `opcao_texto` (verbo forte + objeto) DEVEM constar explicitamente no `texto_evento` (para o dilema-pai) ou no `resultado_texto` anterior (para ramificações). Jamais use sinônimos entre o que o jogador lê e a opção esperada. Se a ação for "Serrar correntes", o texto não pode dizer "usar ferramenta manual"; deve mencionar "uma serra próxima às correntes". Plante as palavras da ação de forma orgânica na prosa para garantir que o jogador deduza o comando copiando as palavras exatas do cenário.
+ÂNCORA LÉXICA SEM ENTREGA DE AÇÃO:
+O substantivo-alvo de cada opcao_texto deve estar nomeado e concreto no texto que o precede (nunca abstraído em categoria genérica). O único proibido é a repetição literal da frase completa (verbo+objeto) de qualquer opcao_texto dentro desse texto — sinônimos, flexões do verbo e menções ao objeto continuam livres, pois são o que permite ao jogador intuir a ação; é a cópia exata do comando que transforma a prosa em lista de opções disfarçada.
 
 "texto_evento" (3–4 frases): o elemento central deve parecer que sempre esteve ali, esperando.
 
@@ -118,7 +118,7 @@ ESTRUTURA EXATA DO JSON
     {
       "sala_id": [UM ID DE SALA INTERMEDIÁRIA QUALQUER],
       "titulo": "Título da cena",
-      "texto_evento": "Evento situacional com as palavras-chave das ações já plantadas no texto (3–4 frases).",
+      "texto_evento": "Evento situacional com o substantivo-alvo já plantado no texto, sem repetir a frase completa da ação esperada (3–4 frases).",
       "dilemas": [
         {
           "opcao_texto": "Verbo Objeto",
@@ -139,18 +139,18 @@ ESTRUTURA EXATA DO JSON
 - dilemas é sempre um array, mesmo com um único objeto (o pai).
 - Todo destino_id usado existe nas saidas da sala, ou é null.
 - dano é sempre inteiro entre 0 e 20.
-- opcao_texto: ações de 2 a 4 palavras, com verbo forte + objeto/alvo, obrigatoriamente ancoradas nas palavras exatas do texto lido.
+- opcao_texto: ações de 2 a 4 palavras, com verbo forte + objeto/alvo cujo substantivo esteja nomeado no texto lido (nunca a frase completa do comando).
 
 EXEMPLO DE CENA MORAL/EXISTENCIAL VÁLIDA
 
 {
   "sala_id": [ID],
   "titulo": "A Voz Atrás da Grade",
-  "texto_evento": "Atrás de uma grade de metal enferrujada, uma mulher com o uniforme da instituição está sentada no escuro. Ela diz saber o caminho até a saída, mas deixa claro que você precisa entregar cartão de acesso do necrotério em troca. Ela estende a mão e espera que você decida se vai questionar a mulher ou apenas recusar ajuda.",
+  "texto_evento": "Atrás de uma grade de metal enferrujada, uma mulher com o uniforme da instituição está sentada no escuro. Ela diz saber o caminho até a saída, mas deixa claro que você precisa entregar cartão de acesso do necrotério em troca. Ela estende a mão e espera para ver se você vai insistir com mais perguntas ou vai embora sem dar nada.",
   "dilemas": [
     {
       "opcao_texto": "Questionar a mulher",
-      "resultado_texto": "Ela sorri, um gesto que não chega aos olhos, e diz que já respondeu essa pergunta pra outros três antes de você — e nenhum saiu vivo. A mão continua estendida, aguardando que você opte por entregar cartão ou recusar ajuda.",
+      "resultado_texto": "Ela sorri, um gesto que não chega aos olhos, e diz que já respondeu essa pergunta para outros três antes de você — e nenhum saiu vivo. A mão continua estendida, aguardando para ver se você vai entregar o que ela pede ou vai deixá-la sem resposta.",
       "dano": 0,
       "destino_id": null,
       "ramificacoes": [
