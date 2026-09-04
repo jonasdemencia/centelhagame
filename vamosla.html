@@ -4444,7 +4444,7 @@ if (portaInfo && portaInfo.trancada) {
 }
     
 
-async function executarDilemaComRamificacao(pai, ram, silent = false) {
+async function executarDilemaComRamificacao(pai, ram, silent = false, pularPonte = false) {
     if (window._transicaoEmAndamento) return;
     window._transicaoEmAndamento = true;
 
@@ -4456,41 +4456,58 @@ async function executarDilemaComRamificacao(pai, ram, silent = false) {
             .forEach(o => { o.disparado = true; });
     }
 
-    // Se não for silencioso, exibe a mensagem do pai (mas geralmente já foi exibida pela interceptação)
-    // Vamos pular a mensagem do pai, pois a ação já foi mostrada como ">> Ação executada".
-    // Se quiser manter a mensagem do pai em outros contextos, pode usar um parâmetro, mas aqui vamos suprimir.
-    // Para evitar duplicação, não adicionamos a mensagem do usuário.
+    // Decide o que exibir
+    let textoFinal = '';
+    const exibirPonte = !pai._ponteExibida && pai.resultado_texto;
 
-    if (!pai._ponteExibida) {
-    if (pai.resultado_texto) {
+    if (exibirPonte && pularPonte) {
+        // Modo match semântico: concatena ponte + ramificação em uma única mensagem
+        textoFinal = `${pai.resultado_texto.replace(/[.!?]+$/, '')}. ${ram.resultado_texto}`;
+        pai._ponteExibida = true;
+        // Aplica dano do pai (se houver) uma única vez
+        if (pai.dano > 0) {
+            energia = Math.max(0, energia - pai.dano);
+            document.getElementById('energia-span').innerText = `🩸 ${energia}/10`;
+            await salvarEstadoJogador();
+        }
+    } else if (exibirPonte && !pularPonte) {
+        // Modo normal (clique no pai): exibe ponte separadamente
         const bridgeDiv = document.createElement('div');
         bridgeDiv.className = 'result-message';
         bridgeDiv.innerText = pai.resultado_texto;
         chatBox.appendChild(bridgeDiv);
         chatBox.scrollTop = chatBox.scrollHeight;
+        if (pai.dano > 0) {
+            energia = Math.max(0, energia - pai.dano);
+            document.getElementById('energia-span').innerText = `🩸 ${energia}/10`;
+            await salvarEstadoJogador();
+        }
+        pai._ponteExibida = true;
+        textoFinal = ram.resultado_texto;
+    } else {
+        // Ponte já exibida ou não existe: exibe apenas a ramificação
+        textoFinal = ram.resultado_texto;
     }
-    if (pai.dano > 0) {
-        energia = Math.max(0, energia - pai.dano);
-        document.getElementById('energia-span').innerText = `🩸 ${energia}/10`;
-        await salvarEstadoJogador();
-    }
-    pai._ponteExibida = true;
-}
-    // Exibe o resultado da ramificação
-    const resultDiv = document.createElement('div');
-    resultDiv.className = 'result-message';
-    resultDiv.innerText = ram.resultado_texto;
-    chatBox.appendChild(resultDiv);
-    chatBox.scrollTop = chatBox.scrollHeight;
 
+    // Exibe a mensagem final (se houver)
+    if (textoFinal) {
+        const resultDiv = document.createElement('div');
+        resultDiv.className = 'result-message';
+        resultDiv.innerText = textoFinal;
+        chatBox.appendChild(resultDiv);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    // Aplica dano da ramificação
     if (ram.dano > 0) {
         energia = Math.max(0, energia - ram.dano);
         document.getElementById('energia-span').innerText = `🩸 ${energia}/10`;
         await salvarEstadoJogador();
     }
 
+    // Navega ou atualiza
     if (ram.destino) {
-        await navegarPara(ram.destino, ram.opcao_texto, { texto: ram.opcao_texto }, true); // silent=true
+        await navegarPara(ram.destino, ram.opcao_texto, { texto: ram.opcao_texto }, true);
     } else {
         atualizarBotoesNavegacao();
         atualizarLootRoom();
@@ -4852,7 +4869,7 @@ async function executarAcaoOpcao(opcao) {
 
     // Executa conforme o tipo, passando silent=true
    if (melhorMatch.isRamificacao) {
-    await executarDilemaComRamificacao(melhorMatch.paiDilema, melhorMatch.opcaoOriginal, true);
+    await executarDilemaComRamificacao(melhorMatch.paiDilema, melhorMatch.opcaoOriginal, true, true);
 } else if (melhorMatch.opcaoOriginal.destino !== undefined && !melhorMatch.opcaoOriginal.dilema) {
     await navegarPara(melhorMatch.opcaoOriginal.destino, melhorMatch.opcaoOriginal.texto, melhorMatch.opcaoOriginal, true);
 } else if (melhorMatch.opcaoOriginal.arquiteto && !melhorMatch.opcaoOriginal.dilema) {
