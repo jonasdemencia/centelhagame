@@ -216,46 +216,38 @@
             return texto;
         }
 
-                // ============================================================
-        // CORREÇÃO AUTOMÁTICA PARA CENAS (FATOR 2 E 3)
-        // ============================================================
-                // ============================================================
-        // CORREÇÃO AUTOMÁTICA PARA CENAS (FATOR 2 E 3)
-        // ============================================================
-                // ============================================================
+                        // ============================================================
         // CORREÇÃO AUTOMÁTICA PARA CENAS (FATOR 2 E 3)
         // ============================================================
         function aplicarCorrecoesCenas(dados) {
             const cenas = dados.cenas || [];
             let modificado = false;
             const logs = [];
-            const corAmarela = '#e8d9b0'; // ou #d4c4a0
+            const corAmarela = '#e8d9b0'; // tom sutil
 
             for (let cena of cenas) {
-                // Fator 2: Cor amarela sutil no texto_evento (em vez de itálico)
+                // Fator 2: Cor amarela sutil no texto_evento (sem itálico)
                 if (cena.texto_evento) {
                     let texto = cena.texto_evento.trim();
-                    // Verifica se já está envolto com a cor desejada
-                    const padraoCor = /<span[^>]*style="[^"]*color:\s*#d4a017[^"]*"[^>]*>/i;
-                    if (!padraoCor.test(texto)) {
-                        // Remove tags anteriores (como <i> ou spans antigos)
-                        texto = texto.replace(/<\/?i>/g, '').replace(/<span[^>]*>/g, '').replace(/<\/span>/g, '');
-                        cena.texto_evento = `<span style="color: ${corAmarela};">${texto}</span>`;
-                        modificado = true;
-                        logs.push(`✅ Cena ${cena.sala_id}: cor amarela aplicada ao texto_evento.`);
-                    }
+                    // Remove tags antigas (como <i>) e spans soltos
+                    texto = texto.replace(/<\/?i>/g, '').replace(/<span[^>]*>/g, '').replace(/<\/span>/g, '');
+                    cena.texto_evento = `<span style="color: ${corAmarela};">${texto}</span>`;
+                    modificado = true;
+                    logs.push(`✅ Cena ${cena.sala_id}: cor amarela aplicada ao texto_evento.`);
                 }
 
-                // Fator 3: Pergunta final nas ramificações (mantém itálico na pergunta, ou pode ser amarelo também? Deixarei como antes)
+                // Fator 3: Pergunta final nas ramificações (sem tags HTML!)
                 if (cena.dilemas && Array.isArray(cena.dilemas)) {
-                    const pergunta = ' <span style="color: #e8d9b0;">O que você fará agora?</span>';
+                    const pergunta = ' O que você fará agora?'; // texto puro
                     let ramModificada = false;
                     for (let dilema of cena.dilemas) {
                         if (dilema.ramificacoes && Array.isArray(dilema.ramificacoes)) {
                             for (let ram of dilema.ramificacoes) {
                                 if (ram.resultado_texto) {
                                     let texto = ram.resultado_texto.trim();
-                                    if (!texto.endsWith(pergunta)) {
+                                    // Remove qualquer tag HTML residual
+                                    texto = texto.replace(/<[^>]*>/g, '').trim();
+                                    if (!texto.endsWith('O que você fará agora?')) {
                                         texto = texto.replace(/[.!?]+$/, '').trim();
                                         ram.resultado_texto = `${texto}${pergunta}`;
                                         modificado = true;
@@ -266,12 +258,13 @@
                         }
                     }
                     if (ramModificada) {
-                        logs.push(`✅ Cena ${cena.sala_id}: pergunta final adicionada às ramificações.`);
+                        logs.push(`✅ Cena ${cena.sala_id}: pergunta final adicionada às ramificações (sem formatação).`);
                     }
                 }
             }
             return { modificado, logs };
         }
+        
         // ---------- VALIDADOR DE TOPOLOGIA ----------
         function validarPlanoTopologia(plano, salaInicio, salaFim) {
             const erros = [];
