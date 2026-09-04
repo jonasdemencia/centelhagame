@@ -216,6 +216,46 @@
             return texto;
         }
 
+                // ============================================================
+        // CORREÇÃO AUTOMÁTICA PARA CENAS (FATOR 2 E 3)
+        // ============================================================
+        function aplicarCorrecoesCenas(dados) {
+            const cenas = dados.cenas || [];
+            let modificado = false;
+
+            for (let cena of cenas) {
+                // Fator 2: Itálico no texto_evento
+                if (cena.texto_evento) {
+                    let texto = cena.texto_evento.trim();
+                    if (!texto.startsWith('<i>') || !texto.endsWith('</i>')) {
+                        cena.texto_evento = `<i>${texto}</i>`;
+                        modificado = true;
+                    }
+                }
+
+                // Fator 3: Pergunta final nas ramificações
+                if (cena.dilemas && Array.isArray(cena.dilemas)) {
+                    const pergunta = ' <i>O que você fará agora?</i>';
+                    for (let dilema of cena.dilemas) {
+                        if (dilema.ramificacoes && Array.isArray(dilema.ramificacoes)) {
+                            for (let ram of dilema.ramificacoes) {
+                                if (ram.resultado_texto) {
+                                    let texto = ram.resultado_texto.trim();
+                                    if (!texto.endsWith(pergunta)) {
+                                        // Remove pontuação final desnecessária antes de adicionar
+                                        texto = texto.replace(/[.!?]+$/, '').trim();
+                                        ram.resultado_texto = `${texto}${pergunta}`;
+                                        modificado = true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return modificado;
+        }
+
         // ---------- VALIDADOR DE TOPOLOGIA ----------
         function validarPlanoTopologia(plano, salaInicio, salaFim) {
             const erros = [];
@@ -530,6 +570,8 @@
                 const salas = dados.salas || {};
                 const cenas = dados.cenas || [];
                 let dadosCorrigidos = JSON.parse(JSON.stringify(dados));
+                    // Aplica correções automáticas de itálico e pergunta final
+    aplicarCorrecoesCenas(dadosCorrigidos);
                 let houveCorrecao = false;
                 let totalSalas = 0;
                 let salasComErro = 0;
