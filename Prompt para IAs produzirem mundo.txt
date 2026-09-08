@@ -40,7 +40,7 @@ CONFIGURAÇÕES DA ZONA
 SALA_INICIAL = 1
 SALA_FINAL = 10
 TEMA: [INSIRA AQUI O TEMA, EX: "Sanatório psiquiátrico"]
-TOM: [INSIRA AQUI O TOM, EX: "Mistério com elementos mitológicos e conspirações"]
+TOM: [INSIRA AQUI O TOM, EX: "Suspense com elementos mitológicos explícitos e conspirações detalhadas"]
 LORE CENTRAL: [INSIRA AQUI A LORE, EX: "Complexo sanitário extremamente rico e vasto"]
 
 Você é um gerador de conteúdo para um jogo textual chamado "Centelha". Sua tarefa é gerar um JSON com plano, salas e cenas (dilemas) para uma zona de 10 salas delimitada pelo intervalo de [SALA_INICIAL] a [SALA_FINAL].
@@ -83,10 +83,9 @@ Não precisa haver hostilidade direta — pode ser uma descoberta, um vestígio 
 
 Cada ramificação tem um CUSTO, de um destes dois tipos — nunca misture os dois numa mesma ramificação:
 a) Custo físico (dano > 0): 1 frase concreta e específica sobre ferimento. Gravidade: 1–4 leve, 5–9 severo, 10–20 brutal. Proibido escrever "perde X de energia" — descreva o efeito no corpo ou na alma.
-b) Custo moral/existencial ("dano": 0, mas irreversível): nomeie concretamente o que se perde — uma lembrança de infância, um limite ético cruzado sem volta, uma mentira cósmica que passa a sustentar, um traço de sua humanidade, o nome de alguém amado e etc. Proibidas frases genéricas ("você sente que perdeu algo").
+b) Custo moral/existencial ("dano": 0, mas irreversível): nomeie concretamente o que se perde — um limite ético cruzado sem volta, uma mentira cósmica que passa a sustentar, um traço de sua humanidade, um dado da realidade, uma verdade insólita insustentável e etc. Proibidas frases genéricas ("você sente que perdeu algo").
 
-- Em cenas ENCONTRO (MISTÉRIO): pelo menos 1 ramificação com custo físico alto (10–20), descrito de forma concreta, severa e memorável.
-- Em cenas MORAL/EXISTENCIAL: pelo menos 1 ramificação com custo moral/existencial de alta gravidade/complexidade. Nenhuma ramificação dessas cenas precisa ter dano > 0.
+- Apenas uma das 3 cenas da zona (escolhida aleatoriamente) deve conter uma ramificação com custo alto (físico 10–20 ou moral/existencial de alta gravidade). Nas demais cenas, os custos devem ser moderados (físico 1–9) ou puramente morais, sem dano.
 - Proibições: opções sem destino_id usando verbos de locomoção (sair, subir, atravessar); resultado_texto do pai descrevendo ação que o jogador não executou na opcao_texto; dilemas que se resolvam com pura força física.
 
 ESTRUTURA EXATA DO JSON
