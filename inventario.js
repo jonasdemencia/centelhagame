@@ -1102,40 +1102,7 @@ const currentEnergy = currentPlayerData.energy || { total: 0, initial: 0 };
 
 
 
-// Adiciona funcionalidade ao botão descartar das opções
-const actionDescartarBtn = document.getElementById('action-descartar');
-if (actionDescartarBtn) {
-    actionDescartarBtn.addEventListener('click', async () => {
-        if (selectedItem) {
-            const uid = auth.currentUser?.uid;
-            if (uid) {
-                const playerRef = doc(db, "players", uid);
-                const playerSnap = await getDoc(playerRef);
-                const inventoryData = playerSnap.data().inventory;
-
-                const itemIndex = inventoryData.itemsInChest.findIndex(i => i.uuid === selectedItem.dataset.uuid);
-                if (itemIndex > -1) {
-                    inventoryData.itemsInChest.splice(itemIndex, 1);
-                }
-
-                if (!inventoryData.discardedItems) {
-                    inventoryData.discardedItems = [];
-                }
-                
-                inventoryData.discardedItems.push(selectedItem.dataset.uuid);
-
-                await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
-
-                selectedItem = null;
-                clearHighlights();
-                toggleUseButton(false);
-                hideItemActions();
-            }
-        }
-    });
-}
-
-    // Adiciona funcionalidade ao botão usar das opções
+// Adiciona funcionalidade ao botão usar das opções
 const actionUsarBtn = document.getElementById('action-usar');
 if (actionUsarBtn) {
     actionUsarBtn.addEventListener('click', async () => {
@@ -1213,33 +1180,31 @@ if (actionUsarBtn) {
         }
 
         // CASO 3: Bolsa de Ouro
-else if (selectedItem.dataset.item === 'pequenabolsaouro') {
-    const playerSnap = await getDoc(playerRef);
-    
-    if (playerSnap.exists()) {
-        const playerData = playerSnap.data();
-        const inventoryData = playerData.inventory;
-        
-        const itemIndex = inventoryData.itemsInChest.findIndex(i => i.uuid === selectedItem.dataset.uuid);
-        if (itemIndex !== -1) {
-            const goldValue = inventoryData.itemsInChest[itemIndex].goldValue || Math.floor(Math.random() * 10) + 1;
-            const ouroAtual = playerData.po || 0;
-            const novoTotal = ouroAtual + goldValue;
+        else if (selectedItem.dataset.item === 'pequenabolsaouro') {
+            const playerSnap = await getDoc(playerRef);
             
-            inventoryData.itemsInChest.splice(itemIndex, 1);
-            
-           await setDoc(playerRef, { 
-    inventory: inventoryData,
-    po: novoTotal 
-}, { merge: true });
+            if (playerSnap.exists()) {
+                const playerData = playerSnap.data();
+                const inventoryData = playerData.inventory;
+                
+                const itemIndex = inventoryData.itemsInChest.findIndex(i => i.uuid === selectedItem.dataset.uuid);
+                if (itemIndex !== -1) {
+                    const goldValue = inventoryData.itemsInChest[itemIndex].goldValue || Math.floor(Math.random() * 10) + 1;
+                    const ouroAtual = playerData.po || 0;
+                    const novoTotal = ouroAtual + goldValue;
+                    
+                    inventoryData.itemsInChest.splice(itemIndex, 1);
+                    
+                   await setDoc(playerRef, { 
+                        inventory: inventoryData,
+                        po: novoTotal 
+                    }, { merge: true });
 
-            
-            alert(`Você ganhou ${goldValue} moedas de ouro! Total: ${novoTotal}`);
+                    
+                    alert(`Você ganhou ${goldValue} moedas de ouro! Total: ${novoTotal}`);
+                }
+            }
         }
-    }
-}
-
-
 
         // CASO 4: Outros Consumíveis (heal, damage, etc.)
         else if (selectedItem.dataset.consumable === 'true') {
@@ -1277,17 +1242,26 @@ else if (selectedItem.dataset.item === 'pequenabolsaouro') {
             }
         }
 
+        // CASO 5: Interação item-ambiente (Shadowgate) – fallback para itens não consumíveis
         else {
-            console.log("O item selecionado não é consumível.");
+            // Tenta usar o item no ambiente da sala atual
+            const resultado = await window.usarItemNoAmbiente(selectedItem.dataset.item);
+            if (!resultado.sucesso) {
+                // A função já exibiu a mensagem de erro (ex: "Isso não parece ter efeito aqui.")
+                // Mantém o inventário aberto para tentar outro item.
+                // Impede a limpeza padrão para o jogador poder tentar novamente.
+                return;
+            }
+            // Se sucesso, a função `usarItemNoAmbiente` já fechou o inventário, exibiu a mensagem e aplicou os efeitos.
         }
 
+        // Limpeza padrão (executa apenas para os casos 1-4 e se o else não retornou)
         selectedItem = null;
         clearHighlights();
         toggleUseButton(false);
         hideItemActions();
     });
 }
-
 
     // Adiciona funcionalidade ao botão checar das opções
 const actionChecarBtn = document.getElementById('action-checar');
