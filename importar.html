@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Importador de Zonas (Cenas + Perigos) Inteligente</title>
+    <title>Importador de Zonas (Cenas + Perigos + Puzzles) Inteligente</title>
     <style>
         body {
             background: #0a0a0a;
@@ -78,21 +78,22 @@
     </style>
 </head>
 <body>
-    <h1>🧩 Importador de Zonas (Cenas + Perigos) Inteligente</h1>
+    <h1>🧩 Importador de Zonas (Cenas + Perigos + Puzzles) Inteligente</h1>
     <p>
         Cole o JSON corrigido do validador ou arraste um arquivo para importar diretamente no Firestore.<br>
-        <strong>As cenas (texto_evento + dilemas) e os perigos (interceptor + nova_opcao) serão injetados automaticamente nas salas.</strong><br>
-        <em>Se você colar apenas <code>{"perigos": [...]}</code>, o importador atualizará somente os perigos das salas já existentes no Firestore, substituindo os antigos e preservando todo o restante.</em>
+        <strong>As cenas (texto_evento + dilemas), os perigos (interceptor + nova_opcao) e os puzzles (Shadowgate) serão injetados automaticamente nas salas.</strong><br>
+        <em>Se você colar apenas <code>{"perigos": [...]}</code>, o importador atualizará somente os perigos das salas já existentes no Firestore.<br>
+        Se colar <code>{"puzzles": {...}}</code> (ou com <code>itens_novos</code>, <code>textos_modificados</code>, <code>itens_adicionados</code>), o importador aplicará os puzzles.</em>
     </p>
 
     <div class="file-input-wrapper" id="drop">
-        📂 Arraste o arquivo da zona OU dos perigos aqui — o importador identifica o conteúdo e coloca no campo certo
+        📂 Arraste o arquivo da zona, dos perigos ou dos puzzles aqui — o importador identifica o conteúdo e coloca no campo certo
         <input type="file" id="fileInput" accept=".json" style="display:none;">
     </div>
 
     <p>ou</p>
 
-    <textarea id="jsonInput" placeholder='Cole aqui o JSON da zona (topologia + prosa + dilemas, com ou sem perigos) OU apenas {"perigos": [...]} para atualizar perigos de salas existentes...'></textarea>
+    <textarea id="jsonInput" placeholder='Cole aqui o JSON da zona (topologia + prosa + dilemas, com ou sem perigos) OU {"perigos": [...]} OU {"puzzles": {...}}'></textarea>
 
     <p style="margin-top:20px;">📦 Perigos gerados em uma chamada separada? Cole só o <code>{"perigos": [...]}</code> aqui (opcional — use apenas se o JSON principal não contiver os perigos):</p>
     <textarea id="perigosInput" style="height:120px;" placeholder='Opcional: cole aqui apenas {"perigos": [...]} se você gerou os perigos numa chamada separada da IA...'></textarea>
@@ -467,6 +468,104 @@
         }
 
         // ============================================================
+        // FUNÇÃO PARA IMPORTAR PUZZLES (SHADOWGATE)
+        // ============================================================
+        async function importarPuzzles(dadosPuzzle, uid) {
+            const docRef = db.collection('players').doc(uid);
+            const docSnap = await docRef.get();
+            if (!docSnap.exists) {
+                throw new Error('Nenhum documento do jogador encontrado. Importe a zona primeiro.');
+            }
+            const dadosAtuais = docSnap.data() || {};
+            const mapaMundoAtual = dadosAtuais.mapaMundo || {};
+            const updatePayload = {};
+
+            // 1. Processar itens novos (salvar em um campo separado para mesclar no ITENS_DB)
+            if (dadosPuzzle.itens_novos && Object.keys(dadosPuzzle.itens_novos).length > 0) {
+                const itensNovosAtuais = dadosAtuais.itens_novos || {};
+                for (const [id, definicao] of Object.entries(dadosPuzzle.itens_novos)) {
+                    if (!itensNovosAtuais[id]) {
+                        itensNovosAtuais[id] = definicao;
+                    }
+                }
+                updatePayload['itens_novos'] = itensNovosAtuais;
+                log(`🧩 ${Object.keys(dadosPuzzle.itens_novos).length} novo(s) item(ns) adicionado(s).`, 'ok');
+            }
+
+            // 2. Aplicar modificações nos textos das salas
+            if (dadosPuzzle.textos_modificados) {
+                for (const [salaId, novoTexto] of Object.entries(dadosPuzzle.textos_modificados)) {
+                    if (mapaMundoAtual[salaId]) {
+                        const salaModificada = JSON.parse(JSON.stringify(mapaMundoAtual[salaId]));
+                        salaModificada.texto_logico = novoTexto;
+                        updatePayload[`mapaMundo.${salaId}`] = salaModificada;
+                        log(`📝 Sala ${salaId}: texto_logico atualizado.`, 'info');
+                    } else {
+                        log(`⚠️ Sala ${salaId} não encontrada para modificar texto.`, 'aviso');
+                    }
+                }
+            }
+
+            // 3. Adicionar itens ao chão das salas
+            if (dadosPuzzle.itens_adicionados) {
+                for (const [salaId, itensIds] of Object.entries(dadosPuzzle.itens_adicionados)) {
+                    if (mapaMundoAtual[salaId]) {
+                        const salaModificada = JSON.parse(JSON.stringify(mapaMundoAtual[salaId]));
+                        if (!salaModificada.itens) salaModificada.itens = [];
+                        for (const itemId of itensIds) {
+                            if (!salaModificada.itens.includes(itemId)) {
+                                salaModificada.itens.push(itemId);
+                            }
+                        }
+                        updatePayload[`mapaMundo.${salaId}`] = salaModificada;
+                        log(`📦 Sala ${salaId}: itens adicionados: ${itensIds.join(', ')}.`, 'info');
+                    } else {
+                        log(`⚠️ Sala ${salaId} não encontrada para adicionar itens.`, 'aviso');
+                    }
+                }
+            }
+
+            // 4. Aplicar puzzles (estados, interacoes_ambiente, usos_possiveis)
+            if (dadosPuzzle.puzzles) {
+                for (const [salaId, puzzleData] of Object.entries(dadosPuzzle.puzzles)) {
+                    if (mapaMundoAtual[salaId]) {
+                        const salaModificada = JSON.parse(JSON.stringify(mapaMundoAtual[salaId]));
+
+                        // Estados
+                        if (puzzleData.estados) {
+                            if (!salaModificada.estados) salaModificada.estados = {};
+                            Object.assign(salaModificada.estados, puzzleData.estados);
+                        }
+
+                        // Interações de ambiente
+                        if (puzzleData.interacoes_ambiente && puzzleData.interacoes_ambiente.length > 0) {
+                            if (!salaModificada.interacoes_ambiente) salaModificada.interacoes_ambiente = [];
+                            salaModificada.interacoes_ambiente = salaModificada.interacoes_ambiente.concat(puzzleData.interacoes_ambiente);
+                        }
+
+                        // Usos possíveis
+                        if (puzzleData.usos_possiveis && puzzleData.usos_possiveis.length > 0) {
+                            if (!salaModificada.usos_possiveis) salaModificada.usos_possiveis = [];
+                            salaModificada.usos_possiveis = salaModificada.usos_possiveis.concat(puzzleData.usos_possiveis);
+                        }
+
+                        updatePayload[`mapaMundo.${salaId}`] = salaModificada;
+                        log(`🧩 Sala ${salaId}: puzzle aplicado (${Object.keys(puzzleData).join(', ')}).`, 'ok');
+                    } else {
+                        log(`⚠️ Sala ${salaId} não encontrada para aplicar puzzle.`, 'aviso');
+                    }
+                }
+            }
+
+            if (Object.keys(updatePayload).length === 0) {
+                throw new Error('Nenhuma modificação de puzzle foi aplicada.');
+            }
+
+            await docRef.update(updatePayload);
+            return { atualizadas: Object.keys(updatePayload).map(k => k.replace('mapaMundo.', '')) };
+        }
+
+        // ============================================================
         // UI
         // ============================================================
         const statusDiv = document.getElementById('status');
@@ -485,7 +584,7 @@
             const perigosStr = document.getElementById('perigosInput').value.trim();
 
             if (!jsonStr) {
-                alert('Cole o JSON da zona ou dos perigos, ou arraste um arquivo.');
+                alert('Cole o JSON da zona, dos perigos ou dos puzzles, ou arraste um arquivo.');
                 return;
             }
 
@@ -495,6 +594,7 @@
 
                 let temZona = !!(dados.plano || dados.salas || dados.cenas);
                 let temPerigos = Array.isArray(dados.perigos);
+                let temPuzzles = !!(dados.itens_novos || dados.textos_modificados || dados.itens_adicionados || dados.puzzles);
 
                 // Se houver perigos separados no campo secundário, mesclar
                 if (perigosStr) {
@@ -518,8 +618,8 @@
                     log(`☠️ ${dadosPerigos.perigos.length} perigos (JSON separado) mesclados.`, 'ok');
                 }
 
-                if (!temZona && !temPerigos) {
-                    alert('O JSON não contém zona (plano/salas/cenas) nem perigos.');
+                if (!temZona && !temPerigos && !temPuzzles) {
+                    alert('O JSON não contém zona (plano/salas/cenas), perigos nem puzzles.');
                     return;
                 }
 
@@ -550,6 +650,17 @@
 
                     resultadoDiv.innerHTML = `
                         <p class="ok">✅ Perigos atualizados!</p>
+                        <pre>${JSON.stringify(resultado, null, 2)}</pre>
+                        <button class="btn" onclick="window.location.href='./vamosla.html'">🎮 Voltar ao Jogo</button>
+                    `;
+                } else if (temPuzzles) {
+                    log('🧩 Importando puzzles...', 'info');
+                    const resultado = await importarPuzzles(dados, user.uid);
+                    log('✅ Puzzles importados com sucesso!', 'ok');
+                    log(`📊 Salas modificadas: ${resultado.atualizadas.join(', ')}`, 'ok');
+
+                    resultadoDiv.innerHTML = `
+                        <p class="ok">✅ Puzzles aplicados!</p>
                         <pre>${JSON.stringify(resultado, null, 2)}</pre>
                         <button class="btn" onclick="window.location.href='./vamosla.html'">🎮 Voltar ao Jogo</button>
                     `;
@@ -599,8 +710,8 @@
                     const parsed = JSON.parse(texto);
                     const temZona = parsed && (parsed.plano || parsed.salas || parsed.cenas);
                     const soPerigos = parsed && Array.isArray(parsed.perigos) && !temZona;
+                    const soPuzzles = parsed && (parsed.itens_novos || parsed.textos_modificados || parsed.itens_adicionados || parsed.puzzles) && !temZona && !soPerigos;
                     if (soPerigos) {
-                        // Se o campo principal estiver vazio, coloca lá; senão, no campo separado
                         if (!document.getElementById('jsonInput').value.trim()) {
                             destino = 'jsonInput';
                             rotulo = 'perigos (campo principal, apenas perigos)';
@@ -608,6 +719,9 @@
                             destino = 'perigosInput';
                             rotulo = 'perigos (campo separado)';
                         }
+                    } else if (soPuzzles) {
+                        destino = 'jsonInput';
+                        rotulo = 'puzzles (campo principal)';
                     }
                 } catch (err) {
                     // mantém no campo principal
@@ -631,7 +745,7 @@
         });
 
         log('🔧 Importador pronto. Cole o JSON ou arraste um arquivo.', 'info');
-        log('📌 Para zona completa: inclua "plano", "salas" e opcionalmente "cenas" e "perigos". Para atualizar apenas perigos: cole somente {"perigos": [...]}.', 'info');
+        log('📌 Para zona completa: inclua "plano", "salas" e opcionalmente "cenas" e "perigos". Para atualizar apenas perigos: cole somente {"perigos": [...]}. Para puzzles: cole {"itens_novos": {...}, "textos_modificados": {...}, "itens_adicionados": {...}, "puzzles": {...}}.', 'info');
     </script>
 </body>
 </html>
