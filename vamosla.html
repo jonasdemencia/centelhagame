@@ -5383,6 +5383,72 @@ REGRA DE FIDELIDADE: Se o botão cita uma porta, janela ou item, certifique-se d
             }
         }
 
+            // ============================================================
+        // SISTEMA DE INTERAÇÃO ITEM-ALVO (SHADOWGATE)
+        // ============================================================
+        window.usarItemNoAmbiente = async function(itemId) {
+            const salaId = secaoAtualId;
+            const sala = mapaMundo?.[salaId];
+            if (!sala) return { sucesso: false };
+
+            if (!sala.usos_possiveis) sala.usos_possiveis = [];
+            if (!sala.estados) sala.estados = {};
+
+            const uso = sala.usos_possiveis.find(u => u.item_id === itemId && !u.usado);
+
+            if (!uso) {
+                adicionarMensagem("Isso não parece ter efeito aqui.", 'system');
+                return { sucesso: false };
+            }
+
+            const condicaoOk = !uso.condicao_estado || sala.estados[uso.condicao_estado] === true;
+            if (!condicaoOk) {
+                adicionarMensagem(uso.mensagem_falha || "Não há nada aqui para usar esse item.", 'system');
+                return { sucesso: false };
+            }
+
+            // Sucesso
+            adicionarMensagem(uso.resultado_texto || "O item encaixa perfeitamente.", 'system');
+
+            // Consome o item só se explicitamente marcado (default: mantém no inventário)
+            if (uso.remove_item === true) {
+                await removerItemDoInventarioFirestore(itemId);
+            }
+
+            // Abre passagem, se houver destino e ainda não existir essa opção
+            if (uso.destino !== undefined && sala.opcoes) {
+                const jaExiste = sala.opcoes.some(o => o.destino === uso.destino);
+                if (!jaExiste) {
+                    sala.opcoes.push({
+                        texto: uso.texto_nova_saida || "Seguir pela passagem revelada",
+                        destino: uso.destino
+                    });
+                }
+            }
+
+            // Efeitos adicionais opcionais
+            if (uso.define_estado) sala.estados[uso.define_estado] = true;
+            if (uso.adiciona_item) {
+                if (!sala.itens) sala.itens = [];
+                sala.itens.push(uso.adiciona_item);
+                atualizarLootRoom();
+            }
+
+            if (uso.reutilizavel !== true) uso.usado = true;
+
+            atualizarBotoesNavegacao();
+            if (typeof window.atualizarInterfaceInventario === 'function') {
+                window.atualizarInterfaceInventario();
+            }
+            await salvarEstadoJogador();
+
+            if (typeof window.fecharInventario === 'function') {
+                window.fecharInventario();
+            }
+
+            return { sucesso: true };
+        };
+
         // Função chamada após a execução de uma opção de exame (tipo_resultado: revelacao/perigo)
         async function processarResultadoExame(opcao) {
     // Apenas revela a chave, SEM alterar flags ou deletar chavesAnexadas
