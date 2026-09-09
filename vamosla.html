@@ -2883,6 +2883,17 @@ Retorne APENAS este JSON:
                     document.getElementById('magia-span').innerText = `✨ Magia: ${magiaAtual}`;
                     if (data.mapaMundo) mapaMundo = data.mapaMundo;
                     window.mapaMundo = mapaMundo;
+
+                    // ===== AQUI INSIRA O BLOCO DE MESCLAGEM =====
+            if (mapaMundo && mapaMundo.itens_novos) {
+                for (const [id, definicao] of Object.entries(mapaMundo.itens_novos)) {
+                    if (!ITENS_DB[id]) {
+                        ITENS_DB[id] = definicao;
+                    }
+                }
+            }
+            // ===== FIM DA MESCLAGEM =====
+                    
                     if (data.arcanumIudicium?.magiasMemorizadas) magiasMemorizadas = data.arcanumIudicium.magiasMemorizadas;
                     if (data.secaoAtualId) secaoAtualId = data.secaoAtualId;
                     if (data.salasVisitadas) salasVisitadas = new Set(data.salasVisitadas);
