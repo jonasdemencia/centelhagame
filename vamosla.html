@@ -1974,8 +1974,12 @@
         function atualizarLootRoom() {
     const lootContainer = document.getElementById('loot-area');
     lootContainer.innerHTML = '';
-    if (!mapaMundo || !mapaMundo[secaoAtualId]) return;
+    if (!mapaMundo || !mapaMundo[secaoAtualId]) {
+        console.log("⚠️ [atualizarLootRoom] mapaMundo ou sala atual não encontrados.");
+        return;
+    }
     const salaAtual = mapaMundo[secaoAtualId];
+    console.log("🔍 [atualizarLootRoom] Sala atual:", secaoAtualId, "Itens:", salaAtual.itens);
 
     // 1) Itens normais da sala (via distribuirItens)
     if (salaAtual.itens && salaAtual.itens.length > 0) {
@@ -2885,13 +2889,17 @@ Retorne APENAS este JSON:
                     window.mapaMundo = mapaMundo;
 
                     // ===== AQUI INSIRA O BLOCO DE MESCLAGEM =====
-            if (mapaMundo && mapaMundo.itens_novos) {
-                for (const [id, definicao] of Object.entries(mapaMundo.itens_novos)) {
-                    if (!ITENS_DB[id]) {
-                        ITENS_DB[id] = definicao;
-                    }
-                }
-            }
+           if (data.itens_novos) {
+    console.log("🔄 Mesclando itens_novos:", data.itens_novos);
+    for (const [id, definicao] of Object.entries(data.itens_novos)) {
+        if (!ITENS_DB[id]) {
+            ITENS_DB[id] = definicao;
+            console.log(`✅ Item mesclado: ${id} -> ${definicao.content}`);
+        } else {
+            console.log(`⚠️ Item ${id} já existe no ITENS_DB`);
+        }
+    }
+}
             // ===== FIM DA MESCLAGEM =====
                     
                     if (data.arcanumIudicium?.magiasMemorizadas) magiasMemorizadas = data.arcanumIudicium.magiasMemorizadas;
@@ -6134,6 +6142,8 @@ REGRA DE FIDELIDADE: Se o botão cita uma porta, janela ou item, certifique-se d
                     atualizarBotoesNavegacao(); 
                     atualizarLootRoom();
                     window.enviar();
+                    console.log("🚀 Jogo carregado. Sala atual:", secaoAtualId);
+console.log("🔍 Itens da sala atual:", mapaMundo?.[secaoAtualId]?.itens);
                 } else {
                     window.location.href = "login.html";
                 }
