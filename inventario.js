@@ -178,6 +178,24 @@ const extraItems = [
 
 ];
 
+// ============================================================
+// FUNÇÃO AUXILIAR PARA OBTER TODOS OS ITENS (FIXOS + DINÂMICOS)
+// ============================================================
+function getAllItems() {
+    let all = [...initialItems, ...extraItems, ...itensNarrativas];
+    if (currentPlayerData && currentPlayerData.itens_novos) {
+        for (const [id, definicao] of Object.entries(currentPlayerData.itens_novos)) {
+            // Garante que o campo 'id' exista
+            if (!definicao.id) definicao.id = id;
+            // Evita duplicatas (caso o mesmo id já exista nos fixos)
+            if (!all.some(item => item.id === definicao.id)) {
+                all.push(definicao);
+            }
+        }
+    }
+    return all;
+}
+
 function typeWriterDescription(message, element) {
     element.textContent = ''; // sempre limpa antes de escrever
     let index = 0;
@@ -204,7 +222,7 @@ function updateItemPreview(item) {
     const previewName = document.getElementById('preview-name');
     const previewDescription = document.getElementById('preview-description');
     
-    const allItemsArr = [...initialItems, ...extraItems, ...itensNarrativas];
+    const allItemsArr = getAllItems();
     const itemData = allItemsArr.find(i => i.id === item.dataset.item);
     
     if (itemData) {
@@ -354,7 +372,7 @@ const equippedWeaponName = inventoryData.equippedItems.weapon;
 
 if (!equippedWeaponName) return;
 
-const allItemsArr = [...initialItems, ...extraItems, ...itensNarrativas];
+const allItemsArr = getAllItems();
 
 const weaponData = allItemsArr.find(item =>
 
@@ -820,7 +838,7 @@ slots.forEach(slot => slot.classList.remove('highlight'));
 
 console.log("Item clicado:", item);
 
-const allItemsArr = [...initialItems, ...extraItems, ...itensNarrativas];
+const allItemsArr = getAllItems();
 
 const itemData = allItemsArr.find(i => i.id === item.dataset.item);
 
@@ -952,7 +970,7 @@ const slotId = slot.id;
         if (!playerSnap.exists()) return;
 
         const inventoryData = playerSnap.data().inventory;
-        const allItemsArr = [...initialItems, ...extraItems, ...itensNarrativas];
+        const allItemsArr = getAllItems();
 
         // Garante que os objetos de inventário existam
         if (!inventoryData.equippedItems) inventoryData.equippedItems = {};
@@ -1279,6 +1297,11 @@ else if (selectedItem.dataset.item === 'pequenabolsaouro') {
 
         else {
             console.log("O item selecionado não é consumível.");
+            // Tenta usar no ambiente (se a função existir no vamosla)
+            if (typeof window.usarItemNoAmbiente === 'function') {
+                const itemId = selectedItem.dataset.item;
+                await window.usarItemNoAmbiente(itemId);
+            }
         }
 
         selectedItem = null;
@@ -1322,7 +1345,7 @@ function addItemClickListener(item) {
                 selectedItem = item;
                 item.classList.add('selected');
 
-                const allItemsArr = [...initialItems, ...extraItems, ...itensNarrativas];
+                const allItemsArr = getAllItems();
                 const itemData = allItemsArr.find(i => i.id === item.dataset.item);
 
                 if (itemData && itemData.slot) {
@@ -1615,7 +1638,7 @@ function loadInventoryUI(inventoryData) {
     const chestElement = document.querySelector('.items');
     chestElement.innerHTML = ""; // Limpa o conteúdo atual
 
-    const allItemsArr = [...initialItems, ...extraItems, ...itensNarrativas];
+    const allItemsArr = getAllItems();
     const largeItemElements = [];
     const smallItemElements = [];
 
@@ -1891,7 +1914,7 @@ async function updateCharacterCouraca() {
     let baseCouraca = 0; // Valor base da couraça
     let bonusCouraca = 0;
 
-    const allItemsArr = [...initialItems, ...extraItems, ...itensNarrativas];
+    const allItemsArr = getAllItems();
 
     // Verifica o item equipado no slot de armadura
     const armorSlot = document.querySelector('.slot[data-slot="armor"]');
@@ -1972,7 +1995,7 @@ if (weaponSlot && weaponSlot.dataset.itemName) {
 
 const equippedWeaponName = weaponSlot.dataset.itemName.replace(/\s*\(\d+\/\d+\)$/, "");
 
-const allItemsArr = [...initialItems, ...extraItems, ...itensNarrativas];
+const allItemsArr = getAllItems();
 
 const weaponData = allItemsArr.find(item => item.content === equippedWeaponName);
 
@@ -2004,7 +2027,7 @@ function calculateEquippedBonuses() {
 
     };
 
-    const allItemsArr = [...initialItems, ...extraItems, ...itensNarrativas];
+    const allItemsArr = getAllItems();
     
     // Verifica todos os slots equipados
     document.querySelectorAll('.slot').forEach(slot => {
@@ -2031,7 +2054,7 @@ function updateSlotCompatibility() {
     
     if (!weaponSlot || !shieldSlot) return;
     
-    const allItemsArr = [...initialItems, ...extraItems, ...itensNarrativas];
+    const allItemsArr = getAllItems();
     const equippedWeaponName = weaponSlot.dataset.itemName;
     
     if (equippedWeaponName) {
@@ -2167,7 +2190,7 @@ equippedWeaponName = equippedWeaponName.replace(/\s*\(\d+\/\d+\)$/, "");
 
 // encontra no catálogo o tipo de munição dessa arma
 
-const allItemsArr = [...initialItems, ...extraItems, ...itensNarrativas];
+const allItemsArr = getAllItems();
 
 const weaponData = allItemsArr.find(item =>
 
