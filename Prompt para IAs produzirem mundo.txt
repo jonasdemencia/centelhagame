@@ -286,7 +286,7 @@ O jogador **precisa encontrar o item antes** de chegar na sala do puzzle. Para i
 
 **A) Na sala do puzzle:**
 
-- Adicionar uma **descrição visual** do obstáculo/elemento no `texto_logico` (ex: "No canto, um alçapão de madeira com uma fechadura de ferro.").
+- Adicionar uma **descrição visual** do obstáculo/elemento no `texto_logico`, **incluindo o gancho narrativo** (ex: "No canto, um alçapão de madeira com uma fechadura de ferro. Você nota que pode levantá-lo, se desejar.").
 - Criar uma **interação de ambiente** (`interacoes_ambiente`) que o jogador executa por texto livre para preparar o cenário (ex: "levantar o tapete") e ativar um `estado`.
 - Criar um **uso de item** (`usos_possiveis`) que exige o item (novo ou existente) e a condição de estado para funcionar, e que desbloqueia uma recompensa (`destino`, `adiciona_item`, etc.).
 
@@ -310,7 +310,7 @@ O jogador **precisa encontrar o item antes** de chegar na sala do puzzle. Para i
   },
   "textos_modificados": {
     "2": "Sobre uma mesa de madeira, uma chave de bronze brilha sob a luz fraca. O resto da sala está coberto de poeira.",
-    "5": "No canto direito, um alçapão de madeira com uma fechadura de ferro. Ao redor, um tapete puído cobre o chão."
+    "5": "No canto direito, um alçapão de madeira com uma fechadura de ferro. Ao redor, um tapete puído cobre o chão, e você percebe que pode levantá-lo, se desejar."
   },
   "itens_adicionados": {
     "2": ["chave_bronze"]
@@ -361,6 +361,16 @@ Se não houver modificações em uma categoria, retorne o objeto vazio `{}`.
 3. **Recompensa clara**: o uso do item deve levar a uma mudança tangível – abrir uma passagem (`destino`), revelar um item (`adiciona_item`), ou fornecer uma pista importante.
 4. **Variedade**: não repita o mesmo item em vários puzzles da mesma zona.
 5. **Posicionamento do item**: coloque o item em uma sala **anterior** e **vazia** (sem cena, perigo ou puzzle). 
+
+---
+
+### ÂNCORA VISUAL E GANCHO NARRATIVO (REGRAS DE OURO)
+
+1. **Substantivo literal**: a `frase_gatilho` da `interacoes_ambiente` DEVE usar o MESMO substantivo que está descrito no `texto_modificado` da sala. Ex: se a ação é "levantar o tapete", a palavra "tapete" deve aparecer no texto.
+
+2. **Gancho explícito**: o `texto_modificado` DEVE conter uma frase que SUGIRA a interação preparatória, SEM revelar a solução do item. Fórmula: `"[objeto]... você nota que pode [ação], se desejar."` Ex: *"O vidro tem uma crosta de fuligem, e você nota que pode raspá-la, se desejar."*
+
+3. **Correção obrigatória**: se o substantivo da `frase_gatilho` não estiver literalmente no `texto_modificado`, ou se não houver o gancho, você DEVE reescrever o texto para incluir ambos.
 
 ---
 
