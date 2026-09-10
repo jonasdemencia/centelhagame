@@ -4545,7 +4545,31 @@ async function executarDilemaComRamificacao(pai, ram, silent = false, pularPonte
     }
 
     // Navega ou atualiza
+        // Navega ou atualiza
     if (ram.destino) {
+        // Gate de leitura: mostra CONTINUAR e espera o clique antes de navegar,
+        // senão navegarPara limpa o chatBox e o jogador nunca lê a consequência.
+        const container = document.getElementById('map-controls');
+        container.innerHTML = '';
+        const btnContinuar = document.createElement('button');
+        btnContinuar.className = 'btn-continuar-interceptor';
+        btnContinuar.innerText = '> CONTINUAR';
+        btnContinuar.style.background = '#1a2a1a';
+        btnContinuar.style.borderColor = '#4caf50';
+        btnContinuar.style.color = '#4caf50';
+        container.appendChild(btnContinuar);
+        container.style.pointerEvents = 'auto';
+
+        const mainScroll = document.getElementById('main-scroll-area');
+        if (mainScroll) mainScroll.scrollTop = mainScroll.scrollHeight;
+
+        await new Promise(resolve => {
+            btnContinuar.onclick = () => {
+                container.style.pointerEvents = 'none';
+                resolve();
+            };
+        });
+
         window._transicaoEmAndamento = false;   // libera antes de navegarPara re-adquirir
         await navegarPara(ram.destino, ram.opcao_texto, { texto: ram.opcao_texto }, true);
     } else {
