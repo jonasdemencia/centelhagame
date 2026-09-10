@@ -185,11 +185,12 @@
 
                 if (!sala.opcoes) sala.opcoes = [];
 
-                const destinosValidos = new Set(
-                    (sala.opcoes || [])
-                        .filter(o => o.destino && !o.arquiteto)
-                        .map(o => String(o.destino))
-                );
+                const salaIdNum = parseInt(salaId);
+const destinosValidos = new Set(
+    (sala.opcoes || [])
+        .filter(o => o.destino && !o.arquiteto && o.destino > salaIdNum)
+        .map(o => String(o.destino))
+);
 
                 const dilemas = Array.isArray(cena.dilemas) ? cena.dilemas : [];
 
