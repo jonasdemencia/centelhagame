@@ -4207,8 +4207,33 @@ Retorne EXATAMENTE o JSON abaixo. Nenhuma palavra extra.`
         // ============================================================
 
         async function navegarPara(destino, textoAcao, opcao, silent = false) {
-            if (window._transicaoEmAndamento) return;
-            window._transicaoEmAndamento = true;
+    if (window._transicaoEmAndamento) return;
+
+    // ============================================================
+    // FALLBACK: destino reservado por dilema ainda não disparado.
+    // Enquanto o jogador não passar pelo dilema, a locomoção comum
+    // que leva à mesma sala fica bloqueada — o dilema é a única via.
+    // ============================================================
+    const salaOrigemBloqueio = mapaMundo?.[secaoAtualId];
+    if (salaOrigemBloqueio && salaOrigemBloqueio.opcoes) {
+        const destinoStr = String(destino);
+        const bloqueadoPorDilema = salaOrigemBloqueio.opcoes.some(o => {
+            if (!o.dilema || o.disparado) return false;
+            if (o.destino !== undefined && String(o.destino) === destinoStr) return true;
+            if (Array.isArray(o.ramificacoes)) {
+                return o.ramificacoes.some(r =>
+                    r.destino !== undefined && String(r.destino) === destinoStr
+                );
+            }
+            return false;
+        });
+        if (bloqueadoPorDilema) {
+            adicionarMensagem("Algo o impede de seguir por ali. Você precisa encontrar outra forma.", 'system');
+            return;
+        }
+    }
+
+    window._transicaoEmAndamento = true;
 
             // ============================================================
             // VERIFICAÇÃO DE PORTA TRANCADA (SISTEMA DE CHAVES)
