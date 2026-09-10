@@ -491,6 +491,9 @@
                                 if (!destinosValidos.includes(dest)) {
                                     erros.push(`${rp}: destino_id ${dest} não é uma saída válida da sala ${salaId}.`);
                                 }
+                                if (dest <= salaId) {
+    erros.push(`${rp}: destino_id ${dest} aponta para trás ou para a própria sala ${salaId}. Só é permitido avanço.`);
+}
                                 const verbosLocomocao = /\b(sair|subir|descer|atravessar|seguir|caminhar|passar|entrar|voltar|rastejar|escalar|saltar)\b/i;
                                 if (verbosLocomocao.test(r.opcao_texto)) {
                                     erros.push(`${rp}: opção com destino_id contém verbo de locomoção (proibido).`);
