@@ -68,6 +68,11 @@ Selecione aleatoriamente 3 salas intermediárias (ignorando a [SALA_INICIAL]) pa
 ÂNCORA LÉXICA E ESTRUTURA DE DILEMAS:
 - O `texto_evento` deve descrever a cena e, no máximo, indicar UMA ação que leva ao dilema-pai (ex: "Se desejar, você pode examinar a pena"). PROIBIDO usar "ou" no `texto_evento` para listar alternativas de ação — as demais escolhas serão introduzidas exclusivamente nas ramificações do pai.
 - O array `dilemas` deve conter exatamente 1 objeto (o dilema-pai), que terá `ramificacoes` com 2 ou 3 objetos (as ramificações). As ramificações são as verdadeiras escolhas do dilema — cada uma com seu próprio `resultado_texto`, `dano` e `destino_id` (se houver).
+
+REGRAS DO CAMPO destino_id (VIOLAÇÃO = FALHA CRÍTICA):
+- destino_id SÓ pode apontar para uma sala de número MAIOR que a sala atual (avanço). Nunca aponte para trás.
+- Ao preencher destino_id numa ramificação, o motor BLOQUEIA a locomoção comum que levava à mesma sala até o jogador passar pelo dilema — o dilema vira a única via de avanço.
+- Se a ramificação não conduz para uma sala à frente, use destino_id: null.
 - O `resultado_texto` do pai é uma ponte narrativa de 2–3 frases que descreve a reação imediata à ação do jogador, sem encerrar o dilema. O pai NUNCA pode ter `destino_id`.
 
 "texto_evento" (3–4 frases): o elemento central deve parecer que sempre esteve ali, esperando.
