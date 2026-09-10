@@ -269,6 +269,15 @@ Você receberá o JSON completo de uma zona (com `plano`, `salas`, `cenas` e `pe
 
 ---
 
+### DERIVAÇÃO ORGÂNICA (REGRA ABSOLUTA)
+Você está TERMINANTEMENTE PROIBIDO de criar puzzles genéricos de "chave e fechadura", "cartão de acesso", "alavancas simples" ou "solventes". 
+1. O item e o obstáculo devem ser uma extrapolação direta do TEMA da Zona atual e do `texto_logico` das salas escolhidas.
+2. A solução do puzzle deve envolver lógicas imersivas do próprio mundo retratado: seus objetos, ofícios, rituais, máquinas e vestígios.
+3. Use a criatividade para variar os mecanismos. O uso do item não precisa ser apenas "encaixar" ou "limpar". Pode ser: apaziguar, corroer, iluminar, curto-circuitar, decifrar, contemplar, ouvir, tocar, completar. 
+4. Em pelo menos 30% dos puzzles, a recompensa (uso do item) NÃO deve abrir uma passagem (`destino`), mas sim revelar um segredo, fornecer uma pista crucial (`adiciona_item`) ou alterar permanentemente o ambiente (`define_estado`).
+
+---
+
 ### COMO FUNCIONA A DISTRIBUIÇÃO DE ITENS
 
 O jogador **precisa encontrar o item antes** de chegar na sala do puzzle. Para isso:
@@ -302,40 +311,41 @@ O jogador **precisa encontrar o item antes** de chegar na sala do puzzle. Para i
 ```json
 {
   "itens_novos": {
-    "chave_bronze": {
-      "id": "chave_bronze",
-      "content": "Chave de Bronze",
-      "description": "Uma chave pesada, com detalhes ornamentais e um brilho fosco. Parece antiga."
+    "id_do_item_criado": {
+      "id": "id_do_item_criado",
+      "content": "Nome do item orgânico ao TEMA",
+      "description": "Descrição física detalhada e sensorial que justifica sua utilidade no puzzle."
     }
   },
   "textos_modificados": {
-    "2": "Sobre uma mesa de madeira, uma chave de bronze brilha sob a luz fraca. O resto da sala está coberto de poeira.",
-    "5": "No canto direito, um alçapão de madeira com uma fechadura de ferro. Ao redor, um tapete puído cobre o chão, e você percebe que pode levantá-lo, se desejar."
+    "[ID_SALA_ONDE_FICA_O_ITEM]": "[Texto original da sala]. Sobre [superfície existente], [descrição do item criado].",
+    "[ID_SALA_DO_OBSTACULO]": "[Texto original da sala]. No canto, [descrição do obstáculo alinhado ao TEMA]. Você nota que pode [ação preparatória literal], se desejar."
   },
   "itens_adicionados": {
-    "2": ["chave_bronze"]
+    "[ID_SALA_ONDE_FICA_O_ITEM]": ["id_do_item_criado"]
   },
   "puzzles": {
-    "5": {
+    "[ID_SALA_DO_OBSTACULO]": {
       "estados": {
-        "tapete_levantado": false
+        "nome_do_estado_preparado": false
       },
       "interacoes_ambiente": [
         {
-          "frase_gatilho": "levantar o tapete",
-          "resposta": "Você ergue o tapete e revela o alçapão completamente. A fechadura de ferro está exposta.",
-          "define_estado": "tapete_levantado"
+          "frase_gatilho": "[ação preparatória literal idêntica à sugerida no texto]",
+          "resposta": "Você [ação concluída], revelando o núcleo do obstáculo.",
+          "define_estado": "nome_do_estado_preparado"
         }
       ],
       "usos_possiveis": [
         {
-          "item_id": "chave_bronze",
-          "condicao_estado": "tapete_levantado",
-          "resultado_texto": "A chave encaixa perfeitamente na fechadura. O alçapão se abre com um rangido seco.",
-          "destino": 7,
-          "texto_nova_saida": "Descer pelo alçapão aberto",
+          "item_id": "id_do_item_criado",
+          "condicao_estado": "nome_do_estado_preparado",
+          "resultado_texto": "Descrição de como a mecânica escolhida supera o obstáculo de forma coerente.",
+          "destino": "[INCLUIR APENAS SE A RECOMPENSA FOR ABRIR PASSAGEM]",
+          "adiciona_item": "[INCLUIR APENAS SE A RECOMPENSA FOR UM NOVO ITEM OU PISTA]",
+          "texto_nova_saida": "Nova ação de locomoção [APENAS SE HOUVER DESTINO]",
           "remove_item": true,
-          "mensagem_falha": "Você tenta usar a chave, mas o alçapão ainda está coberto pelo tapete."
+          "mensagem_falha": "Você tenta usar o item, mas [motivo lógico da falha antes da preparação]."
         }
       ]
     }
@@ -368,7 +378,7 @@ Se não houver modificações em uma categoria, retorne o objeto vazio `{}`.
 
 1. **Substantivo literal**: a `frase_gatilho` da `interacoes_ambiente` DEVE usar o MESMO substantivo que está descrito no `texto_modificado` da sala. Ex: se a ação é "levantar o tapete", a palavra "tapete" deve aparecer no texto.
 
-2. **Gancho explícito**: o `texto_modificado` DEVE conter uma frase que SUGIRA a interação preparatória, SEM revelar a solução do item. Fórmula: `"[objeto]... você nota que pode [ação], se desejar."` Ex: *"O vidro tem uma crosta de fuligem, e você nota que pode raspá-la, se desejar."*
+2. **Gancho explícito**: o `texto_modificado` DEVE conter uma frase que SUGIRA a interação preparatória, SEM revelar a solução do item. Fórmula: `"[objeto]... você nota que pode [ação], se desejar."` Ex: *"A gaiola de ferro tem um cadeado coberto de teia; você nota que pode cortar a teia, se desejar."*
 
 3. **Correção obrigatória**: se o substantivo da `frase_gatilho` não estiver literalmente no `texto_modificado`, ou se não houver o gancho, você DEVE reescrever o texto para incluir ambos.
 
