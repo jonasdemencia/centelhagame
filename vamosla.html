@@ -660,6 +660,49 @@
 
 <script type="module">
 
+    // ============================================================
+// CONTEXTO DO PROJETO — LEIA ANTES DE MEXER NO CÓDIGO
+// ============================================================
+//
+// Este arquivo é o RUNTIME do jogo "Centelha". Ele NÃO gera mais
+// conteúdo (topologia, salas, cenas, dilemas, perigos, puzzles)
+// via APIs externas (Groq/Sambanova/LM Studio). Toda a geração
+// foi movida para fora — uma IA separada produz o JSON da zona,
+// ele é validado em outro lugar, e o arquivo `importar.html`
+// grava tudo direto no Firestore (mapaMundo, itens_novos, etc.).
+//
+// Este runtime apenas LÊ o que está no Firestore e executa:
+//   • Navegação entre salas (opcoes, bloqueios, chaves)
+//   • Cenas/dilemas já injetados (arquiteto: true, dilema: true)
+//   • Perigos já injetados (interceptor_arquiteto, nova_opcao)
+//   • Puzzles Shadowgate (estados, interacoes_ambiente, usos_possiveis)
+//   • Itens dinâmicos (ITENS_DB é mesclado com itens_novos do Firestore)
+//
+// O jogo é TEXTUAL: o jogador digita ações em linguagem natural.
+// Os botões de navegação foram removidos INTENCIONALMENTE por CSS
+// (ver "Oculta apenas os botões de navegação normais" no <style>).
+// O que ainda aparece como botão é só exceção (ex: CONTINUAR em
+// interceptor, ações de arquiteto que exigem clique explícito).
+//
+// Ainda ativos no runtime:
+//   • Motor semântico (Xenova/paraphrase-multilingual-MiniLM) — Tier 2
+//     usado para casar texto livre do jogador com opcoes/interacoes
+//     ocultas via similaridade de cosseno.
+//   • LLM local Tier 3 (WebLLM no desktop / wllama no mobile) — só
+//     para inventar detalhes pontuais e extrair fatos de frases já
+//     geradas. Não gera topologia nem prosa de sala.
+//
+// Fluxo de produção de conteúdo (fora deste arquivo)
+//   1. Prompt "Topologia+Salas"  → gera plano + texto_logico + cenas
+//   2. Prompt "Arquiteto Perigos"→ gera perigos sobre salas sem cena
+//   3. Prompt "Puzzles Shadowgate"→ gera puzzles sobre salas restantes
+//   4. Importador (`importar*.html`) → grava tudo no Firestore
+//   6. Este runtime → lê e executa
+//
+// Portanto: NÃO reintroduza chamadas de geração aqui. Se precisar
+// ajustar conteúdo, edite o prompt correspondente e reimporte.
+// ============================================================
+
         import { pipeline, cos_sim } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.16.0';
         // Tier 3 (geração de texto) migrado de @huggingface/transformers (ONNX
         // Runtime Web) para WebLLM/MLC — motivo: bug ativa de memória no modo
