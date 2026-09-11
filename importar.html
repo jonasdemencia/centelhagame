@@ -136,6 +136,43 @@
         }
 
         // ============================================================
+        // CAMPOS PRESERVADOS DE IMPORTS ANTERIORES / RUNTIME
+        // ============================================================
+        // Quando a importação de zona (importarParaFirestore) reconstrói
+        // o mapaMundo do zero, ela deve preservar os campos que NÃO vêm
+        // do JSON de zona — senão re-importar a zona apaga puzzles e
+        // estados que foram adicionados depois. Esta lista é a fonte
+        // única de verdade sobre o que preservar.
+        const CAMPOS_PRESERVADOS_DA_SALA = [
+            'estados',
+            'interacoes_ambiente',
+            'usos_possiveis',
+            'puzzle_status',
+            'bloqueio',
+            'ind_disponivel'
+        ];
+
+        function preservarCamposRuntime(salaNova, salaExistente) {
+            if (!salaExistente) return salaNova;
+            for (const campo of CAMPOS_PRESERVADOS_DA_SALA) {
+                if (salaExistente[campo] !== undefined) {
+                    salaNova[campo] = salaExistente[campo];
+                }
+            }
+            // Itens: união (o JSON pode adicionar itens via cena; o Firestore
+            // pode ter itens adicionados por um puzzle import posterior).
+            if (Array.isArray(salaExistente.itens) && salaExistente.itens.length > 0) {
+                if (!Array.isArray(salaNova.itens)) salaNova.itens = [];
+                for (const itemId of salaExistente.itens) {
+                    if (!salaNova.itens.includes(itemId)) {
+                        salaNova.itens.push(itemId);
+                    }
+                }
+            }
+            return salaNova;
+        }
+
+        // ============================================================
         // FUNÇÃO DE IMPORTAÇÃO COMPLETA (ZONA + PERIGOS)
         // ============================================================
         async function importarParaFirestore(dados, uid) {
@@ -186,11 +223,11 @@
                 if (!sala.opcoes) sala.opcoes = [];
 
                 const salaIdNum = parseInt(salaId);
-const destinosValidos = new Set(
-    (sala.opcoes || [])
-        .filter(o => o.destino && !o.arquiteto && o.destino > salaIdNum)
-        .map(o => String(o.destino))
-);
+                const destinosValidos = new Set(
+                    (sala.opcoes || [])
+                        .filter(o => o.destino && !o.arquiteto && o.destino > salaIdNum)
+                        .map(o => String(o.destino))
+                );
 
                 const dilemas = Array.isArray(cena.dilemas) ? cena.dilemas : [];
 
@@ -331,44 +368,29 @@ const destinosValidos = new Set(
                 throw new Error('Nenhuma sala válida foi montada a partir do JSON colado (faltam "plano" e/ou "salas"). NADA foi salvo no Firestore — confira se o JSON completo da zona está na caixa principal, não só os perigos.');
             }
 
-            // 5. Salvar no Firestore com LÓGICA INTELIGENTE PARA PERIGOS
+            // ============================================================
+            // 5. PRESERVAR CAMPOS DE RUNTIME / IMPORTS ANTERIORES
+            // ============================================================
+            // Lê o documento UMA VEZ. Todas as salas recebem overlay dos
+            // campos que NÃO vêm do JSON de zona (puzzle_status, estados,
+            // interacoes_ambiente, usos_possiveis, bloqueio, ind_disponivel)
+            // e união de itens. Fim da perda de puzzles em re-import de zona.
             const docRef = db.collection('players').doc(uid);
             const docSnap = await docRef.get();
             const dadosAtuais = docSnap.data() || {};
             const mapaMundoAtual = dadosAtuais.mapaMundo || {};
 
             const updatePayload = {};
+            for (const [id, salaNova] of Object.entries(mapaMundo)) {
+                const salaExistente = mapaMundoAtual[id];
+                preservarCamposRuntime(salaNova, salaExistente);
+                updatePayload[`mapaMundo.${id}`] = salaNova;
 
-            for (const [id, sala] of Object.entries(mapaMundo)) {
-                if (salasComPerigos.has(id) && mapaMundoAtual[id]) {
-                    const salaAntiga = JSON.parse(JSON.stringify(mapaMundoAtual[id]));
-
-                    if (salaAntiga.opcoes) {
-                        salaAntiga.opcoes = salaAntiga.opcoes.filter(op => !(op.arquiteto === true && !op.dilema));
-                        salaAntiga.opcoes.forEach(op => {
-                            if (op.interceptor_arquiteto) delete op.interceptor_arquiteto;
-                        });
-                    }
-
-                    const novasOpcoesPerigo = sala.opcoes.filter(op => op.arquiteto === true && !op.dilema);
-                    salaAntiga.opcoes = salaAntiga.opcoes || [];
-                    salaAntiga.opcoes.push(...novasOpcoesPerigo);
-
-                    for (const op of sala.opcoes) {
-                        if (op.interceptor_arquiteto) {
-                            const alvo = salaAntiga.opcoes.find(o => o.texto === op.texto && o.destino && !o.arquiteto);
-                            if (alvo) {
-                                alvo.interceptor_arquiteto = op.interceptor_arquiteto;
-                            }
-                        }
-                    }
-
-                    updatePayload[`mapaMundo.${id}`] = salaAntiga;
-                    log(`🔄 Sala ${id}: perigos substituídos preservando o restante (textos, saídas, dilemas).`, 'info');
-                } else {
-                    updatePayload[`mapaMundo.${id}`] = sala;
-                    if (salasComPerigos.has(id)) {
-                        log(`➕ Sala ${id}: nova no Firestore, perigos adicionados.`, 'info');
+                if (salaExistente) {
+                    const camposPreservados = CAMPOS_PRESERVADOS_DA_SALA
+                        .filter(c => salaExistente[c] !== undefined);
+                    if (camposPreservados.length > 0) {
+                        log(`🔄 Sala ${id}: preservados do Firestore → ${camposPreservados.join(', ')}`, 'info');
                     }
                 }
             }
@@ -386,6 +408,10 @@ const destinosValidos = new Set(
         // ============================================================
         // FUNÇÃO PARA IMPORTAR APENAS PERIGOS (ATUALIZAÇÃO INTELIGENTE)
         // ============================================================
+        // CORRIGIDO: usa uma cópia de trabalho única. Se o JSON trouxer
+        // mais de um perigo para a MESMA sala, todos são aplicados em
+        // sequência — antes, o segundo sobrescrevia o primeiro porque
+        // cada iteração relia do Firestore.
         async function importarPerigosNoMapaAtual(perigos, uid) {
             const docRef = db.collection('players').doc(uid);
             const docSnap = await docRef.get();
@@ -394,24 +420,31 @@ const destinosValidos = new Set(
             }
             const dadosAtuais = docSnap.data() || {};
             const mapaMundoAtual = dadosAtuais.mapaMundo || {};
-            const updatePayload = {};
+
+            // Cópia de trabalho — todas as escritas vão aqui.
+            const mapaTrabalho = JSON.parse(JSON.stringify(mapaMundoAtual));
+            const salasTocadas = new Set();
 
             for (const perigo of perigos) {
                 const salaId = String(perigo.sala_id);
-                const sala = mapaMundoAtual[salaId];
-                if (!sala) {
+                const salaModificada = mapaTrabalho[salaId];
+                if (!salaModificada) {
                     log(`⚠️ Perigo para sala ${salaId} ignorado: sala não existe no Firestore.`, 'aviso');
                     continue;
                 }
 
-                const salaModificada = JSON.parse(JSON.stringify(sala));
-
                 // Remove perigos antigos (opções de arquiteto que não são dilemas)
-                if (salaModificada.opcoes) {
-                    salaModificada.opcoes = salaModificada.opcoes.filter(op => !(op.arquiteto === true && !op.dilema));
-                    salaModificada.opcoes.forEach(op => {
-                        if (op.interceptor_arquiteto) delete op.interceptor_arquiteto;
-                    });
+                // apenas na PRIMEIRA vez que tocamos esta sala nesta importação.
+                // Se o JSON traz dois perigos para a mesma sala, não queremos
+                // limpar entre eles.
+                if (!salasTocadas.has(salaId)) {
+                    if (salaModificada.opcoes) {
+                        salaModificada.opcoes = salaModificada.opcoes.filter(op => !(op.arquiteto === true && !op.dilema));
+                        salaModificada.opcoes.forEach(op => {
+                            if (op.interceptor_arquiteto) delete op.interceptor_arquiteto;
+                        });
+                    }
+                    salasTocadas.add(salaId);
                 }
 
                 const narrativaBruta = (perigo.resultado_texto || '').trim();
@@ -422,6 +455,8 @@ const destinosValidos = new Set(
                 const dano = typeof perigo.dano === 'number' ? Math.min(50, Math.max(0, Math.round(perigo.dano))) : 0;
                 const resultadoTexto = dano > 0 ? `${narrativaBruta.replace(/[.\s]+$/, '')}. Você perde ${dano} de energia.` : narrativaBruta;
                 const tipoResultado = perigo.tipo_resultado || 'neutro';
+
+                if (!salaModificada.opcoes) salaModificada.opcoes = [];
 
                 if (perigo.tipo === 'nova_opcao') {
                     salaModificada.opcoes.push({
@@ -455,8 +490,11 @@ const destinosValidos = new Set(
                     log(`⚠️ Perigo na sala ${salaId} com "tipo" desconhecido ("${perigo.tipo}") — ignorado.`, 'aviso');
                     continue;
                 }
+            }
 
-                updatePayload[`mapaMundo.${salaId}`] = salaModificada;
+            const updatePayload = {};
+            for (const salaId of salasTocadas) {
+                updatePayload[`mapaMundo.${salaId}`] = mapaTrabalho[salaId];
                 log(`🔄 Sala ${salaId}: perigos substituídos/inseridos.`, 'info');
             }
 
@@ -465,12 +503,18 @@ const destinosValidos = new Set(
             }
 
             await docRef.update(updatePayload);
-            return { atualizadas: Object.keys(updatePayload).map(k => k.replace('mapaMundo.', '')) };
+            return { atualizadas: [...salasTocadas] };
         }
 
         // ============================================================
         // FUNÇÃO PARA IMPORTAR PUZZLES (SHADOWGATE)
         // ============================================================
+        // CORRIGIDO: o bug original reescrevia updatePayload['mapaMundo.X']
+        // em cada fase, sempre relendo do snapshot congelado do Firestore.
+        // Isso fazia a fase de puzzles sobrescrever o texto que a fase de
+        // textos_modificados tinha escrito para a mesma sala — o "texto
+        // novo" nunca chegava ao Firestore. Agora há UMA cópia de trabalho
+        // (mapaTrabalho) que todas as fases compartilham.
         async function importarPuzzles(dadosPuzzle, uid) {
             const docRef = db.collection('players').doc(uid);
             const docSnap = await docRef.get();
@@ -480,6 +524,20 @@ const destinosValidos = new Set(
             const dadosAtuais = docSnap.data() || {};
             const mapaMundoAtual = dadosAtuais.mapaMundo || {};
             const updatePayload = {};
+
+            // ============================================================
+            // CÓPIA DE TRABALHO ÚNICA
+            // ============================================================
+            // Fim do "última escrita vence". Todas as fases abaixo operam
+            // neste mesmo objeto; só no final emitimos o payload.
+            const mapaTrabalho = JSON.parse(JSON.stringify(mapaMundoAtual));
+            const salasTocadas = new Set();
+
+            function obterSala(salaId) {
+                if (!mapaTrabalho[salaId]) return null;
+                salasTocadas.add(salaId);
+                return mapaTrabalho[salaId];
+            }
 
             // 1. Processar itens novos (salvar em um campo separado para mesclar no ITENS_DB)
             if (dadosPuzzle.itens_novos && Object.keys(dadosPuzzle.itens_novos).length > 0) {
@@ -496,66 +554,67 @@ const destinosValidos = new Set(
             // 2. Aplicar modificações nos textos das salas
             if (dadosPuzzle.textos_modificados) {
                 for (const [salaId, novoTexto] of Object.entries(dadosPuzzle.textos_modificados)) {
-                    if (mapaMundoAtual[salaId]) {
-                        const salaModificada = JSON.parse(JSON.stringify(mapaMundoAtual[salaId]));
-                        salaModificada.texto_logico = novoTexto;
-                        updatePayload[`mapaMundo.${salaId}`] = salaModificada;
-                        log(`📝 Sala ${salaId}: texto_logico atualizado.`, 'info');
-                    } else {
+                    const sala = obterSala(salaId);
+                    if (!sala) {
                         log(`⚠️ Sala ${salaId} não encontrada para modificar texto.`, 'aviso');
+                        continue;
                     }
+                    sala.texto_logico = novoTexto;
+                    log(`📝 Sala ${salaId}: texto_logico atualizado.`, 'info');
                 }
             }
 
             // 3. Adicionar itens ao chão das salas
             if (dadosPuzzle.itens_adicionados) {
                 for (const [salaId, itensIds] of Object.entries(dadosPuzzle.itens_adicionados)) {
-                    if (mapaMundoAtual[salaId]) {
-                        const salaModificada = JSON.parse(JSON.stringify(mapaMundoAtual[salaId]));
-                        if (!salaModificada.itens) salaModificada.itens = [];
-                        for (const itemId of itensIds) {
-                            if (!salaModificada.itens.includes(itemId)) {
-                                salaModificada.itens.push(itemId);
-                            }
-                        }
-                        updatePayload[`mapaMundo.${salaId}`] = salaModificada;
-                        log(`📦 Sala ${salaId}: itens adicionados: ${itensIds.join(', ')}.`, 'info');
-                    } else {
+                    const sala = obterSala(salaId);
+                    if (!sala) {
                         log(`⚠️ Sala ${salaId} não encontrada para adicionar itens.`, 'aviso');
+                        continue;
                     }
+                    if (!sala.itens) sala.itens = [];
+                    for (const itemId of itensIds) {
+                        if (!sala.itens.includes(itemId)) {
+                            sala.itens.push(itemId);
+                        }
+                    }
+                    log(`📦 Sala ${salaId}: itens adicionados: ${itensIds.join(', ')}.`, 'info');
                 }
             }
 
             // 4. Aplicar puzzles (estados, interacoes_ambiente, usos_possiveis)
             if (dadosPuzzle.puzzles) {
                 for (const [salaId, puzzleData] of Object.entries(dadosPuzzle.puzzles)) {
-                    if (mapaMundoAtual[salaId]) {
-                        const salaModificada = JSON.parse(JSON.stringify(mapaMundoAtual[salaId]));
-
-                        // Estados
-                        if (puzzleData.estados) {
-                            if (!salaModificada.estados) salaModificada.estados = {};
-                            Object.assign(salaModificada.estados, puzzleData.estados);
-                        }
-
-                        // Interações de ambiente
-                        if (puzzleData.interacoes_ambiente && puzzleData.interacoes_ambiente.length > 0) {
-                            if (!salaModificada.interacoes_ambiente) salaModificada.interacoes_ambiente = [];
-                            salaModificada.interacoes_ambiente = salaModificada.interacoes_ambiente.concat(puzzleData.interacoes_ambiente);
-                        }
-
-                        // Usos possíveis
-                        if (puzzleData.usos_possiveis && puzzleData.usos_possiveis.length > 0) {
-                            if (!salaModificada.usos_possiveis) salaModificada.usos_possiveis = [];
-                            salaModificada.usos_possiveis = salaModificada.usos_possiveis.concat(puzzleData.usos_possiveis);
-                        }
-
-                        updatePayload[`mapaMundo.${salaId}`] = salaModificada;
-                        log(`🧩 Sala ${salaId}: puzzle aplicado (${Object.keys(puzzleData).join(', ')}).`, 'ok');
-                    } else {
+                    const sala = obterSala(salaId);
+                    if (!sala) {
                         log(`⚠️ Sala ${salaId} não encontrada para aplicar puzzle.`, 'aviso');
+                        continue;
                     }
+
+                    if (puzzleData.estados) {
+                        if (!sala.estados) sala.estados = {};
+                        Object.assign(sala.estados, puzzleData.estados);
+                    }
+
+                    if (puzzleData.interacoes_ambiente && puzzleData.interacoes_ambiente.length > 0) {
+                        if (!sala.interacoes_ambiente) sala.interacoes_ambiente = [];
+                        sala.interacoes_ambiente = sala.interacoes_ambiente.concat(puzzleData.interacoes_ambiente);
+                    }
+
+                    if (puzzleData.usos_possiveis && puzzleData.usos_possiveis.length > 0) {
+                        if (!sala.usos_possiveis) sala.usos_possiveis = [];
+                        sala.usos_possiveis = sala.usos_possiveis.concat(puzzleData.usos_possiveis);
+                    }
+
+                    log(`🧩 Sala ${salaId}: puzzle aplicado (${Object.keys(puzzleData).join(', ')}).`, 'ok');
                 }
+            }
+
+            // ============================================================
+            // EMITIR O PAYLOAD FINAL — uma única chave por sala tocada
+            // ============================================================
+            for (const salaId of salasTocadas) {
+                updatePayload[`mapaMundo.${salaId}`] = mapaTrabalho[salaId];
             }
 
             if (Object.keys(updatePayload).length === 0) {
@@ -563,7 +622,7 @@ const destinosValidos = new Set(
             }
 
             await docRef.update(updatePayload);
-            return { atualizadas: Object.keys(updatePayload).map(k => k.replace('mapaMundo.', '')) };
+            return { atualizadas: [...salasTocadas] };
         }
 
         // ============================================================
