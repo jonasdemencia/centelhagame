@@ -55,6 +55,7 @@ REGRAS DE PROSA PARA "texto_logico"
 - Sala [SALA_INICIAL]: descrição direta, sem "Depois de" ou "Ao avançar".
 - Salas intermediárias (entre [SALA_INICIAL] e [SALA_FINAL]): primeira frase começa com "Depois de [ação EXATA que levou a esta sala], você...".
 - Sala [SALA_FINAL]: se tiver múltiplas entradas, use "Ao avançar para este local, você...".
+- Toda sala ancorada com "Ao avançar para este local" tem o ponto de entrada INVISÍVEL ao texto: proibido "a porta pela qual entrou", "por onde veio" ou equivalentes.
 - PROIBIDO como primeira frase: "Você se encontra", "Você está", "Você nota".
 - PROIBIDO repetir na primeira frase palavras da ação de chegada (entry-point leak).
 - Todo elemento físico citado nas "opcoes" de saída DEVE estar visivelmente descrito no texto — nunca crie uma opção sem âncora visual no texto.
