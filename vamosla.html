@@ -4204,6 +4204,22 @@ Retorne EXATAMENTE o JSON abaixo. Nenhuma palavra extra.`
             console.log('[ENTIDADES] Index atualizado:', entityIndex, '| Foco:', entidadeEmFoco);
         }
 
+function montarTextoDaSala(sala) {
+    let texto = (sala?.texto_logico || "").trim();
+    if (!sala?.descricoes_itens_ativos || !sala?.itens || sala.itens.length === 0) {
+        return texto;
+    }
+    const descricoes = sala.descricoes_itens_ativos;
+    for (const itemId of sala.itens) {
+        const frase = descricoes[itemId];
+        if (frase && frase.trim()) {
+            texto = texto.replace(/[.\s]+$/, "");
+            texto += ". " + frase.trim();
+        }
+    }
+    return texto;
+}
+    
         function prepararTextoChegada(textoLogico, acaoUsada, idOrigem, idDestino) {
     const isRetorno = /(voltar|de volta|retornar)\b/i.test(acaoUsada) || (idDestino < idOrigem);
     if (!isRetorno) return textoLogico;
@@ -4412,12 +4428,13 @@ if (portaInfo && portaInfo.trancada) {
             verificarEExpandirMundo();
 
             if (novaSala?.texto_logico) {
-                const textoFinal = prepararTextoChegada(novaSala.texto_logico, textoAcao || opcao.texto, parseInt(secaoAtualId), destino);
-                salaDesc.innerHTML = textoFinal;
-                historicoConversa.push({ role: 'user', content: `[Navegou para: ${textoAcao || opcao.texto}]` });
-                historicoConversa.push({ role: 'assistant', content: novaSala.texto_logico });
-                if (historicoConversa.length > 10) historicoConversa.splice(0, 2);
-            }
+    const textoCompleto = montarTextoDaSala(novaSala);
+    const textoFinal = prepararTextoChegada(textoCompleto, textoAcao || opcao.texto, parseInt(secaoAtualId), destino);
+    salaDesc.innerHTML = textoFinal;
+    historicoConversa.push({ role: 'user', content: `[Navegou para: ${textoAcao || opcao.texto}]` });
+    historicoConversa.push({ role: 'assistant', content: textoCompleto });
+    if (historicoConversa.length > 10) historicoConversa.splice(0, 2);
+}
 
             atualizarBotoesNavegacao();
             atualizarLootRoom();
@@ -4631,7 +4648,7 @@ async function executarDilemaComRamificacao(pai, ram, silent = false, pularPonte
     if (!sala) return;
 
     if (salaDesc.innerHTML === '') {
-        salaDesc.innerHTML = sala.texto_logico || "A escuridão domina este lugar...";
+     salaDesc.innerHTML = montarTextoDaSala(sala) || "A escuridão domina este lugar...";
     }
 
     if (!sala.opcoes) return;
@@ -4820,7 +4837,7 @@ async function executarAcaoOpcao(opcao) {
 
                 const salaAtual = mapaMundo[secaoAtualId];
                 if (salaAtual?.texto_logico) {
-                    document.getElementById('sala-desc').innerHTML = salaAtual.texto_logico;
+                    document.getElementById('sala-desc').innerHTML = montarTextoDaSala(salaAtual);
                     document.getElementById('chat-box').innerHTML = '';
                     adicionarMensagem('⚔️ A escuridão recorda sua presença...', 'system');
                     atualizarBotoesNavegacao();
