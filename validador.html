@@ -146,9 +146,12 @@
                     erros.push('âncora incorreta: sala com múltiplas entradas deve começar com "Ao avançar para este local"');
                 }
 
-                    if (/\b(pela qual|por onde|através d[ao] qual|pelo qual|que (você )?(usou para entrar|entrou por)|do caminho que (você )?percorreu)\b/i.test(textoLogico)) {
+                    if (/\b(pela qual|por onde|através d[ao] qual|pelo qual|que (você )?(usou para entrar|entrou por)|do caminho que (você )?percorreu|atrás de você|de volta|a entrada|por trás)\b/i.test(textoLogico)) {
         erros.push('entrada vazada: sala de múltiplas entradas não pode referir-se ao caminho de chegada');
     }
+                if (/ao fundo[^.]*\b(pela qual|por onde|entrou|veio|de volta)\b/i.test(textoLogico)) {
+    erros.push('entrada vazada: "ao fundo" combinado com marcação de chegada');
+}
             } else if (acaoChegadaEsperada === "SEM_ENTRADA") {
                 if (/^Depois de|^Ao avançar/i.test(textoLogico.trim())) {
                     erros.push('sala de entrada não deve ter âncora de chegada');
