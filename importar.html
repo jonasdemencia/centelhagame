@@ -144,13 +144,14 @@
         // estados que foram adicionados depois. Esta lista é a fonte
         // única de verdade sobre o que preservar.
         const CAMPOS_PRESERVADOS_DA_SALA = [
-            'estados',
-            'interacoes_ambiente',
-            'usos_possiveis',
-            'puzzle_status',
-            'bloqueio',
-            'ind_disponivel'
-        ];
+    'estados',
+    'interacoes_ambiente',
+    'usos_possiveis',
+    'puzzle_status',
+    'bloqueio',
+    'ind_disponivel',
+    'descricoes_itens_ativos'
+];
 
         function preservarCamposRuntime(salaNova, salaExistente) {
             if (!salaExistente) return salaNova;
@@ -582,6 +583,22 @@
                 }
             }
 
+            // 3.5. Registrar descrições dos itens no chão
+// O runtime concatena estas frases ao texto_logico APENAS enquanto
+// o item estiver em sala.itens. Ao ser recolhido, a frase some sozinha.
+if (dadosPuzzle.descricoes_itens_ativos) {
+    for (const [salaId, mapaItens] of Object.entries(dadosPuzzle.descricoes_itens_ativos)) {
+        const sala = obterSala(salaId);
+        if (!sala) {
+            log(`⚠️ Sala ${salaId} não encontrada para registrar descrições de itens.`, 'aviso');
+            continue;
+        }
+        if (!sala.descricoes_itens_ativos) sala.descricoes_itens_ativos = {};
+        Object.assign(sala.descricoes_itens_ativos, mapaItens);
+        log(`🔎 Sala ${salaId}: ${Object.keys(mapaItens).length} descrição(ões) de item registrada(s).`, 'info');
+    }
+}
+
             // 4. Aplicar puzzles (estados, interacoes_ambiente, usos_possiveis)
             if (dadosPuzzle.puzzles) {
                 for (const [salaId, puzzleData] of Object.entries(dadosPuzzle.puzzles)) {
@@ -654,7 +671,7 @@
 
                 let temZona = !!(dados.plano || dados.salas || dados.cenas);
                 let temPerigos = Array.isArray(dados.perigos);
-                let temPuzzles = !!(dados.itens_novos || dados.textos_modificados || dados.itens_adicionados || dados.puzzles);
+                let temPuzzles = !!(dados.itens_novos || dados.textos_modificados || dados.itens_adicionados || dados.descricoes_itens_ativos || dados.puzzles);
 
                 // Se houver perigos separados no campo secundário, mesclar
                 if (perigosStr) {
@@ -770,7 +787,7 @@
                     const parsed = JSON.parse(texto);
                     const temZona = parsed && (parsed.plano || parsed.salas || parsed.cenas);
                     const soPerigos = parsed && Array.isArray(parsed.perigos) && !temZona;
-                    const soPuzzles = parsed && (parsed.itens_novos || parsed.textos_modificados || parsed.itens_adicionados || parsed.puzzles) && !temZona && !soPerigos;
+                    const soPuzzles = parsed && (parsed.itens_novos || parsed.textos_modificados || parsed.itens_adicionados || parsed.descricoes_itens_ativos || parsed.puzzles) && !temZona && !soPerigos;
                     if (soPerigos) {
                         if (!document.getElementById('jsonInput').value.trim()) {
                             destino = 'jsonInput';
