@@ -2326,45 +2326,114 @@ console.error("Erro ao salvar o dia do jogo:", error);
 
 // Modifique a função updateCharacterSheet para incluir a experiência
 
+// Helper defensivo: não estoura se o elemento não existir.
+function setText(id, value) {
+    const el = document.getElementById(id);
+    if (el) {
+        el.innerText = value;
+    } else {
+        console.warn(`[updateCharacterSheet] Elemento ausente no HTML: #${id}`);
+    }
+}
+
 function updateCharacterSheet(playerData) {
     if (!playerData) return;
 
-    document.getElementById("char-name").innerText = playerData.name || "-";
-    document.getElementById("char-name-display").innerText = playerData.name || "Nome do Personagem";
-    document.getElementById("char-race").innerText = playerData.race || "-";
-    document.getElementById("char-class").innerText = playerData.class || "-";
-    document.getElementById("char-alignment").innerText = playerData.alignment || "-";
+    setText("char-name", playerData.name || "-");
+    setText("char-name-display", playerData.name || "Nome do Personagem");
+    setText("char-race", playerData.race || "-");
+    setText("char-class", playerData.class || "-");
+    setText("char-alignment", playerData.alignment || "-");
 
-    // Atualiza o painel de informações
-    document.getElementById("char-day-info").innerText = playerData.gameTime?.currentDay ?? 1;
-    document.getElementById("char-po-info").innerText = playerData.po || "0";
-    document.getElementById("char-class-info").innerText = playerData.class || "-";
-    document.getElementById("char-race-info").innerText = playerData.race || "-";
-    document.getElementById("char-alignment-info").innerText = playerData.alignment || "-";
-    document.getElementById("char-age-info").innerText = playerData.idade;
+    // Painel de informações (inventário)
+    setText("char-day-info", playerData.gameTime?.currentDay ?? 1);
+    setText("char-po-info", playerData.po || "0");
+    setText("char-class-info", playerData.class || "-");
+    setText("char-race-info", playerData.race || "-");
+    setText("char-alignment-info", playerData.alignment || "-");
+    setText("char-age-info", playerData.idade);
+
     console.log("Valor de maoDominante:", playerData.maoDominante);
-    const handText = playerData.maoDominante === "esquerda" ? "Canhoto" : 
-                     playerData.maoDominante === "direita" ? "Destro" : "-";
-    document.getElementById("char-hand-info").innerText = handText;
-    document.getElementById("char-hemisphere-info").innerText = playerData.hemisferioDominante || "-";
+    const handText = playerData.maoDominante === "esquerda" ? "Canhoto"
+                   : playerData.maoDominante === "direita"  ? "Destro"
+                   : "-";
+    setText("char-hand-info", handText);
+    setText("char-hemisphere-info", playerData.hemisferioDominante || "-");
 
-    // Calcula bônus de itens equipados
     const equipBonuses = calculateEquippedBonuses();
 
-    // Atributos base + bônus de equipamentos
-    document.getElementById("char-skill-info").innerText = (playerData.skill?.total ?? 0) + equipBonuses.skill;
-    document.getElementById("char-charisma-info").innerText = (playerData.charisma?.total ?? 0) + equipBonuses.charisma;
-    document.getElementById("char-magic-info").innerText = (playerData.magic?.total ?? 0) + equipBonuses.magic;
-    document.getElementById("char-luck-info").innerText = (playerData.luck?.total ?? 0) + equipBonuses.luck;
-    document.getElementById("char-couraca-info").innerText = playerData.couraca || "0";
+    setText("char-skill-info",    (playerData.skill?.total    ?? 0) + equipBonuses.skill);
+    setText("char-charisma-info", (playerData.charisma?.total ?? 0) + equipBonuses.charisma);
+    setText("char-magic-info",    (playerData.magic?.total    ?? 0) + equipBonuses.magic);
+    setText("char-luck-info",     (playerData.luck?.total     ?? 0) + equipBonuses.luck);
+    setText("char-couraca-info",  playerData.couraca || "0");
 
-
-    // Atualiza o portrait
     const portraitImage = document.getElementById("portrait-image");
     if (portraitImage) {
         portraitImage.src = "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/portraits/portrait1.png";
         portraitImage.style.display = 'block';
     }
+
+    // --- Bloco de idade robusto (mesma lógica de antes) ---
+    function getRandomInt(min, max) {
+        min = Math.ceil(min);
+        max = Math.floor(max);
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    if (typeof playerData.idade !== 'number') {
+        let newAge = 20;
+        if (typeof playerData.idade === 'string') {
+            const matches = playerData.idade.match(/\((\d+)-(\d+)\s*anos\)/);
+            if (matches && matches.length === 3) {
+                const minAge = parseInt(matches[1], 10);
+                const maxAge = parseInt(matches[2], 10);
+                newAge = getRandomInt(minAge, maxAge);
+            }
+        }
+        playerData.idade = newAge;
+        const uid = auth.currentUser?.uid;
+        if (uid) {
+            const playerRef = doc(db, "players", uid);
+            updateDoc(playerRef, { idade: playerData.idade }).catch(() => {});
+            console.log(`Idade do personagem corrigida para: ${playerData.idade}`);
+        }
+    }
+    setText("char-idade", playerData.idade);
+
+    // Energia + barra
+    const energyTotal   = playerData.energy?.total   ?? 0;
+    const energyInitial = playerData.energy?.initial ?? 0;
+    setText("char-energy", `${energyTotal}/${energyInitial}`);
+
+    const barraHP = document.getElementById("barra-hp-inventario");
+    if (barraHP && energyInitial > 0) {
+        const porcentagem = Math.max(0, (energyTotal / energyInitial) * 100);
+        barraHP.style.width = `${porcentagem}%`;
+    }
+
+    // XP + barra
+    const experience = playerData.experience || 0;
+    const levelInfo = calculateLevel(experience);
+    setText("char-level", levelInfo.level);
+    setText("char-xp", `${experience}/${levelInfo.nextLevelXP}`);
+    setText("char-level-info", levelInfo.level);
+
+    const barraXP = document.getElementById("barra-xp-inventario");
+    if (barraXP) {
+        barraXP.style.width = `${levelInfo.progress * 100}%`;
+    }
+
+    // Restante
+    setText("char-skill",      playerData.skill?.total    ?? "-");
+    setText("char-charisma",   playerData.charisma?.total ?? "-");
+    setText("char-magic",      playerData.magic?.total    ?? "-");
+    setText("char-luck",       playerData.luck?.total     ?? "-");
+    setText("char-couraca",    playerData.couraca || "0");
+    setText("char-hand",       playerData.maoDominante || "-");
+    setText("char-hemisphere", playerData.hemisferioDominante || "-");
+    setText("char-day",        playerData.gameTime?.currentDay ?? 1);
+}
 
 
 
