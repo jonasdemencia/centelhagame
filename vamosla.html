@@ -1273,51 +1273,37 @@
         }
     }
 
-    // ============================================================
-// TIER 3 — helper genérico para tarefas curtas (saída de poucos tokens).
-// Fila serial: nunca duas gerações em paralelo. Timeout evita travar.
+   // ============================================================
+// TIER 3 — helper genérico para tarefas curtas.
+// Sem fila, sem timeout: WebLLM serializa internamente.
 // ============================================================
-let _tier3Fila = Promise.resolve();
+async function tier3(system, user, maxTokens = 50) {
+    if (!window.geradorLocal && window.geradorLocalPromise) {
+        await window.geradorLocalPromise;
+    }
+    if (!window.geradorLocal) return null;
+    if (window.geradorLocal.motor === 'semantico') return null;
 
-function tier3(system, user, maxTokens = 50, timeoutMs = 12000) {
-    const executar = async () => {
-        if (!window.geradorLocal && window.geradorLocalPromise) {
-            await window.geradorLocalPromise;
-        }
-        if (!window.geradorLocal) return null;
-        if (window.geradorLocal.motor === 'semantico') return null;
+    const mensagens = [
+        { role: 'system', content: system },
+        { role: 'user', content: user }
+    ];
 
-        const mensagens = [
-            { role: 'system', content: system },
-            { role: 'user', content: user }
-        ];
-
-        const chamada = gerarComNarradorLocal(mensagens, {
+    try {
+        const r = await gerarComNarradorLocal(mensagens, {
             max_new_tokens: maxTokens,
-            temperature: 0.3,
-            top_p: 0.85,
+            temperature: 0.5,
+            top_p: 0.9,
             repetition_penalty: 1.05,
             do_sample: true
         });
-        const timeout = new Promise((_, rej) =>
-            setTimeout(() => rej(new Error(`timeout ${timeoutMs}ms`)), timeoutMs)
-        );
-
-        try {
-            const r = await Promise.race([chamada, timeout]);
-            return (typeof r === 'string' ? r : '').trim() || null;
-        } catch (e) {
-            console.warn(`[Tier 3] ${e.message}`);
-            return null;
-        }
-    };
-
-    const proxima = _tier3Fila.then(executar, executar);
-    _tier3Fila = proxima.catch(() => {});
-    return proxima;
+        return (typeof r === 'string' ? r : '').trim() || null;
+    } catch (e) {
+        console.warn(`[Tier 3] ${e.message}`);
+        return null;
+    }
 }
 
-// 1.1 — reação a ação livre (substitui o "sem efeito")
 async function tier3ReagirAcaoLivre(input, contexto) {
     return await tier3(
         `Você é o narrador de um jogo de terror clínico e brutal, em português brasileiro.
@@ -1327,25 +1313,24 @@ Sem inventar itens, NPCs, pistas ou mudanças de estado.
 Sem clichês ("de repente", "frio na espinha", "coração acelerou").
 Sem metáfora. Apenas o que acontece fisicamente.`,
         `AÇÃO: "${input}"\nCENA: "${(contexto || '').slice(0, 400)}"`,
-        45, 12000
+        45
     );
 }
 
-// 1.2 — desempate de opção na zona ambígua
 async function tier3EscolherOpcao(input, opcoes, ctxSala) {
     if (!opcoes.length) return null;
     const lista = opcoes.map((o, i) => `${i + 1}. ${o.texto}`).join('\n');
     const r = await tier3(
         `Classifique a ação do jogador. Responda APENAS com o número da opção que melhor corresponde, ou 0 se nenhuma servir.`,
         `AÇÃO: "${input}"\nSALA: "${(ctxSala || '').slice(0, 200)}"\nOPÇÕES:\n${lista}`,
-        4, 8000
+        4
     );
     if (!r) return null;
     const n = parseInt(r.replace(/[^\d]/g, ''), 10);
     if (isNaN(n) || n < 1 || n > opcoes.length) return null;
     return opcoes[n - 1];
 }
-
+    
     async function inventarDetalheLocal(pergunta, opcoes = {}) {
         if (!window.geradorLocal && window.geradorLocalPromise) {
             console.log("⏳ [Tier 3] Narrador local ainda carregando, aguardando...");
@@ -1367,13 +1352,12 @@ async function tier3EscolherOpcao(input, opcoes, ctxSala) {
 ];
 
             const saida = await gerarComNarradorLocal(mensagens, {
-                max_new_tokens: 25,
-                do_sample: true,
-                temperature: 0.1,
-                top_k: 10,
-                top_p: 0.5,
-                repetition_penalty: 1.15
-            });
+    max_new_tokens: 25,
+    do_sample: true,
+    temperature: 0.5,
+    top_p: 0.9,
+    repetition_penalty: 1.05
+});
 
             if (saida === null) return null;
             let texto = saida.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
@@ -2589,7 +2573,7 @@ ANSWER:`
 // para desempatar. Se o LLM escolher, executa; se disser "0",
 // cai no fluxo RAG normal.
 // ============================================================
-if (!melhorMatch && maiorSimilaridade >= 0.40 && maiorSimilaridade < limiteAceitacao) {
+if (maiorSimilaridade >= 0.40 && maiorSimilaridade < limiteAceitacao) {
     const opcoesParaLLM = [];
 
     if (salaAtual?.opcoes) {
