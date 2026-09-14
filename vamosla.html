@@ -1315,19 +1315,13 @@ function tamanhoModeloAtivo() {
     async function tier3ReagirAcaoLivre(input, contexto) {
     const tam = tamanhoModeloAtivo();
 
-    if (tam === 'pequeno') {
-        // 1B: tudo no user, UM exemplo, system mínimo
-        return await tier3(
-            'Você é narrador de RPG de terror. Responda em uma frase curta, em português, em segunda pessoa.',
-            `CENA: "${(contexto || '').slice(0, 200)}"
-AÇÃO: "${input}"
-
-Exemplo de resposta: "A madeira range e devolve um som oco."
-Sua resposta:`,
-            35
-        );
-    }
-
+   if (tam === 'pequeno') {
+    return await tier3(
+        'Narre em UMA frase curta, em segunda pessoa, o efeito físico da ação do jogador.',
+        `CENA: "${(contexto || '').slice(0, 200)}"\nAÇÃO: "${input}"`,
+        45
+    );
+}
     if (tam === 'medio') {
         // 1.5B: um pouco mais de espaço, ainda enxuto
         return await tier3(
