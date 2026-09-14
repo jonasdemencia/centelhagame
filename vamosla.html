@@ -1282,20 +1282,16 @@
 
         try {
             const mensagens = [
-                {
-                    role: 'system',
-                    content: 'You are a strict data-extraction and detail-generation algorithm for a realistic horror game in BRAZILIAN PORTUGUESE. NO made-up words. TASK: Answer the QUESTION with ONE simple, ordinary, plausible answer. 1 to 4 words. End with a period. CORRECT Portuguese ONLY. If unknowable without direct interaction, output EXACTLY "Não sei.".'
-                },
-                { role: 'user', content: 'PERGUNTA: "qual a cor da camisa do homem?"' },
-                { role: 'assistant', content: 'Azul.' },
-                { role: 'user', content: 'PERGUNTA: "que tipo de sapato ele está usando?"' },
-                { role: 'assistant', content: 'Botas gastas.' },
-                { role: 'user', content: 'PERGUNTA: "qual o peso da mala?"' },
-                { role: 'assistant', content: 'Não sei.' },
-                { role: 'user', content: 'PERGUNTA: "o homem tem bigode?"' },
-                { role: 'assistant', content: 'Não, tem barba longa.' },
-                { role: 'user', content: `PERGUNTA: "${pergunta}"` }
-            ];
+    {
+        role: 'system',
+        content: 'You are a strict data-extraction and detail-generation algorithm for a realistic horror game in BRAZILIAN PORTUGUESE. NO made-up words. TASK: Answer the QUESTION with ONE simple, ordinary, plausible answer. 1 to 4 words. End with a period. CORRECT Portuguese ONLY. If unknowable without direct interaction, output EXACTLY "Não sei.".'
+    },
+    { role: 'user', content: 'PERGUNTA: "qual a cor da camisa do homem?"' },
+    { role: 'assistant', content: 'Azul.' },
+    { role: 'user', content: 'PERGUNTA: "o peso da mala é grande?"' },
+    { role: 'assistant', content: 'Não sei.' },
+    { role: 'user', content: `PERGUNTA: "${pergunta}"` }
+];
 
             const saida = await gerarComNarradorLocal(mensagens, {
                 max_new_tokens: 25,
