@@ -1342,13 +1342,9 @@ async function tier3EscolherOpcao(input, opcoes, ctxSala) {
             const mensagens = [
     {
         role: 'system',
-        content: 'You are a strict data-extraction and detail-generation algorithm for a realistic horror game in BRAZILIAN PORTUGUESE. NO made-up words. TASK: Answer the QUESTION with ONE simple, ordinary, plausible answer. 1 to 4 words. End with a period. CORRECT Portuguese ONLY. If unknowable without direct interaction, output EXACTLY "Não sei.".'
+        content: 'Você responde perguntas factuais sobre um jogo de terror. Responda com UMA frase curta em português brasileiro. 1 a 5 palavras. Sem explicação. Se não souber, responda: Não sei.'
     },
-    { role: 'user', content: 'PERGUNTA: "qual a cor da camisa do homem?"' },
-    { role: 'assistant', content: 'Azul.' },
-    { role: 'user', content: 'PERGUNTA: "o peso da mala é grande?"' },
-    { role: 'assistant', content: 'Não sei.' },
-    { role: 'user', content: `PERGUNTA: "${pergunta}"` }
+    { role: 'user', content: pergunta }
 ];
 
             const saida = await gerarComNarradorLocal(mensagens, {
@@ -2682,12 +2678,24 @@ if (maiorSimilaridade >= 0.40 && maiorSimilaridade < limiteAceitacao) {
                     console.log("📖 [RAG] Nenhuma frase relevante encontrada.");
                 }
 
-                if (!fatoExtraido) {
-                    fatoExtraido = await inventarDetalheLocal(pergunta);
-                    if (fatoExtraido) {
-                        console.log(`🎭 [Invenção] "${pergunta}" -> "${fatoExtraido}"`);
-                    }
-                }
+                // Roteamento por tipo de frase:
+// - Perguntas factuais (começam com "qual/quem/onde/...") → inventarDetalheLocal
+// - Ações livres → tier3ReagirAcaoLivre (que É o prompt certo pra isso)
+const ehPerguntaFactual = /^\s*(qual|quais|quem|onde|quando|como|por\s*que|o\s*que|que\s+)/i.test(pergunta);
+
+if (!fatoExtraido && ehPerguntaFactual) {
+    fatoExtraido = await inventarDetalheLocal(pergunta);
+    if (fatoExtraido) {
+        console.log(`🎭 [Invenção] "${pergunta}" -> "${fatoExtraido}"`);
+    }
+} else if (!fatoExtraido) {
+    // Ação livre: já gera a reação aqui mesmo
+    console.log(`🎬 [Ação livre] roteando para tier3ReagirAcaoLivre`);
+    fatoExtraido = await tier3ReagirAcaoLivre(pergunta, salaAtual?.texto_logico || '');
+    if (fatoExtraido) {
+        console.log(`🎬 [Reação] "${pergunta}" -> "${fatoExtraido}"`);
+    }
+}
 
                 clearInterval(intervaloAnimacao);
                 document.getElementById(tempId)?.remove();
@@ -2696,7 +2704,6 @@ if (maiorSimilaridade >= 0.40 && maiorSimilaridade < limiteAceitacao) {
                     salvarFatoCache(pergunta, vetorPerguntaAtual, fatoExtraido, salaAtual);
                     adicionarMensagem(`🔍 ${fatoExtraido}`, 'system');
                } else {
-    const reacao = await tier3ReagirAcaoLivre(pergunta, salaAtual?.texto_logico || '');
     adicionarMensagem(`🔍 ${reacao || 'Sua ação não produz nenhum efeito perceptível.'}`, 'system');
 }
 
