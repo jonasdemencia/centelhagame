@@ -1273,127 +1273,61 @@
         }
     }
 
-   // ============================================================
-// TIER 3 — helper genérico para tarefas curtas.
-// Sem fila, sem timeout: WebLLM serializa internamente.
-// ============================================================
-async function tier3(system, user, maxTokens = 50) {
-    if (!window.geradorLocal && window.geradorLocalPromise) {
-        await window.geradorLocalPromise;
+    async function inventarDetalheLocal(pergunta, opcoes = {}) {
+        if (!window.geradorLocal && window.geradorLocalPromise) {
+            console.log("⏳ [Tier 3] Narrador local ainda carregando, aguardando...");
+            await window.geradorLocalPromise;
+        }
+        if (!window.geradorLocal) return null;
+
+        try {
+            const mensagens = [
+                {
+                    role: 'system',
+                    content: 'You are a strict data-extraction and detail-generation algorithm for a realistic horror game in BRAZILIAN PORTUGUESE. NO made-up words. TASK: Answer the QUESTION with ONE simple, ordinary, plausible answer. 1 to 4 words. End with a period. CORRECT Portuguese ONLY. If unknowable without direct interaction, output EXACTLY "Não sei.".'
+                },
+                { role: 'user', content: 'PERGUNTA: "qual a cor da camisa do homem?"' },
+                { role: 'assistant', content: 'Azul.' },
+                { role: 'user', content: 'PERGUNTA: "que tipo de sapato ele está usando?"' },
+                { role: 'assistant', content: 'Botas gastas.' },
+                { role: 'user', content: 'PERGUNTA: "qual o peso da mala?"' },
+                { role: 'assistant', content: 'Não sei.' },
+                { role: 'user', content: 'PERGUNTA: "o homem tem bigode?"' },
+                { role: 'assistant', content: 'Não, tem barba longa.' },
+                { role: 'user', content: `PERGUNTA: "${pergunta}"` }
+            ];
+
+            const saida = await gerarComNarradorLocal(mensagens, {
+                max_new_tokens: 150,
+                do_sample: true,
+                temperature: 0.1,
+                top_k: 10,
+                top_p: 0.5,
+                repetition_penalty: 1.15
+            });
+
+            if (saida === null) return null;
+            let texto = saida.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+
+            const PALAVRAS_SUSPEITAS = /\b(the|is|are|and|you|sorry|cannot|answer|question)\b/i;
+            if (!texto || texto.length > 40 || PALAVRAS_SUSPEITAS.test(texto) || texto.includes('<think>')) {
+                console.warn("⚠️ [Tier 3] Saída inválida — descartando.");
+                return null;
+            }
+
+            const primeiroPonto = texto.match(/^.*?[.!?]/);
+            if (!primeiroPonto) {
+                console.warn("⚠️ [Tier 3] Saída cortada sem pontuação final — descartando:", texto);
+                return null;
+            }
+
+            return primeiroPonto[0];
+
+        } catch (erro) {
+            console.error("❌ Erro na geração local (Tier 3):", erro);
+            return null;
+        }
     }
-    if (!window.geradorLocal) return null;
-    if (window.geradorLocal.motor === 'semantico') return null;
-
-    const mensagens = [
-        { role: 'system', content: system },
-        { role: 'user', content: user }
-    ];
-
-    try {
-        const r = await gerarComNarradorLocal(mensagens, {
-            max_new_tokens: maxTokens,
-            temperature: 0.5,
-            top_p: 0.9,
-            repetition_penalty: 1.05,
-            do_sample: true
-        });
-        return (typeof r === 'string' ? r : '').trim() || null;
-    } catch (e) {
-        console.warn(`[Tier 3] ${e.message}`);
-        return null;
-    }
-}
-
-function tamanhoModeloAtivo() {
-    const id = String(window.geradorLocal?.instancia?.modelId || '');
-    if (/3B/i.test(id)) return 'grande';
-    if (/1\.5B/i.test(id)) return 'medio';
-    if (/1B/i.test(id)) return 'pequeno';
-    return 'medio';
-}
-    
-    async function tier3ReagirAcaoLivre(input, contexto) {
-    const tam = tamanhoModeloAtivo();
-
-   if (tam === 'pequeno') {
-    return await tier3(
-        'Narre em UMA frase curta, em segunda pessoa, o efeito físico da ação do jogador.',
-        `CENA: "${(contexto || '').slice(0, 200)}"\nAÇÃO: "${input}"`,
-        45
-    );
-}
-    if (tam === 'medio') {
-        // 1.5B: um pouco mais de espaço, ainda enxuto
-        return await tier3(
-            'Você é narrador de RPG de terror. Descreva em UMA frase curta, em segunda pessoa, o efeito físico da ação. Use objetos da cena. Nunca escreva "nada acontece".',
-            `CENA: "${(contexto || '').slice(0, 300)}"
-AÇÃO: "${input}"`,
-            45
-        );
-    }
-
-    // grande (3B): o prompt que já está funcionando
-    return await tier3(
-        'Você é narrador de um RPG de terror. O jogador executa uma ação. Descreva em UMA frase curta, em segunda pessoa, o efeito físico concreto no mundo ou no corpo do jogador. Use objetos da cena. NUNCA escreva "não há reação" ou "nada acontece" — sempre há um efeito físico mínimo (som, cheiro, atrito, dor, silêncio, eco).',
-        `CENA: "${(contexto || '').slice(0, 400)}"\nAÇÃO: "${input}"`,
-        50
-    );
-}
-
-async function tier3EscolherOpcao(input, opcoes, ctxSala) {
-    if (!opcoes.length) return null;
-    const lista = opcoes.map((o, i) => `${i + 1}. ${o.texto}`).join('\n');
-    const r = await tier3(
-        `Classifique a ação do jogador. Responda APENAS com o número da opção que melhor corresponde, ou 0 se nenhuma servir.`,
-        `AÇÃO: "${input}"\nSALA: "${(ctxSala || '').slice(0, 200)}"\nOPÇÕES:\n${lista}`,
-        4
-    );
-    if (!r) return null;
-    const n = parseInt(r.replace(/[^\d]/g, ''), 10);
-    if (isNaN(n) || n < 1 || n > opcoes.length) return null;
-    return opcoes[n - 1];
-}
-    
-    async function inventarDetalheLocal(pergunta) {
-    const tam = tamanhoModeloAtivo();
-
-    let systemPrompt;
-    if (tam === 'pequeno') {
-        systemPrompt = 'Você responde perguntas sobre uma cena de RPG. Responda em uma frase curta, em português, descrevendo o que está visível.';
-    } else if (tam === 'medio') {
-        systemPrompt = 'Você responde perguntas sobre uma cena de RPG de terror. Responda em UMA frase curta, em português, descrevendo apenas o que está visível (objetos, sons, cheiros). Não confirme armadilhas ou monstros ocultos.';
-    } else {
-        systemPrompt = 'Você responde perguntas sobre a cena de um RPG de terror, em português brasileiro.\n- Descreva apenas o que está VISÍVEL (objetos, sons, cheiros, luz).\n- NUNCA confirme nem negue a existência de armadilhas, monstros ou perigos ocultos.\n- Se a pergunta for sobre algo que o personagem não pode ver, responda que não há como saber sem investigar.\n- UMA frase curta, 8 a 20 palavras.';
-    }
-
-    const mensagens = [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: pergunta }
-    ];
-
-    try {
-        const saida = await gerarComNarradorLocal(mensagens, {
-            max_new_tokens: 40,
-            do_sample: true,
-            temperature: 0.5,
-            top_p: 0.9,
-            repetition_penalty: 1.05
-        });
-
-        if (saida === null || saida === undefined) return null;
-        let texto = saida.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
-        if (!texto) return null;
-
-        // Remove ponto final duplicado, corta em 200 chars
-        if (texto.length > 200) texto = texto.slice(0, 200);
-        const primeiroPonto = texto.match(/^.*?[.!?]/);
-        return primeiroPonto ? primeiroPonto[0] : texto;
-    } catch (erro) {
-        console.error('❌ inventarDetalheLocal:', erro);
-        return null;
-    }
-}
-    
 
     async function extrairFatoLocal(pergunta, fraseContexto) {
         if (!window.geradorLocal) return null;
@@ -2582,92 +2516,6 @@ ANSWER:`
             }
 
             // ============================================================
-// FASE 1.2 — zona ambígua (0.40 a 0.65). Consulta o LLM local
-// para desempatar. Se o LLM escolher, executa; se disser "0",
-// cai no fluxo RAG normal.
-// ============================================================
-if (maiorSimilaridade >= 0.40 && maiorSimilaridade < limiteAceitacao) {
-    const opcoesParaLLM = [];
-
-    if (salaAtual?.opcoes) {
-        for (const opcao of salaAtual.opcoes) {
-            const texto = opcao.texto || opcao.opcao_texto;
-            if (texto) {
-                opcoesParaLLM.push({
-                    texto,
-                    payload: { tipo: 'opcao', opcaoOriginal: opcao, paiDilema: null, isRamificacao: false }
-                });
-            }
-            if (opcao.dilema && opcao.ramificacoes) {
-                for (const ram of opcao.ramificacoes) {
-                    if (ram.opcao_texto) {
-                        opcoesParaLLM.push({
-                            texto: ram.opcao_texto,
-                            payload: { tipo: 'ramificacao', opcaoOriginal: ram, paiDilema: opcao, isRamificacao: true }
-                        });
-                    }
-                }
-            }
-        }
-    }
-    if (salaAtual?.interacoes_ambiente) {
-        for (const interacao of salaAtual.interacoes_ambiente) {
-            if (interacao.usado && interacao.reutilizavel !== true) continue;
-            if (interacao.frase_gatilho) {
-                opcoesParaLLM.push({
-                    texto: interacao.frase_gatilho,
-                    payload: { tipo: 'interacao_ambiente', opcaoOriginal: interacao, paiDilema: null, isRamificacao: false }
-                });
-            }
-        }
-    }
-
-    if (opcoesParaLLM.length > 0) {
-        console.log(`[1.2] Zona ambígua (${maiorSimilaridade.toFixed(3)}). Consultando LLM...`);
-        const escolhida = await tier3EscolherOpcao(pergunta, opcoesParaLLM, salaAtual?.nome || '');
-
-        if (escolhida) {
-            console.log(`[1.2] LLM escolheu: "${escolhida.texto}"`);
-            const match = escolhida.payload;
-
-            clearInterval(intervaloAnimacao);
-            document.getElementById(tempId)?.remove();
-
-            if (match.tipo === 'interacao_ambiente') {
-                const interacao = match.opcaoOriginal;
-                adicionarMensagem(interacao.resposta || "Algo muda sutilmente ao seu redor.", 'system');
-                if (!salaAtual.estados) salaAtual.estados = {};
-                if (interacao.define_estado) salaAtual.estados[interacao.define_estado] = true;
-                if (interacao.reutilizavel !== true) interacao.usado = true;
-                await salvarEstadoJogador();
-                sendBtn.disabled = false;
-                userInput.disabled = false;
-                userInput.focus();
-                return;
-            }
-
-            adicionarMensagem(">> Ação executada: " + escolhida.texto, 'system');
-
-            if (match.isRamificacao) {
-                await executarDilemaComRamificacao(match.paiDilema, match.opcaoOriginal, true, true);
-            } else if (match.opcaoOriginal.destino !== undefined && !match.opcaoOriginal.dilema) {
-                await navegarPara(match.opcaoOriginal.destino, match.opcaoOriginal.texto, match.opcaoOriginal, true);
-            } else if (match.opcaoOriginal.arquiteto && !match.opcaoOriginal.dilema) {
-                await executarAcaoOpcao(match.opcaoOriginal);
-            } else {
-                await executarDilema(match.opcaoOriginal, true);
-            }
-
-            sendBtn.disabled = false;
-            userInput.disabled = false;
-            userInput.focus();
-            return;
-        }
-        console.log("[1.2] LLM não reconheceu nenhuma opção. Seguindo fluxo normal.");
-    }
-}
-
-            // ============================================================
             // Tier 2/3 fallback — RAG por sentença + invenção local
             // ============================================================
             try {
@@ -2686,42 +2534,30 @@ if (maiorSimilaridade >= 0.40 && maiorSimilaridade < limiteAceitacao) {
                 }
 
                 const fraseRelevante = await buscarFraseRelevante(pergunta, salaAtual, vetorPerguntaAtual);
-let fatoExtraido = null;
+                let fatoExtraido = null;
 
-// RAG/extrator só para perguntas. Ações nunca passam por aqui.
-const ehPergunta = /\?\s*$/.test(pergunta) || /^\s*(qual|quais|quem|onde|quando|como|por\s*que|o\s*que|que\s+|h[aá]|existe|tem\s+|algu[eé]m|algum[a]?|é\s+poss[ií]vel|parece)/i.test(pergunta);
+                if (fraseRelevante && fraseRelevante.score > 0.45) {
+                    console.log(`📖 [RAG] Frase encontrada (${fraseRelevante.score.toFixed(4)}): "${fraseRelevante.frase}"`);
+                    fatoExtraido = await extrairFatoLocal(pergunta, fraseRelevante.frase);
+                } else {
+                    console.log("📖 [RAG] Nenhuma frase relevante encontrada.");
+                }
 
-if (ehPergunta && fraseRelevante && fraseRelevante.score > 0.45) {
-    console.log(`📖 [RAG] Frase encontrada (${fraseRelevante.score.toFixed(4)}): "${fraseRelevante.frase}"`);
-    fatoExtraido = await extrairFatoLocal(pergunta, fraseRelevante.frase);
-} else if (!ehPergunta) {
-    console.log("🎬 [Ação — RAG pulado por não ser pergunta]");
-} else {
-    console.log("📖 [RAG] Nenhuma frase relevante encontrada.");
-}
+                if (!fatoExtraido) {
+                    fatoExtraido = await inventarDetalheLocal(pergunta);
+                    if (fatoExtraido) {
+                        console.log(`🎭 [Invenção] "${pergunta}" -> "${fatoExtraido}"`);
+                    }
+                }
 
-                // Roteamento por tipo de frase:
-// - Perguntas factuais (começam com "qual/quem/onde/...") → inventarDetalheLocal
-// - Ações livres → tier3ReagirAcaoLivre (que É o prompt certo pra isso)
-const ehPerguntaFactual = /^\s*(qual|quais|quem|onde|quando|como|por\s*que|o\s*que|que\s+)/i.test(pergunta);
-
-if (!fatoExtraido && ehPergunta) {
-    fatoExtraido = await inventarDetalheLocal(pergunta);
-    if (fatoExtraido) console.log(`🎭 [Invenção] "${pergunta}" -> "${fatoExtraido}"`);
-} else if (!fatoExtraido) {
-    console.log(`🎬 [Ação livre] roteando para tier3ReagirAcaoLivre`);
-    const brutoReacao = await tier3ReagirAcaoLivre(pergunta, salaAtual?.texto_logico || '');
-    console.log(`🎬 [Reação] bruto =`, JSON.stringify(brutoReacao));
-    fatoExtraido = brutoReacao;
-}
                 clearInterval(intervaloAnimacao);
                 document.getElementById(tempId)?.remove();
 
-                                if (fatoExtraido) {
+                if (fatoExtraido) {
                     salvarFatoCache(pergunta, vetorPerguntaAtual, fatoExtraido, salaAtual);
                     adicionarMensagem(`🔍 ${fatoExtraido}`, 'system');
                 } else {
-                    adicionarMensagem(`🔍 Sua ação não produz nenhum efeito perceptível.`, 'system');
+                    adicionarMensagem("Sua ação não produz nenhum efeito perceptível.", 'system');
                 }
 
                 sendBtn.disabled = false;
