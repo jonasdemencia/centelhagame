@@ -2669,25 +2669,28 @@ if (maiorSimilaridade >= 0.40 && maiorSimilaridade < limiteAceitacao) {
                 }
 
                 const fraseRelevante = await buscarFraseRelevante(pergunta, salaAtual, vetorPerguntaAtual);
-                let fatoExtraido = null;
+let fatoExtraido = null;
 
-                if (fraseRelevante && fraseRelevante.score > 0.45) {
-                    console.log(`📖 [RAG] Frase encontrada (${fraseRelevante.score.toFixed(4)}): "${fraseRelevante.frase}"`);
-                    fatoExtraido = await extrairFatoLocal(pergunta, fraseRelevante.frase);
-                } else {
-                    console.log("📖 [RAG] Nenhuma frase relevante encontrada.");
-                }
+// RAG/extrator só para perguntas. Ações nunca passam por aqui.
+const ehPergunta = /\?\s*$/.test(pergunta) || /^\s*(qual|quais|quem|onde|quando|como|por\s*que|o\s*que|que\s+|h[aá]|existe|tem\s+|algu[eé]m|algum[a]?|é\s+poss[ií]vel|parece)/i.test(pergunta);
+
+if (ehPergunta && fraseRelevante && fraseRelevante.score > 0.45) {
+    console.log(`📖 [RAG] Frase encontrada (${fraseRelevante.score.toFixed(4)}): "${fraseRelevante.frase}"`);
+    fatoExtraido = await extrairFatoLocal(pergunta, fraseRelevante.frase);
+} else if (!ehPergunta) {
+    console.log("🎬 [Ação — RAG pulado por não ser pergunta]");
+} else {
+    console.log("📖 [RAG] Nenhuma frase relevante encontrada.");
+}
 
                 // Roteamento por tipo de frase:
 // - Perguntas factuais (começam com "qual/quem/onde/...") → inventarDetalheLocal
 // - Ações livres → tier3ReagirAcaoLivre (que É o prompt certo pra isso)
 const ehPerguntaFactual = /^\s*(qual|quais|quem|onde|quando|como|por\s*que|o\s*que|que\s+)/i.test(pergunta);
 
-if (!fatoExtraido && ehPerguntaFactual) {
+if (!fatoExtraido && ehPergunta) {
     fatoExtraido = await inventarDetalheLocal(pergunta);
-    if (fatoExtraido) {
-        console.log(`🎭 [Invenção] "${pergunta}" -> "${fatoExtraido}"`);
-    }
+    if (fatoExtraido) console.log(`🎭 [Invenção] "${pergunta}" -> "${fatoExtraido}"`);
 } else if (!fatoExtraido) {
     console.log(`🎬 [Ação livre] roteando para tier3ReagirAcaoLivre`);
     const brutoReacao = await tier3ReagirAcaoLivre(pergunta, salaAtual?.texto_logico || '');
