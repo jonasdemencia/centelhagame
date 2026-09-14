@@ -1273,6 +1273,79 @@
         }
     }
 
+    // ============================================================
+// TIER 3 — helper genérico para tarefas curtas (saída de poucos tokens).
+// Fila serial: nunca duas gerações em paralelo. Timeout evita travar.
+// ============================================================
+let _tier3Fila = Promise.resolve();
+
+function tier3(system, user, maxTokens = 50, timeoutMs = 12000) {
+    const executar = async () => {
+        if (!window.geradorLocal && window.geradorLocalPromise) {
+            await window.geradorLocalPromise;
+        }
+        if (!window.geradorLocal) return null;
+        if (window.geradorLocal.motor === 'semantico') return null;
+
+        const mensagens = [
+            { role: 'system', content: system },
+            { role: 'user', content: user }
+        ];
+
+        const chamada = gerarComNarradorLocal(mensagens, {
+            max_new_tokens: maxTokens,
+            temperature: 0.3,
+            top_p: 0.85,
+            repetition_penalty: 1.05,
+            do_sample: true
+        });
+        const timeout = new Promise((_, rej) =>
+            setTimeout(() => rej(new Error(`timeout ${timeoutMs}ms`)), timeoutMs)
+        );
+
+        try {
+            const r = await Promise.race([chamada, timeout]);
+            return (typeof r === 'string' ? r : '').trim() || null;
+        } catch (e) {
+            console.warn(`[Tier 3] ${e.message}`);
+            return null;
+        }
+    };
+
+    const proxima = _tier3Fila.then(executar, executar);
+    _tier3Fila = proxima.catch(() => {});
+    return proxima;
+}
+
+// 1.1 — reação a ação livre (substitui o "sem efeito")
+async function tier3ReagirAcaoLivre(input, contexto) {
+    return await tier3(
+        `Você é o narrador de um jogo de terror clínico e brutal, em português brasileiro.
+O jogador executou uma ação que NÃO avança a trama.
+Descreva a reação do mundo em UMA frase curta, em segunda pessoa.
+Sem inventar itens, NPCs, pistas ou mudanças de estado.
+Sem clichês ("de repente", "frio na espinha", "coração acelerou").
+Sem metáfora. Apenas o que acontece fisicamente.`,
+        `AÇÃO: "${input}"\nCENA: "${(contexto || '').slice(0, 400)}"`,
+        45, 12000
+    );
+}
+
+// 1.2 — desempate de opção na zona ambígua
+async function tier3EscolherOpcao(input, opcoes, ctxSala) {
+    if (!opcoes.length) return null;
+    const lista = opcoes.map((o, i) => `${i + 1}. ${o.texto}`).join('\n');
+    const r = await tier3(
+        `Classifique a ação do jogador. Responda APENAS com o número da opção que melhor corresponde, ou 0 se nenhuma servir.`,
+        `AÇÃO: "${input}"\nSALA: "${(ctxSala || '').slice(0, 200)}"\nOPÇÕES:\n${lista}`,
+        4, 8000
+    );
+    if (!r) return null;
+    const n = parseInt(r.replace(/[^\d]/g, ''), 10);
+    if (isNaN(n) || n < 1 || n > opcoes.length) return null;
+    return opcoes[n - 1];
+}
+
     async function inventarDetalheLocal(pergunta, opcoes = {}) {
         if (!window.geradorLocal && window.geradorLocalPromise) {
             console.log("⏳ [Tier 3] Narrador local ainda carregando, aguardando...");
@@ -2512,6 +2585,92 @@ ANSWER:`
             }
 
             // ============================================================
+// FASE 1.2 — zona ambígua (0.40 a 0.65). Consulta o LLM local
+// para desempatar. Se o LLM escolher, executa; se disser "0",
+// cai no fluxo RAG normal.
+// ============================================================
+if (!melhorMatch && maiorSimilaridade >= 0.40 && maiorSimilaridade < limiteAceitacao) {
+    const opcoesParaLLM = [];
+
+    if (salaAtual?.opcoes) {
+        for (const opcao of salaAtual.opcoes) {
+            const texto = opcao.texto || opcao.opcao_texto;
+            if (texto) {
+                opcoesParaLLM.push({
+                    texto,
+                    payload: { tipo: 'opcao', opcaoOriginal: opcao, paiDilema: null, isRamificacao: false }
+                });
+            }
+            if (opcao.dilema && opcao.ramificacoes) {
+                for (const ram of opcao.ramificacoes) {
+                    if (ram.opcao_texto) {
+                        opcoesParaLLM.push({
+                            texto: ram.opcao_texto,
+                            payload: { tipo: 'ramificacao', opcaoOriginal: ram, paiDilema: opcao, isRamificacao: true }
+                        });
+                    }
+                }
+            }
+        }
+    }
+    if (salaAtual?.interacoes_ambiente) {
+        for (const interacao of salaAtual.interacoes_ambiente) {
+            if (interacao.usado && interacao.reutilizavel !== true) continue;
+            if (interacao.frase_gatilho) {
+                opcoesParaLLM.push({
+                    texto: interacao.frase_gatilho,
+                    payload: { tipo: 'interacao_ambiente', opcaoOriginal: interacao, paiDilema: null, isRamificacao: false }
+                });
+            }
+        }
+    }
+
+    if (opcoesParaLLM.length > 0) {
+        console.log(`[1.2] Zona ambígua (${maiorSimilaridade.toFixed(3)}). Consultando LLM...`);
+        const escolhida = await tier3EscolherOpcao(pergunta, opcoesParaLLM, salaAtual?.nome || '');
+
+        if (escolhida) {
+            console.log(`[1.2] LLM escolheu: "${escolhida.texto}"`);
+            const match = escolhida.payload;
+
+            clearInterval(intervaloAnimacao);
+            document.getElementById(tempId)?.remove();
+
+            if (match.tipo === 'interacao_ambiente') {
+                const interacao = match.opcaoOriginal;
+                adicionarMensagem(interacao.resposta || "Algo muda sutilmente ao seu redor.", 'system');
+                if (!salaAtual.estados) salaAtual.estados = {};
+                if (interacao.define_estado) salaAtual.estados[interacao.define_estado] = true;
+                if (interacao.reutilizavel !== true) interacao.usado = true;
+                await salvarEstadoJogador();
+                sendBtn.disabled = false;
+                userInput.disabled = false;
+                userInput.focus();
+                return;
+            }
+
+            adicionarMensagem(">> Ação executada: " + escolhida.texto, 'system');
+
+            if (match.isRamificacao) {
+                await executarDilemaComRamificacao(match.paiDilema, match.opcaoOriginal, true, true);
+            } else if (match.opcaoOriginal.destino !== undefined && !match.opcaoOriginal.dilema) {
+                await navegarPara(match.opcaoOriginal.destino, match.opcaoOriginal.texto, match.opcaoOriginal, true);
+            } else if (match.opcaoOriginal.arquiteto && !match.opcaoOriginal.dilema) {
+                await executarAcaoOpcao(match.opcaoOriginal);
+            } else {
+                await executarDilema(match.opcaoOriginal, true);
+            }
+
+            sendBtn.disabled = false;
+            userInput.disabled = false;
+            userInput.focus();
+            return;
+        }
+        console.log("[1.2] LLM não reconheceu nenhuma opção. Seguindo fluxo normal.");
+    }
+}
+
+            // ============================================================
             // Tier 2/3 fallback — RAG por sentença + invenção local
             // ============================================================
             try {
@@ -2552,9 +2711,10 @@ ANSWER:`
                 if (fatoExtraido) {
                     salvarFatoCache(pergunta, vetorPerguntaAtual, fatoExtraido, salaAtual);
                     adicionarMensagem(`🔍 ${fatoExtraido}`, 'system');
-                } else {
-                    adicionarMensagem("Sua ação não produz nenhum efeito perceptível.", 'system');
-                }
+               } else {
+    const reacao = await tier3ReagirAcaoLivre(pergunta, salaAtual?.texto_logico || '');
+    adicionarMensagem(`🔍 ${reacao || 'Sua ação não produz nenhum efeito perceptível.'}`, 'system');
+}
 
                 sendBtn.disabled = false;
                 userInput.disabled = false;
