@@ -2454,196 +2454,49 @@ function updateCharacterSheet(playerData) {
     setText("char-day", playerData.gameTime?.currentDay ?? 1);
 }
 
-
-
-// --- Início do Bloco de Idade Robusto ---
-
-// Função auxiliar para gerar um número inteiro aleatório entre min e max (inclusive)
-
-function getRandomInt(min, max) {
-
-min = Math.ceil(min);
-
-max = Math.floor(max);
-
-return Math.floor(Math.random() * (max - min + 1)) + min;
-
-}
-
-// Verifica se a idade do jogador NÃO é um número. Isso corrige personagens com a string errada ou sem idade.
-
-if (typeof playerData.idade !== 'number') {
-
-let newAge = 20; // Idade padrão caso a lógica abaixo falhe
-
-// Se a idade for uma string (como "Adepto (45-60 anos)"), tenta extrair a faixa etária
-
-if (typeof playerData.idade === 'string') {
-
-// Procura por um padrão como "(XX-YY anos)"
-
-const matches = playerData.idade.match(/\((\d+)-(\d+)\s*anos\)/);
-
-if (matches && matches.length === 3) {
-
-const minAge = parseInt(matches[1], 10);
-
-const maxAge = parseInt(matches[2], 10);
-
-// Gera uma idade aleatória dentro da faixa encontrada
-
-newAge = getRandomInt(minAge, maxAge);
-
-}
-
-}
-
-// Define a idade corrigida para o personagem
-
-playerData.idade = newAge;
-
-// Salva a idade correta (numérica) no Firestore para não precisar fazer isso de novo
-
-const uid = auth.currentUser?.uid;
-
-if (uid) {
-
-const playerRef = doc(db, "players", uid);
-
-updateDoc(playerRef, { idade: playerData.idade });
-
-console.log(`Idade do personagem corrigida para: ${playerData.idade}`);
-
-}
-
-}
-
-// Atualiza o elemento HTML com a idade correta (agora garantido que é um número)
-
-document.getElementById("char-idade").innerText = playerData.idade;
-
-// --- Fim do Bloco de Idade Robusto ---
-
-// Atualiza energia e barra de HP
-
-const energyTotal = playerData.energy?.total ?? 0;
-
-const energyInitial = playerData.energy?.initial ?? 0;
-
-// Atualiza o texto da energia
-
-document.getElementById("char-energy").innerText = `${energyTotal}/${energyInitial}`;
-
-// Atualiza a barra de HP
-
-const barraHP = document.getElementById("barra-hp-inventario");
-
-if (barraHP && energyInitial > 0) {
-
-const porcentagem = Math.max(0, (energyTotal / energyInitial) * 100);
-
-barraHP.style.width = `${porcentagem}%`;
-
-}
-
-// Atualiza a experiência e nível
-
-const experience = playerData.experience || 0;
-
-const levelInfo = calculateLevel(experience);
-
-document.getElementById("char-level").innerText = levelInfo.level;
-
-document.getElementById("char-xp").innerText = `${experience}/${levelInfo.nextLevelXP}`;
-document.getElementById("char-level-info").innerText = levelInfo.level;
-
-// Atualiza a barra de XP
-
-const barraXP = document.getElementById("barra-xp-inventario");
-
-if (barraXP) {
-
-barraXP.style.width = `${levelInfo.progress * 100}%`;
-
-}
-
-// Restante dos atributos
-
-document.getElementById("char-skill").innerText = playerData.skill?.total ?? "-";
-
-document.getElementById("char-charisma").innerText = playerData.charisma?.total ?? "-";
-
-document.getElementById("char-magic").innerText = playerData.magic?.total ?? "-";
-
-document.getElementById("char-luck").innerText = playerData.luck?.total ?? "-";
-
-document.getElementById("char-couraca").innerText = playerData.couraca || "0";
-
-document.getElementById("char-hand").innerText = playerData.maoDominante || "-";
-
-document.getElementById("char-hemisphere").innerText = playerData.hemisferioDominante || "-";
-
-// Atualiza o dia
-
-document.getElementById("char-day").innerText = playerData.gameTime?.currentDay ?? 1;
-
-}
-
 // Nova função para salvar os dados do jogador (além do inventário)
-
 async function savePlayerData(uid, playerData) {
+    try {
+        const playerRef = doc(db, "players", uid);
+        await setDoc(playerRef, playerData, { merge: true });
+        console.log("Dados do jogador salvos com sucesso!");
 
-try {
+        // -------------------- CONDIÇÃO DE MORTE (AGORA GERAL) --------------------
+        if (playerData.energy && playerData.energy.total <= 0) {
+            alert("Seu personagem morreu! Game Over.");
+            console.log("GAME OVER: Energia chegou a 0 ou menos.");
+            // Aqui você pode adicionar mais lógica de game over, se necessário.
+        }
+        // ----------------------------------------------------------------------
 
-const playerRef = doc(db, "players", uid);
-
-await setDoc(playerRef, playerData, { merge: true });
-
-console.log("Dados do jogador salvos com sucesso!");
-
-// -------------------- CONDIÇÃO DE MORTE (AGORA GERAL) --------------------
-
-if (playerData.energy && playerData.energy.total <= 0) {
-
-alert("Seu personagem morreu! Game Over.");
-
-console.log("GAME OVER: Energia chegou a 0 ou menos.");
-
-// Aqui você pode adicionar mais lógica de game over, se necessário.
-
-}
-
-// ----------------------------------------------------------------------
-
-} catch (error) {
-
-console.error("Erro ao salvar os dados do jogador:", error);
-
-}
-// Sistema de expansão/recolhimento
-let isExpanded = false;
-
-setTimeout(function() {
-    const expandBtn = document.getElementById('expand-btn');
-    const container = document.querySelector('.container');
-    
-    if (expandBtn && container) {
-        expandBtn.addEventListener('click', function() {
-            console.log('Botão clicado!');
-            isExpanded = !isExpanded;
-            
-            if (isExpanded) {
-                container.classList.add('expanded');
-                console.log('Expandindo...');
-            } else {
-                container.classList.remove('expanded');
-                console.log('Recolhendo...');
-            }
-        });
-        console.log('Event listener adicionado ao botão');
-    } else {
-        console.log('Botão ou container não encontrado');
+    } catch (error) {
+        console.error("Erro ao salvar os dados do jogador:", error);
     }
 
-}, 1000);
+    // Sistema de expansão/recolhimento
+    let isExpanded = false;
+
+    setTimeout(function() {
+        const expandBtn = document.getElementById('expand-btn');
+        const container = document.querySelector('.container');
+
+        if (expandBtn && container) {
+            expandBtn.addEventListener('click', function() {
+                console.log('Botão clicado!');
+                isExpanded = !isExpanded;
+
+                if (isExpanded) {
+                    container.classList.add('expanded');
+                    console.log('Expandindo...');
+                } else {
+                    container.classList.remove('expanded');
+                    console.log('Recolhendo...');
+                }
+            });
+            console.log('Event listener adicionado ao botão');
+        } else {
+            console.log('Botão ou container não encontrado');
+        }
+
+    }, 1000);
 }
