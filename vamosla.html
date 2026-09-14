@@ -2689,23 +2689,20 @@ if (!fatoExtraido && ehPerguntaFactual) {
         console.log(`🎭 [Invenção] "${pergunta}" -> "${fatoExtraido}"`);
     }
 } else if (!fatoExtraido) {
-    // Ação livre: já gera a reação aqui mesmo
     console.log(`🎬 [Ação livre] roteando para tier3ReagirAcaoLivre`);
-    fatoExtraido = await tier3ReagirAcaoLivre(pergunta, salaAtual?.texto_logico || '');
-    if (fatoExtraido) {
-        console.log(`🎬 [Reação] "${pergunta}" -> "${fatoExtraido}"`);
-    }
+    const brutoReacao = await tier3ReagirAcaoLivre(pergunta, salaAtual?.texto_logico || '');
+    console.log(`🎬 [Reação] bruto =`, JSON.stringify(brutoReacao));
+    fatoExtraido = brutoReacao;
 }
-
                 clearInterval(intervaloAnimacao);
                 document.getElementById(tempId)?.remove();
 
-                if (fatoExtraido) {
+                                if (fatoExtraido) {
                     salvarFatoCache(pergunta, vetorPerguntaAtual, fatoExtraido, salaAtual);
                     adicionarMensagem(`🔍 ${fatoExtraido}`, 'system');
-               } else {
-    adicionarMensagem(`🔍 ${reacao || 'Sua ação não produz nenhum efeito perceptível.'}`, 'system');
-}
+                } else {
+                    adicionarMensagem(`🔍 Sua ação não produz nenhum efeito perceptível.`, 'system');
+                }
 
                 sendBtn.disabled = false;
                 userInput.disabled = false;
