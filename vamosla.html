@@ -1298,7 +1298,7 @@
             ];
 
             const saida = await gerarComNarradorLocal(mensagens, {
-                max_new_tokens: 150,
+                max_new_tokens: 25,
                 do_sample: true,
                 temperature: 0.1,
                 top_k: 10,
@@ -1311,9 +1311,9 @@
 
             const PALAVRAS_SUSPEITAS = /\b(the|is|are|and|you|sorry|cannot|answer|question)\b/i;
             if (!texto || texto.length > 40 || PALAVRAS_SUSPEITAS.test(texto) || texto.includes('<think>')) {
-                console.warn("⚠️ [Tier 3] Saída inválida — descartando.");
-                return null;
-            }
+    console.warn("⚠️ [Tier 3] Saída inválida — descartando. Texto bruto:", JSON.stringify(texto));
+    return null;
+}
 
             const primeiroPonto = texto.match(/^.*?[.!?]/);
             if (!primeiroPonto) {
