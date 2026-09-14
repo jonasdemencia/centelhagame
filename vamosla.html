@@ -1304,16 +1304,45 @@ async function tier3(system, user, maxTokens = 50) {
     }
 }
 
-async function tier3ReagirAcaoLivre(input, contexto) {
+function tamanhoModeloAtivo() {
+    const id = String(window.geradorLocal?.instancia?.modelId || '');
+    if (/3B/i.test(id)) return 'grande';
+    if (/1\.5B/i.test(id)) return 'medio';
+    if (/1B/i.test(id)) return 'pequeno';
+    return 'medio';
+}
+    
+    async function tier3ReagirAcaoLivre(input, contexto) {
+    const tam = tamanhoModeloAtivo();
+
+    if (tam === 'pequeno') {
+        // 1B: tudo no user, UM exemplo, system mínimo
+        return await tier3(
+            'Você é narrador de RPG de terror. Responda em uma frase curta, em português, em segunda pessoa.',
+            `CENA: "${(contexto || '').slice(0, 200)}"
+AÇÃO: "${input}"
+
+Exemplo de resposta: "A madeira range e devolve um som oco."
+Sua resposta:`,
+            35
+        );
+    }
+
+    if (tam === 'medio') {
+        // 1.5B: um pouco mais de espaço, ainda enxuto
+        return await tier3(
+            'Você é narrador de RPG de terror. Descreva em UMA frase curta, em segunda pessoa, o efeito físico da ação. Use objetos da cena. Nunca escreva "nada acontece".',
+            `CENA: "${(contexto || '').slice(0, 300)}"
+AÇÃO: "${input}"`,
+            45
+        );
+    }
+
+    // grande (3B): o prompt que já está funcionando
     return await tier3(
-        `Você é o narrador de um jogo de terror clínico e brutal, em português brasileiro.
-O jogador executou uma ação que NÃO avança a trama.
-Descreva a reação do mundo em UMA frase curta, em segunda pessoa.
-Sem inventar itens, NPCs, pistas ou mudanças de estado.
-Sem clichês ("de repente", "frio na espinha", "coração acelerou").
-Sem metáfora. Apenas o que acontece fisicamente.`,
-        `AÇÃO: "${input}"\nCENA: "${(contexto || '').slice(0, 400)}"`,
-        45
+        'Você é narrador de um RPG de terror. O jogador executa uma ação. Descreva em UMA frase curta, em segunda pessoa, o efeito físico concreto no mundo ou no corpo do jogador. Use objetos da cena. NUNCA escreva "não há reação" ou "nada acontece" — sempre há um efeito físico mínimo (som, cheiro, atrito, dor, silêncio, eco).',
+        `CENA: "${(contexto || '').slice(0, 400)}"\nAÇÃO: "${input}"`,
+        50
     );
 }
 
@@ -1331,52 +1360,46 @@ async function tier3EscolherOpcao(input, opcoes, ctxSala) {
     return opcoes[n - 1];
 }
     
-    async function inventarDetalheLocal(pergunta, opcoes = {}) {
-        if (!window.geradorLocal && window.geradorLocalPromise) {
-            console.log("⏳ [Tier 3] Narrador local ainda carregando, aguardando...");
-            await window.geradorLocalPromise;
-        }
-        if (!window.geradorLocal) return null;
+    async function inventarDetalheLocal(pergunta) {
+    const tam = tamanhoModeloAtivo();
 
-        try {
-            const mensagens = [
-    {
-        role: 'system',
-        content: 'Você responde perguntas factuais sobre um jogo de terror. Responda com UMA frase curta em português brasileiro. 1 a 5 palavras. Sem explicação. Se não souber, responda: Não sei.'
-    },
-    { role: 'user', content: pergunta }
-];
-
-            const saida = await gerarComNarradorLocal(mensagens, {
-    max_new_tokens: 25,
-    do_sample: true,
-    temperature: 0.5,
-    top_p: 0.9,
-    repetition_penalty: 1.05
-});
-
-            if (saida === null) return null;
-            let texto = saida.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
-
-            const PALAVRAS_SUSPEITAS = /\b(the|is|are|and|you|sorry|cannot|answer|question)\b/i;
-            if (!texto || texto.length > 40 || PALAVRAS_SUSPEITAS.test(texto) || texto.includes('<think>')) {
-    console.warn("⚠️ [Tier 3] Saída inválida — descartando. Texto bruto:", JSON.stringify(texto));
-    return null;
-}
-
-            const primeiroPonto = texto.match(/^.*?[.!?]/);
-            if (!primeiroPonto) {
-                console.warn("⚠️ [Tier 3] Saída cortada sem pontuação final — descartando:", texto);
-                return null;
-            }
-
-            return primeiroPonto[0];
-
-        } catch (erro) {
-            console.error("❌ Erro na geração local (Tier 3):", erro);
-            return null;
-        }
+    let systemPrompt;
+    if (tam === 'pequeno') {
+        systemPrompt = 'Você responde perguntas sobre uma cena de RPG. Responda em uma frase curta, em português, descrevendo o que está visível.';
+    } else if (tam === 'medio') {
+        systemPrompt = 'Você responde perguntas sobre uma cena de RPG de terror. Responda em UMA frase curta, em português, descrevendo apenas o que está visível (objetos, sons, cheiros). Não confirme armadilhas ou monstros ocultos.';
+    } else {
+        systemPrompt = 'Você responde perguntas sobre a cena de um RPG de terror, em português brasileiro.\n- Descreva apenas o que está VISÍVEL (objetos, sons, cheiros, luz).\n- NUNCA confirme nem negue a existência de armadilhas, monstros ou perigos ocultos.\n- Se a pergunta for sobre algo que o personagem não pode ver, responda que não há como saber sem investigar.\n- UMA frase curta, 8 a 20 palavras.';
     }
+
+    const mensagens = [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: pergunta }
+    ];
+
+    try {
+        const saida = await gerarComNarradorLocal(mensagens, {
+            max_new_tokens: 40,
+            do_sample: true,
+            temperature: 0.5,
+            top_p: 0.9,
+            repetition_penalty: 1.05
+        });
+
+        if (saida === null || saida === undefined) return null;
+        let texto = saida.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+        if (!texto) return null;
+
+        // Remove ponto final duplicado, corta em 200 chars
+        if (texto.length > 200) texto = texto.slice(0, 200);
+        const primeiroPonto = texto.match(/^.*?[.!?]/);
+        return primeiroPonto ? primeiroPonto[0] : texto;
+    } catch (erro) {
+        console.error('❌ inventarDetalheLocal:', erro);
+        return null;
+    }
+}
+    
 
     async function extrairFatoLocal(pergunta, fraseContexto) {
         if (!window.geradorLocal) return null;
