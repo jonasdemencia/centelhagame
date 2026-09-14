@@ -2322,10 +2322,6 @@ console.error("Erro ao salvar o dia do jogo:", error);
 
 }
 
-// 📌 Atualizar os dados da ficha de personagem ao carregar e barra de hp
-
-// Modifique a função updateCharacterSheet para incluir a experiência
-
 // Helper defensivo: não estoura se o elemento não existir.
 function setText(id, value) {
     const el = document.getElementById(id);
@@ -2336,6 +2332,8 @@ function setText(id, value) {
     }
 }
 
+// 📌 Atualizar os dados da ficha de personagem ao carregar e barra de hp
+// Modifique a função updateCharacterSheet para incluir a experiência
 function updateCharacterSheet(playerData) {
     if (!playerData) return;
 
@@ -2345,45 +2343,52 @@ function updateCharacterSheet(playerData) {
     setText("char-class", playerData.class || "-");
     setText("char-alignment", playerData.alignment || "-");
 
-    // Painel de informações (inventário)
+    // Atualiza o painel de informações
     setText("char-day-info", playerData.gameTime?.currentDay ?? 1);
     setText("char-po-info", playerData.po || "0");
     setText("char-class-info", playerData.class || "-");
     setText("char-race-info", playerData.race || "-");
     setText("char-alignment-info", playerData.alignment || "-");
     setText("char-age-info", playerData.idade);
-
     console.log("Valor de maoDominante:", playerData.maoDominante);
-    const handText = playerData.maoDominante === "esquerda" ? "Canhoto"
-                   : playerData.maoDominante === "direita"  ? "Destro"
-                   : "-";
+    const handText = playerData.maoDominante === "esquerda" ? "Canhoto" :
+                     playerData.maoDominante === "direita"  ? "Destro" :
+                     "-";
     setText("char-hand-info", handText);
     setText("char-hemisphere-info", playerData.hemisferioDominante || "-");
 
+    // Calcula bônus de itens equipados
     const equipBonuses = calculateEquippedBonuses();
 
+    // Atributos base + bônus de equipamentos
     setText("char-skill-info",    (playerData.skill?.total    ?? 0) + equipBonuses.skill);
     setText("char-charisma-info", (playerData.charisma?.total ?? 0) + equipBonuses.charisma);
     setText("char-magic-info",    (playerData.magic?.total    ?? 0) + equipBonuses.magic);
     setText("char-luck-info",     (playerData.luck?.total     ?? 0) + equipBonuses.luck);
     setText("char-couraca-info",  playerData.couraca || "0");
 
+    // Atualiza o portrait
     const portraitImage = document.getElementById("portrait-image");
     if (portraitImage) {
         portraitImage.src = "https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/portraits/portrait1.png";
         portraitImage.style.display = 'block';
     }
 
-    // --- Bloco de idade robusto (mesma lógica de antes) ---
+    // --- Início do Bloco de Idade Robusto ---
+    // Função auxiliar para gerar um número inteiro aleatório entre min e max (inclusive)
     function getRandomInt(min, max) {
         min = Math.ceil(min);
         max = Math.floor(max);
         return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 
+    // Verifica se a idade do jogador NÃO é um número.
     if (typeof playerData.idade !== 'number') {
-        let newAge = 20;
+        let newAge = 20; // Idade padrão caso a lógica abaixo falhe
+
+        // Se a idade for uma string (como "Adepto (45-60 anos)"), tenta extrair a faixa etária
         if (typeof playerData.idade === 'string') {
+            // Procura por um padrão como "(XX-YY anos)"
             const matches = playerData.idade.match(/\((\d+)-(\d+)\s*anos\)/);
             if (matches && matches.length === 3) {
                 const minAge = parseInt(matches[1], 10);
@@ -2391,7 +2396,11 @@ function updateCharacterSheet(playerData) {
                 newAge = getRandomInt(minAge, maxAge);
             }
         }
+
+        // Define a idade corrigida para o personagem
         playerData.idade = newAge;
+
+        // Salva a idade correta (numérica) no Firestore para não precisar fazer isso de novo
         const uid = auth.currentUser?.uid;
         if (uid) {
             const playerRef = doc(db, "players", uid);
@@ -2399,32 +2408,40 @@ function updateCharacterSheet(playerData) {
             console.log(`Idade do personagem corrigida para: ${playerData.idade}`);
         }
     }
+
+    // Atualiza o elemento HTML com a idade correta (agora garantido que é um número)
     setText("char-idade", playerData.idade);
 
-    // Energia + barra
+    // --- Fim do Bloco de Idade Robusto ---
+
+    // Atualiza energia e barra de HP
     const energyTotal   = playerData.energy?.total   ?? 0;
     const energyInitial = playerData.energy?.initial ?? 0;
+
+    // Atualiza o texto da energia
     setText("char-energy", `${energyTotal}/${energyInitial}`);
 
+    // Atualiza a barra de HP
     const barraHP = document.getElementById("barra-hp-inventario");
     if (barraHP && energyInitial > 0) {
         const porcentagem = Math.max(0, (energyTotal / energyInitial) * 100);
         barraHP.style.width = `${porcentagem}%`;
     }
 
-    // XP + barra
+    // Atualiza a experiência e nível
     const experience = playerData.experience || 0;
     const levelInfo = calculateLevel(experience);
     setText("char-level", levelInfo.level);
     setText("char-xp", `${experience}/${levelInfo.nextLevelXP}`);
     setText("char-level-info", levelInfo.level);
 
+    // Atualiza a barra de XP
     const barraXP = document.getElementById("barra-xp-inventario");
     if (barraXP) {
         barraXP.style.width = `${levelInfo.progress * 100}%`;
     }
 
-    // Restante
+    // Restante dos atributos
     setText("char-skill",      playerData.skill?.total    ?? "-");
     setText("char-charisma",   playerData.charisma?.total ?? "-");
     setText("char-magic",      playerData.magic?.total    ?? "-");
@@ -2432,7 +2449,9 @@ function updateCharacterSheet(playerData) {
     setText("char-couraca",    playerData.couraca || "0");
     setText("char-hand",       playerData.maoDominante || "-");
     setText("char-hemisphere", playerData.hemisferioDominante || "-");
-    setText("char-day",        playerData.gameTime?.currentDay ?? 1);
+
+    // Atualiza o dia
+    setText("char-day", playerData.gameTime?.currentDay ?? 1);
 }
 
 
