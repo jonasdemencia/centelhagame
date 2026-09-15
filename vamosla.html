@@ -1949,25 +1949,25 @@ ANSWER:`
         window._transicaoEmAndamento = true;
 
         const salaAtualObj = mapaMundo?.[secaoAtualId];
-        if (salaAtualObj && opcao && opcao.texto && ehNomePorta(opcao.texto)) {
-            const keyState = `${secaoAtualId}_${opcao.destino || opcao.texto}`;
-            const portaInfo = window.sistemaChaves?.portasTrancadas?.[keyState];
-            if (portaInfo && portaInfo.trancada) {
-                const temChave = await verificarItemNoInventarioFirestore("chavedeferro");
-                if (!temChave) {
-                    const indice = Math.floor(Math.random() * MENSAGENS_CHAVE_FALTANDO.length);
-                    const mensagem = MENSAGENS_CHAVE_FALTANDO[indice];
-                    adicionarMensagem(mensagem, 'system');
-                    window._transicaoEmAndamento = false;
-                    return;
-                } else {
-                    await removerItemDoInventarioFirestore("chavedeferro");
-                    portaInfo.trancada = false;
-                    adicionarMensagem(`Você usou Chave de ferro`, 'system');
-                    await salvarEstadoJogador();
-                }
-            }
+if (salaAtualObj && opcao && opcao.destino !== undefined) {
+    const keyState = `${secaoAtualId}_${opcao.destino}`;
+    const portaInfo = window.sistemaChaves?.portasTrancadas?.[keyState];
+    if (portaInfo && portaInfo.trancada) {
+        const temChave = await verificarItemNoInventarioFirestore("chavedeferro");
+        if (!temChave) {
+            const indice = Math.floor(Math.random() * MENSAGENS_CHAVE_FALTANDO.length);
+            const mensagem = MENSAGENS_CHAVE_FALTANDO[indice];
+            adicionarMensagem(mensagem, 'system');
+            window._transicaoEmAndamento = false;
+            return;
+        } else {
+            await removerItemDoInventarioFirestore("chavedeferro");
+            portaInfo.trancada = false;
+            adicionarMensagem(`Você usou Chave de ferro`, 'system');
+            await salvarEstadoJogador();
         }
+    }
+}
 
         const container = document.getElementById('map-controls');
         const salaDesc = document.getElementById('sala-desc');
