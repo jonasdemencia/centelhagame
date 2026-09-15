@@ -1738,6 +1738,44 @@ ANSWER:`
         return div.id;
     }
 
+        // ============================================================
+    // SUSPEITA DE PERIGO — hesitação antes da transição
+    // ============================================================
+    function confirmarSuspeita(frase) {
+        return new Promise(resolve => {
+            adicionarMensagem(frase, 'system');
+
+            const container = document.getElementById('map-controls');
+            container.innerHTML = '';
+            container.style.pointerEvents = 'auto';
+
+            const btnSim = document.createElement('button');
+            btnSim.className = 'btn-continuar-interceptor';
+            btnSim.innerText = '> CONTINUAR';
+            btnSim.style.background = '#1a2a1a';
+            btnSim.style.borderColor = '#4caf50';
+            btnSim.style.color = '#4caf50';
+
+            const btnNao = document.createElement('button');
+            btnNao.className = 'btn-continuar-interceptor';
+            btnNao.innerText = '> NÃO CONTINUAR';
+
+            btnSim.onclick = () => {
+                container.innerHTML = '';
+                container.style.pointerEvents = 'none';
+                resolve(true);
+            };
+            btnNao.onclick = () => {
+                container.innerHTML = '';
+                container.style.pointerEvents = 'none';
+                resolve(false);
+            };
+
+            container.appendChild(btnSim);
+            container.appendChild(btnNao);
+        });
+    }
+
     // ============================================================
     // SISTEMA DE TESTES / DADOS
     // ============================================================
@@ -1869,10 +1907,20 @@ ANSWER:`
                 }
                 return false;
             });
-            if (bloqueadoPorDilema) {
+                        if (bloqueadoPorDilema) {
                 adicionarMensagem("Algo o impede de seguir por ali. Você precisa encontrar outra forma.", 'system');
                 return;
             }
+        }
+
+        // Suspense antes de atravessar um ponto sinalizado.
+        if (opcao && opcao.suspeita_frase && !opcao._suspeitaConsumida) {
+            window._transicaoEmAndamento = true;
+            const prossegue = await confirmarSuspeita(opcao.suspeita_frase);
+            opcao._suspeitaConsumida = true;
+            await salvarEstadoJogador();
+            window._transicaoEmAndamento = false;
+            if (!prossegue) return;
         }
 
         window._transicaoEmAndamento = true;
