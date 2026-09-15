@@ -1615,9 +1615,11 @@ ANSWER:`
                                 for (let op2 of salaAtual.opcoes) {
                                     if (op2.temChaveAnexada && op2._chaveAnexadaKey) {
                                         op2.temChaveAnexada = false;
+                                        op2.chaveRevelada = false;           // [PATCH] limpa flag de exibição
                                         if (window.sistemaChaves.chavesAnexadas[op2._chaveAnexadaKey]) {
                                             delete window.sistemaChaves.chavesAnexadas[op2._chaveAnexadaKey];
                                         }
+                                        op2._chaveAnexadaKey = null;         // [PATCH] libera referência antiga
                                         break;
                                     }
                                 }
@@ -1703,6 +1705,27 @@ ANSWER:`
         }
     }
 
+    // ============================================================
+    // [PATCH] Sanitiza o mapaMundo antes de persistir.
+    // Remove os caches de runtime do Tier 2 (_fraseEmbeds e
+    // _fatosCache), que contêm Float32Array e são recusados pelo
+    // Firestore. Preserva todos os campos "_" que precisam
+    // persistir (_suspeitaConsumida, _ponteExibida, _chaveAnexadaKey).
+    // ============================================================
+    function limparMapaParaSalvar(mapa) {
+        if (!mapa) return mapa;
+        const clone = {};
+        for (const [idSala, sala] of Object.entries(mapa)) {
+            if (!sala || typeof sala !== 'object') {
+                clone[idSala] = sala;
+                continue;
+            }
+            const { _fraseEmbeds, _fatosCache, ...rest } = sala;
+            clone[idSala] = rest;
+        }
+        return clone;
+    }
+
     async function salvarEstadoJogador() {
         if (!uidAtual) return;
         try {
@@ -1714,7 +1737,7 @@ ANSWER:`
                 "charisma.total": jogadorStats.CARISMA,
                 "luck.total": jogadorStats.SORTE,
                 "magic.total": magiaAtual,
-                mapaMundo: mapaMundo,
+                mapaMundo: limparMapaParaSalvar(mapaMundo),   // [PATCH] remove Float32Array antes do updateDoc
                 secaoAtualId: secaoAtualId,
                 dnaGlobal: dnaGlobal,
                 zonaAtual: zonaAtual,
@@ -2758,10 +2781,28 @@ ANSWER:`
         return { sucesso: true };
     };
 
+    // ============================================================
+    // [PATCH] Marca a opção como revelada (persistência) antes de
+    // colocar a chave na loot-area. Sem isso, atualizarLootRoom()
+    // (chamado logo em seguida em executarAcaoOpcao) apagava o
+    // botão porque op.chaveRevelada continuava false.
+    // ============================================================
     async function processarResultadoExame(opcao) {
-        if (opcao && opcao.temChaveAnexada) {
-            await revelarChaveNoLootArea();
+        if (!opcao || !opcao.temChaveAnexada) return;
+
+        // 1. Marca a opção como revelada (persiste junto com o mapaMundo).
+        opcao.chaveRevelada = true;
+
+        // 2. Sincroniza o registro paralelo em sistemaChaves (também persistido).
+        if (opcao._chaveAnexadaKey && window.sistemaChaves?.chavesAnexadas) {
+            const reg = window.sistemaChaves.chavesAnexadas[opcao._chaveAnexadaKey];
+            if (reg) reg.revelada = true;
         }
+
+        // 3. Agora sim: renderiza o botão. Na sequência, quando
+        //    atualizarLootRoom() rodar, a condição (temChaveAnexada &&
+        //    chaveRevelada) será verdadeira e o botão será re-adicionado.
+        await revelarChaveNoLootArea();
     }
 
     async function revelarChaveNoLootArea() {
@@ -2787,9 +2828,11 @@ ANSWER:`
                     for (let op of salaAtual.opcoes) {
                         if (op.temChaveAnexada && op._chaveAnexadaKey) {
                             op.temChaveAnexada = false;
+                            op.chaveRevelada = false;           // [PATCH] limpa flag de exibição
                             if (window.sistemaChaves.chavesAnexadas[op._chaveAnexadaKey]) {
                                 delete window.sistemaChaves.chavesAnexadas[op._chaveAnexadaKey];
                             }
+                            op._chaveAnexadaKey = null;         // [PATCH] libera referência antiga
                             break;
                         }
                     }
