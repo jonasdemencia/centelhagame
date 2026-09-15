@@ -2344,39 +2344,49 @@ if (salaAtualObj && opcao && opcao.destino !== undefined) {
     }
 
     async function executarAcaoOpcao(opcao) {
-        if (window._transicaoEmAndamento) return;
-        window._transicaoEmAndamento = true;
+    if (window._transicaoEmAndamento) return;
+    window._transicaoEmAndamento = true;
 
-        opcao.disparado = true;
+    opcao.disparado = true;
 
-        let perigoBloqueado = false;
-        if (opcao.dano > 10) {
-            const resultadoTeste = await realizarTestePerigo();
-            if (resultadoTeste === 'SUCESSO') perigoBloqueado = true;
-        }
-
-        if (!perigoBloqueado) {
-            const resultDiv = document.createElement('div');
-            resultDiv.className = 'result-message';
-            resultDiv.innerText = opcao.resultado_texto;
-            chatBox.appendChild(resultDiv);
-            chatBox.scrollTop = chatBox.scrollHeight;
-
-            if (opcao.dano > 0) {
-                energia = Math.max(0, energia - opcao.dano);
-                document.getElementById('energia-span').innerText = `🩸 ${energia}/10`;
-                await salvarEstadoJogador();
-            }
-
-            if (opcao.temChaveAnexada) {
-                await processarResultadoExame(opcao);
-            }
-        }
-
-        atualizarBotoesNavegacao();
-        atualizarLootRoom();
-        window._transicaoEmAndamento = false;
+    let perigoBloqueado = false;
+    if (opcao.dano > 10) {
+        const resultadoTeste = await realizarTestePerigo();
+        if (resultadoTeste === 'SUCESSO') perigoBloqueado = true;
     }
+
+    if (!perigoBloqueado) {
+        const resultDiv = document.createElement('div');
+        resultDiv.className = 'result-message';
+        resultDiv.innerText = opcao.resultado_texto;
+        chatBox.appendChild(resultDiv);
+        chatBox.scrollTop = chatBox.scrollHeight;
+
+        if (opcao.dano > 0) {
+            energia = Math.max(0, energia - opcao.dano);
+            document.getElementById('energia-span').innerText = `🩸 ${energia}/10`;
+            await salvarEstadoJogador();
+        }
+    } else {
+        // [PATCH] Sucesso no teste de perigo: narrativa de evasão,
+        // mas a chave ainda é revelada (ela está no cofre, o teste
+        // era só para saber se você se machuca ou não).
+        const evasaoDiv = document.createElement('div');
+        evasaoDiv.className = 'result-message';
+        evasaoDiv.innerText = "Você recua no último instante — o mecanismo salta no ar, fechando-se sobre o vazio. A abertura range, deixando o interior exposto.";
+        chatBox.appendChild(evasaoDiv);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    // [PATCH] Reveal fora do if — acontece em SUCESSO ou FALHA.
+    if (opcao.temChaveAnexada) {
+        await processarResultadoExame(opcao);
+    }
+
+    atualizarBotoesNavegacao();
+    atualizarLootRoom();
+    window._transicaoEmAndamento = false;
+}
 
     // ============================================================
     // FUNÇÃO PRINCIPAL window.enviar
