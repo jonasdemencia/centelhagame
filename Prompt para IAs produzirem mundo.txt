@@ -74,7 +74,7 @@ Selecione aleatoriamente 3 salas intermediárias (ignorando a [SALA_INICIAL]) pa
 
 ÂNCORA LÉXICA E ESTRUTURA DE DILEMAS:
 - O `texto_evento` deve descrever a cena e, no máximo, indicar UMA ação que leva ao dilema-pai (ex: "Se desejar, você pode examinar a pena"). PROIBIDO usar "ou" no `texto_evento` para listar alternativas de ação — as demais escolhas serão introduzidas exclusivamente nas ramificações do pai.
-- O array `dilemas` deve conter exatamente 1 objeto (o dilema-pai), que terá `ramificacoes` com 2 ou 3 objetos (as ramificações). As ramificações são as verdadeiras escolhas do dilema — cada uma com seu próprio `resultado_texto`, `dano` e `destino_id` (se houver).
+- O array dilemas deve conter exatamente 1 objeto (o dilema-pai), que terá ramificacoes com exatamente 3 objetos — o padrão da zona. Use 2 ramificações apenas em casos excepcionais, quando a terceira opção for comprovadamente supérflua ou redundante. Nunca 1, nunca 4+. As ramificações são as verdadeiras escolhas do dilema — cada uma com seu próprio resultado_texto, dano e destino_id (se houver).
 
 REGRAS DO CAMPO destino_id (VIOLAÇÃO = FALHA CRÍTICA):
 - destino_id SÓ pode apontar para uma sala de número MAIOR que a sala atual (avanço). Nunca aponte para trás.
@@ -148,23 +148,29 @@ EXEMPLO DE CENA MORAL/EXISTENCIAL VÁLIDA
 {
   "sala_id": [ID],
   "titulo": "A Voz Atrás da Grade",
-  "texto_evento": "Atrás de uma grade de metal enferrujada, uma mulher com o uniforme da instituição está sentada no escuro. Ela diz saber o caminho até a saída, mas deixa claro que você precisa entregar o cartão de acesso do necrotério em troca. Ela estende a mão e espera sua decisão. Se desejar, Você pode questionar a mulher.",
+  "texto_evento": "Atrás de uma grade de metal enferrujada, uma mulher com o uniforme da instituição está sentada no escuro. Ela diz saber o caminho até a saída, mas deixa claro que você precisa entregar o cartão de acesso do necrotério em troca. Ela estende a mão e espera sua decisão. Se desejar, você pode questionar a mulher.",
   "dilemas": [
     {
       "opcao_texto": "Questionar a mulher",
-      "resultado_texto": "Ela sorri, um gesto que não chega aos olhos, e diz que já respondeu essa pergunta pra outros três antes de você — e nenhum saiu vivo. A mão da mulher continua estendida. Você pode optar por entregar o cartão ou recusar ajuda.",
+      "resultado_texto": "Ela sorri, um gesto que não chega aos olhos, e diz que já respondeu essa pergunta para outros três antes de você — e nenhum saiu vivo. A mão da mulher continua estendida. Você pode entregar o cartão, recusar ajuda ou exigir uma prova.",
       "dano": 0,
       "destino_id": null,
       "ramificacoes": [
         {
           "opcao_texto": "Entregar o cartão",
-          "resultado_texto": "Quando o cartão deixa sua mão, uma dor seca atravessa seu crânio como um prego enferrujado. Por um instante, sente que o que foi dado não foi apenas um cartão, mas possibilidas de um mal atingir outras pessoas a partir das mãos sujas dessa mulher.",
+          "resultado_texto": "Quando o cartão deixa sua mão, uma dor seca atravessa seu crânio como um prego enferrujado. Por um instante, sente que o que foi dado não foi apenas um cartão, mas a possibilidade de um mal atingir outras pessoas a partir das mãos sujas dessa mulher.",
           "dano": 16,
           "destino_id": [ID_VÁLIDO]
         },
         {
           "opcao_texto": "Recusar ajuda",
           "resultado_texto": "Ela retrai a mão e volta ao escuro sem protestar. Ao se afastar, você percebe que as memórias do rosto de sua amada foram substituídas pelo rosto vazio daquela mulher no escuro.",
+          "dano": 0,
+          "destino_id": null
+        },
+        {
+          "opcao_texto": "Exigir prova",
+          "resultado_texto": "Ela ergue a manga do uniforme e mostra uma marca idêntica à que você carrega no antebraço — sem dizer palavra. A mão continua estendida, agora como se soubesse que você não tem escolha.",
           "dano": 0,
           "destino_id": null
         }
