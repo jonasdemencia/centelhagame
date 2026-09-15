@@ -152,6 +152,38 @@
     'ind_disponivel',
     'descricoes_itens_ativos'
 ];
+        const POOL_SUSPEITAS = [
+    "Algo aqui parece fora de lugar.",
+    "Este ponto da sala faz sua respiração mudar.",
+    "Você percebe que está parado, sem lembrar de ter parado.",
+    "Há uma qualidade no ar deste ponto que você não consegue nomear.",
+    "Seu corpo hesita antes de você decidir.",
+    "A luz aqui é sutilmente diferente do resto.",
+    "Você sente um arrepio que não vem do frio.",
+    "Algo neste ponto parece esperar.",
+    "O som do ambiente fica mais opaco ali.",
+    "Você não consegue lembrar de ter vindo por este lado.",
+    "Uma parte sua quer recuar sem motivo claro.",
+    "O cheiro aqui tem uma nota que não estava antes.",
+    "Seus olhos voltam para este ponto sem você mandar.",
+    "O ar parece mais denso deste lado.",
+    "Há uma vibração mínima que você sente nos dentes.",
+    "Você pisca e o mundo parece por um instante mais lento.",
+    "Este ponto da sala não combina com o resto.",
+    "Algo em você se prepara, sem saber para quê.",
+    "A sombra aqui parece um pouco mais funda.",
+    "Seu instinto diz que este lugar já viu algo.",
+    "Você segura a respiração sem ter decidido.",
+    "Um formigamento sobe pela sua nuca.",
+    "Este ponto parece ter sido tocado recentemente.",
+    "Você tem a impressão de já ter estado aqui.",
+    "Algo no canto do seu olho se recusa a se fixar.",
+    "O silêncio aqui tem uma textura diferente.",
+    "Você sente o peso do próprio corpo mudar.",
+    "Há um detalhe aqui que você não consegue nomear.",
+    "Seu passo fica mais curto sem você perceber.",
+    "Algo neste ponto parece estar te medindo."
+];
 
         function preservarCamposRuntime(salaNova, salaExistente) {
             if (!salaExistente) return salaNova;
@@ -173,6 +205,57 @@
             return salaNova;
         }
 
+
+        // ============================================================
+        // DISTRIBUIÇÃO DE SUSPEITAS (1 real + 2 falsas por zona)
+        // ============================================================
+        function distribuirSuspeitas(mapaMundo) {
+            const elegiveis = [];
+            const comInterceptor = [];
+
+            for (const salaId in mapaMundo) {
+                const sala = mapaMundo[salaId];
+                if (!sala.opcoes) continue;
+                for (const op of sala.opcoes) {
+                    if (op.arquiteto || op.dilema || !op.destino) continue;
+                    elegiveis.push(op);
+                    if (op.interceptor_arquiteto) comInterceptor.push(op);
+                }
+            }
+
+            // Sem interceptor real, não faz sentido sinalizar nada.
+            if (comInterceptor.length === 0) return;
+
+            // Sorteia 3 frases distintas do pool.
+            const pool = [...POOL_SUSPEITAS];
+            for (let i = pool.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [pool[i], pool[j]] = [pool[j], pool[i]];
+            }
+            const frases = pool.slice(0, 3);
+
+            // 1 frase para cada interceptor real.
+            let idxFrase = 0;
+            for (const op of comInterceptor) {
+                op.suspeita_frase = frases[idxFrase % frases.length];
+                op._suspeitaConsumida = false;
+                idxFrase++;
+            }
+
+            // 2 frases para saídas falsas (sorteia entre as sem interceptor).
+            const candidatasFalsas = elegiveis.filter(op => !op.interceptor_arquiteto);
+            for (let i = candidatasFalsas.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [candidatasFalsas[i], candidatasFalsas[j]] = [candidatasFalsas[j], candidatasFalsas[i]];
+            }
+            const numFalsas = Math.min(2, candidatasFalsas.length);
+            for (let k = 0; k < numFalsas; k++) {
+                candidatasFalsas[k].suspeita_frase = frases[idxFrase % frases.length];
+                candidatasFalsas[k]._suspeitaConsumida = false;
+                idxFrase++;
+            }
+        }
+        
         // ============================================================
         // FUNÇÃO DE IMPORTAÇÃO COMPLETA (ZONA + PERIGOS)
         // ============================================================
@@ -364,6 +447,9 @@
                 }
             }
 
+            // 3.5. Distribuir suspeitas (1 real + 2 falsas por zona)
+            distribuirSuspeitas(mapaMundo);
+
             // 4. Trava de segurança
             if (Object.keys(mapaMundo).length === 0) {
                 throw new Error('Nenhuma sala válida foi montada a partir do JSON colado (faltam "plano" e/ou "salas"). NADA foi salvo no Firestore — confira se o JSON completo da zona está na caixa principal, não só os perigos.');
@@ -492,6 +578,9 @@
                     continue;
                 }
             }
+
+            // Distribuir suspeitas no mapa de trabalho.
+            distribuirSuspeitas(mapaTrabalho);
 
             const updatePayload = {};
             for (const salaId of salasTocadas) {
