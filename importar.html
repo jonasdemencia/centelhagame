@@ -209,7 +209,7 @@
         // ============================================================
         // DISTRIBUIÇÃO DE SUSPEITAS (1 real + 2 falsas por zona)
         // ============================================================
-        function distribuirSuspeitas(mapaMundo) {
+                function distribuirSuspeitas(mapaMundo) {
             const elegiveis = [];
             const comInterceptor = [];
 
@@ -218,15 +218,16 @@
                 if (!sala.opcoes) continue;
                 for (const op of sala.opcoes) {
                     if (op.arquiteto || op.dilema || !op.destino) continue;
-                    elegiveis.push(op);
-                    if (op.interceptor_arquiteto) comInterceptor.push(op);
+                    elegiveis.push({ salaId, op });
+                    if (op.interceptor_arquiteto) comInterceptor.push({ salaId, op });
                 }
             }
 
-            // Sem interceptor real, não faz sentido sinalizar nada.
-            if (comInterceptor.length === 0) return;
+            if (comInterceptor.length === 0) {
+                log(`🔍 Suspeitas: nenhuma saída com interceptor — nada sinalizado nesta zona.`, 'info');
+                return;
+            }
 
-            // Sorteia 3 frases distintas do pool.
             const pool = [...POOL_SUSPEITAS];
             for (let i = pool.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
@@ -234,26 +235,31 @@
             }
             const frases = pool.slice(0, 3);
 
-            // 1 frase para cada interceptor real.
             let idxFrase = 0;
-            for (const op of comInterceptor) {
+
+            for (const { salaId, op } of comInterceptor) {
                 op.suspeita_frase = frases[idxFrase % frases.length];
                 op._suspeitaConsumida = false;
+                log(`🔍 [REAL] Sala ${salaId} → saída "${op.texto}" | frase: "${op.suspeita_frase}"`, 'aviso');
                 idxFrase++;
             }
 
-            // 2 frases para saídas falsas (sorteia entre as sem interceptor).
-            const candidatasFalsas = elegiveis.filter(op => !op.interceptor_arquiteto);
+            const candidatasFalsas = elegiveis.filter(e => !e.op.interceptor_arquiteto);
             for (let i = candidatasFalsas.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [candidatasFalsas[i], candidatasFalsas[j]] = [candidatasFalsas[j], candidatasFalsas[i]];
             }
             const numFalsas = Math.min(2, candidatasFalsas.length);
+
             for (let k = 0; k < numFalsas; k++) {
-                candidatasFalsas[k].suspeita_frase = frases[idxFrase % frases.length];
-                candidatasFalsas[k]._suspeitaConsumida = false;
+                const { salaId, op } = candidatasFalsas[k];
+                op.suspeita_frase = frases[idxFrase % frases.length];
+                op._suspeitaConsumida = false;
+                log(`🔍 [ISCA] Sala ${salaId} → saída "${op.texto}" | frase: "${op.suspeita_frase}"`, 'info');
                 idxFrase++;
             }
+
+            log(`🔍 Suspeitas distribuídas: ${comInterceptor.length} real(is) + ${numFalsas} isca(s).`, 'ok');
         }
         
         // ============================================================
