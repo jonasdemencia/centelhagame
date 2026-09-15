@@ -74,7 +74,7 @@ Selecione aleatoriamente 3 salas intermediárias (ignorando a [SALA_INICIAL]) pa
 
 ÂNCORA LÉXICA E ESTRUTURA DE DILEMAS:
 - O `texto_evento` deve descrever a cena e, no máximo, indicar UMA ação que leva ao dilema-pai (ex: "Se desejar, você pode examinar a pena"). PROIBIDO usar "ou" no `texto_evento` para listar alternativas de ação — as demais escolhas serão introduzidas exclusivamente nas ramificações do pai.
-- O array dilemas deve conter exatamente 1 objeto (o dilema-pai), que terá ramificacoes com exatamente 3 objetos — o padrão da zona. Use 2 ramificações apenas em casos excepcionais, quando a terceira opção for comprovadamente supérflua ou redundante. Nunca 1, nunca 4+. As ramificações são as verdadeiras escolhas do dilema — cada uma com seu próprio resultado_texto, dano e destino_id (se houver).
+O array dilemas deve conter exatamente 1 objeto (o dilema-pai), que terá ramificacoes com exatamente 3 objetos — o padrão da zona. Use 2 ramificações apenas em casos excepcionais, quando a terceira opção for comprovadamente supérflua ou redundante. Nunca 1, nunca 4+. As ramificações são as verdadeiras escolhas do dilema — cada uma com seu próprio resultado_texto, dano e destino_id (se houver). Como o jogo não tem botões, o resultado_texto do pai deve terminar enunciando em prosa as 3 opções, para o jogador saber o que digitar.
 
 REGRAS DO CAMPO destino_id (VIOLAÇÃO = FALHA CRÍTICA):
 - destino_id SÓ pode apontar para uma sala de número MAIOR que a sala atual (avanço). Nunca aponte para trás.
