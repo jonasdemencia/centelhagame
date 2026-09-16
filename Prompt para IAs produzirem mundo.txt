@@ -284,6 +284,7 @@ Você receberá o JSON completo de uma zona (com `plano`, `salas`, `cenas` e `pe
 3. Salas que já possuem `perigos` (pelo `sala_id` no array `perigos`) NUNCA recebem puzzles.
 4. Das salas restantes (intermediárias e vazias), escolha **aleatoriamente de 1 a 3 salas** para receber um puzzle. Se houver menos de 3 disponíveis, use todas.
 5. Uma sala jamais terá mais de um puzzle.
+6. SEQUESTRO DE ROTA: se o puzzle tiver `destino`, a sala DEVE ter exatamente UMA saída de avanço. Esse destino é o mesmo da saída original. No `texto_modificado`, substitua a âncora visual dessa saída (porta/escada/corredor) pela descrição do obstáculo. Registre o destino em `saidas_sequestradas`.
 
 ---
 
@@ -336,9 +337,12 @@ O jogador **precisa encontrar o item antes** de chegar na sala do puzzle. Para i
     }
   },
     "textos_modificados": {
-    "[ID_SALA_ONDE_FICA_O_ITEM]": "[Texto original da sala].",
-    "[ID_SALA_DO_OBSTACULO]": "[Texto original da sala]. No canto, [descrição do obstáculo alinhado ao TEMA]. Você nota que pode [ação preparatória literal], se desejar."
-  },
+  "[ID_SALA_ONDE_FICA_O_ITEM]": "[Texto original da sala].",
+  "[ID_SALA_DO_OBSTACULO]": "[Texto original da sala COM a âncora da saída de avanço REMOVIDA]. No lugar dela, [descrição do obstáculo]. Você nota que pode [ação preparatória literal], se desejar."
+},
+"saidas_sequestradas": {
+  "[ID_SALA_DO_OBSTACULO]": [ID_DO_DESTINO_SEQUESTRADO]
+},
   "descricoes_itens_ativos": {
     "[ID_SALA_ONDE_FICA_O_ITEM]": {
       "[id_do_item_criado]": "Uma única frase visual, ancorada a um móvel/objeto-portador JÁ existente no texto_logico. Esta frase será anexada automaticamente ao texto da sala APENAS enquanto o item estiver no chão. NÃO repita nenhum substantivo de cima."
@@ -382,6 +386,7 @@ O jogador **precisa encontrar o item antes** de chegar na sala do puzzle. Para i
 - `textos_modificados`: mapeia `sala_id` para o novo `texto_logico` (com as descrições adicionadas).
 - `itens_adicionados`: mapeia `sala_id` para um array de IDs de itens que devem ser colocados no chão daquela sala.
 - `puzzles`: mapeia `sala_id` para os objetos com `estados`, `interacoes_ambiente` e `usos_possiveis`.
+- `saidas_sequestradas`: destino removido do plano; o script de importação deleta a aresta antes de gravar. Vazio se não houver sequestro.
 
 Se não houver modificações em uma categoria, retorne o objeto vazio `{}`.
 
@@ -413,7 +418,7 @@ Se não houver modificações em uma categoria, retorne o objeto vazio `{}`.
 
 - Retorne **APENAS** o JSON, sem texto adicional, sem formatação markdown.
 - O JSON deve ser **válido** e **completo**.
-- Se não houver salas elegíveis para puzzles, retorne `{"itens_novos": {}, "textos_modificados": {}, "itens_adicionados": {}, "puzzles": {}}`.
+- Se não houver salas elegíveis para puzzles, retorne `{"itens_novos": {}, "textos_modificados": {}, "descricoes_itens_ativos": {}, "itens_adicionados": {}, "puzzles": {}, "saidas_sequestradas": {}}`.
 
 Agora, analise o JSON da zona fornecida e gere os puzzles. Lembre-se: o item deve estar em uma sala anterior, e o texto da sala deve deixar claro tanto a presença do item quanto a do obstáculo.
 ```
