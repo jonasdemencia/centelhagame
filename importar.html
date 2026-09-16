@@ -694,6 +694,26 @@ if (dadosPuzzle.descricoes_itens_ativos) {
     }
 }
 
+// 3.6. Sequestro de rota: remove a saída original do plano
+// A saída removida NÃO é uma opção de arquiteto (perigo/cena) — é uma
+// saída pura do plano original. Só ela é filtrada. Quando o puzzle
+// for resolvido no runtime, `usarItemNoAmbiente` faz push da rota de
+// volta (via `usos_possiveis[].destino`).
+if (dadosPuzzle.saidas_sequestradas) {
+    for (const [salaId, destinoId] of Object.entries(dadosPuzzle.saidas_sequestradas)) {
+        const sala = obterSala(salaId);
+        if (!sala) {
+            log(`⚠️ Sala ${salaId} não encontrada para sequestrar rota.`, 'aviso');
+            continue;
+        }
+        if (!Array.isArray(sala.opcoes)) continue;
+        const antes = sala.opcoes.length;
+        sala.opcoes = sala.opcoes.filter(o => !(o.destino === destinoId && !o.arquiteto));
+        const removidas = antes - sala.opcoes.length;
+        log(`🔒 Sala ${salaId}: rota para ${destinoId} sequestrada (${removidas} saída(s) removida(s)).`, 'ok');
+    }
+}
+            
             // 4. Aplicar puzzles (estados, interacoes_ambiente, usos_possiveis)
             if (dadosPuzzle.puzzles) {
                 for (const [salaId, puzzleData] of Object.entries(dadosPuzzle.puzzles)) {
@@ -766,7 +786,7 @@ if (dadosPuzzle.descricoes_itens_ativos) {
 
                 let temZona = !!(dados.plano || dados.salas || dados.cenas);
                 let temPerigos = Array.isArray(dados.perigos);
-                let temPuzzles = !!(dados.itens_novos || dados.textos_modificados || dados.itens_adicionados || dados.descricoes_itens_ativos || dados.puzzles);
+                let temPuzzles = !!(dados.saidas_sequestradas || dados.itens_novos || dados.textos_modificados || dados.itens_adicionados || dados.descricoes_itens_ativos || dados.puzzles);
 
                 // Se houver perigos separados no campo secundário, mesclar
                 if (perigosStr) {
