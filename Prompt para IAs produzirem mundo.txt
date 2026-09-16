@@ -282,9 +282,9 @@ Você receberá o JSON completo de uma zona (com `plano`, `salas`, `cenas` e `pe
 1. A sala `[SALA_INICIAL]` (entrada) NUNCA recebe puzzles.
 2. Salas que já possuem `cenas` (pelo `sala_id` no array `cenas`) NUNCA recebem puzzles.
 3. Salas que já possuem `perigos` (pelo `sala_id` no array `perigos`) NUNCA recebem puzzles.
-4. Das salas restantes (intermediárias e vazias), escolha **aleatoriamente de 1 a 3 salas** para receber um puzzle. Se houver menos de 3 disponíveis, use todas.
+4. Das salas restantes (intermediárias e vazias), escolha **aleatoriamente de 1 a 3 salas** para receber um puzzle. Se houver menos de 3 disponíveis, use todas. Se um puzzle tiver `destino`, a sala escolhida precisa atender a regra 6 — se não atender, escolha outra sala ou use recompensa sem `destino` (`adiciona_item` ou `define_estado`).
 5. Uma sala jamais terá mais de um puzzle.
-6. SEQUESTRO DE ROTA: se o puzzle tiver `destino`, a sala DEVE ter exatamente UMA saída de avanço. Esse destino é o mesmo da saída original. No `texto_modificado`, substitua a âncora visual dessa saída (porta/escada/corredor) pela descrição do obstáculo. Registre o destino em `saidas_sequestradas`.
+6. SEQUESTRO DE ROTA: se algum `usos_possiveis` tiver `destino`, a sala DEVE ter exatamente UMA saída de avanço (saída com `destino > sala_id`). Esse destino é o mesmo da saída original. No `texto_modificado`, substitua a âncora visual dessa saída (porta/escada/corredor) pela descrição do obstáculo. Registre o destino em `saidas_sequestradas`.
 
 ---
 
