@@ -35,6 +35,12 @@ body{padding:0 0 80px}
 .brand-mark{font-size:22px;color:var(--gold);filter:drop-shadow(0 0 10px rgba(217,164,65,.5))}
 .brand h1{margin:0;font-size:15px;letter-spacing:2.5px;color:var(--gold);font-weight:700}
 .brand p{margin:0;font-size:10px;color:var(--text-dimmer);letter-spacing:1.5px;text-transform:uppercase}
+.header-actions{display:flex;align-items:center;gap:10px}
+.icon-btn{width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;
+  background:var(--surface);border:1px solid var(--border);border-radius:50%;
+  color:var(--text-dim);cursor:pointer;font-size:14px;transition:.15s;font-family:inherit;padding:0}
+.icon-btn:hover{color:var(--gold);border-color:rgba(217,164,65,.3)}
+.icon-btn.active{color:var(--gold);border-color:rgba(217,164,65,.4);background:var(--gold-dim)}
 .auth-status{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text-dim);
   padding:6px 12px;background:var(--surface);border:1px solid var(--border);border-radius:20px;transition:.2s}
 .auth-status .dot{width:6px;height:6px;border-radius:50%;background:var(--text-dimmer);transition:.2s}
@@ -52,12 +58,69 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
 .card-header h2{margin:0 0 4px;font-size:15px;color:var(--gold);letter-spacing:.5px;font-weight:700}
 .card-header p{margin:0;font-size:11px;color:var(--text-dim)}
 
+/* ============ MIRROR CARD ============ */
+.mirror-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
+  margin-bottom:20px;overflow:hidden;transition:border-color .2s}
+.mirror-header{display:flex;justify-content:space-between;align-items:center;
+  padding:12px 20px 10px;border-bottom:1px solid var(--border)}
+.mirror-header-left{display:flex;align-items:center;gap:12px}
+.mirror-title{font-size:12px;font-weight:700;color:var(--gold);letter-spacing:.6px}
+.mirror-sync-indicator{font-size:10.5px;color:var(--text-dimmer);display:flex;align-items:center;gap:5px}
+.mirror-sync-indicator.syncing::after{content:'';width:8px;height:8px;border-radius:50%;
+  border:1.5px solid var(--gold);border-top-color:transparent;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.mirror-close{width:24px;height:24px;background:transparent;border:1px solid transparent;color:var(--text-dim);
+  font-size:16px;line-height:1;cursor:pointer;border-radius:4px;transition:.15s;font-family:inherit;padding:0}
+.mirror-close:hover{color:var(--text);border-color:var(--border-2);background:var(--surface-2)}
+
+.mirror-body{padding:16px 24px 14px}
+.mirror-numbers{display:flex;align-items:baseline;gap:8px;font-size:12px;color:var(--text-dim);margin-bottom:8px}
+.mn-primary{font-size:15px;font-weight:700;color:var(--gold)}
+.mn-sep{color:var(--text-dimmer)}
+
+.zones-bar{display:flex;gap:2px;height:14px}
+.zone-seg{flex:1;position:relative;background:#141414;border:1px solid #1f1f1f;border-radius:2px;
+  overflow:hidden;cursor:help;transition:border-color .15s}
+.zone-seg:hover{border-color:var(--gold)}
+.zone-seg::after{content:'';position:absolute;inset:0;width:var(--fill,0%);background:var(--gold);
+  transition:width .35s ease}
+.zone-seg.empty::after{background:transparent}
+.zone-seg.partial::after{background:rgba(217,164,65,.55)}
+.zone-seg.complete::after{background:var(--gold)}
+.zone-seg.complete{border-color:rgba(217,164,65,.3)}
+
+.zones-ticks{position:relative;height:12px;margin-top:4px;font-size:9px;color:var(--text-dimmer)}
+.zones-ticks span{position:absolute;transform:translateX(-50%);white-space:nowrap}
+
+.mini-bars{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+  gap:6px 22px;margin-top:16px}
+.mini-bar{display:grid;grid-template-columns:20px 68px 1fr 60px;align-items:center;gap:8px;
+  font-size:11px;color:var(--text-dim);cursor:help;padding:3px 0;border-radius:4px;transition:background .15s}
+.mini-bar:hover{background:rgba(217,164,65,.04)}
+.mb-icon{text-align:center;font-size:12px}
+.mb-label{color:var(--text)}
+.mb-track{height:6px;background:#141414;border:1px solid #1f1f1f;border-radius:3px;overflow:hidden;position:relative}
+.mb-fill{height:100%;background:var(--gold);transition:width .35s ease}
+.mini-bar.empty .mb-fill{background:transparent}
+.mini-bar.empty .mb-label{color:var(--text-dim)}
+.mini-bar.empty .mb-count{color:var(--text-dimmer)}
+.mb-count{text-align:right;font-size:10.5px;color:var(--text-dim)}
+
+.mirror-footer{display:flex;align-items:center;gap:12px;margin-top:14px;padding-top:12px;
+  border-top:1px solid var(--border);font-size:10.5px;color:var(--text-dimmer);flex-wrap:wrap}
+.mirror-footer .btn{margin-left:auto;padding:5px 10px;font-size:10.5px}
+.mirror-timestamp{display:flex;align-items:center;gap:6px}
+.mirror-auth-info{display:flex;align-items:center;gap:6px}
+.mirror-empty{padding:32px 20px;text-align:center;color:var(--text-dimmer);font-size:12px}
+
+/* ============ IMPORTER ============ */
 .importer-body{padding:20px 24px 24px}
 .editor-wrap{position:relative;border:1px solid var(--border-2);border-radius:var(--radius);
   background:var(--surface-2);transition:border-color .2s, background .2s}
 .editor-wrap.dragover{border-color:var(--gold);background:var(--gold-dim)}
 .editor-wrap:focus-within{border-color:var(--border-2);background:var(--surface-3)}
-.editor-badge{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);font-size:11px;flex-wrap:wrap}
+.editor-badge{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);
+  font-size:11px;flex-wrap:wrap}
 .badge{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:12px;
   font-size:10px;letter-spacing:.5px;font-weight:500;text-transform:uppercase}
 .badge-empty{background:var(--surface-3);color:var(--text-dimmer);border:1px solid var(--border-2)}
@@ -68,11 +131,9 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
 
 .editor{position:relative;min-height:280px;max-height:520px;overflow:hidden}
 .editor-compact{min-height:220px;max-height:400px}
-.editor-highlight,.editor-input{
-  font-family:inherit;font-size:12.5px;line-height:1.6;
+.editor-highlight,.editor-input{font-family:inherit;font-size:12.5px;line-height:1.6;
   padding:16px 18px;margin:0;border:0;white-space:pre-wrap;word-wrap:break-word;
-  overflow-wrap:break-word;tab-size:2
-}
+  overflow-wrap:break-word;tab-size:2}
 .editor-highlight{position:absolute;inset:0;overflow:auto;pointer-events:none;color:var(--text);background:transparent}
 .editor-input{position:relative;background:transparent;color:transparent;caret-color:var(--gold);
   width:100%;min-height:280px;max-height:520px;outline:none;resize:vertical;z-index:1;display:block}
@@ -145,6 +206,7 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
 .log-warn{color:var(--gold)}
 .log-info{color:var(--text-dim)}
 
+/* ============ VALIDATOR ============ */
 .validator-toggle{display:flex;align-items:center;justify-content:space-between;gap:14px;width:100%;
   padding:18px 24px;background:transparent;border:0;color:var(--text);font-family:inherit;font-size:15px;
   font-weight:700;cursor:pointer;letter-spacing:.5px;transition:background .15s}
@@ -190,9 +252,7 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
 .vrow .detail .err{color:var(--red)}
 .vrow .detail .warn{color:var(--gold)}
 .vrow .detail .ok{color:var(--green)}
-
 .validator-empty{padding:20px;text-align:center;color:var(--text-dimmer);font-size:11.5px}
-
 .validator-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
 
 .toasts{position:fixed;bottom:24px;right:24px;display:flex;flex-direction:column;gap:10px;z-index:2000;pointer-events:none}
@@ -223,13 +283,50 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
       <p>Console de Zonas</p>
     </div>
   </div>
-  <div class="auth-status" id="authStatus">
-    <span class="dot"></span>
-    <span class="auth-label">Verificando...</span>
+  <div class="header-actions">
+    <button class="icon-btn" id="mirrorToggleBtn" onclick="toggleMirrorVisibility()"
+      title="Mostrar/ocultar espelho do Firestore">📊</button>
+    <div class="auth-status" id="authStatus">
+      <span class="dot"></span>
+      <span class="auth-label">Verificando...</span>
+    </div>
   </div>
 </header>
 
 <main>
+  <!-- ===================== MIRROR ===================== -->
+  <section class="mirror-card" id="mirrorCard">
+    <div class="mirror-header">
+      <div class="mirror-header-left">
+        <span class="mirror-title">📊 ESPELHO DO FIRESTORE</span>
+        <span class="mirror-sync-indicator" id="mirrorSyncIndicator">aguardando...</span>
+      </div>
+      <button class="mirror-close" onclick="fecharMirror()" title="Ocultar">×</button>
+    </div>
+    <div class="mirror-body" id="mirrorBody">
+      <div id="mirrorContent">
+        <div class="mirror-numbers">
+          <span class="mn-primary" id="mnSalas">0 / 300</span>
+          <span class="mn-sep">·</span>
+          <span id="mnPct">0%</span>
+          <span class="mn-sep">·</span>
+          <span id="mnZonas">0 zonas completas</span>
+        </div>
+        <div class="zones-bar" id="zonesBar"></div>
+        <div class="zones-ticks" id="zonesTicks"></div>
+        <div class="mini-bars" id="miniBars"></div>
+        <div class="mirror-footer">
+          <span class="mirror-timestamp" id="mirrorTimestamp">📡 aguardando sincronização</span>
+          <span class="mirror-auth-info" id="mirrorAuthInfo"></span>
+          <button class="btn btn-ghost btn-sm" onclick="sincronizarMirror()">
+            <span class="btn-icon">🔄</span> Sincronizar
+          </button>
+        </div>
+      </div>
+      <div class="mirror-empty" id="mirrorEmpty" hidden></div>
+    </div>
+  </section>
+
   <!-- ===================== IMPORTER ===================== -->
   <section class="card importer-card">
     <div class="card-header">
@@ -338,6 +435,13 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 /* ============================================================
+   CONSTANTES DO MUNDO
+   ============================================================ */
+const TOTAL_SALAS = 300;      // 30 zonas × 10 salas
+const TOTAL_ZONAS = 30;
+const SALAS_POR_ZONA = 10;
+
+/* ============================================================
    UI UTILS
    ============================================================ */
 const $ = id => document.getElementById(id);
@@ -381,7 +485,7 @@ function highlightJSON(str) {
 }
 
 /* ============================================================
-   EDITOR (textarea + highlight overlay)
+   EDITOR
    ============================================================ */
 function setupEditor(textarea, highlight) {
   function refresh() {
@@ -1263,6 +1367,8 @@ async function importarJSON() {
     const elapsed = Math.round(performance.now() - startTime);
     renderImportResult({ status: 'ok', time: elapsed, chips, logs });
     toast('Importação concluída.', 'ok');
+    // Auto-sync do espelho após import bem-sucedido
+    sincronizarMirror();
   } catch (e) {
     console.error(e);
     logFn(`❌ Erro: ${e.message}`, 'err');
@@ -1339,7 +1445,6 @@ function abrirArquivoValidator() {
 function validarAntesDeImportar() {
   const card = $('validatorCard');
   if (!card.classList.contains('open')) card.classList.add('open');
-  // Sincroniza o JSON do importador para o validador
   const main = $('jsonInput').value;
   if (!main.trim()) {
     toast('Cole um JSON no importador primeiro.', 'warn');
@@ -1554,11 +1659,7 @@ function lerArquivo(file) {
   });
 }
 
-/* ============================================================
-   SETUP DRAG & DROP
-   ============================================================ */
 function setupDrops() {
-  // Importador principal
   configurarDrop($('mainInputWrap'), async file => {
     try {
       const texto = await lerArquivo(file);
@@ -1588,7 +1689,6 @@ function setupDrops() {
     } catch (e) { toast('Erro: ' + e.message, 'err'); }
   });
 
-  // Validador
   configurarDrop($('validatorInputWrap'), async file => {
     try {
       const texto = await lerArquivo(file);
@@ -1601,7 +1701,6 @@ function setupDrops() {
     } catch (e) { toast('Erro: ' + e.message, 'err'); }
   });
 
-  // File input do validador
   $('validatorFile').addEventListener('change', async () => {
     const f = $('validatorFile').files[0];
     if (!f) return;
@@ -1629,21 +1728,323 @@ function agendarAutoValidate() {
 }
 
 /* ============================================================
+   MIRROR — análise do mapaMundo
+   ============================================================ */
+function analisarMapaMundo(mapaMundo, itens_novos) {
+  const result = {
+    totalSalas: 0,
+    zonasCompletas: 0,
+    salasPresentes: new Set(),
+    cenas: 0, puzzles: 0, perigos: 0, itens: 0, rotas: 0,
+    itens_novos_count: 0,
+    cenasSalas: [], puzzlesSalas: [], perigosSalas: [], itensSalas: [], rotasSalas: []
+  };
+
+  if (!mapaMundo) return result;
+
+  for (const [idStr, sala] of Object.entries(mapaMundo)) {
+    const id = Number(idStr);
+    if (!Number.isFinite(id) || id < 1 || id > TOTAL_SALAS) continue;
+    result.totalSalas++;
+    result.salasPresentes.add(id);
+
+    // Cenas: flag cena_aplicada
+    if (sala.cena_aplicada === true) {
+      result.cenas++;
+      result.cenasSalas.push(id);
+    }
+
+    // Puzzles: puzzle_status OU estados OU usos_possiveis
+    const temEstado = sala.puzzle_status !== undefined ||
+      (sala.estados && Object.keys(sala.estados).length > 0);
+    const temUso = Array.isArray(sala.usos_possiveis) && sala.usos_possiveis.length > 0;
+    const temInteracao = Array.isArray(sala.interacoes_ambiente) && sala.interacoes_ambiente.length > 0;
+    if (temEstado || temUso || temInteracao) {
+      result.puzzles++;
+      result.puzzlesSalas.push(id);
+    }
+
+    // Perigos: interceptor_arquiteto em alguma opção OU opção de arquiteto sem dilema (nova_opcao)
+    let temPerigo = false;
+    if (Array.isArray(sala.opcoes)) {
+      for (const op of sala.opcoes) {
+        if (op.interceptor_arquiteto) { temPerigo = true; break; }
+        if (op.arquiteto === true && op.dilema !== true) { temPerigo = true; break; }
+      }
+    }
+    if (temPerigo) {
+      result.perigos++;
+      result.perigosSalas.push(id);
+    }
+
+    // Itens no chão
+    if (Array.isArray(sala.itens) && sala.itens.length > 0) {
+      result.itens++;
+      result.itensSalas.push(id);
+    }
+
+    // Rotas sequestradas: usos_possiveis com destino (rota restaurada pelo puzzle)
+    if (Array.isArray(sala.usos_possiveis)) {
+      const temRota = sala.usos_possiveis.some(u => u && u.destino !== undefined && u.destino !== null);
+      if (temRota) {
+        result.rotas++;
+        result.rotasSalas.push(id);
+      }
+    }
+  }
+
+  // Zonas completas: 10/10 salas presentes
+  for (let z = 0; z < TOTAL_ZONAS; z++) {
+    const start = z * SALAS_POR_ZONA + 1;
+    let completo = true;
+    for (let i = start; i < start + SALAS_POR_ZONA; i++) {
+      if (!result.salasPresentes.has(i)) { completo = false; break; }
+    }
+    if (completo) result.zonasCompletas++;
+  }
+
+  if (itens_novos) result.itens_novos_count = Object.keys(itens_novos).length;
+
+  return result;
+}
+
+/* ============================================================
+   MIRROR — render
+   ============================================================ */
+function truncarListaSalas(arr, max = 12) {
+  if (!arr || arr.length === 0) return 'nenhuma';
+  const ordenado = [...arr].sort((a, b) => a - b);
+  if (ordenado.length <= max) return ordenado.join(', ');
+  return ordenado.slice(0, max).join(', ') + ` … (+${ordenado.length - max})`;
+}
+
+function renderMirror(analise) {
+  $('mirrorEmpty').hidden = true;
+  $('mirrorContent').hidden = false;
+
+  // Números principais
+  $('mnSalas').textContent = `${analise.totalSalas} / ${TOTAL_SALAS}`;
+  const pct = (analise.totalSalas / TOTAL_SALAS * 100).toFixed(1);
+  $('mnPct').textContent = `${pct}%`;
+  $('mnZonas').textContent = `${analise.zonasCompletas} zona${analise.zonasCompletas === 1 ? '' : 's'} completa${analise.zonasCompletas === 1 ? '' : 's'}`;
+
+  // Barra de zonas
+  const zonesBar = $('zonesBar');
+  let html = '';
+  for (let z = 0; z < TOTAL_ZONAS; z++) {
+    const start = z * SALAS_POR_ZONA + 1;
+    let count = 0;
+    for (let i = start; i < start + SALAS_POR_ZONA; i++) {
+      if (analise.salasPresentes.has(i)) count++;
+    }
+    const fillPct = (count / SALAS_POR_ZONA) * 100;
+    let cls = 'zone-seg';
+    if (count === SALAS_POR_ZONA) cls += ' complete';
+    else if (count > 0) cls += ' partial';
+    else cls += ' empty';
+    const title = `Zona ${z + 1} · ${count}/${SALAS_POR_ZONA} salas`;
+    html += `<div class="${cls}" style="--fill:${fillPct}%" title="${title}"></div>`;
+  }
+  zonesBar.innerHTML = html;
+
+  // Ticks numéricos
+  const ticks = $('zonesTicks');
+  ticks.innerHTML = '';
+  [5, 10, 15, 20, 25, 30].forEach(n => {
+    const el = document.createElement('span');
+    el.textContent = n;
+    el.style.left = (n / TOTAL_ZONAS * 100) + '%';
+    ticks.appendChild(el);
+  });
+
+  // Mini-barras
+  const totalSalas = analise.totalSalas;
+  const bars = [
+    { icon: '🎭', label: 'Cenas', value: analise.cenas, salas: analise.cenasSalas, extra: '' },
+    { icon: '🧩', label: 'Puzzles', value: analise.puzzles, salas: analise.puzzlesSalas, extra: '' },
+    { icon: '☠️', label: 'Perigos', value: analise.perigos, salas: analise.perigosSalas, extra: '' },
+    { icon: '📦', label: 'Itens', value: analise.itens, salas: analise.itensSalas,
+      extra: analise.itens_novos_count > 0 ? ` · +${analise.itens_novos_count} novos em itens_novos` : '' },
+    { icon: '🔒', label: 'Rotas', value: analise.rotas, salas: analise.rotasSalas, extra: '' }
+  ];
+
+  const mb = $('miniBars');
+  mb.innerHTML = bars.map(b => {
+    const pct = totalSalas > 0 ? (b.value / totalSalas * 100) : 0;
+    const cls = b.value === 0 ? 'mini-bar empty' : 'mini-bar';
+    const tooltip = `Salas: ${truncarListaSalas(b.salas)}${b.extra}`;
+    return `<div class="${cls}" title="${tooltip}">
+      <span class="mb-icon">${b.icon}</span>
+      <span class="mb-label">${b.label}</span>
+      <div class="mb-track"><div class="mb-fill" style="width:${pct}%"></div></div>
+      <span class="mb-count">${b.value}/${totalSalas}</span>
+    </div>`;
+  }).join('');
+}
+
+function renderMirrorEmpty(msg) {
+  $('mirrorContent').hidden = true;
+  const empty = $('mirrorEmpty');
+  empty.hidden = false;
+  empty.textContent = msg;
+  $('mirrorSyncIndicator').textContent = 'sem dados';
+  $('mirrorSyncIndicator').classList.remove('syncing');
+}
+
+function renderMirrorError(msg) {
+  $('mirrorContent').hidden = true;
+  const empty = $('mirrorEmpty');
+  empty.hidden = false;
+  empty.textContent = '⚠️ Não foi possível ler o Firestore: ' + msg;
+  $('mirrorSyncIndicator').textContent = 'erro';
+  $('mirrorSyncIndicator').classList.remove('syncing');
+}
+
+/* ============================================================
+   MIRROR — sincronização
+   ============================================================ */
+let mirrorLastSync = 0;
+
+async function sincronizarMirror() {
+  const user = firebase.auth().currentUser;
+  const indicator = $('mirrorSyncIndicator');
+
+  if (!user) {
+    renderMirrorEmpty('Faça login para ver o espelho do Firestore.');
+    return;
+  }
+
+  indicator.textContent = 'sincronizando';
+  indicator.classList.add('syncing');
+
+  try {
+    const docSnap = await db.collection('players').doc(user.uid).get();
+    const dados = docSnap.data() || {};
+    const mapaMundo = dados.mapaMundo || {};
+    const itens_novos = dados.itens_novos || {};
+    const analise = analisarMapaMundo(mapaMundo, itens_novos);
+    renderMirror(analise);
+    mirrorLastSync = Date.now();
+    atualizarMirrorTimestamp();
+    indicator.textContent = 'sincronizado';
+    indicator.classList.remove('syncing');
+
+    // Cache local para render instantâneo no próximo load
+    try {
+      const cache = {
+        analise: {
+          totalSalas: analise.totalSalas,
+          zonasCompletas: analise.zonasCompletas,
+          salasPresentes: [...analise.salasPresentes],
+          cenas: analise.cenas,
+          puzzles: analise.puzzles,
+          perigos: analise.perigos,
+          itens: analise.itens,
+          rotas: analise.rotas,
+          itens_novos_count: analise.itens_novos_count,
+          cenasSalas: analise.cenasSalas,
+          puzzlesSalas: analise.puzzlesSalas,
+          perigosSalas: analise.perigosSalas,
+          itensSalas: analise.itensSalas,
+          rotasSalas: analise.rotasSalas
+        },
+        ts: mirrorLastSync
+      };
+      localStorage.setItem('centelha.console.mirrorSnapshot', JSON.stringify(cache));
+    } catch (_) { /* cache best-effort */ }
+  } catch (e) {
+    console.error(e);
+    renderMirrorError(e.message);
+  }
+}
+
+function atualizarMirrorTimestamp() {
+  const el = $('mirrorTimestamp');
+  if (!el) return;
+  if (!mirrorLastSync) { el.textContent = '📡 aguardando sincronização'; return; }
+  const s = Math.floor((Date.now() - mirrorLastSync) / 1000);
+  let rel;
+  if (s < 5) rel = 'agora';
+  else if (s < 60) rel = `há ${s}s`;
+  else if (s < 3600) rel = `há ${Math.floor(s / 60)}min`;
+  else if (s < 86400) rel = `há ${Math.floor(s / 3600)}h`;
+  else rel = `há ${Math.floor(s / 86400)}d`;
+  el.textContent = `📡 sincronizado ${rel}`;
+}
+
+function atualizarMirrorAuthInfo() {
+  const el = $('mirrorAuthInfo');
+  if (!el) return;
+  const user = firebase.auth().currentUser;
+  if (!user) { el.textContent = ''; return; }
+  const nome = user.displayName || user.email || user.uid.slice(0, 12);
+  el.textContent = `· ✅ ${nome}`;
+}
+
+function carregarMirrorCache() {
+  try {
+    const raw = localStorage.getItem('centelha.console.mirrorSnapshot');
+    if (!raw) return false;
+    const cache = JSON.parse(raw);
+    const a = cache.analise;
+    if (!a) return false;
+    const analise = {
+      ...a,
+      salasPresentes: new Set(a.salasPresentes || [])
+    };
+    renderMirror(analise);
+    mirrorLastSync = cache.ts || 0;
+    atualizarMirrorTimestamp();
+    $('mirrorSyncIndicator').textContent = 'cache local';
+    return true;
+  } catch (_) { return false; }
+}
+
+/* ============================================================
+   MIRROR — toggle visibilidade
+   ============================================================ */
+function toggleMirrorVisibility() {
+  const card = $('mirrorCard');
+  const btn = $('mirrorToggleBtn');
+  const hidden = card.style.display === 'none';
+  if (hidden) {
+    card.style.display = '';
+    btn.classList.remove('active');
+    localStorage.removeItem('centelha.console.mirrorHidden');
+  } else {
+    card.style.display = 'none';
+    btn.classList.add('active');
+    localStorage.setItem('centelha.console.mirrorHidden', '1');
+  }
+}
+
+function fecharMirror() {
+  $('mirrorCard').style.display = 'none';
+  $('mirrorToggleBtn').classList.add('active');
+  localStorage.setItem('centelha.console.mirrorHidden', '1');
+}
+
+function restaurarVisibilidadeMirror() {
+  const hidden = localStorage.getItem('centelha.console.mirrorHidden') === '1';
+  if (hidden) {
+    $('mirrorCard').style.display = 'none';
+    $('mirrorToggleBtn').classList.add('active');
+  }
+}
+
+/* ============================================================
    BOOTSTRAP
    ============================================================ */
 let refreshMainHighlight = () => {};
 let refreshValidatorHighlight = () => {};
 
 window.addEventListener('DOMContentLoaded', () => {
-  // Editor principal
   const mainTA = $('jsonInput');
   refreshMainHighlight = setupEditor(mainTA, $('editorHighlight'));
 
-  // Editor do validador
   const valTA = $('validatorJsonInput');
   refreshValidatorHighlight = setupEditor(valTA, $('validatorHighlight'));
 
-  // Restaura
   const savedMain = localStorage.getItem('centelha.console.jsonInput');
   if (savedMain) { mainTA.value = savedMain; refreshMainHighlight(); }
   const savedP = localStorage.getItem('centelha.console.perigosInput');
@@ -1657,7 +2058,6 @@ window.addEventListener('DOMContentLoaded', () => {
 
   atualizarBadgeEPreview();
 
-  // Eventos do editor principal
   mainTA.addEventListener('input', () => {
     localStorage.setItem('centelha.console.jsonInput', mainTA.value);
     atualizarBadgeEPreview();
@@ -1666,7 +2066,6 @@ window.addEventListener('DOMContentLoaded', () => {
     localStorage.setItem('centelha.console.perigosInput', $('perigosInput').value);
   });
 
-  // Eventos do editor do validador
   valTA.addEventListener('input', () => {
     localStorage.setItem('centelha.console.validatorJson', valTA.value);
     atualizarBadge(valTA, $('validatorBadge'));
@@ -1677,6 +2076,11 @@ window.addEventListener('DOMContentLoaded', () => {
   });
 
   setupDrops();
+
+  // Mirror: visibilidade + cache + timer
+  restaurarVisibilidadeMirror();
+  carregarMirrorCache();
+  setInterval(atualizarMirrorTimestamp, 10000);
 });
 
 /* ============================================================
@@ -1690,10 +2094,13 @@ firebase.auth().onAuthStateChanged(user => {
     el.classList.add('ok');
     lbl.textContent = user.displayName || user.email || user.uid.slice(0, 12);
     toast('Autenticado.', 'ok');
+    atualizarMirrorAuthInfo();
+    sincronizarMirror();
   } else {
     el.classList.add('warn');
     lbl.textContent = 'sem login';
-    toast('Faça login no jogo antes de importar.', 'warn');
+    renderMirrorEmpty('Faça login para ver o espelho do Firestore.');
+    atualizarMirrorAuthInfo();
   }
 });
 
@@ -1703,6 +2110,7 @@ firebase.auth().onAuthStateChanged(user => {
 console.log('%c⚡ Centelha · Console de Zonas', 'color:#d9a441;font-weight:bold;font-size:14px');
 console.log('📋 Validadores ativos: topologia, ancoragem, entry-point leak, densidade e dilemas.');
 console.log('📥 Importadores: zona completa, perigos (isolado), puzzles (Shadowgate).');
+console.log('📊 Espelho: leitura read-only do doc players/{uid}, sem criar documentos novos.');
 </script>
 
 </body>
