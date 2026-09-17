@@ -24,13 +24,11 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
   font-family:'JetBrains Mono','Courier New',monospace;font-size:13px;line-height:1.55;min-height:100vh}
 body{padding:0 0 80px}
 
-/* Progress */
 .progress-bar{position:fixed;top:0;left:0;right:0;height:2px;z-index:1000;overflow:hidden;pointer-events:none}
 .progress-bar.active::after{content:'';position:absolute;top:0;left:0;height:100%;width:40%;
   background:linear-gradient(90deg,transparent,var(--gold),transparent);animation:pslide 1.2s ease-in-out infinite}
 @keyframes pslide{0%{transform:translateX(-100%)}100%{transform:translateX(300%)}}
 
-/* Header */
 .app-header{position:sticky;top:0;z-index:100;display:flex;justify-content:space-between;align-items:center;
   padding:14px 28px;background:rgba(10,10,10,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
 .brand{display:flex;align-items:center;gap:12px}
@@ -47,7 +45,6 @@ body{padding:0 0 80px}
 .auth-status.err{border-color:rgba(229,57,53,.3)}
 .auth-status.err .dot{background:var(--red);box-shadow:0 0 8px var(--red)}
 
-/* Main */
 main{max-width:1000px;margin:0 auto;padding:28px 24px}
 .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
   margin-bottom:20px;overflow:hidden;transition:border-color .2s}
@@ -55,13 +52,12 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
 .card-header h2{margin:0 0 4px;font-size:15px;color:var(--gold);letter-spacing:.5px;font-weight:700}
 .card-header p{margin:0;font-size:11px;color:var(--text-dim)}
 
-/* Editor */
 .importer-body{padding:20px 24px 24px}
 .editor-wrap{position:relative;border:1px solid var(--border-2);border-radius:var(--radius);
   background:var(--surface-2);transition:border-color .2s, background .2s}
 .editor-wrap.dragover{border-color:var(--gold);background:var(--gold-dim)}
 .editor-wrap:focus-within{border-color:var(--border-2);background:var(--surface-3)}
-.editor-badge{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);font-size:11px}
+.editor-badge{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);font-size:11px;flex-wrap:wrap}
 .badge{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:12px;
   font-size:10px;letter-spacing:.5px;font-weight:500;text-transform:uppercase}
 .badge-empty{background:var(--surface-3);color:var(--text-dimmer);border:1px solid var(--border-2)}
@@ -71,6 +67,7 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
 .badge-invalid{background:var(--red-dim);color:var(--red);border:1px solid rgba(229,57,53,.35)}
 
 .editor{position:relative;min-height:280px;max-height:520px;overflow:hidden}
+.editor-compact{min-height:220px;max-height:400px}
 .editor-highlight,.editor-input{
   font-family:inherit;font-size:12.5px;line-height:1.6;
   padding:16px 18px;margin:0;border:0;white-space:pre-wrap;word-wrap:break-word;
@@ -79,6 +76,8 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
 .editor-highlight{position:absolute;inset:0;overflow:auto;pointer-events:none;color:var(--text);background:transparent}
 .editor-input{position:relative;background:transparent;color:transparent;caret-color:var(--gold);
   width:100%;min-height:280px;max-height:520px;outline:none;resize:vertical;z-index:1;display:block}
+.editor-compact .editor-highlight,
+.editor-compact .editor-input{min-height:220px;max-height:400px}
 .editor-input::placeholder{color:var(--text-dimmer)}
 .editor-input::selection{background:rgba(217,164,65,.25)}
 
@@ -88,7 +87,6 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
 .tok-bool{color:#d88db8}
 .tok-null{color:#777}
 
-/* Secondary textarea */
 .secondary-input{margin-top:14px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface-2)}
 .secondary-input summary{padding:10px 14px;font-size:11px;color:var(--text-dim);cursor:pointer;user-select:none;
   list-style:none;transition:color .15s}
@@ -99,14 +97,12 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
 .secondary-input textarea{width:100%;min-height:100px;background:transparent;border:0;border-top:1px solid var(--border);
   padding:12px 14px;color:var(--text);font-family:inherit;font-size:12px;outline:none;resize:vertical}
 
-/* Preview */
 .preview{margin-top:14px;padding:12px 16px;background:var(--surface-2);border:1px solid var(--border);
   border-radius:var(--radius);font-size:11.5px;color:var(--text-dim);display:flex;flex-direction:column;gap:6px}
 .preview .line{display:flex;align-items:flex-start;gap:8px}
 .preview .line strong{color:var(--text);font-weight:500}
 .preview .icon{flex-shrink:0;width:14px;text-align:center}
 
-/* Actions */
 .actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px;align-items:center}
 .btn{display:inline-flex;align-items:center;gap:8px;padding:11px 20px;border:1px solid transparent;
   border-radius:var(--radius);font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer;
@@ -121,7 +117,6 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
 .btn-ghost:hover:not(:disabled){color:var(--text);border-color:var(--text-dim)}
 .btn-sm{padding:8px 14px;font-size:11.5px}
 
-/* Result panel */
 .result-panel{margin-top:18px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface-2);overflow:hidden}
 .result-header{padding:14px 18px;display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}
 .result-status{font-size:13px;font-weight:700;letter-spacing:.3px}
@@ -143,20 +138,13 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
 .result-details > div{padding:0 18px 18px}
 .result-panel .result-actions{padding:14px 18px;border-top:1px solid var(--border);display:flex;gap:10px;flex-wrap:wrap}
 
-/* Log panel */
 .log-panel{max-height:220px;overflow:auto;padding:10px 12px;background:var(--bg);border:1px solid var(--border);
   border-radius:6px;font-size:11.5px;line-height:1.6}
 .log-ok{color:var(--green)}
 .log-err{color:var(--red)}
 .log-warn{color:var(--gold)}
 .log-info{color:var(--text-dim)}
-.log-msg{color:var(--text)}
 
-/* JSON view */
-.json-view{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:14px;
-  max-height:400px;overflow:auto;font-size:11px;line-height:1.6;margin:0;white-space:pre}
-
-/* Validator */
 .validator-toggle{display:flex;align-items:center;justify-content:space-between;gap:14px;width:100%;
   padding:18px 24px;background:transparent;border:0;color:var(--text);font-family:inherit;font-size:15px;
   font-weight:700;cursor:pointer;letter-spacing:.5px;transition:background .15s}
@@ -170,24 +158,17 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
 .validator-badges .mini.ok{background:var(--green-dim);color:var(--green);border:1px solid rgba(76,175,80,.3)}
 .chevron{color:var(--text-dimmer);font-size:14px;transition:transform .25s ease}
 .validator-card.open .chevron{transform:rotate(90deg)}
-.validator-panel{max-height:0;overflow:hidden;transition:max-height .35s ease}
-.validator-card.open .validator-panel{max-height:3000px}
+.validator-panel{max-height:0;overflow:hidden;transition:max-height .4s ease}
+.validator-card.open .validator-panel{max-height:4000px}
 .validator-body{padding:4px 24px 24px;border-top:1px solid var(--border)}
 
-.validator-options{display:flex;align-items:center;gap:16px;padding:14px 0}
+.validator-options{display:flex;align-items:center;gap:14px;padding:14px 0;flex-wrap:wrap}
 .check{display:inline-flex;align-items:center;gap:8px;font-size:11.5px;color:var(--text-dim);cursor:pointer;user-select:none}
 .check input{appearance:none;width:14px;height:14px;border:1px solid var(--border-2);border-radius:3px;
   background:var(--surface-2);cursor:pointer;position:relative;transition:.15s}
 .check input:checked{background:var(--gold);border-color:var(--gold)}
 .check input:checked::after{content:'✓';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
   color:#0a0a0a;font-size:10px;font-weight:700}
-
-.drop-zone{display:flex;align-items:center;justify-content:center;gap:12px;padding:26px 20px;
-  border:2px dashed var(--border-2);border-radius:var(--radius);cursor:pointer;
-  font-size:12px;color:var(--text-dim);transition:.2s;background:var(--surface-2)}
-.drop-zone:hover{border-color:var(--text-dimmer);color:var(--text)}
-.drop-zone.dragover{border-color:var(--gold);background:var(--gold-dim);color:var(--gold)}
-.drop-icon{font-size:16px}
 
 .validator-stats{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 12px}
 .vstat{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;background:var(--surface-2);
@@ -209,13 +190,11 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
 .vrow .detail .err{color:var(--red)}
 .vrow .detail .warn{color:var(--gold)}
 .vrow .detail .ok{color:var(--green)}
-.vrow .tag{font-size:10px;color:var(--text-dimmer);margin-left:auto;flex-shrink:0;align-self:flex-start}
 
 .validator-empty{padding:20px;text-align:center;color:var(--text-dimmer);font-size:11.5px}
 
 .validator-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
 
-/* Toasts */
 .toasts{position:fixed;bottom:24px;right:24px;display:flex;flex-direction:column;gap:10px;z-index:2000;pointer-events:none}
 .toast{pointer-events:auto;padding:12px 18px;background:var(--surface-2);border:1px solid var(--border-2);
   border-radius:var(--radius);font-size:12px;color:var(--text);max-width:340px;
@@ -226,7 +205,6 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
 .toast.warn{border-left:3px solid var(--gold)}
 .toast.info{border-left:3px solid var(--blue)}
 
-/* Scrollbars */
 ::-webkit-scrollbar{width:9px;height:9px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:#222;border-radius:5px}
@@ -309,17 +287,29 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
             <input type="checkbox" id="autoValidate">
             <span>Auto-validar ao colar (debounce 800ms)</span>
           </label>
+          <button class="btn btn-ghost btn-sm" onclick="copiarDoImportador()">
+            <span class="btn-icon">📋</span> Copiar do importador
+          </button>
+          <button class="btn btn-ghost btn-sm" onclick="abrirArquivoValidator()">
+            <span class="btn-icon">📂</span> Abrir arquivo
+          </button>
+          <input type="file" id="validatorFile" accept=".json" style="display:none;">
         </div>
 
-        <div class="drop-zone" id="validatorDrop">
-          <span class="drop-icon">📂</span>
-          <span>Arraste um arquivo JSON aqui ou clique para selecionar</span>
-          <input type="file" id="validatorFile" accept=".json" style="display:none;">
+        <div class="editor-wrap" id="validatorInputWrap">
+          <div class="editor-badge">
+            <span class="badge badge-empty" id="validatorBadge">aguardando JSON</span>
+          </div>
+          <div class="editor editor-compact">
+            <pre class="editor-highlight" id="validatorHighlight" aria-hidden="true"></pre>
+            <textarea class="editor-input" id="validatorJsonInput" spellcheck="false"
+              placeholder='Cole aqui ou arraste um arquivo JSON para validar...'></textarea>
+          </div>
         </div>
 
         <div class="validator-stats" id="validatorStats" hidden></div>
         <div class="validator-result" id="validatorResult">
-          <div class="validator-empty">Cole um JSON no importador acima ou arraste um arquivo aqui para validar.</div>
+          <div class="validator-empty">Cole um JSON acima, arraste um arquivo ou use "Copiar do importador".</div>
         </div>
       </div>
     </div>
@@ -370,7 +360,7 @@ function setProgress(active) {
 }
 
 /* ============================================================
-   JSON SYNTAX HIGHLIGHT
+   JSON HIGHLIGHT
    ============================================================ */
 function escapeHTML(s) {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -382,9 +372,8 @@ function highlightJSON(str) {
     /("(?:\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
     m => {
       let cls = 'tok-num';
-      if (/^"/.test(m)) {
-        cls = /:$/.test(m) ? 'tok-key' : 'tok-str';
-      } else if (/true|false/.test(m)) cls = 'tok-bool';
+      if (/^"/.test(m)) cls = /:$/.test(m) ? 'tok-key' : 'tok-str';
+      else if (/true|false/.test(m)) cls = 'tok-bool';
       else if (/null/.test(m)) cls = 'tok-null';
       return `<span class="${cls}">${m}</span>`;
     }
@@ -396,10 +385,8 @@ function highlightJSON(str) {
    ============================================================ */
 function setupEditor(textarea, highlight) {
   function refresh() {
-    let text = textarea.value;
-    if (!text) { highlight.innerHTML = ''; return; }
-    // Adiciona um zero-width para garantir última linha visível
-    highlight.innerHTML = highlightJSON(text) + '\n';
+    const text = textarea.value;
+    highlight.innerHTML = text ? (highlightJSON(text) + '\n') : '';
   }
   textarea.addEventListener('input', refresh);
   textarea.addEventListener('scroll', () => {
@@ -411,7 +398,7 @@ function setupEditor(textarea, highlight) {
 }
 
 /* ============================================================
-   VALIDAÇÃO (código original preservado)
+   VALIDAÇÃO (código preservado)
    ============================================================ */
 function validarTextoLogico(textoLogico, acaoChegadaEsperada) {
   const erros = [];
@@ -419,7 +406,6 @@ function validarTextoLogico(textoLogico, acaoChegadaEsperada) {
     erros.push('texto vazio ou nulo');
     return erros;
   }
-
   if (acaoChegadaEsperada && acaoChegadaEsperada !== "MULTIPLAS_ENTRADAS" && acaoChegadaEsperada !== "SEM_ENTRADA") {
     const padraoEsperado = new RegExp(
       `^Depois de ${acaoChegadaEsperada.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'i');
@@ -441,15 +427,12 @@ function validarTextoLogico(textoLogico, acaoChegadaEsperada) {
       erros.push('sala de entrada não deve ter âncora de chegada');
     }
   }
-
   if (acaoChegadaEsperada && acaoChegadaEsperada !== "MULTIPLAS_ENTRADAS" && acaoChegadaEsperada !== "SEM_ENTRADA") {
     const stopwords = ['para', 'pela', 'pelo', 'com', 'como', 'sobre', 'entre', 'trás', 'frente', 'lado'];
     const palavrasChave = acaoChegadaEsperada
       .toLowerCase()
       .replace(/^(subir|descer|atravessar|rastejar|passar|entrar|avançar|cruzar|caminhar|voltar)\s+/i, '')
-      .split(/\s+/)
-      .filter(p => p.length > 3 && !stopwords.includes(p));
-
+      .split(/\s+/).filter(p => p.length > 3 && !stopwords.includes(p));
     if (palavrasChave.length > 0) {
       const primeiraSentenca = textoLogico.split(/[.!?]/)[0] || '';
       const restoDoTexto = textoLogico.slice(primeiraSentenca.length);
@@ -471,7 +454,6 @@ function corrigirAncoragem(textoLogico, acaoChegada) {
   }
   const texto = textoLogico.trim();
   const ancoramentoGenerico = /^você (se encontra|está|fica|nota|percebe|avança|para diante)/i;
-
   if (acaoChegada && acaoChegada !== "MULTIPLAS_ENTRADAS" && acaoChegada !== "SEM_ENTRADA") {
     if (ancoramentoGenerico.test(texto) || !/^Depois de|^Ao avançar/i.test(texto)) {
       const verboCorrido = acaoChegada.toLowerCase();
@@ -564,12 +546,10 @@ function validarPlanoTopologia(plano, salaInicio, salaFim) {
     return saidasParaFrente.length >= 3;
   });
   if (!temHub) erros.push('Nenhum hub encontrado. Mapa é linear — rejeitado.');
-
   const salaFronteira = Object.entries(plano).find(([_, s]) => s.para_proxima_zona === true);
   if (!salaFronteira) erros.push(`Nenhuma sala de fronteira (para_proxima_zona: true).`);
   else if (Number(salaFronteira[0]) !== salaFim)
     erros.push(`Fronteira está em sala ${salaFronteira[0]}, deveria estar em ${salaFim}.`);
-
   let totalVertices = 0, totalArestas = 0;
   for (const [idStr, sala] of Object.entries(plano)) {
     const id = Number(idStr);
@@ -594,8 +574,7 @@ function validarDensidadeAmbiental(textoLogico, opcoes) {
     const nucleo = acao
       .toLowerCase()
       .replace(/^(subir|descer|atravessar|rastejar|passar|entrar|avançar|cruzar|caminhar|voltar|sair|abrir|fechar)\s+/i, '')
-      .replace(/^(pela|pelo|para a|para o|na|no|em|uma|um)\s+/i, '')
-      .trim();
+      .replace(/^(pela|pelo|para a|para o|na|no|em|uma|um)\s+/i, '').trim();
     if (!nucleo) continue;
     const palavrasNucleo = nucleo.split(/\s+/);
     let encontrado = false;
@@ -611,89 +590,51 @@ function validarDensidadeAmbiental(textoLogico, opcoes) {
 function validarCenas(cenas, plano, salaInicio, salaFim) {
   const erros = [];
   const avisos = [];
-
-  if (!Array.isArray(cenas)) {
-    erros.push('campo "cenas" não é um array.');
-    return { erros, avisos };
-  }
-
+  if (!Array.isArray(cenas)) { erros.push('campo "cenas" não é um array.'); return { erros, avisos }; }
   const idsInternos = [];
   for (let i = 2; i <= 9; i++) idsInternos.push(i);
   const cenasPorSala = cenas.map(c => c.sala_id).filter(id => idsInternos.includes(id));
-  if (cenasPorSala.length < 2) {
-    avisos.push(`Número de cenas (${cenasPorSala.length}) é menor que 2. Recomenda-se 2-3.`);
-  } else if (cenasPorSala.length > 3) {
-    avisos.push(`Número de cenas (${cenasPorSala.length}) é maior que 3. Recomenda-se 2-3.`);
-  }
+  if (cenasPorSala.length < 2) avisos.push(`Número de cenas (${cenasPorSala.length}) é menor que 2. Recomenda-se 2-3.`);
+  else if (cenasPorSala.length > 3) avisos.push(`Número de cenas (${cenasPorSala.length}) é maior que 3. Recomenda-se 2-3.`);
 
   for (let idx = 0; idx < cenas.length; idx++) {
     const cena = cenas[idx];
     const prefixo = `Cena ${idx + 1} (sala ${cena.sala_id || '?'})`;
-
-    if (!cena.sala_id || typeof cena.sala_id !== 'number') {
-      erros.push(`${prefixo}: sala_id inválido ou ausente.`);
-      continue;
-    }
+    if (!cena.sala_id || typeof cena.sala_id !== 'number') { erros.push(`${prefixo}: sala_id inválido ou ausente.`); continue; }
     const salaId = cena.sala_id;
-    if (!plano[String(salaId)]) {
-      erros.push(`${prefixo}: sala_id ${salaId} não existe no plano.`);
-      continue;
-    }
-    if (salaId === 1 || salaId === salaFim) {
-      erros.push(`${prefixo}: sala_id não pode ser entrada (1) ou fronteira (${salaFim}).`);
-    }
-
-    if (!cena.titulo || typeof cena.titulo !== 'string' || cena.titulo.trim() === '') {
-      erros.push(`${prefixo}: titulo ausente ou vazio.`);
-    }
-
+    if (!plano[String(salaId)]) { erros.push(`${prefixo}: sala_id ${salaId} não existe no plano.`); continue; }
+    if (salaId === 1 || salaId === salaFim) erros.push(`${prefixo}: sala_id não pode ser entrada (1) ou fronteira (${salaFim}).`);
+    if (!cena.titulo || typeof cena.titulo !== 'string' || cena.titulo.trim() === '') erros.push(`${prefixo}: titulo ausente ou vazio.`);
     if (!cena.texto_evento || typeof cena.texto_evento !== 'string' || cena.texto_evento.trim() === '') {
       erros.push(`${prefixo}: texto_evento ausente ou vazio.`);
     } else {
       const limpo = cena.texto_evento.replace(/<[^>]+>/g, '');
       const frases = limpo.split(/[.!?]+/).filter(s => s.trim().length > 0);
-      if (frases.length < 3 || frases.length > 5) {
-        avisos.push(`${prefixo}: texto_evento deve ter 3-4 frases (tem ${frases.length}).`);
-      }
+      if (frases.length < 3 || frases.length > 5) avisos.push(`${prefixo}: texto_evento deve ter 3-4 frases (tem ${frases.length}).`);
       const cliches = [/de repente/i, /frio na espinha/i, /bilhete/i, /papel/i, /mensagem/i, /escrita/i];
-      for (const cli of cliches) {
-        if (cli.test(limpo)) erros.push(`${prefixo}: texto_evento contém clichê proibido: "${cli.source}"`);
-      }
+      for (const cli of cliches) if (cli.test(limpo)) erros.push(`${prefixo}: texto_evento contém clichê proibido: "${cli.source}"`);
       const metaforas = [/ganha peso/i, /ganha vida/i, /espera por alguém/i, /a escuridão/i];
-      for (const meta of metaforas) {
-        if (meta.test(limpo)) avisos.push(`${prefixo}: possível metáfora de intenção no texto_evento: "${meta.source}"`);
-      }
+      for (const meta of metaforas) if (meta.test(limpo)) avisos.push(`${prefixo}: possível metáfora de intenção no texto_evento: "${meta.source}"`);
     }
-
     if (!cena.dilemas || !Array.isArray(cena.dilemas) || cena.dilemas.length === 0) {
       erros.push(`${prefixo}: dilemas deve ser um array não vazio.`);
       continue;
     }
-
     let qtdRamificacoes = 0;
     for (const dilema of cena.dilemas) {
-      if (dilema.ramificacoes && Array.isArray(dilema.ramificacoes) && dilema.ramificacoes.length > 0) {
-        qtdRamificacoes++;
-      }
+      if (dilema.ramificacoes && Array.isArray(dilema.ramificacoes) && dilema.ramificacoes.length > 0) qtdRamificacoes++;
     }
-    if (qtdRamificacoes !== 1) {
-      erros.push(`${prefixo}: deve haver exatamente 1 dilema com ramificações (encontrado ${qtdRamificacoes}).`);
-    }
+    if (qtdRamificacoes !== 1) erros.push(`${prefixo}: deve haver exatamente 1 dilema com ramificações (encontrado ${qtdRamificacoes}).`);
 
     let hasHighDamage = false;
     for (let dIdx = 0; dIdx < cena.dilemas.length; dIdx++) {
       const dilema = cena.dilemas[dIdx];
       const dp = `${prefixo} dilema ${dIdx + 1}`;
-
-      if (!dilema.opcao_texto || typeof dilema.opcao_texto !== 'string' || dilema.opcao_texto.trim() === '') {
-        erros.push(`${dp}: opcao_texto ausente ou vazio.`);
-      }
+      if (!dilema.opcao_texto || typeof dilema.opcao_texto !== 'string' || dilema.opcao_texto.trim() === '') erros.push(`${dp}: opcao_texto ausente ou vazio.`);
       if (!dilema.resultado_texto || typeof dilema.resultado_texto !== 'string' || dilema.resultado_texto.trim() === '') {
         erros.push(`${dp}: resultado_texto ausente ou vazio.`);
       } else {
-        if (/perde\s+\d+\s+de\s+energia/i.test(dilema.resultado_texto)) {
-          erros.push(`${dp}: resultado_texto menciona perda de energia diretamente (proibido).`);
-        }
+        if (/perde\s+\d+\s+de\s+energia/i.test(dilema.resultado_texto)) erros.push(`${dp}: resultado_texto menciona perda de energia diretamente (proibido).`);
       }
       if (dilema.dano === undefined || typeof dilema.dano !== 'number' || dilema.dano < 0 || dilema.dano > 20) {
         erros.push(`${dp}: dano deve ser inteiro entre 0 e 20 (recebido ${dilema.dano}).`);
@@ -704,90 +645,59 @@ function validarCenas(cenas, plano, salaInicio, salaFim) {
         const dest = dilema.destino_id;
         const saidas = plano[String(salaId)]?.saidas || [];
         const destinosValidos = saidas.map(s => s.destino);
-        if (!destinosValidos.includes(dest)) {
-          erros.push(`${dp}: destino_id ${dest} não é uma saída válida da sala ${salaId}.`);
-        }
+        if (!destinosValidos.includes(dest)) erros.push(`${dp}: destino_id ${dest} não é uma saída válida da sala ${salaId}.`);
         const verbosLocomocao = /\b(sair|subir|descer|atravessar|seguir|caminhar|passar|entrar|voltar|rastejar|escalar|saltar)\b/i;
-        if (verbosLocomocao.test(dilema.opcao_texto)) {
-          erros.push(`${dp}: opção com destino_id contém verbo de locomoção (proibido).`);
-        }
+        if (verbosLocomocao.test(dilema.opcao_texto)) erros.push(`${dp}: opção com destino_id contém verbo de locomoção (proibido).`);
       }
-
       const ram = dilema.ramificacoes;
       if (ram !== null && !Array.isArray(ram)) {
         erros.push(`${dp}: ramificacoes deve ser null ou array.`);
       } else if (Array.isArray(ram)) {
-        if (ram.length < 2 || ram.length > 3) {
-          avisos.push(`${dp}: ramificacoes deve ter 2-3 itens (tem ${ram.length}).`);
-        }
+        if (ram.length < 2 || ram.length > 3) avisos.push(`${dp}: ramificacoes deve ter 2-3 itens (tem ${ram.length}).`);
         for (let rIdx = 0; rIdx < ram.length; rIdx++) {
           const r = ram[rIdx];
           const rp = `${dp} ramificação ${rIdx + 1}`;
-          if (!r.opcao_texto || typeof r.opcao_texto !== 'string' || r.opcao_texto.trim() === '') {
-            erros.push(`${rp}: opcao_texto ausente ou vazio.`);
-          }
+          if (!r.opcao_texto || typeof r.opcao_texto !== 'string' || r.opcao_texto.trim() === '') erros.push(`${rp}: opcao_texto ausente ou vazio.`);
           if (!r.resultado_texto || typeof r.resultado_texto !== 'string' || r.resultado_texto.trim() === '') {
             erros.push(`${rp}: resultado_texto ausente ou vazio.`);
           } else {
-            if (/perde\s+\d+\s+de\s+energia/i.test(r.resultado_texto)) {
-              erros.push(`${rp}: resultado_texto menciona perda de energia diretamente (proibido).`);
-            }
+            if (/perde\s+\d+\s+de\s+energia/i.test(r.resultado_texto)) erros.push(`${rp}: resultado_texto menciona perda de energia diretamente (proibido).`);
           }
           if (r.dano === undefined || typeof r.dano !== 'number' || r.dano < 0 || r.dano > 20) {
             erros.push(`${rp}: dano deve ser inteiro entre 0 e 20 (recebido ${r.dano}).`);
-          } else if (r.dano >= 8) {
-            hasHighDamage = true;
-          }
+          } else if (r.dano >= 8) hasHighDamage = true;
           if (r.destino_id !== null && typeof r.destino_id !== 'number') {
             erros.push(`${rp}: destino_id deve ser null ou número.`);
           } else if (r.destino_id !== null) {
             const dest = r.destino_id;
             const saidas = plano[String(salaId)]?.saidas || [];
             const destinosValidos = saidas.map(s => s.destino);
-            if (!destinosValidos.includes(dest)) {
-              erros.push(`${rp}: destino_id ${dest} não é uma saída válida da sala ${salaId}.`);
-            }
-            if (dest <= salaId) {
-              erros.push(`${rp}: destino_id ${dest} aponta para trás ou para a própria sala ${salaId}. Só é permitido avanço.`);
-            }
+            if (!destinosValidos.includes(dest)) erros.push(`${rp}: destino_id ${dest} não é uma saída válida da sala ${salaId}.`);
+            if (dest <= salaId) erros.push(`${rp}: destino_id ${dest} aponta para trás ou para a própria sala ${salaId}. Só é permitido avanço.`);
             const verbosLocomocao = /\b(sair|subir|descer|atravessar|seguir|caminhar|passar|entrar|voltar|rastejar|escalar|saltar)\b/i;
-            if (verbosLocomocao.test(r.opcao_texto)) {
-              erros.push(`${rp}: opção com destino_id contém verbo de locomoção (proibido).`);
-            }
+            if (verbosLocomocao.test(r.opcao_texto)) erros.push(`${rp}: opção com destino_id contém verbo de locomoção (proibido).`);
           }
         }
       }
-
       if (Array.isArray(ram) && ram.length > 0) {
-        if (dilema.dano !== 0) {
-          erros.push(`${dp}: dilema-pai com ramificações deve ter dano = 0 (tem ${dilema.dano}).`);
-        }
+        if (dilema.dano !== 0) erros.push(`${dp}: dilema-pai com ramificações deve ter dano = 0 (tem ${dilema.dano}).`);
         const frasesPai = (dilema.resultado_texto || '').replace(/<[^>]+>/g, '').split(/[.!?]+/).filter(s => s.trim().length > 0);
-        if (frasesPai.length < 2 || frasesPai.length > 4) {
-          avisos.push(`${dp}: resultado_texto do pai deve ter 2-3 frases (tem ${frasesPai.length}).`);
-        }
+        if (frasesPai.length < 2 || frasesPai.length > 4) avisos.push(`${dp}: resultado_texto do pai deve ter 2-3 frases (tem ${frasesPai.length}).`);
       }
     }
-
-    if (!hasHighDamage) {
-      erros.push(`${prefixo}: nenhuma ramificação ou consequência tem dano Alto (>=8) - obrigatório.`);
-    }
-
+    if (!hasHighDamage) erros.push(`${prefixo}: nenhuma ramificação ou consequência tem dano Alto (>=8) - obrigatório.`);
     const salaTexto = plano[String(salaId)]?.texto_logico || '';
     if (salaTexto && cena.texto_evento) {
       const limpo = cena.texto_evento.replace(/<[^>]+>/g, '');
       const palavrasAmbiente = /(chão|parede|teto|porta|janela|móvel|objeto|corredor|escada|azulejo|gaveta|mesa|cadeira|sofá|armário|lâmpada|fio|canalização|vidro|ferro|madeira|pedra|concreto|tinta|papel|desinfetante|mofo|ferrugem|cheiro|sombra|luz|escuro|claro)/i;
-      if (palavrasAmbiente.test(limpo)) {
-        avisos.push(`${prefixo}: texto_evento pode estar descrevendo ambiente (deveria focar na entidade/ação).`);
-      }
+      if (palavrasAmbiente.test(limpo)) avisos.push(`${prefixo}: texto_evento pode estar descrevendo ambiente (deveria focar na entidade/ação).`);
     }
   }
-
   return { erros, avisos };
 }
 
 /* ============================================================
-   IMPORTAÇÃO — utilitários originais
+   IMPORTAÇÃO — utilitários
    ============================================================ */
 function expurgarViciosIA(texto) {
   if (!texto) return texto;
@@ -838,9 +748,7 @@ const POOL_SUSPEITAS = [
 function preservarCamposRuntime(salaNova, salaExistente) {
   if (!salaExistente) return salaNova;
   for (const campo of CAMPOS_PRESERVADOS_DA_SALA) {
-    if (salaExistente[campo] !== undefined) {
-      salaNova[campo] = salaExistente[campo];
-    }
+    if (salaExistente[campo] !== undefined) salaNova[campo] = salaExistente[campo];
   }
   if (Array.isArray(salaExistente.itens) && salaExistente.itens.length > 0) {
     if (!Array.isArray(salaNova.itens)) salaNova.itens = [];
@@ -854,7 +762,6 @@ function preservarCamposRuntime(salaNova, salaExistente) {
 function distribuirSuspeitas(mapaMundo, logFn) {
   const elegiveis = [];
   const comInterceptor = [];
-
   for (const salaId in mapaMundo) {
     const sala = mapaMundo[salaId];
     if (!sala.opcoes) continue;
@@ -864,19 +771,16 @@ function distribuirSuspeitas(mapaMundo, logFn) {
       if (op.interceptor_arquiteto) comInterceptor.push({ salaId, op });
     }
   }
-
   if (comInterceptor.length === 0) {
     logFn(`🔍 Suspeitas: nenhuma saída com interceptor — nada sinalizado nesta zona.`, 'info');
     return;
   }
-
   const pool = [...POOL_SUSPEITAS];
   for (let i = pool.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [pool[i], pool[j]] = [pool[j], pool[i]];
   }
   const frases = pool.slice(0, 3);
-
   let idxFrase = 0;
   for (const { salaId, op } of comInterceptor) {
     op.suspeita_frase = frases[idxFrase % frases.length];
@@ -884,14 +788,12 @@ function distribuirSuspeitas(mapaMundo, logFn) {
     logFn(`🔍 [REAL] Sala ${salaId} → saída "${op.texto}" | frase: "${op.suspeita_frase}"`, 'warn');
     idxFrase++;
   }
-
   const candidatasFalsas = elegiveis.filter(e => !e.op.interceptor_arquiteto);
   for (let i = candidatasFalsas.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [candidatasFalsas[i], candidatasFalsas[j]] = [candidatasFalsas[j], candidatasFalsas[i]];
   }
   const numFalsas = Math.min(2, candidatasFalsas.length);
-
   for (let k = 0; k < numFalsas; k++) {
     const { salaId, op } = candidatasFalsas[k];
     op.suspeita_frase = frases[idxFrase % frases.length];
@@ -899,7 +801,6 @@ function distribuirSuspeitas(mapaMundo, logFn) {
     logFn(`🔍 [ISCA] Sala ${salaId} → saída "${op.texto}" | frase: "${op.suspeita_frase}"`, 'info');
     idxFrase++;
   }
-
   logFn(`🔍 Suspeitas distribuídas: ${comInterceptor.length} real(is) + ${numFalsas} isca(s).`, 'ok');
 }
 
@@ -910,7 +811,6 @@ async function importarParaFirestore(dados, uid, logFn) {
   const plano = dados.plano || {};
   const salas = dados.salas || {};
   const cenas = dados.cenas || [];
-
   const mapaMundo = {};
   for (const [id, sala] of Object.entries(salas)) {
     const planoItem = plano[id];
@@ -925,41 +825,33 @@ async function importarParaFirestore(dados, uid, logFn) {
       opcoes: opcoes
     };
   }
-
   for (const cena of cenas) {
     const salaId = String(cena.sala_id);
     const sala = mapaMundo[salaId];
     if (!sala) { logFn(`⚠️ Cena para sala ${salaId} ignorada: sala não existe.`, 'warn'); continue; }
-
     const titulo = (cena.titulo || 'Evento Inesperado').trim();
     const textoEvento = expurgarViciosIA((cena.texto_evento || '').trim());
     if (!textoEvento) { logFn(`⚠️ Cena "${titulo}" (sala ${salaId}) sem texto_evento — ignorada.`, 'warn'); continue; }
-
     let textoBase = expurgarViciosIA((sala.texto_logico || '').trim());
     sala.texto_logico = `${textoBase.replace(/[.\s]+$/, '')}. ${textoEvento}`;
     sala.cena_titulo = titulo;
     sala.cena_aplicada = true;
-
     if (!sala.opcoes) sala.opcoes = [];
     const salaIdNum = parseInt(salaId);
     const destinosValidos = new Set(
       (sala.opcoes || []).filter(o => o.destino && !o.arquiteto && o.destino > salaIdNum).map(o => String(o.destino))
     );
-
     const dilemas = Array.isArray(cena.dilemas) ? cena.dilemas : [];
     for (const dilema of dilemas) {
       const opcaoTexto = (dilema.opcao_texto || 'Observar com cautela').trim();
       const narrativaBruta = expurgarViciosIA((dilema.resultado_texto || '').trim());
       if (!narrativaBruta) continue;
-
       const dano = typeof dilema.dano === 'number' ? Math.min(20, Math.max(0, Math.round(dilema.dano))) : 0;
       const resultadoTexto = dano > 0
         ? `${narrativaBruta.replace(/[.\s]+$/, '')}. Você perde ${dano} de energia.`
         : narrativaBruta;
-
       const destinoRaw = dilema.destino_id ? String(dilema.destino_id) : null;
       const destinoValidado = (destinoRaw && destinosValidos.has(destinoRaw)) ? parseInt(destinoRaw) : null;
-
       const ramsRaw = Array.isArray(dilema.ramificacoes) ? dilema.ramificacoes : [];
       const ramificacoes = ramsRaw
         .filter(r => r.opcao_texto && r.resultado_texto)
@@ -977,7 +869,6 @@ async function importarParaFirestore(dados, uid, logFn) {
             destino: rDestino
           };
         });
-
       sala.opcoes.push({
         texto: opcaoTexto,
         arquiteto: true,
@@ -991,38 +882,25 @@ async function importarParaFirestore(dados, uid, logFn) {
     }
     logFn(`🎭 "${titulo}" → Sala ${salaId} | texto_evento injetado, ${dilemas.length} dilema(s) processado(s)`, 'ok');
   }
-
   const salasComCena = new Set(cenas.map(c => String(c.sala_id)));
   const perigos = Array.isArray(dados.perigos) ? dados.perigos : [];
-
   for (const perigo of perigos) {
     const salaId = String(perigo.sala_id);
     const sala = mapaMundo[salaId];
     if (!sala) { logFn(`⚠️ Perigo para sala ${salaId} ignorado: sala não existe.`, 'warn'); continue; }
-
-    if (salasComCena.has(salaId)) {
-      logFn(`⚠️ Sala ${salaId} tem cena E perigo — não deveria acontecer. Injetando mesmo assim.`, 'warn');
-    }
-
+    if (salasComCena.has(salaId)) logFn(`⚠️ Sala ${salaId} tem cena E perigo — não deveria acontecer. Injetando mesmo assim.`, 'warn');
     const narrativaBruta = (perigo.resultado_texto || '').trim();
     if (!narrativaBruta) { logFn(`⚠️ Perigo na sala ${salaId} sem resultado_texto — ignorado.`, 'warn'); continue; }
-
     const dano = typeof perigo.dano === 'number' ? Math.min(50, Math.max(0, Math.round(perigo.dano))) : 0;
     const resultadoTexto = dano > 0
       ? `${narrativaBruta.replace(/[.\s]+$/, '')}. Você perde ${dano} de energia.`
       : narrativaBruta;
     const tipoResultado = perigo.tipo_resultado || 'neutro';
-
     if (!sala.opcoes) sala.opcoes = [];
-
     if (perigo.tipo === 'nova_opcao') {
       sala.opcoes.push({
         texto: perigo.opcao_texto || 'Examinar anomalia',
-        arquiteto: true,
-        resultado_texto: resultadoTexto,
-        dano,
-        tipo_resultado: tipoResultado,
-        disparado: false
+        arquiteto: true, resultado_texto: resultadoTexto, dano, tipo_resultado: tipoResultado, disparado: false
       });
       logFn(`☠️ Nova opção "${perigo.opcao_texto}" (dano ${dano}) → Sala ${salaId}`, 'ok');
     } else if (perigo.tipo === 'interceptor') {
@@ -1033,11 +911,7 @@ async function importarParaFirestore(dados, uid, logFn) {
       } else {
         sala.opcoes.push({
           texto: perigo.opcao_texto || 'Investigar caminho obstruído',
-          arquiteto: true,
-          resultado_texto: resultadoTexto,
-          dano,
-          tipo_resultado: tipoResultado,
-          disparado: false
+          arquiteto: true, resultado_texto: resultadoTexto, dano, tipo_resultado: tipoResultado, disparado: false
         });
         logFn(`⚠️ Interceptor "${perigo.opcao_texto}" não bateu com nenhuma saída da sala ${salaId} — fallback.`, 'warn');
       }
@@ -1045,18 +919,14 @@ async function importarParaFirestore(dados, uid, logFn) {
       logFn(`⚠️ Perigo na sala ${salaId} com tipo desconhecido ("${perigo.tipo}") — ignorado.`, 'warn');
     }
   }
-
   distribuirSuspeitas(mapaMundo, logFn);
-
   if (Object.keys(mapaMundo).length === 0) {
     throw new Error('Nenhuma sala válida foi montada (faltam "plano" e/ou "salas"). NADA foi salvo.');
   }
-
   const docRef = db.collection('players').doc(uid);
   const docSnap = await docRef.get();
   const dadosAtuais = docSnap.data() || {};
   const mapaMundoAtual = dadosAtuais.mapaMundo || {};
-
   const updatePayload = {};
   for (const [id, salaNova] of Object.entries(mapaMundo)) {
     const salaExistente = mapaMundoAtual[id];
@@ -1067,12 +937,10 @@ async function importarParaFirestore(dados, uid, logFn) {
       if (campos.length > 0) logFn(`🔄 Sala ${id}: preservados do Firestore → ${campos.join(', ')}`, 'info');
     }
   }
-
   if (mapaMundo["1"] && !dadosAtuais.zonaAtual) {
     updatePayload["zonaAtual"] = 1;
     updatePayload["secaoAtualId"] = "1";
   }
-
   await docRef.update(updatePayload);
   return { mapaMundo };
 }
@@ -1084,17 +952,14 @@ async function importarPerigosNoMapaAtual(perigos, uid, logFn) {
   const docRef = db.collection('players').doc(uid);
   const docSnap = await docRef.get();
   if (!docSnap.exists) throw new Error('Nenhum documento do jogador encontrado. Importe a zona primeiro.');
-
   const dadosAtuais = docSnap.data() || {};
   const mapaMundoAtual = dadosAtuais.mapaMundo || {};
   const mapaTrabalho = JSON.parse(JSON.stringify(mapaMundoAtual));
   const salasTocadas = new Set();
-
   for (const perigo of perigos) {
     const salaId = String(perigo.sala_id);
     const salaModificada = mapaTrabalho[salaId];
     if (!salaModificada) { logFn(`⚠️ Perigo para sala ${salaId} ignorado: sala não existe no Firestore.`, 'warn'); continue; }
-
     if (!salasTocadas.has(salaId)) {
       if (salaModificada.opcoes) {
         salaModificada.opcoes = salaModificada.opcoes.filter(op => !(op.arquiteto === true && !op.dilema));
@@ -1102,24 +967,18 @@ async function importarPerigosNoMapaAtual(perigos, uid, logFn) {
       }
       salasTocadas.add(salaId);
     }
-
     const narrativaBruta = (perigo.resultado_texto || '').trim();
     if (!narrativaBruta) { logFn(`⚠️ Perigo na sala ${salaId} sem resultado_texto — ignorado.`, 'warn'); continue; }
-
     const dano = typeof perigo.dano === 'number' ? Math.min(50, Math.max(0, Math.round(perigo.dano))) : 0;
     const resultadoTexto = dano > 0
       ? `${narrativaBruta.replace(/[.\s]+$/, '')}. Você perde ${dano} de energia.`
       : narrativaBruta;
     const tipoResultado = perigo.tipo_resultado || 'neutro';
-
     if (!salaModificada.opcoes) salaModificada.opcoes = [];
-
     if (perigo.tipo === 'nova_opcao') {
       salaModificada.opcoes.push({
         texto: perigo.opcao_texto || 'Examinar anomalia',
-        arquiteto: true,
-        resultado_texto: resultadoTexto,
-        dano, tipo_resultado: tipoResultado, disparado: false
+        arquiteto: true, resultado_texto: resultadoTexto, dano, tipo_resultado: tipoResultado, disparado: false
       });
     } else if (perigo.tipo === 'interceptor') {
       const alvo = salaModificada.opcoes.find(o => o.texto === perigo.opcao_texto && o.destino && !o.arquiteto);
@@ -1136,16 +995,13 @@ async function importarPerigosNoMapaAtual(perigos, uid, logFn) {
       continue;
     }
   }
-
   distribuirSuspeitas(mapaTrabalho, logFn);
-
   const updatePayload = {};
   for (const salaId of salasTocadas) {
     updatePayload[`mapaMundo.${salaId}`] = mapaTrabalho[salaId];
     logFn(`🔄 Sala ${salaId}: perigos substituídos/inseridos.`, 'info');
   }
   if (Object.keys(updatePayload).length === 0) throw new Error('Nenhuma sala válida para atualizar perigos.');
-
   await docRef.update(updatePayload);
   return { atualizadas: [...salasTocadas] };
 }
@@ -1157,20 +1013,16 @@ async function importarPuzzles(dadosPuzzle, uid, logFn) {
   const docRef = db.collection('players').doc(uid);
   const docSnap = await docRef.get();
   if (!docSnap.exists) throw new Error('Nenhum documento do jogador encontrado. Importe a zona primeiro.');
-
   const dadosAtuais = docSnap.data() || {};
   const mapaMundoAtual = dadosAtuais.mapaMundo || {};
   const updatePayload = {};
-
   const mapaTrabalho = JSON.parse(JSON.stringify(mapaMundoAtual));
   const salasTocadas = new Set();
-
   function obterSala(salaId) {
     if (!mapaTrabalho[salaId]) return null;
     salasTocadas.add(salaId);
     return mapaTrabalho[salaId];
   }
-
   if (dadosPuzzle.itens_novos && Object.keys(dadosPuzzle.itens_novos).length > 0) {
     const itensNovosAtuais = dadosAtuais.itens_novos || {};
     for (const [id, def] of Object.entries(dadosPuzzle.itens_novos)) {
@@ -1179,7 +1031,6 @@ async function importarPuzzles(dadosPuzzle, uid, logFn) {
     updatePayload['itens_novos'] = itensNovosAtuais;
     logFn(`🧩 ${Object.keys(dadosPuzzle.itens_novos).length} novo(s) item(ns) adicionado(s).`, 'ok');
   }
-
   if (dadosPuzzle.textos_modificados) {
     for (const [salaId, novoTexto] of Object.entries(dadosPuzzle.textos_modificados)) {
       const sala = obterSala(salaId);
@@ -1188,7 +1039,6 @@ async function importarPuzzles(dadosPuzzle, uid, logFn) {
       logFn(`📝 Sala ${salaId}: texto_logico atualizado.`, 'info');
     }
   }
-
   if (dadosPuzzle.itens_adicionados) {
     for (const [salaId, itensIds] of Object.entries(dadosPuzzle.itens_adicionados)) {
       const sala = obterSala(salaId);
@@ -1198,7 +1048,6 @@ async function importarPuzzles(dadosPuzzle, uid, logFn) {
       logFn(`📦 Sala ${salaId}: itens adicionados: ${itensIds.join(', ')}.`, 'info');
     }
   }
-
   if (dadosPuzzle.descricoes_itens_ativos) {
     for (const [salaId, mapaItens] of Object.entries(dadosPuzzle.descricoes_itens_ativos)) {
       const sala = obterSala(salaId);
@@ -1208,7 +1057,6 @@ async function importarPuzzles(dadosPuzzle, uid, logFn) {
       logFn(`🔎 Sala ${salaId}: ${Object.keys(mapaItens).length} descrição(ões) registrada(s).`, 'info');
     }
   }
-
   if (dadosPuzzle.saidas_sequestradas) {
     for (const [salaId, destinoId] of Object.entries(dadosPuzzle.saidas_sequestradas)) {
       const sala = obterSala(salaId);
@@ -1219,12 +1067,10 @@ async function importarPuzzles(dadosPuzzle, uid, logFn) {
       logFn(`🔒 Sala ${salaId}: rota para ${destinoId} sequestrada (${antes - sala.opcoes.length} saída(s) removida(s)).`, 'ok');
     }
   }
-
   if (dadosPuzzle.puzzles) {
     for (const [salaId, puzzleData] of Object.entries(dadosPuzzle.puzzles)) {
       const sala = obterSala(salaId);
       if (!sala) { logFn(`⚠️ Sala ${salaId} não encontrada para aplicar puzzle.`, 'warn'); continue; }
-
       if (puzzleData.estados) {
         if (!sala.estados) sala.estados = {};
         Object.assign(sala.estados, puzzleData.estados);
@@ -1240,18 +1086,14 @@ async function importarPuzzles(dadosPuzzle, uid, logFn) {
       logFn(`🧩 Sala ${salaId}: puzzle aplicado (${Object.keys(puzzleData).join(', ')}).`, 'ok');
     }
   }
-
-  for (const salaId of salasTocadas) {
-    updatePayload[`mapaMundo.${salaId}`] = mapaTrabalho[salaId];
-  }
+  for (const salaId of salasTocadas) updatePayload[`mapaMundo.${salaId}`] = mapaTrabalho[salaId];
   if (Object.keys(updatePayload).length === 0) throw new Error('Nenhuma modificação de puzzle foi aplicada.');
-
   await docRef.update(updatePayload);
-  return { atualizadas: [...salaTocadas] };
+  return { atualizadas: [...salasTocadas] };
 }
 
 /* ============================================================
-   DETECÇÃO DE TIPO (para badge e preview)
+   DETECÇÃO DE TIPO
    ============================================================ */
 function detectarTipo(dados) {
   if (!dados || typeof dados !== 'object') return null;
@@ -1260,7 +1102,6 @@ function detectarTipo(dados) {
   const temPuzzles = !!(dados.saidas_sequestradas || dados.itens_novos ||
     dados.textos_modificados || dados.itens_adicionados ||
     dados.descricoes_itens_ativos || dados.puzzles);
-
   if (temZona) return 'zona';
   if (temPuzzles) return 'puzzles';
   if (temPerigos) return 'perigos';
@@ -1282,35 +1123,31 @@ function contarDados(dados) {
   return c;
 }
 
-function atualizarBadgeEPreview() {
-  const raw = $('jsonInput').value.trim();
-  const badge = $('mainBadge');
-  const preview = $('preview');
+/* ============================================================
+   BADGE GENÉRICO
+   ============================================================ */
+function atualizarBadge(inputEl, badgeEl) {
+  const raw = inputEl.value.trim();
   if (!raw) {
-    badge.className = 'badge badge-empty';
-    badge.textContent = 'aguardando JSON';
-    preview.hidden = true;
-    return;
+    badgeEl.className = 'badge badge-empty';
+    badgeEl.textContent = 'aguardando JSON';
+    return null;
   }
   let dados;
   try { dados = JSON.parse(raw); }
   catch (e) {
-    badge.className = 'badge badge-invalid';
-    badge.textContent = 'JSON inválido';
-    preview.hidden = true;
-    return;
+    badgeEl.className = 'badge badge-invalid';
+    badgeEl.textContent = 'JSON inválido';
+    return null;
   }
   const tipo = detectarTipo(dados);
   if (!tipo) {
-    badge.className = 'badge badge-invalid';
-    badge.textContent = 'não reconhecido';
-    preview.hidden = true;
-    return;
+    badgeEl.className = 'badge badge-invalid';
+    badgeEl.textContent = 'não reconhecido';
+    return null;
   }
   const labels = { zona: 'zona completa', perigos: 'perigos', puzzles: 'puzzles' };
-  badge.className = `badge badge-${tipo}`;
-  badge.textContent = labels[tipo];
-
+  badgeEl.className = `badge badge-${tipo}`;
   const c = contarDados(dados);
   const chips = [];
   if (c.salas) chips.push(`${c.salas} salas`);
@@ -1319,15 +1156,22 @@ function atualizarBadgeEPreview() {
   if (c.perigos) chips.push(`${c.perigos} perigos`);
   if (c.puzzles) chips.push(`${c.puzzles} puzzles`);
   if (c.itens_novos) chips.push(`${c.itens_novos} itens novos`);
+  badgeEl.textContent = labels[tipo] + (chips.length ? ' · ' + chips.join(' · ') : '');
+  return { dados, tipo, chips };
+}
 
+function atualizarBadgeEPreview() {
+  const info = atualizarBadge($('jsonInput'), $('mainBadge'));
+  const preview = $('preview');
+  if (!info) { preview.hidden = true; return; }
+  const labels = { zona: 'zona completa', perigos: 'perigos', puzzles: 'puzzles' };
   let acao = '';
-  if (tipo === 'zona') acao = 'Substitui o mapaMundo com as salas do JSON (preservando campos de runtime como puzzles, estados e itens).';
-  else if (tipo === 'perigos') acao = 'Apenas atualiza perigos no mapaMundo existente do Firestore.';
-  else if (tipo === 'puzzles') acao = 'Aplica puzzles, itens e modificações em salas já existentes.';
-
+  if (info.tipo === 'zona') acao = 'Substitui o mapaMundo com as salas do JSON (preservando campos de runtime como puzzles, estados e itens).';
+  else if (info.tipo === 'perigos') acao = 'Apenas atualiza perigos no mapaMundo existente do Firestore.';
+  else if (info.tipo === 'puzzles') acao = 'Aplica puzzles, itens e modificações em salas já existentes.';
   preview.hidden = false;
   preview.innerHTML = `
-    <div class="line"><span class="icon">🎯</span><span><strong>Tipo:</strong> ${labels[tipo]}${chips.length ? ' · ' + chips.join(' · ') : ''}</span></div>
+    <div class="line"><span class="icon">🎯</span><span><strong>Tipo:</strong> ${labels[info.tipo]}${info.chips.length ? ' · ' + info.chips.join(' · ') : ''}</span></div>
     <div class="line"><span class="icon">⚙️</span><span>${acao}</span></div>
     <div class="line"><span class="icon">🛡️</span><span>Campos de runtime serão preservados automaticamente do Firestore.</span></div>
   `;
@@ -1344,11 +1188,11 @@ function limparTudo() {
   $('importResult').innerHTML = '';
   $('validatorStats').hidden = true;
   $('validatorStats').innerHTML = '';
-  $('validatorResult').innerHTML = '<div class="validator-empty">Cole um JSON no importador acima ou arraste um arquivo aqui para validar.</div>';
+  $('validatorResult').innerHTML = '<div class="validator-empty">Cole um JSON acima, arraste um arquivo ou use "Copiar do importador".</div>';
   $('validatorBadges').innerHTML = '';
   localStorage.removeItem('centelha.console.jsonInput');
   localStorage.removeItem('centelha.console.perigosInput');
-  refreshEditorHighlight();
+  refreshMainHighlight();
   atualizarBadgeEPreview();
   toast('Campos limpos.', 'info');
 }
@@ -1359,14 +1203,12 @@ function limparTudo() {
 async function importarJSON() {
   const jsonStr = $('jsonInput').value.trim();
   const perigosStr = $('perigosInput').value.trim();
-
   if (!jsonStr) { toast('Cole o JSON principal.', 'warn'); return; }
 
   let dados;
   try { dados = JSON.parse(jsonStr); }
   catch (e) { toast('JSON principal inválido: ' + e.message, 'err'); return; }
 
-  // Mescla perigos do campo separado
   if (perigosStr) {
     let dp;
     try { dp = JSON.parse(perigosStr); }
@@ -1379,11 +1221,7 @@ async function importarJSON() {
   const temPerigos = Array.isArray(dados.perigos) && dados.perigos.length > 0;
   const temPuzzles = !!(dados.saidas_sequestradas || dados.itens_novos || dados.textos_modificados ||
     dados.itens_adicionados || dados.descricoes_itens_ativos || dados.puzzles);
-
-  if (!temZona && !temPerigos && !temPuzzles) {
-    toast('O JSON não contém zona, perigos nem puzzles.', 'warn');
-    return;
-  }
+  if (!temZona && !temPerigos && !temPuzzles) { toast('O JSON não contém zona, perigos nem puzzles.', 'warn'); return; }
 
   const user = firebase.auth().currentUser;
   if (!user) { toast('Nenhum usuário logado. Faça login no jogo primeiro.', 'err'); return; }
@@ -1402,7 +1240,6 @@ async function importarJSON() {
   try {
     logFn(`👤 Usuário: ${user.uid}`, 'info');
     let chips = [];
-
     if (temZona) {
       logFn('⏳ Importando zona completa...', 'info');
       const r = await importarParaFirestore(dados, user.uid, logFn);
@@ -1423,7 +1260,6 @@ async function importarJSON() {
       chips = [`${r.atualizadas.length} salas atualizadas`];
       logFn('✅ Perigos importados/atualizados com sucesso!', 'ok');
     }
-
     const elapsed = Math.round(performance.now() - startTime);
     renderImportResult({ status: 'ok', time: elapsed, chips, logs });
     toast('Importação concluída.', 'ok');
@@ -1441,27 +1277,22 @@ async function importarJSON() {
 function renderImportResult({ loading, status, time, chips = [], logs = [], error }) {
   const panel = $('importResult');
   panel.hidden = false;
-
   const headerHTML = loading
     ? `<div class="result-header"><span class="result-status" style="color:var(--gold)">⏳ Processando...</span></div>`
     : `<div class="result-header">
          <span class="result-status ${status === 'ok' ? 'ok' : 'err'}">${status === 'ok' ? '✅ Importado' : '❌ Falhou'}</span>
          <span class="result-time">${time}ms</span>
        </div>`;
-
   const chipsHTML = chips.length
-    ? `<div class="result-chips">${chips.map(c => `<span class="chip ok">${c}</span>`).join('')}</div>`
-    : '';
-
-  const logsHTML = logs.map(l => `<div class="log-${l.type === 'warn' ? 'warn' : l.type === 'err' ? 'err' : l.type === 'ok' ? 'ok' : 'info'}">${escapeHTML(l.msg)}</div>`).join('');
-
+    ? `<div class="result-chips">${chips.map(c => `<span class="chip ok">${c}</span>`).join('')}</div>` : '';
+  const logsHTML = logs.map(l =>
+    `<div class="log-${l.type === 'warn' ? 'warn' : l.type === 'err' ? 'err' : l.type === 'ok' ? 'ok' : 'info'}">${escapeHTML(l.msg)}</div>`
+  ).join('');
   const actionsHTML = !loading
     ? `<div class="result-actions">
          <button class="btn btn-primary btn-sm" onclick="window.location.href='./vamosla.html'">🎮 Voltar ao Jogo</button>
          <button class="btn btn-ghost btn-sm" onclick="copiarLog()">📋 Copiar log</button>
-       </div>`
-    : '';
-
+       </div>` : '';
   panel.innerHTML = `
     ${headerHTML}
     ${chipsHTML}
@@ -1472,10 +1303,8 @@ function renderImportResult({ loading, status, time, chips = [], logs = [], erro
     </details>
     ${actionsHTML}
   `;
-
   const lp = $('importLogPanel');
   if (lp) lp.scrollTop = lp.scrollHeight;
-
   window._lastImportLogs = logs;
 }
 
@@ -1486,25 +1315,47 @@ function copiarLog() {
 }
 
 /* ============================================================
-   VALIDADOR — accordion
+   VALIDADOR — accordion + ações
    ============================================================ */
 function toggleValidator() {
-  const card = $('validatorCard');
-  card.classList.toggle('open');
+  $('validatorCard').classList.toggle('open');
+}
+
+function copiarDoImportador() {
+  const main = $('jsonInput').value;
+  if (!main.trim()) { toast('O importador está vazio.', 'warn'); return; }
+  $('validatorJsonInput').value = main;
+  localStorage.setItem('centelha.console.validatorJson', main);
+  refreshValidatorHighlight();
+  atualizarBadge($('validatorJsonInput'), $('validatorBadge'));
+  toast('JSON copiado do importador.', 'ok');
+  if ($('autoValidate').checked) rodarValidacao();
+}
+
+function abrirArquivoValidator() {
+  $('validatorFile').click();
 }
 
 function validarAntesDeImportar() {
-  const raw = $('jsonInput').value.trim();
-  if (!raw) { toast('Cole um JSON no importador primeiro.', 'warn'); return; }
-  // Abre accordion se não estiver aberto
   const card = $('validatorCard');
   if (!card.classList.contains('open')) card.classList.add('open');
-  rodarValidacao(raw);
-  // Scroll até o validador
+  // Sincroniza o JSON do importador para o validador
+  const main = $('jsonInput').value;
+  if (!main.trim()) {
+    toast('Cole um JSON no importador primeiro.', 'warn');
+    setTimeout(() => card.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+    return;
+  }
+  $('validatorJsonInput').value = main;
+  localStorage.setItem('centelha.console.validatorJson', main);
+  refreshValidatorHighlight();
+  atualizarBadge($('validatorJsonInput'), $('validatorBadge'));
+  rodarValidacao();
   setTimeout(() => card.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
 }
 
-function rodarValidacao(jsonStr) {
+function rodarValidacao() {
+  const raw = $('validatorJsonInput').value.trim();
   const resultDiv = $('validatorResult');
   const statsDiv = $('validatorStats');
   const badgesDiv = $('validatorBadges');
@@ -1513,8 +1364,13 @@ function rodarValidacao(jsonStr) {
   statsDiv.innerHTML = '';
   badgesDiv.innerHTML = '';
 
+  if (!raw) {
+    resultDiv.innerHTML = '<div class="validator-empty">Cole um JSON acima, arraste um arquivo ou use "Copiar do importador".</div>';
+    return;
+  }
+
   let dados;
-  try { dados = JSON.parse(jsonStr); }
+  try { dados = JSON.parse(raw); }
   catch (e) {
     resultDiv.innerHTML = `<div class="vrow err"><strong>❌</strong><span class="detail">JSON inválido: ${escapeHTML(e.message)}</span></div>`;
     badgesDiv.innerHTML = `<span class="mini err">JSON inválido</span>`;
@@ -1541,18 +1397,14 @@ function rodarValidacao(jsonStr) {
   let salasCorrigidas = 0;
   let totalErrosDensidade = 0;
 
-  // 1. TOPOLOGIA
   const errosTopo = validarPlanoTopologia(plano, salaInicio, salaFim);
   if (errosTopo.length === 0) {
     html += `<h3>Topologia</h3><div class="vrow ok"><strong>✅</strong><span class="detail">Topologia aprovada.</span></div>`;
   } else {
     html += `<h3>Topologia</h3>`;
-    for (const err of errosTopo) {
-      html += `<div class="vrow err"><strong>❌</strong><span class="detail">${escapeHTML(err)}</span></div>`;
-    }
+    for (const err of errosTopo) html += `<div class="vrow err"><strong>❌</strong><span class="detail">${escapeHTML(err)}</span></div>`;
   }
 
-  // 2. PROSA E DENSIDADE
   html += `<h3>Prosa e Densidade</h3>`;
   let dadosCorrigidos = JSON.parse(JSON.stringify(dados));
   let houveCorrecaoAncoragem = false;
@@ -1561,18 +1413,15 @@ function rodarValidacao(jsonStr) {
     const planoItem = plano[id];
     const opcoes = planoItem?.saidas || [];
     const acao = opcoes[0]?.acao || null;
-
     let acaoChegada = acao;
     if (id == salaInicio) acaoChegada = "SEM_ENTRADA";
     else {
       const entradas = Object.values(plano).flatMap(s => (s.saidas || [])).filter(s => s.destino == id);
       if (entradas.length > 1) acaoChegada = "MULTIPLAS_ENTRADAS";
     }
-
     const errosAncora = validarTextoLogico(sala.texto_logico, acaoChegada);
     const errosDensidade = validarDensidadeAmbiental(sala.texto_logico, opcoes);
     totalErrosDensidade += errosDensidade.length;
-
     const todos = [...errosAncora, ...errosDensidade];
     if (todos.length === 0) {
       html += `<div class="vrow ok"><strong>✅ Sala ${id}</strong><span class="detail">aprovada</span></div>`;
@@ -1592,21 +1441,15 @@ function rodarValidacao(jsonStr) {
     }
   }
 
-  // 3. CENAS
   html += `<h3>Cenas e Dilemas</h3>`;
   const validacaoCenas = validarCenas(cenas, plano, salaInicio, salaFim);
   if (validacaoCenas.erros.length === 0 && validacaoCenas.avisos.length === 0) {
     html += `<div class="vrow ok"><strong>✅</strong><span class="detail">Cenas e dilemas aprovados.</span></div>`;
   } else {
-    for (const err of validacaoCenas.erros) {
-      html += `<div class="vrow err"><strong>❌</strong><span class="detail">${escapeHTML(err)}</span></div>`;
-    }
-    for (const aviso of validacaoCenas.avisos) {
-      html += `<div class="vrow warn"><strong>⚠️</strong><span class="detail">${escapeHTML(aviso)}</span></div>`;
-    }
+    for (const err of validacaoCenas.erros) html += `<div class="vrow err"><strong>❌</strong><span class="detail">${escapeHTML(err)}</span></div>`;
+    for (const aviso of validacaoCenas.avisos) html += `<div class="vrow warn"><strong>⚠️</strong><span class="detail">${escapeHTML(aviso)}</span></div>`;
   }
 
-  // 4. CORREÇÕES AUTOMÁTICAS DE CENAS (cor amarela)
   const resultadoCorrecao = aplicarCorrecoesCenas(dadosCorrigidos);
   if (resultadoCorrecao.logs.length > 0) {
     html += `<h3>Correções automáticas</h3>`;
@@ -1615,7 +1458,6 @@ function rodarValidacao(jsonStr) {
     }
   }
 
-  // Ações
   const houveCorrecaoTotal = houveCorrecaoAncoragem || resultadoCorrecao.modificado;
   const errosTopoFatais = errosTopo.length > 0;
   const bloqueiaEnvio = validacaoCenas.erros.length > 0 || errosTopoFatais;
@@ -1625,6 +1467,8 @@ function rodarValidacao(jsonStr) {
     html += `<button class="btn btn-primary btn-sm" onclick="enviarCorrigidoParaImportador()">📤 Enviar corrigido ao importador</button>`;
     html += `<button class="btn btn-ghost btn-sm" onclick="baixarCorrigido()">⬇️ Baixar JSON corrigido</button>`;
     window._dadosCorrigidos = dadosCorrigidos;
+  } else {
+    window._dadosCorrigidos = null;
   }
   if (bloqueiaEnvio) {
     html += `<div class="vrow warn" style="margin-top:10px"><strong>⚠️</strong><span class="detail">Erros de ${errosTopoFatais ? 'topologia' : 'cenas'} impedem o envio direto. Corrija o JSON original.</span></div>`;
@@ -1633,7 +1477,6 @@ function rodarValidacao(jsonStr) {
 
   resultDiv.innerHTML = html;
 
-  // Stats
   const totalErrosCenas = validacaoCenas.erros.length;
   const totalAvisosCenas = validacaoCenas.avisos.length;
   const totalProblemas = errosTopo.length + salasComErro + totalErrosCenas;
@@ -1649,7 +1492,6 @@ function rodarValidacao(jsonStr) {
     ${salasCorrigidas > 0 ? `<span class="vstat warn">🔧 ${salasCorrigidas} corrigida(s)</span>` : ''}
   `;
 
-  // Badges no cabeçalho
   const badges = [];
   if (errosTopo.length > 0) badges.push(`<span class="mini err">❌ topo ${errosTopo.length}</span>`);
   if (salasComErro > 0) badges.push(`<span class="mini err">❌ salas ${salasComErro}</span>`);
@@ -1664,14 +1506,11 @@ function enviarCorrigidoParaImportador() {
   const json = JSON.stringify(window._dadosCorrigidos, null, 2);
   $('jsonInput').value = json;
   localStorage.setItem('centelha.console.jsonInput', json);
-  refreshEditorHighlight();
+  refreshMainHighlight();
   atualizarBadgeEPreview();
   toast('JSON corrigido enviado ao importador.', 'ok');
-  // Fecha o validador e rola para o importador
   $('validatorCard').classList.remove('open');
-  setTimeout(() => {
-    document.querySelector('.importer-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, 150);
+  setTimeout(() => document.querySelector('.importer-card').scrollIntoView({ behavior: 'smooth', block: 'start' }), 150);
 }
 
 function baixarCorrigido() {
@@ -1688,7 +1527,7 @@ function baixarCorrigido() {
 }
 
 /* ============================================================
-   DRAG & DROP (importador principal + validador)
+   DRAG & DROP genérico
    ============================================================ */
 function configurarDrop(target, onFile) {
   target.addEventListener('dragover', e => {
@@ -1715,120 +1554,129 @@ function lerArquivo(file) {
   });
 }
 
-// Importador principal
-const mainWrap = $('mainInputWrap');
-configurarDrop(mainWrap, async file => {
-  try {
-    const texto = await lerArquivo(file);
-    // Auto-detecta destino
-    let destino = 'jsonInput';
-    let rotulo = 'principal';
+/* ============================================================
+   SETUP DRAG & DROP
+   ============================================================ */
+function setupDrops() {
+  // Importador principal
+  configurarDrop($('mainInputWrap'), async file => {
     try {
-      const parsed = JSON.parse(texto);
-      const temZona = parsed && (parsed.plano || parsed.salas || parsed.cenas);
-      const soPerigos = parsed && Array.isArray(parsed.perigos) && !temZona;
-      const soPuzzles = parsed && (parsed.itens_novos || parsed.textos_modificados ||
-        parsed.itens_adicionados || parsed.descricoes_itens_ativos || parsed.puzzles) && !temZona && !soPerigos;
-      if (soPerigos && $('jsonInput').value.trim()) {
-        destino = 'perigosInput';
-        rotulo = 'perigos';
-      } else if (soPerigos) {
-        destino = 'jsonInput';
-        rotulo = 'perigos';
-      } else if (soPuzzles) {
-        destino = 'jsonInput';
-        rotulo = 'puzzles';
-      } else if (temZona) {
-        destino = 'jsonInput';
-        rotulo = 'zona';
+      const texto = await lerArquivo(file);
+      let destino = 'jsonInput';
+      let rotulo = 'principal';
+      try {
+        const parsed = JSON.parse(texto);
+        const temZona = parsed && (parsed.plano || parsed.salas || parsed.cenas);
+        const soPerigos = parsed && Array.isArray(parsed.perigos) && !temZona;
+        const soPuzzles = parsed && (parsed.itens_novos || parsed.textos_modificados ||
+          parsed.itens_adicionados || parsed.descricoes_itens_ativos || parsed.puzzles) && !temZona && !soPerigos;
+        if (soPerigos && $('jsonInput').value.trim()) { destino = 'perigosInput'; rotulo = 'perigos'; }
+        else if (soPerigos) { destino = 'jsonInput'; rotulo = 'perigos'; }
+        else if (soPuzzles) { destino = 'jsonInput'; rotulo = 'puzzles'; }
+        else if (temZona) { destino = 'jsonInput'; rotulo = 'zona'; }
+      } catch (_) {}
+      $(destino).value = texto;
+      if (destino === 'jsonInput') {
+        localStorage.setItem('centelha.console.jsonInput', texto);
+        refreshMainHighlight();
+        atualizarBadgeEPreview();
+      } else {
+        localStorage.setItem('centelha.console.perigosInput', texto);
+        $('secondaryInput').open = true;
       }
-    } catch (_) { /* deixa no principal */ }
+      toast(`Arquivo carregado (${rotulo}).`, 'ok');
+    } catch (e) { toast('Erro: ' + e.message, 'err'); }
+  });
 
-    $(destino).value = texto;
-    if (destino === 'jsonInput') {
-      localStorage.setItem('centelha.console.jsonInput', texto);
-      refreshEditorHighlight();
-      atualizarBadgeEPreview();
-    } else {
-      localStorage.setItem('centelha.console.perigosInput', texto);
-      $('secondaryInput').open = true;
-    }
-    toast(`Arquivo carregado (${rotulo}).`, 'ok');
-  } catch (e) {
-    toast('Erro: ' + e.message, 'err');
-  }
-});
+  // Validador
+  configurarDrop($('validatorInputWrap'), async file => {
+    try {
+      const texto = await lerArquivo(file);
+      $('validatorJsonInput').value = texto;
+      localStorage.setItem('centelha.console.validatorJson', texto);
+      refreshValidatorHighlight();
+      atualizarBadge($('validatorJsonInput'), $('validatorBadge'));
+      rodarValidacao();
+      toast('Arquivo carregado no validador.', 'ok');
+    } catch (e) { toast('Erro: ' + e.message, 'err'); }
+  });
 
-// Validador (drop zone dedicada)
-const validatorDrop = $('validatorDrop');
-const validatorFile = $('validatorFile');
-configurarDrop(validatorDrop, async file => {
-  try {
-    const texto = await lerArquivo(file);
-    $('jsonInput').value = texto;
-    localStorage.setItem('centelha.console.jsonInput', texto);
-    refreshEditorHighlight();
-    atualizarBadgeEPreview();
-    rodarValidacao(texto);
-    toast('Arquivo validado.', 'ok');
-  } catch (e) {
-    toast('Erro: ' + e.message, 'err');
-  }
-});
-validatorDrop.addEventListener('click', () => validatorFile.click());
-validatorFile.addEventListener('change', async () => {
-  if (validatorFile.files[0]) {
-    const texto = await lerArquivo(validatorFile.files[0]);
-    $('jsonInput').value = texto;
-    localStorage.setItem('centelha.console.jsonInput', texto);
-    refreshEditorHighlight();
-    atualizarBadgeEPreview();
-    rodarValidacao(texto);
-  }
-});
+  // File input do validador
+  $('validatorFile').addEventListener('change', async () => {
+    const f = $('validatorFile').files[0];
+    if (!f) return;
+    try {
+      const texto = await lerArquivo(f);
+      $('validatorJsonInput').value = texto;
+      localStorage.setItem('centelha.console.validatorJson', texto);
+      refreshValidatorHighlight();
+      atualizarBadge($('validatorJsonInput'), $('validatorBadge'));
+      rodarValidacao();
+    } catch (e) { toast('Erro: ' + e.message, 'err'); }
+  });
+}
 
 /* ============================================================
-   AUTO-VALIDATE (debounce)
+   AUTO-VALIDATE
    ============================================================ */
 let autoValidateTimer = null;
-let refreshEditorHighlight = () => {};
-
 function agendarAutoValidate() {
   if (!$('autoValidate').checked) return;
   clearTimeout(autoValidateTimer);
   autoValidateTimer = setTimeout(() => {
-    const raw = $('jsonInput').value.trim();
-    if (raw) rodarValidacao(raw);
+    if ($('validatorJsonInput').value.trim()) rodarValidacao();
   }, 800);
 }
 
 /* ============================================================
    BOOTSTRAP
    ============================================================ */
-window.addEventListener('DOMContentLoaded', () => {
-  const ta = $('jsonInput');
-  const pre = $('editorHighlight');
-  refreshEditorHighlight = setupEditor(ta, pre);
+let refreshMainHighlight = () => {};
+let refreshValidatorHighlight = () => {};
 
-  // Restaura do localStorage
-  const saved = localStorage.getItem('centelha.console.jsonInput');
-  if (saved) { ta.value = saved; refreshEditorHighlight(); }
+window.addEventListener('DOMContentLoaded', () => {
+  // Editor principal
+  const mainTA = $('jsonInput');
+  refreshMainHighlight = setupEditor(mainTA, $('editorHighlight'));
+
+  // Editor do validador
+  const valTA = $('validatorJsonInput');
+  refreshValidatorHighlight = setupEditor(valTA, $('validatorHighlight'));
+
+  // Restaura
+  const savedMain = localStorage.getItem('centelha.console.jsonInput');
+  if (savedMain) { mainTA.value = savedMain; refreshMainHighlight(); }
   const savedP = localStorage.getItem('centelha.console.perigosInput');
   if (savedP) { $('perigosInput').value = savedP; $('secondaryInput').open = true; }
+  const savedVal = localStorage.getItem('centelha.console.validatorJson');
+  if (savedVal) {
+    valTA.value = savedVal;
+    refreshValidatorHighlight();
+    atualizarBadge(valTA, $('validatorBadge'));
+  }
 
   atualizarBadgeEPreview();
 
-  ta.addEventListener('input', () => {
-    localStorage.setItem('centelha.console.jsonInput', ta.value);
+  // Eventos do editor principal
+  mainTA.addEventListener('input', () => {
+    localStorage.setItem('centelha.console.jsonInput', mainTA.value);
     atualizarBadgeEPreview();
-    agendarAutoValidate();
   });
   $('perigosInput').addEventListener('input', () => {
     localStorage.setItem('centelha.console.perigosInput', $('perigosInput').value);
   });
+
+  // Eventos do editor do validador
+  valTA.addEventListener('input', () => {
+    localStorage.setItem('centelha.console.validatorJson', valTA.value);
+    atualizarBadge(valTA, $('validatorBadge'));
+    agendarAutoValidate();
+  });
   $('autoValidate').addEventListener('change', () => {
     if ($('autoValidate').checked) agendarAutoValidate();
   });
+
+  setupDrops();
 });
 
 /* ============================================================
