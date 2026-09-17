@@ -113,9 +113,20 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
 .mirror-auth-info{display:flex;align-items:center;gap:6px}
 .mirror-empty{padding:32px 20px;text-align:center;color:var(--text-dimmer);font-size:12px}
 
-/* ============ IMPORTER ============ */
-.importer-body{padding:20px 24px 24px}
-.editor-wrap{position:relative;border:1px solid var(--border-2);border-radius:var(--radius);
+  /* ============ IMPORTER ============ */
+  .importer-toggle{display:flex;align-items:center;gap:14px;width:100%;
+  padding:18px 24px;background:transparent;border:0;color:var(--text);font-family:inherit;
+  font-size:15px;font-weight:700;cursor:pointer;letter-spacing:.5px;transition:background .15s;text-align:left}
+.importer-toggle:hover{background:var(--surface-2)}
+.importer-title{display:flex;align-items:center;gap:12px;color:var(--gold)}
+.importer-title .icon{color:var(--gold);font-size:16px}
+.importer-subtitle{font-size:11px;color:var(--text-dim);font-weight:400;flex:1;
+  letter-spacing:0;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.importer-panel{max-height:0;overflow:hidden;transition:max-height .4s ease}
+.importer-card.open .importer-panel{max-height:5000px}
+.importer-card.open .chevron{transform:rotate(90deg)}
+.importer-body{padding:20px 24px 24px;border-top:1px solid var(--border)}
+  .editor-wrap{position:relative;border:1px solid var(--border-2);border-radius:var(--radius);
   background:var(--surface-2);transition:border-color .2s, background .2s}
 .editor-wrap.dragover{border-color:var(--gold);background:var(--gold-dim)}
 .editor-wrap:focus-within{border-color:var(--border-2);background:var(--surface-3)}
@@ -328,13 +339,17 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
   </section>
 
   <!-- ===================== IMPORTER ===================== -->
-  <section class="card importer-card">
-    <div class="card-header">
-      <h2>Importador</h2>
-      <p>Cole o JSON ou arraste um arquivo. O console identifica o tipo automaticamente.</p>
-    </div>
-
-    <div class="importer-body">
+  <section class="card importer-card open" id="importerCard">
+    <button class="importer-toggle" id="importerToggle" onclick="toggleImporter()" aria-expanded="true">
+      <span class="importer-title">
+        <span class="icon">📥</span>
+        <span>Importador</span>
+      </span>
+      <span class="importer-subtitle">Cole o JSON ou arraste um arquivo. O console identifica o tipo automaticamente.</span>
+      <span class="chevron">▸</span>
+    </button>
+    <div class="importer-panel" id="importerPanel">
+      <div class="importer-body">
       <div class="editor-wrap" id="mainInputWrap">
         <div class="editor-badge">
           <span class="badge badge-empty" id="mainBadge">aguardando JSON</span>
@@ -365,6 +380,7 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
 
       <div class="result-panel" id="importResult" hidden></div>
     </div>
+      </div> 
   </section>
 
   <!-- ===================== VALIDATOR ===================== -->
@@ -1427,6 +1443,12 @@ function toggleValidator() {
   $('validatorCard').classList.toggle('open');
 }
 
+function toggleImporter() {
+  const card = $('importerCard');
+  card.classList.toggle('open');
+  $('importerToggle').setAttribute('aria-expanded', card.classList.contains('open'));
+}
+  
 function copiarDoImportador() {
   const main = $('jsonInput').value;
   if (!main.trim()) { toast('O importador está vazio.', 'warn'); return; }
