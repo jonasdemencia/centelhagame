@@ -113,8 +113,39 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
 .mirror-auth-info{display:flex;align-items:center;gap:6px}
 .mirror-empty{padding:32px 20px;text-align:center;color:var(--text-dimmer);font-size:12px}
 
-  /* ============ IMPORTER ============ */
-  .importer-toggle{display:flex;align-items:center;gap:14px;width:100%;
+/* ============ PROMPTS CARD ============ */
+.prompts-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
+  margin-bottom:20px;overflow:hidden}
+.prompts-header{display:flex;justify-content:space-between;align-items:center;
+  padding:16px 24px 14px;border-bottom:1px solid var(--border)}
+.prompts-title{display:flex;align-items:center;gap:12px;font-size:15px;font-weight:700;
+  color:var(--gold);letter-spacing:.5px}
+.prompts-title .icon{color:var(--gold);font-size:16px}
+.prompts-subtitle{font-size:11px;color:var(--text-dim);font-weight:400;letter-spacing:0}
+.prompts-body{padding:16px 24px 22px;display:flex;flex-direction:column;gap:18px}
+.prompt-block{border:1px solid var(--border-2);border-radius:var(--radius);
+  background:var(--surface-2);overflow:hidden;transition:border-color .2s}
+.prompt-block:focus-within{border-color:rgba(217,164,65,.35)}
+.prompt-block-header{display:flex;justify-content:space-between;align-items:center;
+  padding:10px 14px;background:var(--surface-3);border-bottom:1px solid var(--border);gap:10px;flex-wrap:wrap}
+.prompt-block-title{font-size:12px;font-weight:700;color:var(--text);letter-spacing:.4px}
+.prompt-block-actions{display:flex;align-items:center;gap:10px}
+.prompt-etapa{font-size:10px;color:var(--text-dimmer);letter-spacing:.8px;text-transform:uppercase;
+  padding:3px 8px;background:var(--surface);border:1px solid var(--border);border-radius:10px}
+.prompt-textarea{width:100%;min-height:220px;max-height:520px;padding:14px 16px;
+  background:var(--surface-2);border:0;color:var(--text);font-family:inherit;
+  font-size:12.5px;line-height:1.6;outline:none;resize:vertical;display:block;tab-size:2}
+.prompt-textarea:focus{background:var(--surface-3)}
+.prompt-textarea::selection{background:rgba(217,164,65,.25)}
+.prompt-footer{display:flex;align-items:center;gap:10px;padding:9px 14px;
+  background:var(--surface-3);border-top:1px solid var(--border);font-size:11px;color:var(--text-dim)}
+.prompt-footer .ok{color:var(--green)}
+.prompt-footer .warn{color:var(--gold)}
+.prompt-footer .err{color:var(--red)}
+.prompt-footer .icon{color:var(--text-dimmer)}
+
+/* ============ IMPORTER ============ */
+.importer-toggle{display:flex;align-items:center;gap:14px;width:100%;
   padding:18px 24px;background:transparent;border:0;color:var(--text);font-family:inherit;
   font-size:15px;font-weight:700;cursor:pointer;letter-spacing:.5px;transition:background .15s;text-align:left}
 .importer-toggle:hover{background:var(--surface-2)}
@@ -126,7 +157,7 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
 .importer-card.open .importer-panel{max-height:5000px}
 .importer-card.open .chevron{transform:rotate(90deg)}
 .importer-body{padding:20px 24px 24px;border-top:1px solid var(--border)}
-  .editor-wrap{position:relative;border:1px solid var(--border-2);border-radius:var(--radius);
+.editor-wrap{position:relative;border:1px solid var(--border-2);border-radius:var(--radius);
   background:var(--surface-2);transition:border-color .2s, background .2s}
 .editor-wrap.dragover{border-color:var(--gold);background:var(--gold-dim)}
 .editor-wrap:focus-within{border-color:var(--border-2);background:var(--surface-3)}
@@ -338,6 +369,77 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
     </div>
   </section>
 
+  <!-- ===================== PROMPTS ===================== -->
+  <section class="card prompts-card" id="promptsCard">
+    <div class="prompts-header">
+      <div class="prompts-title">
+        <span class="icon">📝</span>
+        <div>
+          <div>PROMPTS</div>
+          <div class="prompts-subtitle">Cabeçalho regenerado a cada sincronização · corpo editável e persistente</div>
+        </div>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="sincronizarPrompts()">
+        <span class="btn-icon">🔄</span> Atualizar prompts
+      </button>
+    </div>
+    <div class="prompts-body">
+      <!-- Topologia + Cenas -->
+      <div class="prompt-block">
+        <div class="prompt-block-header">
+          <span class="prompt-block-title">🎭 Topologia + Cenas</span>
+          <div class="prompt-block-actions">
+            <span class="prompt-etapa">Etapa 1 de 3</span>
+            <button class="btn btn-ghost btn-sm" onclick="copiarPrompt('topologia')">
+              <span class="btn-icon">📋</span> Copiar
+            </button>
+          </div>
+        </div>
+        <textarea class="prompt-textarea" id="prompt_topologia" spellcheck="false"></textarea>
+        <div class="prompt-footer">
+          <span class="icon">▸</span>
+          <span id="statusTopologia">aguardando login</span>
+        </div>
+      </div>
+
+      <!-- Perigos -->
+      <div class="prompt-block">
+        <div class="prompt-block-header">
+          <span class="prompt-block-title">☠️ Perigos</span>
+          <div class="prompt-block-actions">
+            <span class="prompt-etapa">Etapa 2 de 3</span>
+            <button class="btn btn-ghost btn-sm" onclick="copiarPrompt('perigos')">
+              <span class="btn-icon">📋</span> Copiar
+            </button>
+          </div>
+        </div>
+        <textarea class="prompt-textarea" id="prompt_perigos" spellcheck="false"></textarea>
+        <div class="prompt-footer">
+          <span class="icon">▸</span>
+          <span id="statusPerigos">aguardando login</span>
+        </div>
+      </div>
+
+      <!-- Puzzles -->
+      <div class="prompt-block">
+        <div class="prompt-block-header">
+          <span class="prompt-block-title">🧩 Puzzles</span>
+          <div class="prompt-block-actions">
+            <span class="prompt-etapa">Etapa 3 de 3</span>
+            <button class="btn btn-ghost btn-sm" onclick="copiarPrompt('puzzles')">
+              <span class="btn-icon">📋</span> Copiar
+            </button>
+          </div>
+        </div>
+        <textarea class="prompt-textarea" id="prompt_puzzles" spellcheck="false"></textarea>
+        <div class="prompt-footer">
+          <span class="icon">▸</span>
+          <span id="statusPuzzles">aguardando login</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- ===================== IMPORTER ===================== -->
   <section class="card importer-card open" id="importerCard">
     <button class="importer-toggle" id="importerToggle" onclick="toggleImporter()" aria-expanded="true">
@@ -453,7 +555,7 @@ const db = firebase.firestore();
 /* ============================================================
    CONSTANTES DO MUNDO
    ============================================================ */
-const TOTAL_SALAS = 300;      // 30 zonas × 10 salas
+const TOTAL_SALAS = 300;
 const TOTAL_ZONAS = 30;
 const SALAS_POR_ZONA = 10;
 
@@ -518,7 +620,370 @@ function setupEditor(textarea, highlight) {
 }
 
 /* ============================================================
-   VALIDAÇÃO (código preservado)
+   PROMPTS — corpos padrão
+   ============================================================ */
+const PROMPT_KEYS = ['topologia', 'perigos', 'puzzles'];
+
+const DEFAULT_BODIES = {
+  topologia: [
+    'TEMA: Sanatório psiquiátrico',
+    'TOM: Suspense com conspirações detalhadas',
+    'LORE CENTRAL: Complexo sanitário extremamente rico e vasto',
+    '',
+    'Você é um gerador de conteúdo para um jogo textual chamado "Centelha". Sua tarefa é gerar um JSON com plano, salas e cenas (dilemas) para uma zona de 10 salas delimitada pelo intervalo de [SALA_INICIAL] a [SALA_FINAL].',
+    '',
+    'REGRAS DE TOPOLOGIA (PLANO)',
+    '- Sala [SALA_INICIAL] = entrada. Sala [SALA_FINAL] = fronteira (com "para_proxima_zona": true).',
+    '- Cada sala tem de 1 a 3 saídas. Pelo menos uma sala tem 3+ (hub).',
+    '- Toda conexão de ida (A → B) tem uma de volta (B → A) com ação inversa. Os IDs de destino devem estar estritamente dentro da zona atual.',
+    '- A estrutura é uma árvore, sem ciclos.',
+    '',
+    'REGRAS DE PROSA PARA "texto_logico"',
+    '- Sala [SALA_INICIAL]: descrição direta, sem "Depois de" ou "Ao avançar".',
+    '- Salas intermediárias com UMA ÚNICA entrada: primeira frase começa com "Depois de [ação EXATA que levou a esta sala], você...".',
+    '- Qualquer sala com múltiplas entradas usa "Ao avançar para este local, você...".',
+    '- PROIBIDO como primeira frase: "Você se encontra", "Você está", "Você nota".',
+    '- SAÍDAS NEUTRAS: nenhuma saída pode ser marcada como a de chegada. Proibido "pela qual entrou", "atrás de você", "por onde veio", "de volta".',
+    '- Cada "texto_logico" precisa ter 3+ elementos do cenário, 1+ dado sensorial e âncoras visuais por saída.',
+    '',
+    'REGRAS PARA CENAS E DILEMAS (ARQUITETO DE CENAS)',
+    'Selecione aleatoriamente 3 salas intermediárias (ignorando a SALA_INICIAL) para receber uma cena. As demais não têm cena.',
+    '',
+    '- O array dilemas deve conter exatamente 1 objeto (o dilema-pai), com ramificacoes contendo exatamente 3 objetos.',
+    '- destino_id SÓ pode apontar para uma sala de número MAIOR que a sala atual.',
+    '- Se a ramificação não conduz para uma sala à frente, use destino_id: null.',
+    '- Cada ramificação tem um CUSTO: físico (dano > 0) OU moral/existencial (dano > 0), nunca ambos.',
+    '- Apenas uma das 3 cenas deve ter custo alto (10–20). As demais: moderados (1–9) ou sem dano.',
+    '- opcao_texto: ações de 2 a 4 palavras, verbo forte + objeto.',
+    '',
+    'ESTRUTURA EXATA DO JSON',
+    '{',
+    '  "plano": {',
+    '    "[SALA_INICIAL]": { "local_fisico": "...", "saidas": [{"destino": N, "acao": "..."}] },',
+    '    "[SALA_FINAL]": { "local_fisico": "...", "saidas": [{"destino": N, "acao": "..."}], "para_proxima_zona": true }',
+    '  },',
+    '  "salas": { "[SALA_INICIAL]": { "texto_logico": "..." }, "[SALA_FINAL]": { "texto_logico": "..." } },',
+    '  "cenas": [',
+    '    {',
+    '      "sala_id": N,',
+    '      "titulo": "...",',
+    '      "texto_evento": "...",',
+    '      "dilemas": [',
+    '        {',
+    '          "opcao_texto": "...",',
+    '          "resultado_texto": "...",',
+    '          "dano": 0,',
+    '          "destino_id": null,',
+    '          "ramificacoes": [',
+    '            {"opcao_texto": "...", "resultado_texto": "...", "dano": 0, "destino_id": null},',
+    '            {"opcao_texto": "...", "resultado_texto": "...", "dano": 14, "destino_id": null},',
+    '            {"opcao_texto": "...", "resultado_texto": "...", "dano": 0, "destino_id": null}',
+    '          ]',
+    '        }',
+    '      ]',
+    '    }',
+    '  ]',
+    '}',
+    '',
+    'IMPORTANTE',
+    '- Entregue APENAS o JSON, sem texto adicional, sem erros de sintaxe.',
+    '- Ações de ida e volta simétricas (ex: "Subir" ↔ "Descer").',
+    '- texto_logico e texto_evento são complementares, sem repetir informação física.',
+    '- Crie o JSON contendo rigorosamente as 10 salas compreendidas entre a SALA_INICIAL e SALA_FINAL.'
+  ].join('\n'),
+
+  perigos: [
+    'Você é o Arquiteto de Perigos do jogo de terror textual "Centelha". Você recebe uma zona delimitada pelo intervalo de [SALA_INICIAL] a [SALA_FINAL] JÁ PRONTA (plano + texto_logico + cenas) e deve adicionar armadilhas e anomalias físicas às salas que ainda não têm cena.',
+    '',
+    'ENTRADA',
+    'Você vai receber o JSON completo da zona (campos plano, salas, cenas). Não repita esse JSON na resposta — só devolva o array de perigos.',
+    '',
+    'ELEGIBILIDADE E ESCALA',
+    '1. Salas elegíveis = qualquer sala estritamente no intervalo entre [SALA_INICIAL] e [SALA_FINAL] (ignorando as duas) cujo sala_id NÃO apareça em nenhum objeto do array cenas. As salas inicial e final NUNCA recebem perigo.',
+    '2. Escolha até [QUANTIDADE_PERIGOS] salas elegíveis. Nunca repita uma sala.',
+    '3. Uma sala nunca pode ter cena e perigo ao mesmo tempo — regra dura.',
+    '',
+    'TIPOS (escolha um por perigo)',
+    '- "interceptor": emboscada NO TRAJETO de uma saída que já existe na sala. O opcao_texto deve ser idêntico, palavra por palavra, ao acao de uma das saidas daquela sala no plano. Nunca intercepte uma ação de "voltar"/retorno.',
+    '- "nova_opcao": uma ação de EXAME que surge na sala (não navega para lugar nenhum). O objeto/elemento examinado DEVE já estar descrito literalmente no texto_logico daquela sala.',
+    '',
+    'CATEGORIAS DE DANO',
+    '- PSICOLOGICO (dano 0): sem contato físico — revela algo perturbador.',
+    '- FISICO_LEVE (1–4): arranhão, corte superficial, contusão.',
+    '- FISICO_GRAVE (5–15): ferimento sério, sangramento abundante, fratura.',
+    '- FISICO_CATASTROFICO (16–50): dano brutal, quase incapacitante.',
+    '- REVELACAO_CARNAL (0–2): revelação fisiológica/anatômica perturbadora.',
+    'Distribua as categorias entre os perigos gerados de forma que não sejam todas da mesma faixa de gravidade.',
+    '',
+    'REGRAS DE ESCRITA',
+    '- resultado_texto: 2–3 frases. PROIBIDO "você perde X de energia".',
+    '- PROIBIDO clichês de lore: bilhetes, diários, cartas, sussurros nas paredes, sombras que falam.',
+    '- tipo_resultado: "perigo" ou "revelacao".',
+    '- Sem ramificações: cada perigo é um evento único.',
+    '',
+    'ESTRUTURA DE SAÍDA',
+    '{',
+    '  "perigos": [',
+    '    {',
+    '      "sala_id": N,',
+    '      "tipo": "interceptor",',
+    '      "opcao_texto": "...",',
+    '      "resultado_texto": "...",',
+    '      "dano": N,',
+    '      "tipo_resultado": "perigo"',
+    '    }',
+    '  ]',
+    '}',
+    '',
+    'Devolva APENAS o array de perigos em {"perigos": [...]}, sem repetir o JSON da zona.'
+  ].join('\n'),
+
+  puzzles: [
+    'Você é o Arquiteto de Puzzles do jogo "Centelha". Sua tarefa é criar enigmas interativos no estilo Shadowgate, onde o jogador deve primeiro encontrar um item em uma sala anterior e depois usá-lo em outra sala para desbloquear uma passagem, revelar um segredo ou alterar o ambiente.',
+    '',
+    'Você receberá o JSON completo de uma zona (plano, salas, cenas e perigos). Sua missão é adicionar puzzles APENAS nas salas que sobraram — aquelas que não possuem cena nem perigo.',
+    '',
+    'Se o input incluir itens_legado_pendentes (itens gerados por uma zona anterior), você DEVE usar pelo menos UM deles em um puzzle desta zona. Não os redefina em itens_novos; referencie-os diretamente em usos_possiveis.',
+    '',
+    'REGRAS DE SELEÇÃO (RIGOROSAS)',
+    '1. A sala [SALA_INICIAL] NUNCA recebe puzzles.',
+    '2. Salas com cenas NUNCA recebem puzzles.',
+    '3. Salas com perigos NUNCA recebem puzzles.',
+    '4. Das salas restantes, escolha aleatoriamente de 1 a 3 salas.',
+    '5. Uma sala jamais terá mais de um puzzle.',
+    '6. SEQUESTRO DE ROTA: se algum usos_possiveis tiver destino, a sala DEVE ter exatamente UMA saída de avanço.',
+    '',
+    'DERIVAÇÃO ORGÂNICA (REGRA ABSOLUTA)',
+    '- Proibido puzzles genéricos de "chave e fechadura", "cartão de acesso" ou "solventes".',
+    '- O item e o obstáculo devem ser extrapolação direta do TEMA e do texto_logico das salas escolhidas.',
+    '- Em pelo menos 30% dos puzzles, a recompensa NÃO deve abrir uma passagem, mas revelar segredo, item ou alterar ambiente.',
+    '',
+    'DISTRIBUIÇÃO DE ITENS',
+    '- Coloque o item numa sala ANTERIOR (ID menor) que também esteja vazia (sem cena, sem perigo, sem puzzle).',
+    '',
+    'ITENS DE LEGADO',
+    '- Crie 1 a 2 itens de legado com descrição neutra (só aparência física, sem sugerir uso).',
+    '- Registre-os em itens_legado para o pipeline.',
+    '',
+    'ESTRUTURA DE RETORNO (JSON OBRIGATÓRIO)',
+    '{',
+    '  "itens_novos": { "id": { "id": "...", "content": "...", "description": "..." } },',
+    '  "itens_legado": [{ "id": "...", "sala_plantio": N }],',
+    '  "itens_legado_consumidos": ["..."],',
+    '  "textos_modificados": { "ID": "..." },',
+    '  "saidas_sequestradas": { "ID": N },',
+    '  "descricoes_itens_ativos": { "ID": { "item": "..." } },',
+    '  "itens_adicionados": { "ID": ["item"] },',
+    '  "puzzles": {',
+    '    "ID": {',
+    '      "estados": { "estado": false },',
+    '      "interacoes_ambiente": [{"frase_gatilho": "...", "resposta": "...", "define_estado": "..."}],',
+    '      "usos_possiveis": [{"item_id": "...", "condicao_estado": "...", "resultado_texto": "...", "destino": N, "texto_nova_saida": "...", "remove_item": true, "mensagem_falha": "..."}]',
+    '    }',
+    '  }',
+    '}',
+    '',
+    'Devolva APENAS o JSON, sem texto adicional.'
+  ].join('\n')
+};
+
+/* ============================================================
+   PROMPTS — lógica
+   ============================================================ */
+function calcularZonaAtual(mapaMundo) {
+  const total = Object.keys(mapaMundo || {}).length;
+  const n = Math.floor(total / SALAS_POR_ZONA) + 1;
+  return Math.min(Math.max(n, 1), TOTAL_ZONAS);
+}
+
+function construirCabecalho(key, n, ctx) {
+  const start = (n - 1) * SALAS_POR_ZONA + 1;
+  const end = n * SALAS_POR_ZONA;
+  const linhas = [
+    'CONFIGURAÇÕES DA ZONA',
+    `SALA_INICIAL = ${start}`,
+    `SALA_FINAL   = ${end}`
+  ];
+  if (key === 'perigos') {
+    linhas.push(`QUANTIDADE_PERIGOS = 3`);
+  } else if (key === 'puzzles') {
+    const itens = ctx.itens_legado_pendentes || [];
+    if (itens.length > 0) {
+      linhas.push(`itens_legado_pendentes: ${JSON.stringify(itens)}`);
+    }
+    linhas.push(`salas_ocupadas: ${JSON.stringify(ctx.salas_ocupadas || [])}`);
+  }
+  return linhas.join('\n');
+}
+
+// Corpo = tudo após o primeiro "\n\n". Cabeçalho nunca contém linha em branco.
+function extrairCorpo(texto) {
+  if (!texto) return '';
+  const idx = texto.indexOf('\n\n');
+  if (idx < 0) return texto; // sem separador: trata tudo como corpo (fallback)
+  return texto.slice(idx + 2);
+}
+
+function carregarCorpoPersistido(key) {
+  let corpo = localStorage.getItem(`centelha.prompt.${key}.corpo`);
+  if (corpo === null) corpo = DEFAULT_BODIES[key] || '';
+  return corpo;
+}
+
+function salvarCorpoPersistido(key, corpo) {
+  localStorage.setItem(`centelha.prompt.${key}.corpo`, corpo);
+}
+
+function montarTextoCompleto(key, n, ctx) {
+  const header = construirCabecalho(key, n, ctx);
+  const corpo = carregarCorpoPersistido(key);
+  return header + '\n\n' + corpo;
+}
+
+function initPromptTextareas() {
+  for (const key of PROMPT_KEYS) {
+    const ta = $(`prompt_${key}`);
+    if (!ta) continue;
+    // Pré-carrega com header provisório (será reescrito na primeira sync)
+    const header = `CONFIGURAÇÕES DA ZONA\nSALA_INICIAL = ?\nSALA_FINAL   = ?`;
+    ta.value = header + '\n\n' + carregarCorpoPersistido(key);
+    ta.addEventListener('input', () => {
+      const corpo = extrairCorpo(ta.value);
+      salvarCorpoPersistido(key, corpo);
+    });
+  }
+}
+
+function coletarSalasOcupadas(mapaMundo, n) {
+  const start = (n - 1) * SALAS_POR_ZONA + 1;
+  const end = n * SALAS_POR_ZONA;
+  const salas = [];
+  for (let i = start; i <= end; i++) {
+    const sala = mapaMundo[String(i)];
+    if (!sala) continue;
+    if (sala.cena_aplicada === true) { salas.push(i); continue; }
+    if (Array.isArray(sala.opcoes)) {
+      const temPerigo = sala.opcoes.some(op =>
+        op && (op.interceptor_arquiteto || (op.arquiteto === true && op.dilema !== true))
+      );
+      if (temPerigo) salas.push(i);
+    }
+  }
+  return salas;
+}
+
+function coletarItensLegado(dados) {
+  const obj = dados.itens_legado || {};
+  return Object.values(obj)
+    .filter(x => x && x.id)
+    .map(x => ({ id: x.id, sala_plantio: x.sala_plantio ?? null }));
+}
+
+function analisarZona(mapaMundo, n) {
+  const start = (n - 1) * SALAS_POR_ZONA + 1;
+  const end = n * SALAS_POR_ZONA;
+  let salasOk = 0, cenas = 0, perigos = 0;
+  for (let i = start; i <= end; i++) {
+    const sala = mapaMundo[String(i)];
+    if (!sala) continue;
+    salasOk++;
+    if (sala.cena_aplicada === true) cenas++;
+    if (Array.isArray(sala.opcoes)) {
+      const tp = sala.opcoes.some(op =>
+        op && (op.interceptor_arquiteto || (op.arquiteto === true && op.dilema !== true))
+      );
+      if (tp) perigos++;
+    }
+  }
+  return { salasOk, cenas, perigos, start, end };
+}
+
+async function sincronizarPrompts(silent = false) {
+  const user = firebase.auth().currentUser;
+  if (!user) {
+    setStatusPromptsNoLogin();
+    if (!silent) toast('Faça login para sincronizar os prompts.', 'warn');
+    return;
+  }
+
+  try {
+    const docSnap = await db.collection('players').doc(user.uid).get();
+    const dados = docSnap.data() || {};
+    const mapaMundo = dados.mapaMundo || {};
+    const n = calcularZonaAtual(mapaMundo);
+
+    const salas_ocupadas = coletarSalasOcupadas(mapaMundo, n);
+    const itens_legado_pendentes = coletarItensLegado(dados);
+
+    const ctx = { salas_ocupadas, itens_legado_pendentes };
+
+    for (const key of PROMPT_KEYS) {
+      const ta = $(`prompt_${key}`);
+      if (!ta) continue;
+      // Preserva edições pendentes do usuário antes de reescrever
+      if (ta.value) {
+        const corpoAtual = extrairCorpo(ta.value);
+        if (corpoAtual) salvarCorpoPersistido(key, corpoAtual);
+      }
+      ta.value = montarTextoCompleto(key, n, ctx);
+    }
+
+    atualizarStatusPrompts(mapaMundo, n);
+    if (!silent) toast(`Prompts atualizados (zona ${n}).`, 'ok');
+  } catch (e) {
+    console.error(e);
+    if (!silent) toast('Erro ao sincronizar prompts: ' + e.message, 'err');
+  }
+}
+
+function atualizarStatusPrompts(mapaMundo, n) {
+  const { salasOk, cenas, perigos, start, end } = analisarZona(mapaMundo, n);
+
+  const elTop = $('statusTopologia');
+  const elPer = $('statusPerigos');
+  const elPuz = $('statusPuzzles');
+
+  if (elTop) {
+    elTop.innerHTML = `<span class="ok">✅ pronta · zona ${n} (salas ${start}–${end})</span>`;
+  }
+  if (elPer) {
+    if (salasOk === SALAS_POR_ZONA) {
+      elPer.innerHTML = `<span class="ok">✅ pronta · zona ${n} importada · ${cenas} cena(s)</span>`;
+    } else {
+      elPer.innerHTML = `<span class="warn">⏳ aguardando zona ${n} · ${salasOk}/10 salas importadas</span>`;
+    }
+  }
+  if (elPuz) {
+    if (salasOk === SALAS_POR_ZONA && perigos > 0) {
+      elPuz.innerHTML = `<span class="ok">✅ pronta · zona ${n} · ${perigos} perigo(s) aplicado(s)</span>`;
+    } else if (salasOk === SALAS_POR_ZONA && perigos === 0) {
+      elPuz.innerHTML = `<span class="warn">⏳ aguardando perigos da zona ${n}</span>`;
+    } else {
+      elPuz.innerHTML = `<span class="warn">⏳ aguardando zona ${n} · ${salasOk}/10 salas importadas</span>`;
+    }
+  }
+}
+
+function setStatusPromptsNoLogin() {
+  const msg = `<span class="warn">⏳ aguardando login</span>`;
+  for (const elId of ['statusTopologia', 'statusPerigos', 'statusPuzzles']) {
+    const el = $(elId);
+    if (el) el.innerHTML = msg;
+  }
+}
+
+function copiarPrompt(key) {
+  const ta = $(`prompt_${key}`);
+  if (!ta) return;
+  const texto = ta.value;
+  if (!texto.trim()) { toast('Prompt vazio.', 'warn'); return; }
+  navigator.clipboard.writeText(texto)
+    .then(() => toast('Prompt copiado.', 'ok'))
+    .catch(e => toast('Erro ao copiar: ' + e.message, 'err'));
+}
+
+/* ============================================================
+   VALIDAÇÃO
    ============================================================ */
 function validarTextoLogico(textoLogico, acaoChegadaEsperada) {
   const erros = [];
@@ -1144,35 +1609,32 @@ async function importarPuzzles(dadosPuzzle, uid, logFn) {
     return mapaTrabalho[salaId];
   }
 
-  // Consome itens de legado usados nesta zona
-const itensLegadoAtuais = { ...(dadosAtuais.itens_legado || {}) };
-const legadoConsumidos = Array.isArray(dadosPuzzle.itens_legado_consumidos)
+  const itensLegadoAtuais = { ...(dadosAtuais.itens_legado || {}) };
+  const legadoConsumidos = Array.isArray(dadosPuzzle.itens_legado_consumidos)
     ? dadosPuzzle.itens_legado_consumidos
     : [];
-for (const idConsumido of legadoConsumidos) {
+  for (const idConsumido of legadoConsumidos) {
     if (itensLegadoAtuais[idConsumido]) {
-        delete itensLegadoAtuais[idConsumido];
-        logFn(`🎁 Item de legado consumido e removido da fila: ${idConsumido}`, 'info');
+      delete itensLegadoAtuais[idConsumido];
+      logFn(`🎁 Item de legado consumido e removido da fila: ${idConsumido}`, 'info');
     }
-}
+  }
 
-// Adiciona os novos itens de legado gerados por esta zona
-if (Array.isArray(dadosPuzzle.itens_legado) && dadosPuzzle.itens_legado.length > 0) {
+  if (Array.isArray(dadosPuzzle.itens_legado) && dadosPuzzle.itens_legado.length > 0) {
     for (const entrada of dadosPuzzle.itens_legado) {
-        if (!entrada || !entrada.id) continue;
-        itensLegadoAtuais[entrada.id] = {
-            id: entrada.id,
-            sala_plantio: entrada.sala_plantio ?? null
-        };
+      if (!entrada || !entrada.id) continue;
+      itensLegadoAtuais[entrada.id] = {
+        id: entrada.id,
+        sala_plantio: entrada.sala_plantio ?? null
+      };
     }
     logFn(`🎁 ${dadosPuzzle.itens_legado.length} item(ns) de legado registrado(s) para a próxima zona.`, 'ok');
-}
+  }
 
-// Grava se houve consumo OU se novos foram adicionados
-if (legadoConsumidos.length > 0 || (Array.isArray(dadosPuzzle.itens_legado) && dadosPuzzle.itens_legado.length > 0)) {
+  if (legadoConsumidos.length > 0 || (Array.isArray(dadosPuzzle.itens_legado) && dadosPuzzle.itens_legado.length > 0)) {
     updatePayload['itens_legado'] = itensLegadoAtuais;
-}
-  
+  }
+
   if (dadosPuzzle.itens_novos && Object.keys(dadosPuzzle.itens_novos).length > 0) {
     const itensNovosAtuais = dadosAtuais.itens_novos || {};
     for (const [id, def] of Object.entries(dadosPuzzle.itens_novos)) {
@@ -1415,7 +1877,6 @@ async function importarJSON() {
     const elapsed = Math.round(performance.now() - startTime);
     renderImportResult({ status: 'ok', time: elapsed, chips, logs });
     toast('Importação concluída.', 'ok');
-    // Auto-sync do espelho após import bem-sucedido
     sincronizarMirror();
   } catch (e) {
     console.error(e);
@@ -1802,13 +2263,11 @@ function analisarMapaMundo(mapaMundo, itens_novos) {
     result.totalSalas++;
     result.salasPresentes.add(id);
 
-    // Cenas: flag cena_aplicada
     if (sala.cena_aplicada === true) {
       result.cenas++;
       result.cenasSalas.push(id);
     }
 
-    // Puzzles: puzzle_status OU estados OU usos_possiveis
     const temEstado = sala.puzzle_status !== undefined ||
       (sala.estados && Object.keys(sala.estados).length > 0);
     const temUso = Array.isArray(sala.usos_possiveis) && sala.usos_possiveis.length > 0;
@@ -1818,7 +2277,6 @@ function analisarMapaMundo(mapaMundo, itens_novos) {
       result.puzzlesSalas.push(id);
     }
 
-    // Perigos: interceptor_arquiteto em alguma opção OU opção de arquiteto sem dilema (nova_opcao)
     let temPerigo = false;
     if (Array.isArray(sala.opcoes)) {
       for (const op of sala.opcoes) {
@@ -1831,13 +2289,11 @@ function analisarMapaMundo(mapaMundo, itens_novos) {
       result.perigosSalas.push(id);
     }
 
-    // Itens no chão
     if (Array.isArray(sala.itens) && sala.itens.length > 0) {
       result.itens++;
       result.itensSalas.push(id);
     }
 
-    // Rotas sequestradas: usos_possiveis com destino (rota restaurada pelo puzzle)
     if (Array.isArray(sala.usos_possiveis)) {
       const temRota = sala.usos_possiveis.some(u => u && u.destino !== undefined && u.destino !== null);
       if (temRota) {
@@ -1847,7 +2303,6 @@ function analisarMapaMundo(mapaMundo, itens_novos) {
     }
   }
 
-  // Zonas completas: 10/10 salas presentes
   for (let z = 0; z < TOTAL_ZONAS; z++) {
     const start = z * SALAS_POR_ZONA + 1;
     let completo = true;
@@ -1876,13 +2331,11 @@ function renderMirror(analise) {
   $('mirrorEmpty').hidden = true;
   $('mirrorContent').hidden = false;
 
-  // Números principais
   $('mnSalas').textContent = `${analise.totalSalas} / ${TOTAL_SALAS}`;
   const pct = (analise.totalSalas / TOTAL_SALAS * 100).toFixed(1);
   $('mnPct').textContent = `${pct}%`;
   $('mnZonas').textContent = `${analise.zonasCompletas} zona${analise.zonasCompletas === 1 ? '' : 's'} completa${analise.zonasCompletas === 1 ? '' : 's'}`;
 
-  // Barra de zonas
   const zonesBar = $('zonesBar');
   let html = '';
   for (let z = 0; z < TOTAL_ZONAS; z++) {
@@ -1901,7 +2354,6 @@ function renderMirror(analise) {
   }
   zonesBar.innerHTML = html;
 
-  // Ticks numéricos
   const ticks = $('zonesTicks');
   ticks.innerHTML = '';
   [5, 10, 15, 20, 25, 30].forEach(n => {
@@ -1911,7 +2363,6 @@ function renderMirror(analise) {
     ticks.appendChild(el);
   });
 
-  // Mini-barras
   const totalSalas = analise.totalSalas;
   const bars = [
     { icon: '🎭', label: 'Cenas', value: analise.cenas, salas: analise.cenasSalas, extra: '' },
@@ -1965,6 +2416,7 @@ async function sincronizarMirror() {
 
   if (!user) {
     renderMirrorEmpty('Faça login para ver o espelho do Firestore.');
+    setStatusPromptsNoLogin();
     return;
   }
 
@@ -1983,7 +2435,6 @@ async function sincronizarMirror() {
     indicator.textContent = 'sincronizado';
     indicator.classList.remove('syncing');
 
-    // Cache local para render instantâneo no próximo load
     try {
       const cache = {
         analise: {
@@ -2005,7 +2456,11 @@ async function sincronizarMirror() {
         ts: mirrorLastSync
       };
       localStorage.setItem('centelha.console.mirrorSnapshot', JSON.stringify(cache));
-    } catch (_) { /* cache best-effort */ }
+    } catch (_) { }
+
+    // Sincroniza prompts junto (silencioso)
+    await sincronizarPrompts(true);
+
   } catch (e) {
     console.error(e);
     renderMirrorError(e.message);
@@ -2131,7 +2586,10 @@ window.addEventListener('DOMContentLoaded', () => {
 
   setupDrops();
 
-  // Mirror: visibilidade + cache + timer
+  // Prompts: pré-carrega do localStorage antes de sincronizar
+  initPromptTextareas();
+  setStatusPromptsNoLogin();
+
   restaurarVisibilidadeMirror();
   carregarMirrorCache();
   setInterval(atualizarMirrorTimestamp, 10000);
@@ -2155,6 +2613,7 @@ firebase.auth().onAuthStateChanged(user => {
     lbl.textContent = 'sem login';
     renderMirrorEmpty('Faça login para ver o espelho do Firestore.');
     atualizarMirrorAuthInfo();
+    setStatusPromptsNoLogin();
   }
 });
 
@@ -2163,6 +2622,7 @@ firebase.auth().onAuthStateChanged(user => {
    ============================================================ */
 console.log('%c⚡ Centelha · Console de Zonas', 'color:#d9a441;font-weight:bold;font-size:14px');
 console.log('📋 Validadores ativos: topologia, ancoragem, entry-point leak, densidade e dilemas.');
+console.log('📝 Prompts: Topologia+Cenas, Perigos, Puzzles — cabeçalho dinâmico, corpo editável.');
 console.log('📥 Importadores: zona completa, perigos (isolado), puzzles (Shadowgate).');
 console.log('📊 Espelho: leitura read-only do doc players/{uid}, sem criar documentos novos.');
 </script>
