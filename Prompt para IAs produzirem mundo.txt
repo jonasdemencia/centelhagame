@@ -318,7 +318,7 @@ Além dos itens usados nos puzzles desta zona, você deve criar **1 a 2 itens de
 - **Descrição neutra**: descreva só a aparência física, sem sugerir uso, função ou destino. Ex: "Um cilindro de latão com rosca interna numa das pontas" ✅ — nunca "um cilindro que parece encaixar em fechaduras" ❌.
 - **Tema livre**: não precisa extrapolar o tema da zona atual — pode ser algo genérico ou tangencial, já que será usado numa zona de tema diferente.
 
-Registre-os normalmente em `itens_adicionados` e `descricoes_itens_ativos` (iguais aos itens novos), e liste-os em `itens_legado` para o pipeline.
+Registre-os normalmente em `itens_adicionados` e `descricoes_itens_ativos` (iguais aos itens novos), e liste-os em `itens_legado` para o pipeline. Ao usar um item de legado herdado (`itens_legado_pendentes`) em um puzzle desta zona, registre o `id` dele em `itens_legado_consumidos` no output. Itens de legado não usados permanecem na fila para a próxima zona.
 
 ---
 
@@ -351,6 +351,7 @@ Registre-os normalmente em `itens_adicionados` e `descricoes_itens_ativos` (igua
   "itens_legado": [
     { "id": "id_do_item_de_legado", "sala_plantio": 3 }
   ],
+  "itens_legado_consumidos": ["id_do_item_de_legado_usado"],
   "textos_modificados": {
     "[ID_SALA_ONDE_FICA_O_ITEM]": "[Texto original da sala].",
     "[ID_SALA_DO_OBSTACULO]": "[Texto original da sala COM a âncora da saída de avanço REMOVIDA]. No lugar dela, [descrição do obstáculo]. Você nota que pode [ação preparatória literal], se desejar."
