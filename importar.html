@@ -117,13 +117,25 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
 .prompts-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
   margin-bottom:20px;overflow:hidden}
 .prompts-header{display:flex;justify-content:space-between;align-items:center;
-  padding:14px 24px;gap:14px;cursor:pointer;transition:background .15s;user-select:none}
+  padding:14px 24px;gap:14px;cursor:pointer;transition:background .15s;user-select:none;flex-wrap:wrap}
 .prompts-header:hover{background:var(--surface-2)}
 .prompts-title{display:flex;align-items:center;gap:12px;font-size:15px;font-weight:700;
   color:var(--gold);letter-spacing:.5px}
 .prompts-title .icon{color:var(--gold);font-size:16px}
 .prompts-subtitle{font-size:11px;color:var(--text-dim);font-weight:400;letter-spacing:0;margin-top:2px}
-.prompts-header-actions{display:flex;align-items:center;gap:12px;flex-shrink:0}
+.prompts-header-actions{display:flex;align-items:center;gap:10px;flex-shrink:0;flex-wrap:wrap}
+
+/* Controle de zona [−] Zona N [+] */
+.zone-control{display:inline-flex;align-items:center;gap:0;
+  background:var(--surface-2);border:1px solid var(--border-2);border-radius:var(--radius);
+  padding:2px;overflow:hidden;user-select:none}
+.zone-btn{width:26px;height:26px;background:transparent;border:0;color:var(--text-dim);
+  font-family:inherit;font-size:15px;cursor:pointer;border-radius:5px;transition:.15s;padding:0;
+  display:inline-flex;align-items:center;justify-content:center;line-height:1}
+.zone-btn:hover:not(:disabled){background:var(--gold-dim);color:var(--gold)}
+.zone-btn:disabled{opacity:.3;cursor:not-allowed}
+.zone-label{font-size:11px;color:var(--text-dim);padding:0 10px;white-space:nowrap;letter-spacing:.4px}
+.zone-label strong{color:var(--gold);font-weight:700;font-size:12.5px;margin-left:3px}
 
 .prompts-mini-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;
   padding:0 24px 20px;border-top:1px solid var(--border);padding-top:16px}
@@ -166,6 +178,8 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
 
 @media (max-width:720px){
   .prompts-mini-grid{grid-template-columns:1fr}
+  .prompts-header{flex-direction:column;align-items:flex-start}
+  .prompts-header-actions{width:100%}
 }
 
 /* ============ IMPORTER ============ */
@@ -401,12 +415,17 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
         <span class="icon">📝</span>
         <div>
           <div>PROMPTS</div>
-          <div class="prompts-subtitle">Cabeçalho regenerado a cada sincronização · corpo editável e persistente</div>
+          <div class="prompts-subtitle">Troca de zona manual ([−] / [+]) · 🔄 recarrega dados do Firestore</div>
         </div>
       </div>
       <div class="prompts-header-actions">
-        <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation(); sincronizarPrompts()">
-          <span class="btn-icon">🔄</span> Atualizar prompts
+        <div class="zone-control" onclick="event.stopPropagation()" title="Ajustar zona atual">
+          <button class="zone-btn" id="zoneBtnMenos" onclick="mudarZona(-1)" title="Zona anterior">−</button>
+          <span class="zone-label">Zona<strong id="zonaDisplay">1</strong></span>
+          <button class="zone-btn" id="zoneBtnMais" onclick="mudarZona(1)" title="Próxima zona">+</button>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation(); sincronizarPromptsManual()">
+          <span class="btn-icon">🔄</span> Atualizar
         </button>
         <span class="chevron">▸</span>
       </div>
@@ -862,14 +881,64 @@ const DEFAULT_BODIES = {
 };
 
 /* ============================================================
-   PROMPTS — lógica
+   PROMPTS — estado
    ============================================================ */
-function calcularZonaAtual(mapaMundo) {
+let _promptZona = 1;              // zona atual exibida nos prompts
+let _promptZonaManual = false;    // true se o usuário já escolheu manualmente (ou se foi auto-setado alguma vez)
+let _lastDados = null;            // último snapshot do doc players/{uid}
+let _promptsReady = false;        // true após a primeira renderização com dados reais
+
+/* ============================================================
+   PROMPTS — persistência / cálculo
+   ============================================================ */
+function calcularZonaAuto(mapaMundo) {
   const total = Object.keys(mapaMundo || {}).length;
   const n = Math.floor(total / SALAS_POR_ZONA) + 1;
   return Math.min(Math.max(n, 1), TOTAL_ZONAS);
 }
 
+function lerZonaSalva() {
+  const raw = localStorage.getItem('centelha.prompt.zonaManual');
+  if (!raw) return null;
+  const n = parseInt(raw, 10);
+  if (!Number.isFinite(n) || n < 1 || n > TOTAL_ZONAS) return null;
+  return n;
+}
+
+function salvarZona(n) {
+  localStorage.setItem('centelha.prompt.zonaManual', String(n));
+}
+
+function atualizarDisplayZona() {
+  const el = $('zonaDisplay');
+  if (el) el.textContent = String(_promptZona);
+  const bm = $('zoneBtnMenos');
+  const bp = $('zoneBtnMais');
+  if (bm) bm.disabled = _promptZona <= 1;
+  if (bp) bp.disabled = _promptZona >= TOTAL_ZONAS;
+}
+
+function carregarCorpoPersistido(key) {
+  let corpo = localStorage.getItem(`centelha.prompt.${key}.corpo`);
+  if (corpo === null) corpo = DEFAULT_BODIES[key] || '';
+  return corpo;
+}
+
+function salvarCorpoPersistido(key, corpo) {
+  localStorage.setItem(`centelha.prompt.${key}.corpo`, corpo);
+}
+
+// Corpo = tudo após o primeiro "\n\n". Cabeçalho nunca contém linha em branco interna.
+function extrairCorpo(texto) {
+  if (!texto) return '';
+  const idx = texto.indexOf('\n\n');
+  if (idx < 0) return texto;
+  return texto.slice(idx + 2);
+}
+
+/* ============================================================
+   PROMPTS — construção de conteúdo
+   ============================================================ */
 function construirCabecalho(key, n, ctx) {
   const start = (n - 1) * SALAS_POR_ZONA + 1;
   const end = n * SALAS_POR_ZONA;
@@ -916,24 +985,6 @@ function construirResumo(key, n, ctx) {
   return linhas.join('<br>');
 }
 
-// Corpo = tudo após o primeiro "\n\n". Cabeçalho nunca contém linha em branco interna.
-function extrairCorpo(texto) {
-  if (!texto) return '';
-  const idx = texto.indexOf('\n\n');
-  if (idx < 0) return texto;
-  return texto.slice(idx + 2);
-}
-
-function carregarCorpoPersistido(key) {
-  let corpo = localStorage.getItem(`centelha.prompt.${key}.corpo`);
-  if (corpo === null) corpo = DEFAULT_BODIES[key] || '';
-  return corpo;
-}
-
-function salvarCorpoPersistido(key, corpo) {
-  localStorage.setItem(`centelha.prompt.${key}.corpo`, corpo);
-}
-
 function montarTextoCompleto(key, n, ctx) {
   const header = construirCabecalho(key, n, ctx);
   const corpo = carregarCorpoPersistido(key);
@@ -953,6 +1004,9 @@ function initPromptTextareas() {
   }
 }
 
+/* ============================================================
+   PROMPTS — coleta de contexto a partir do doc
+   ============================================================ */
 function coletarSalasOcupadas(mapaMundo, n) {
   const start = (n - 1) * SALAS_POR_ZONA + 1;
   const end = n * SALAS_POR_ZONA;
@@ -972,10 +1026,19 @@ function coletarSalasOcupadas(mapaMundo, n) {
 }
 
 function coletarItensLegado(dados) {
-  const obj = dados.itens_legado || {};
+  const obj = (dados && dados.itens_legado) || {};
   return Object.values(obj)
     .filter(x => x && x.id)
     .map(x => ({ id: x.id, sala_plantio: x.sala_plantio ?? null }));
+}
+
+function ctxParaZona(n) {
+  const dados = _lastDados || {};
+  const mapaMundo = dados.mapaMundo || {};
+  return {
+    salas_ocupadas: coletarSalasOcupadas(mapaMundo, n),
+    itens_legado_pendentes: coletarItensLegado(dados)
+  };
 }
 
 function analisarZona(mapaMundo, n) {
@@ -997,48 +1060,32 @@ function analisarZona(mapaMundo, n) {
   return { salasOk, cenas, perigos, start, end };
 }
 
-async function sincronizarPrompts(silent = false) {
-  const user = firebase.auth().currentUser;
-  if (!user) {
-    setStatusPromptsNoLogin();
-    setResumosNoLogin();
-    if (!silent) toast('Faça login para sincronizar os prompts.', 'warn');
-    return;
-  }
+/* ============================================================
+   PROMPTS — render
+   ============================================================ */
+function aplicarPrompts() {
+  const n = _promptZona;
+  const ctx = ctxParaZona(n);
 
-  try {
-    const docSnap = await db.collection('players').doc(user.uid).get();
-    const dados = docSnap.data() || {};
-    const mapaMundo = dados.mapaMundo || {};
-    const n = calcularZonaAtual(mapaMundo);
-
-    const salas_ocupadas = coletarSalasOcupadas(mapaMundo, n);
-    const itens_legado_pendentes = coletarItensLegado(dados);
-
-    const ctx = { salas_ocupadas, itens_legado_pendentes };
-
-    for (const key of PROMPT_KEYS) {
-      const ta = $(`prompt_${key}`);
-      if (ta) {
-        if (ta.value) {
-          const corpoAtual = extrairCorpo(ta.value);
-          if (corpoAtual) salvarCorpoPersistido(key, corpoAtual);
-        }
-        ta.value = montarTextoCompleto(key, n, ctx);
+  for (const key of PROMPT_KEYS) {
+    const ta = $(`prompt_${key}`);
+    if (ta) {
+      // Preserva o corpo que o usuário editou antes de reescrever o cabeçalho
+      if (ta.value) {
+        const corpoAtual = extrairCorpo(ta.value);
+        if (corpoAtual) salvarCorpoPersistido(key, corpoAtual);
       }
-      const miniEl = $(MINI_IDS[key]);
-      if (miniEl) miniEl.innerHTML = construirResumo(key, n, ctx);
+      ta.value = montarTextoCompleto(key, n, ctx);
     }
-
-    atualizarStatusPrompts(mapaMundo, n);
-    if (!silent) toast(`Prompts atualizados (zona ${n}).`, 'ok');
-  } catch (e) {
-    console.error(e);
-    if (!silent) toast('Erro ao sincronizar prompts: ' + e.message, 'err');
+    const miniEl = $(MINI_IDS[key]);
+    if (miniEl) miniEl.innerHTML = construirResumo(key, n, ctx);
   }
+  atualizarStatusPromptsZona(n);
 }
 
-function atualizarStatusPrompts(mapaMundo, n) {
+function atualizarStatusPromptsZona(n) {
+  if (!_lastDados) { setStatusPromptsNoLogin(); return; }
+  const mapaMundo = _lastDados.mapaMundo || {};
   const { salasOk, cenas, perigos, start, end } = analisarZona(mapaMundo, n);
 
   const elTop = $('statusTopologia');
@@ -1081,6 +1128,46 @@ function setResumosNoLogin() {
   }
 }
 
+/* ============================================================
+   PROMPTS — ações
+   ============================================================ */
+function mudarZona(delta) {
+  const novo = Math.min(Math.max(_promptZona + delta, 1), TOTAL_ZONAS);
+  if (novo === _promptZona) return;
+  _promptZona = novo;
+  _promptZonaManual = true;
+  salvarZona(novo);
+  atualizarDisplayZona();
+  aplicarPrompts();
+}
+
+async function sincronizarPromptsManual() {
+  const user = firebase.auth().currentUser;
+  if (!user) {
+    toast('Faça login para atualizar os prompts.', 'warn');
+    return;
+  }
+  try {
+    const snap = await db.collection('players').doc(user.uid).get();
+    _lastDados = snap.data() || {};
+    // Se é a primeira vez que temos dados reais, inicializa a zona (auto) se o usuário nunca escolheu
+    if (!_promptsReady) {
+      if (!_promptZonaManual) {
+        _promptZona = calcularZonaAuto(_lastDados.mapaMundo || {});
+        salvarZona(_promptZona);
+        _promptZonaManual = true;
+      }
+      _promptsReady = true;
+    }
+    atualizarDisplayZona();
+    aplicarPrompts();
+    toast(`Prompts atualizados (zona ${_promptZona}).`, 'ok');
+  } catch (e) {
+    console.error(e);
+    toast('Erro ao atualizar prompts: ' + e.message, 'err');
+  }
+}
+
 function copiarPrompt(key) {
   const ta = $(`prompt_${key}`);
   if (!ta) return;
@@ -1101,6 +1188,15 @@ function togglePrompts() {
 function restaurarEstadoPrompts() {
   const aberto = localStorage.getItem('centelha.console.promptsAberto') === '1';
   if (aberto) $('promptsCard').classList.add('open');
+}
+
+function restaurarZonaSalva() {
+  const z = lerZonaSalva();
+  if (z !== null) {
+    _promptZona = z;
+    _promptZonaManual = true;
+  }
+  atualizarDisplayZona();
 }
 
 /* ============================================================
@@ -1998,6 +2094,7 @@ async function importarJSON() {
     const elapsed = Math.round(performance.now() - startTime);
     renderImportResult({ status: 'ok', time: elapsed, chips, logs });
     toast('Importação concluída.', 'ok');
+    // Sincroniza espelho (NÃO mexe nos prompts — controle é manual)
     sincronizarMirror();
   } catch (e) {
     console.error(e);
@@ -2580,9 +2677,20 @@ async function sincronizarMirror() {
       localStorage.setItem('centelha.console.mirrorSnapshot', JSON.stringify(cache));
     } catch (_) { }
 
-    // Sincroniza prompts junto (silencioso)
-    await sincronizarPrompts(true);
-
+    // Atualiza o cache interno dos prompts, mas NÃO re-renderiza.
+    // Exceção: primeira vez que temos dados reais — aí inicializa a zona (auto se nunca escolhida)
+    // e faz a renderização inicial dos prompts. A partir daí, os prompts só mudam por ação do usuário.
+    _lastDados = dados;
+    if (!_promptsReady) {
+      if (!_promptZonaManual) {
+        _promptZona = calcularZonaAuto(mapaMundo);
+        salvarZona(_promptZona);
+        _promptZonaManual = true;
+      }
+      atualizarDisplayZona();
+      aplicarPrompts();
+      _promptsReady = true;
+    }
   } catch (e) {
     console.error(e);
     renderMirrorError(e.message);
@@ -2710,6 +2818,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // Prompts: pré-carrega do localStorage antes de sincronizar
   initPromptTextareas();
+  restaurarZonaSalva();
   setStatusPromptsNoLogin();
   setResumosNoLogin();
   restaurarEstadoPrompts();
@@ -2747,7 +2856,7 @@ firebase.auth().onAuthStateChanged(user => {
    ============================================================ */
 console.log('%c⚡ Centelha · Console de Zonas', 'color:#d9a441;font-weight:bold;font-size:14px');
 console.log('📋 Validadores ativos: topologia, ancoragem, entry-point leak, densidade e dilemas.');
-console.log('📝 Prompts: Topologia+Cenas, Perigos, Puzzles — recolhível com resumo por etapa.');
+console.log('📝 Prompts: zona controlada manualmente por [−]/[+] · 🔄 recarrega dados do Firestore.');
 console.log('📥 Importadores: zona completa, perigos (isolado), puzzles (Shadowgate).');
 console.log('📊 Espelho: leitura read-only do doc players/{uid}, sem criar documentos novos.');
 </script>
