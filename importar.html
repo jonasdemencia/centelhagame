@@ -1143,6 +1143,36 @@ async function importarPuzzles(dadosPuzzle, uid, logFn) {
     salasTocadas.add(salaId);
     return mapaTrabalho[salaId];
   }
+
+  // Consome itens de legado usados nesta zona
+const itensLegadoAtuais = { ...(dadosAtuais.itens_legado || {}) };
+const legadoConsumidos = Array.isArray(dadosPuzzle.itens_legado_consumidos)
+    ? dadosPuzzle.itens_legado_consumidos
+    : [];
+for (const idConsumido of legadoConsumidos) {
+    if (itensLegadoAtuais[idConsumido]) {
+        delete itensLegadoAtuais[idConsumido];
+        logFn(`🎁 Item de legado consumido e removido da fila: ${idConsumido}`, 'info');
+    }
+}
+
+// Adiciona os novos itens de legado gerados por esta zona
+if (Array.isArray(dadosPuzzle.itens_legado) && dadosPuzzle.itens_legado.length > 0) {
+    for (const entrada of dadosPuzzle.itens_legado) {
+        if (!entrada || !entrada.id) continue;
+        itensLegadoAtuais[entrada.id] = {
+            id: entrada.id,
+            sala_plantio: entrada.sala_plantio ?? null
+        };
+    }
+    logFn(`🎁 ${dadosPuzzle.itens_legado.length} item(ns) de legado registrado(s) para a próxima zona.`, 'ok');
+}
+
+// Grava se houve consumo OU se novos foram adicionados
+if (legadoConsumidos.length > 0 || (Array.isArray(dadosPuzzle.itens_legado) && dadosPuzzle.itens_legado.length > 0)) {
+    updatePayload['itens_legado'] = itensLegadoAtuais;
+}
+  
   if (dadosPuzzle.itens_novos && Object.keys(dadosPuzzle.itens_novos).length > 0) {
     const itensNovosAtuais = dadosAtuais.itens_novos || {};
     for (const [id, def] of Object.entries(dadosPuzzle.itens_novos)) {
@@ -1221,7 +1251,7 @@ function detectarTipo(dados) {
   const temPerigos = Array.isArray(dados.perigos);
   const temPuzzles = !!(dados.saidas_sequestradas || dados.itens_novos ||
     dados.textos_modificados || dados.itens_adicionados ||
-    dados.descricoes_itens_ativos || dados.puzzles);
+    dados.descricoes_itens_ativos || dados.puzzles || dados.itens_legado);
   if (temZona) return 'zona';
   if (temPuzzles) return 'puzzles';
   if (temPerigos) return 'perigos';
@@ -1240,6 +1270,7 @@ function contarDados(dados) {
   if (Array.isArray(dados.perigos)) c.perigos = dados.perigos.length;
   if (dados.puzzles) c.puzzles = Object.keys(dados.puzzles).length;
   if (dados.itens_novos) c.itens_novos = Object.keys(dados.itens_novos).length;
+  if (Array.isArray(dados.itens_legado)) c.itens_legado = dados.itens_legado.length;
   return c;
 }
 
@@ -1276,6 +1307,7 @@ function atualizarBadge(inputEl, badgeEl) {
   if (c.perigos) chips.push(`${c.perigos} perigos`);
   if (c.puzzles) chips.push(`${c.puzzles} puzzles`);
   if (c.itens_novos) chips.push(`${c.itens_novos} itens novos`);
+  if (c.itens_legado) chips.push(`${c.itens_legado} itens de legado`);
   badgeEl.textContent = labels[tipo] + (chips.length ? ' · ' + chips.join(' · ') : '');
   return { dados, tipo, chips };
 }
