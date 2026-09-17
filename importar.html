@@ -1,943 +1,1861 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Importador de Zonas (Cenas + Perigos + Puzzles) Inteligente</title>
-    <style>
-        body {
-            background: #0a0a0a;
-            color: #ccc;
-            font-family: 'Courier New', monospace;
-            padding: 20px;
-            max-width: 800px;
-            margin: 0 auto;
-        }
-        .ok { color: #4caf50; }
-        .erro { color: #e53935; }
-        .aviso { color: #d9a441; }
-        textarea {
-            width: 100%;
-            height: 300px;
-            background: #111;
-            color: #ccc;
-            border: 1px solid #333;
-            padding: 10px;
-            font-family: 'Courier New', monospace;
-            font-size: 12px;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-        .btn {
-            background: #d9a441;
-            color: #000;
-            border: none;
-            padding: 12px 24px;
-            cursor: pointer;
-            font-weight: bold;
-            border-radius: 4px;
-            margin-top: 10px;
-            font-family: inherit;
-        }
-        .btn:hover { background: #e0b050; }
-        .file-input-wrapper {
-            margin: 20px 0;
-            padding: 20px;
-            border: 2px dashed #444;
-            border-radius: 8px;
-            text-align: center;
-            cursor: pointer;
-        }
-        .file-input-wrapper.dragover {
-            border-color: #d9a441;
-            background: #1a150a;
-        }
-        pre {
-            background: #0a0a0a;
-            padding: 10px;
-            border: 1px solid #222;
-            overflow: auto;
-            max-height: 200px;
-            font-size: 11px;
-            border-radius: 4px;
-        }
-        #status {
-            margin: 10px 0;
-            padding: 10px;
-            background: #0a0a0a;
-            border: 1px solid #222;
-            max-height: 200px;
-            overflow: auto;
-            font-size: 12px;
-            border-radius: 4px;
-        }
-        #status .ok { color: #4caf50; }
-        #status .erro { color: #e53935; }
-        #status .aviso { color: #d9a441; }
-        #status .info { color: #888; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Centelha · Console de Zonas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0a0a; --surface:#111; --surface-2:#141414; --surface-3:#1a1a1a;
+  --border:#1f1f1f; --border-2:#2a2a2a;
+  --text:#ccc; --text-dim:#888; --text-dimmer:#555;
+  --gold:#d9a441; --gold-hover:#e0b050; --gold-dim:rgba(217,164,65,.10);
+  --green:#4caf50; --green-dim:rgba(76,175,80,.10);
+  --red:#e53935; --red-dim:rgba(229,57,53,.10);
+  --blue:#5a8fbf; --blue-dim:rgba(90,143,191,.10);
+  --yellow:#e8d9b0;
+  --radius:8px; --radius-lg:12px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
+  font-family:'JetBrains Mono','Courier New',monospace;font-size:13px;line-height:1.55;min-height:100vh}
+body{padding:0 0 80px}
+
+/* Progress */
+.progress-bar{position:fixed;top:0;left:0;right:0;height:2px;z-index:1000;overflow:hidden;pointer-events:none}
+.progress-bar.active::after{content:'';position:absolute;top:0;left:0;height:100%;width:40%;
+  background:linear-gradient(90deg,transparent,var(--gold),transparent);animation:pslide 1.2s ease-in-out infinite}
+@keyframes pslide{0%{transform:translateX(-100%)}100%{transform:translateX(300%)}}
+
+/* Header */
+.app-header{position:sticky;top:0;z-index:100;display:flex;justify-content:space-between;align-items:center;
+  padding:14px 28px;background:rgba(10,10,10,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
+.brand{display:flex;align-items:center;gap:12px}
+.brand-mark{font-size:22px;color:var(--gold);filter:drop-shadow(0 0 10px rgba(217,164,65,.5))}
+.brand h1{margin:0;font-size:15px;letter-spacing:2.5px;color:var(--gold);font-weight:700}
+.brand p{margin:0;font-size:10px;color:var(--text-dimmer);letter-spacing:1.5px;text-transform:uppercase}
+.auth-status{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text-dim);
+  padding:6px 12px;background:var(--surface);border:1px solid var(--border);border-radius:20px;transition:.2s}
+.auth-status .dot{width:6px;height:6px;border-radius:50%;background:var(--text-dimmer);transition:.2s}
+.auth-status.ok{border-color:rgba(76,175,80,.3)}
+.auth-status.ok .dot{background:var(--green);box-shadow:0 0 8px var(--green)}
+.auth-status.warn{border-color:rgba(217,164,65,.3)}
+.auth-status.warn .dot{background:var(--gold);box-shadow:0 0 8px var(--gold)}
+.auth-status.err{border-color:rgba(229,57,53,.3)}
+.auth-status.err .dot{background:var(--red);box-shadow:0 0 8px var(--red)}
+
+/* Main */
+main{max-width:1000px;margin:0 auto;padding:28px 24px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
+  margin-bottom:20px;overflow:hidden;transition:border-color .2s}
+.card-header{padding:20px 24px 14px;border-bottom:1px solid var(--border)}
+.card-header h2{margin:0 0 4px;font-size:15px;color:var(--gold);letter-spacing:.5px;font-weight:700}
+.card-header p{margin:0;font-size:11px;color:var(--text-dim)}
+
+/* Editor */
+.importer-body{padding:20px 24px 24px}
+.editor-wrap{position:relative;border:1px solid var(--border-2);border-radius:var(--radius);
+  background:var(--surface-2);transition:border-color .2s, background .2s}
+.editor-wrap.dragover{border-color:var(--gold);background:var(--gold-dim)}
+.editor-wrap:focus-within{border-color:var(--border-2);background:var(--surface-3)}
+.editor-badge{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);font-size:11px}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:12px;
+  font-size:10px;letter-spacing:.5px;font-weight:500;text-transform:uppercase}
+.badge-empty{background:var(--surface-3);color:var(--text-dimmer);border:1px solid var(--border-2)}
+.badge-zona{background:var(--gold-dim);color:var(--gold);border:1px solid rgba(217,164,65,.35)}
+.badge-perigos{background:var(--red-dim);color:#ff7a70;border:1px solid rgba(229,57,53,.35)}
+.badge-puzzles{background:var(--blue-dim);color:var(--blue);border:1px solid rgba(90,143,191,.35)}
+.badge-invalid{background:var(--red-dim);color:var(--red);border:1px solid rgba(229,57,53,.35)}
+
+.editor{position:relative;min-height:280px;max-height:520px;overflow:hidden}
+.editor-highlight,.editor-input{
+  font-family:inherit;font-size:12.5px;line-height:1.6;
+  padding:16px 18px;margin:0;border:0;white-space:pre-wrap;word-wrap:break-word;
+  overflow-wrap:break-word;tab-size:2
+}
+.editor-highlight{position:absolute;inset:0;overflow:auto;pointer-events:none;color:var(--text);background:transparent}
+.editor-input{position:relative;background:transparent;color:transparent;caret-color:var(--gold);
+  width:100%;min-height:280px;max-height:520px;outline:none;resize:vertical;z-index:1;display:block}
+.editor-input::placeholder{color:var(--text-dimmer)}
+.editor-input::selection{background:rgba(217,164,65,.25)}
+
+.tok-key{color:#e0b050}
+.tok-str{color:#8ec78e}
+.tok-num{color:#7fb8e0}
+.tok-bool{color:#d88db8}
+.tok-null{color:#777}
+
+/* Secondary textarea */
+.secondary-input{margin-top:14px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface-2)}
+.secondary-input summary{padding:10px 14px;font-size:11px;color:var(--text-dim);cursor:pointer;user-select:none;
+  list-style:none;transition:color .15s}
+.secondary-input summary::-webkit-details-marker{display:none}
+.secondary-input summary::before{content:'▸ ';color:var(--text-dimmer);display:inline-block;transition:transform .2s}
+.secondary-input[open] summary::before{transform:rotate(90deg)}
+.secondary-input summary:hover{color:var(--gold)}
+.secondary-input textarea{width:100%;min-height:100px;background:transparent;border:0;border-top:1px solid var(--border);
+  padding:12px 14px;color:var(--text);font-family:inherit;font-size:12px;outline:none;resize:vertical}
+
+/* Preview */
+.preview{margin-top:14px;padding:12px 16px;background:var(--surface-2);border:1px solid var(--border);
+  border-radius:var(--radius);font-size:11.5px;color:var(--text-dim);display:flex;flex-direction:column;gap:6px}
+.preview .line{display:flex;align-items:flex-start;gap:8px}
+.preview .line strong{color:var(--text);font-weight:500}
+.preview .icon{flex-shrink:0;width:14px;text-align:center}
+
+/* Actions */
+.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px;align-items:center}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:11px 20px;border:1px solid transparent;
+  border-radius:var(--radius);font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer;
+  transition:.15s;letter-spacing:.3px}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn-icon{font-size:13px}
+.btn-primary{background:var(--gold);color:#0a0a0a}
+.btn-primary:hover:not(:disabled){background:var(--gold-hover);box-shadow:0 0 20px rgba(217,164,65,.25)}
+.btn-secondary{background:transparent;border-color:var(--border-2);color:var(--blue)}
+.btn-secondary:hover:not(:disabled){background:var(--blue-dim);border-color:var(--blue)}
+.btn-ghost{background:transparent;border-color:var(--border-2);color:var(--text-dim)}
+.btn-ghost:hover:not(:disabled){color:var(--text);border-color:var(--text-dim)}
+.btn-sm{padding:8px 14px;font-size:11.5px}
+
+/* Result panel */
+.result-panel{margin-top:18px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface-2);overflow:hidden}
+.result-header{padding:14px 18px;display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}
+.result-status{font-size:13px;font-weight:700;letter-spacing:.3px}
+.result-status.ok{color:var(--green)}
+.result-status.err{color:var(--red)}
+.result-time{font-size:11px;color:var(--text-dimmer)}
+.result-chips{display:flex;flex-wrap:wrap;gap:6px;padding:0 18px 14px}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;background:var(--surface-3);
+  border:1px solid var(--border-2);border-radius:20px;font-size:10.5px;color:var(--text-dim)}
+.chip.ok{border-color:rgba(76,175,80,.3);color:var(--green)}
+.chip.err{border-color:rgba(229,57,53,.3);color:var(--red)}
+.chip.warn{border-color:rgba(217,164,65,.3);color:var(--gold)}
+.result-details{border-top:1px solid var(--border)}
+.result-details summary{padding:10px 18px;font-size:11px;color:var(--text-dim);cursor:pointer;user-select:none;list-style:none}
+.result-details summary::-webkit-details-marker{display:none}
+.result-details summary::before{content:'▸ ';color:var(--text-dimmer);display:inline-block;transition:transform .2s}
+.result-details[open] summary::before{transform:rotate(90deg)}
+.result-details summary:hover{color:var(--gold)}
+.result-details > div{padding:0 18px 18px}
+.result-panel .result-actions{padding:14px 18px;border-top:1px solid var(--border);display:flex;gap:10px;flex-wrap:wrap}
+
+/* Log panel */
+.log-panel{max-height:220px;overflow:auto;padding:10px 12px;background:var(--bg);border:1px solid var(--border);
+  border-radius:6px;font-size:11.5px;line-height:1.6}
+.log-ok{color:var(--green)}
+.log-err{color:var(--red)}
+.log-warn{color:var(--gold)}
+.log-info{color:var(--text-dim)}
+.log-msg{color:var(--text)}
+
+/* JSON view */
+.json-view{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:14px;
+  max-height:400px;overflow:auto;font-size:11px;line-height:1.6;margin:0;white-space:pre}
+
+/* Validator */
+.validator-toggle{display:flex;align-items:center;justify-content:space-between;gap:14px;width:100%;
+  padding:18px 24px;background:transparent;border:0;color:var(--text);font-family:inherit;font-size:15px;
+  font-weight:700;cursor:pointer;letter-spacing:.5px;transition:background .15s}
+.validator-toggle:hover{background:var(--surface-2)}
+.validator-title{display:flex;align-items:center;gap:12px}
+.validator-title .icon{color:var(--gold);font-size:16px}
+.validator-badges{display:flex;gap:6px;margin-left:auto;margin-right:10px}
+.validator-badges .mini{font-size:10.5px;padding:2px 8px;border-radius:10px;font-weight:500}
+.validator-badges .mini.err{background:var(--red-dim);color:var(--red);border:1px solid rgba(229,57,53,.3)}
+.validator-badges .mini.warn{background:var(--gold-dim);color:var(--gold);border:1px solid rgba(217,164,65,.3)}
+.validator-badges .mini.ok{background:var(--green-dim);color:var(--green);border:1px solid rgba(76,175,80,.3)}
+.chevron{color:var(--text-dimmer);font-size:14px;transition:transform .25s ease}
+.validator-card.open .chevron{transform:rotate(90deg)}
+.validator-panel{max-height:0;overflow:hidden;transition:max-height .35s ease}
+.validator-card.open .validator-panel{max-height:3000px}
+.validator-body{padding:4px 24px 24px;border-top:1px solid var(--border)}
+
+.validator-options{display:flex;align-items:center;gap:16px;padding:14px 0}
+.check{display:inline-flex;align-items:center;gap:8px;font-size:11.5px;color:var(--text-dim);cursor:pointer;user-select:none}
+.check input{appearance:none;width:14px;height:14px;border:1px solid var(--border-2);border-radius:3px;
+  background:var(--surface-2);cursor:pointer;position:relative;transition:.15s}
+.check input:checked{background:var(--gold);border-color:var(--gold)}
+.check input:checked::after{content:'✓';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  color:#0a0a0a;font-size:10px;font-weight:700}
+
+.drop-zone{display:flex;align-items:center;justify-content:center;gap:12px;padding:26px 20px;
+  border:2px dashed var(--border-2);border-radius:var(--radius);cursor:pointer;
+  font-size:12px;color:var(--text-dim);transition:.2s;background:var(--surface-2)}
+.drop-zone:hover{border-color:var(--text-dimmer);color:var(--text)}
+.drop-zone.dragover{border-color:var(--gold);background:var(--gold-dim);color:var(--gold)}
+.drop-icon{font-size:16px}
+
+.validator-stats{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 12px}
+.vstat{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;background:var(--surface-2);
+  border:1px solid var(--border);border-radius:20px;font-size:11px;color:var(--text-dim)}
+.vstat.ok{border-color:rgba(76,175,80,.3);color:var(--green)}
+.vstat.err{border-color:rgba(229,57,53,.3);color:var(--red)}
+.vstat.warn{border-color:rgba(217,164,65,.3);color:var(--gold)}
+
+.validator-result{font-size:12px}
+.validator-result h3{margin:18px 0 8px;font-size:12px;color:var(--gold);letter-spacing:.5px;text-transform:uppercase;font-weight:700}
+.validator-result h3:first-child{margin-top:8px}
+.vrow{display:flex;gap:10px;padding:9px 12px;background:var(--surface-2);border-left:3px solid var(--border-2);
+  border-radius:4px;margin-bottom:6px;font-size:11.5px;line-height:1.55}
+.vrow.ok{border-left-color:var(--green)}
+.vrow.err{border-left-color:var(--red)}
+.vrow.warn{border-left-color:var(--gold)}
+.vrow strong{color:var(--text);font-weight:600;flex-shrink:0}
+.vrow .detail{color:var(--text-dim);flex:1}
+.vrow .detail .err{color:var(--red)}
+.vrow .detail .warn{color:var(--gold)}
+.vrow .detail .ok{color:var(--green)}
+.vrow .tag{font-size:10px;color:var(--text-dimmer);margin-left:auto;flex-shrink:0;align-self:flex-start}
+
+.validator-empty{padding:20px;text-align:center;color:var(--text-dimmer);font-size:11.5px}
+
+.validator-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+
+/* Toasts */
+.toasts{position:fixed;bottom:24px;right:24px;display:flex;flex-direction:column;gap:10px;z-index:2000;pointer-events:none}
+.toast{pointer-events:auto;padding:12px 18px;background:var(--surface-2);border:1px solid var(--border-2);
+  border-radius:var(--radius);font-size:12px;color:var(--text);max-width:340px;
+  box-shadow:0 8px 30px rgba(0,0,0,.6);transform:translateX(20px);opacity:0;transition:.25s ease}
+.toast.show{transform:translateX(0);opacity:1}
+.toast.ok{border-left:3px solid var(--green)}
+.toast.err{border-left:3px solid var(--red)}
+.toast.warn{border-left:3px solid var(--gold)}
+.toast.info{border-left:3px solid var(--blue)}
+
+/* Scrollbars */
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#222;border-radius:5px}
+::-webkit-scrollbar-thumb:hover{background:#2f2f2f}
+</style>
 </head>
 <body>
-    <h1>🧩 Importador de Zonas (Cenas + Perigos + Puzzles) Inteligente</h1>
-    <p>
-        Cole o JSON corrigido do validador ou arraste um arquivo para importar diretamente no Firestore.<br>
-        <strong>As cenas (texto_evento + dilemas), os perigos (interceptor + nova_opcao) e os puzzles (Shadowgate) serão injetados automaticamente nas salas.</strong><br>
-        <em>Se você colar apenas <code>{"perigos": [...]}</code>, o importador atualizará somente os perigos das salas já existentes no Firestore.<br>
-        Se colar <code>{"puzzles": {...}}</code> (ou com <code>itens_novos</code>, <code>textos_modificados</code>, <code>itens_adicionados</code>), o importador aplicará os puzzles.</em>
-    </p>
 
-    <div class="file-input-wrapper" id="drop">
-        📂 Arraste o arquivo da zona, dos perigos ou dos puzzles aqui — o importador identifica o conteúdo e coloca no campo certo
-        <input type="file" id="fileInput" accept=".json" style="display:none;">
+<div class="progress-bar" id="progressBar"></div>
+
+<header class="app-header">
+  <div class="brand">
+    <div class="brand-mark">⚡</div>
+    <div>
+      <h1>CENTELHA</h1>
+      <p>Console de Zonas</p>
+    </div>
+  </div>
+  <div class="auth-status" id="authStatus">
+    <span class="dot"></span>
+    <span class="auth-label">Verificando...</span>
+  </div>
+</header>
+
+<main>
+  <!-- ===================== IMPORTER ===================== -->
+  <section class="card importer-card">
+    <div class="card-header">
+      <h2>Importador</h2>
+      <p>Cole o JSON ou arraste um arquivo. O console identifica o tipo automaticamente.</p>
     </div>
 
-    <p>ou</p>
+    <div class="importer-body">
+      <div class="editor-wrap" id="mainInputWrap">
+        <div class="editor-badge">
+          <span class="badge badge-empty" id="mainBadge">aguardando JSON</span>
+        </div>
+        <div class="editor">
+          <pre class="editor-highlight" id="editorHighlight" aria-hidden="true"></pre>
+          <textarea class="editor-input" id="jsonInput" spellcheck="false"
+            placeholder='Cole aqui o JSON da zona (plano + salas + cenas) OU {"perigos": [...]} OU {"puzzles": {...}}'></textarea>
+        </div>
+      </div>
 
-    <textarea id="jsonInput" placeholder='Cole aqui o JSON da zona (topologia + prosa + dilemas, com ou sem perigos) OU {"perigos": [...]} OU {"puzzles": {...}}'></textarea>
+      <details class="secondary-input" id="secondaryInput">
+        <summary>Perigos em JSON separado (opcional)</summary>
+        <textarea id="perigosInput" spellcheck="false" placeholder='{"perigos": [...]}'></textarea>
+      </details>
 
-    <p style="margin-top:20px;">📦 Perigos gerados em uma chamada separada? Cole só o <code>{"perigos": [...]}</code> aqui (opcional — use apenas se o JSON principal não contiver os perigos):</p>
-    <textarea id="perigosInput" style="height:120px;" placeholder='Opcional: cole aqui apenas {"perigos": [...]} se você gerou os perigos numa chamada separada da IA...'></textarea>
+      <div class="preview" id="preview" hidden></div>
 
-    <button class="btn" onclick="importarJSON()">🚀 Importar para o Firestore</button>
+      <div class="actions">
+        <button class="btn btn-primary" id="btnImport" onclick="importarJSON()">
+          <span class="btn-icon">🚀</span> Importar para o Firestore
+        </button>
+        <button class="btn btn-secondary" onclick="validarAntesDeImportar()">
+          <span class="btn-icon">🧪</span> Validar antes
+        </button>
+        <button class="btn btn-ghost" onclick="limparTudo()">Limpar</button>
+      </div>
 
-    <div id="status"></div>
-    <div id="resultado"></div>
+      <div class="result-panel" id="importResult" hidden></div>
+    </div>
+  </section>
 
-    <!-- Firebase compat (versão que suporta firebase.auth()) -->
-    <script src="https://www.gstatic.com/firebasejs/11.4.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/11.4.0/firebase-auth-compat.js"></script>
+  <!-- ===================== VALIDATOR ===================== -->
+  <section class="card validator-card" id="validatorCard">
+    <button class="validator-toggle" id="validatorToggle" onclick="toggleValidator()">
+      <span class="validator-title">
+        <span class="icon">🧪</span>
+        <span>Validador</span>
+      </span>
+      <span class="validator-badges" id="validatorBadges"></span>
+      <span class="chevron" id="validatorChevron">▸</span>
+    </button>
+    <div class="validator-panel" id="validatorPanel">
+      <div class="validator-body">
+        <div class="validator-options">
+          <label class="check">
+            <input type="checkbox" id="autoValidate">
+            <span>Auto-validar ao colar (debounce 800ms)</span>
+          </label>
+        </div>
 
-    <script>
-        // ============================================================
-        // CONFIGURAÇÃO DO FIREBASE (MESMA DO SEU JOGO)
-        // ============================================================
-        const firebaseConfig = {
-            apiKey: "AIzaSyC0XfvjonW2gd1eGAZX7NBYfPGMwI2siJw",
-            authDomain: "centelhagame-9d511.firebaseapp.com",
-            projectId: "centelhagame-9d511",
-            storageBucket: "centelhagame-9d511.appspot.com",
-            messagingSenderId: "700809803145",
-            appId: "1:700809803145:web:bff4c6a751ec9389919d58"
-        };
+        <div class="drop-zone" id="validatorDrop">
+          <span class="drop-icon">📂</span>
+          <span>Arraste um arquivo JSON aqui ou clique para selecionar</span>
+          <input type="file" id="validatorFile" accept=".json" style="display:none;">
+        </div>
 
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
+        <div class="validator-stats" id="validatorStats" hidden></div>
+        <div class="validator-result" id="validatorResult">
+          <div class="validator-empty">Cole um JSON no importador acima ou arraste um arquivo aqui para validar.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
 
-        // ============================================================
-        // LIMPEZA DE VÍCIOS DE IA (idêntica à de vamosla.html)
-        // ============================================================
-        function expurgarViciosIA(texto) {
-            if (!texto) return texto;
-            let limpo = texto.replace(/(?:,\s*|\s+)\b(?:quase\s+)?como se\b[^.!?]*([.!?]|$)/gi, '$1');
-            limpo = limpo.replace(/(?:,\s*|\s+)\b(?:quase\s+)?como (?:um|uma)\b[^.!?]*([.!?]|$)/gi, '$1');
-            limpo = limpo.replace(/\b[Dd]e repente,?\s*/g, '');
-            return limpo.replace(/\s{2,}/g, ' ').trim();
+<div class="toasts" id="toasts"></div>
+
+<script src="https://www.gstatic.com/firebasejs/11.4.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/11.4.0/firebase-auth-compat.js"></script>
+
+<script>
+/* ============================================================
+   FIREBASE
+   ============================================================ */
+const firebaseConfig = {
+  apiKey: "AIzaSyC0XfvjonW2gd1eGAZX7NBYfPGMwI2siJw",
+  authDomain: "centelhagame-9d511.firebaseapp.com",
+  projectId: "centelhagame-9d511",
+  storageBucket: "centelhagame-9d511.appspot.com",
+  messagingSenderId: "700809803145",
+  appId: "1:700809803145:web:bff4c6a751ec9389919d58"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+/* ============================================================
+   UI UTILS
+   ============================================================ */
+const $ = id => document.getElementById(id);
+const toastsEl = $('toasts');
+const progressBar = $('progressBar');
+
+function toast(msg, type = 'info', ms = 3200) {
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = msg;
+  toastsEl.appendChild(el);
+  requestAnimationFrame(() => el.classList.add('show'));
+  setTimeout(() => {
+    el.classList.remove('show');
+    setTimeout(() => el.remove(), 300);
+  }, ms);
+}
+function setProgress(active) {
+  progressBar.classList.toggle('active', !!active);
+}
+
+/* ============================================================
+   JSON SYNTAX HIGHLIGHT
+   ============================================================ */
+function escapeHTML(s) {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+function highlightJSON(str) {
+  if (!str) return '';
+  str = escapeHTML(str);
+  return str.replace(
+    /("(?:\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
+    m => {
+      let cls = 'tok-num';
+      if (/^"/.test(m)) {
+        cls = /:$/.test(m) ? 'tok-key' : 'tok-str';
+      } else if (/true|false/.test(m)) cls = 'tok-bool';
+      else if (/null/.test(m)) cls = 'tok-null';
+      return `<span class="${cls}">${m}</span>`;
+    }
+  );
+}
+
+/* ============================================================
+   EDITOR (textarea + highlight overlay)
+   ============================================================ */
+function setupEditor(textarea, highlight) {
+  function refresh() {
+    let text = textarea.value;
+    if (!text) { highlight.innerHTML = ''; return; }
+    // Adiciona um zero-width para garantir última linha visível
+    highlight.innerHTML = highlightJSON(text) + '\n';
+  }
+  textarea.addEventListener('input', refresh);
+  textarea.addEventListener('scroll', () => {
+    highlight.scrollTop = textarea.scrollTop;
+    highlight.scrollLeft = textarea.scrollLeft;
+  });
+  refresh();
+  return refresh;
+}
+
+/* ============================================================
+   VALIDAÇÃO (código original preservado)
+   ============================================================ */
+function validarTextoLogico(textoLogico, acaoChegadaEsperada) {
+  const erros = [];
+  if (!textoLogico || textoLogico.trim() === '') {
+    erros.push('texto vazio ou nulo');
+    return erros;
+  }
+
+  if (acaoChegadaEsperada && acaoChegadaEsperada !== "MULTIPLAS_ENTRADAS" && acaoChegadaEsperada !== "SEM_ENTRADA") {
+    const padraoEsperado = new RegExp(
+      `^Depois de ${acaoChegadaEsperada.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'i');
+    if (!padraoEsperado.test(textoLogico.trim()) && !/^Ao avançar para este local/i.test(textoLogico.trim())) {
+      erros.push(`âncora incorreta: deveria começar com "Depois de ${acaoChegadaEsperada}" ou "Ao avançar para este local"`);
+    }
+  } else if (acaoChegadaEsperada === "MULTIPLAS_ENTRADAS") {
+    if (!/^Ao avançar para este local/i.test(textoLogico.trim())) {
+      erros.push('âncora incorreta: sala com múltiplas entradas deve começar com "Ao avançar para este local"');
+    }
+    if (/\b(pela qual|por onde|através d[ao] qual|pelo qual|que (você )?(usou para entrar|entrou por)|do caminho que (você )?percorreu|atrás de você|de volta|a entrada|por trás)\b/i.test(textoLogico)) {
+      erros.push('entrada vazada: sala de múltiplas entradas não pode referir-se ao caminho de chegada');
+    }
+    if (/ao fundo[^.]*\b(pela qual|por onde|entrou|veio|de volta)\b/i.test(textoLogico)) {
+      erros.push('entrada vazada: "ao fundo" combinado com marcação de chegada');
+    }
+  } else if (acaoChegadaEsperada === "SEM_ENTRADA") {
+    if (/^Depois de|^Ao avançar/i.test(textoLogico.trim())) {
+      erros.push('sala de entrada não deve ter âncora de chegada');
+    }
+  }
+
+  if (acaoChegadaEsperada && acaoChegadaEsperada !== "MULTIPLAS_ENTRADAS" && acaoChegadaEsperada !== "SEM_ENTRADA") {
+    const stopwords = ['para', 'pela', 'pelo', 'com', 'como', 'sobre', 'entre', 'trás', 'frente', 'lado'];
+    const palavrasChave = acaoChegadaEsperada
+      .toLowerCase()
+      .replace(/^(subir|descer|atravessar|rastejar|passar|entrar|avançar|cruzar|caminhar|voltar)\s+/i, '')
+      .split(/\s+/)
+      .filter(p => p.length > 3 && !stopwords.includes(p));
+
+    if (palavrasChave.length > 0) {
+      const primeiraSentenca = textoLogico.split(/[.!?]/)[0] || '';
+      const restoDoTexto = textoLogico.slice(primeiraSentenca.length);
+      for (const palavra of palavrasChave) {
+        if (new RegExp(`\\b${palavra}`, 'i').test(restoDoTexto)) {
+          erros.push(`entry-point leak: "${palavra}" (da ação de chegada) reaparece após a primeira frase`);
         }
+      }
+    }
+  }
+  return erros;
+}
 
-        // ============================================================
-        // CAMPOS PRESERVADOS DE IMPORTS ANTERIORES / RUNTIME
-        // ============================================================
-        // Quando a importação de zona (importarParaFirestore) reconstrói
-        // o mapaMundo do zero, ela deve preservar os campos que NÃO vêm
-        // do JSON de zona — senão re-importar a zona apaga puzzles e
-        // estados que foram adicionados depois. Esta lista é a fonte
-        // única de verdade sobre o que preservar.
-        const CAMPOS_PRESERVADOS_DA_SALA = [
-    'estados',
-    'interacoes_ambiente',
-    'usos_possiveis',
-    'puzzle_status',
-    'bloqueio',
-    'ind_disponivel',
-    'descricoes_itens_ativos'
+function corrigirAncoragem(textoLogico, acaoChegada) {
+  if (!textoLogico || textoLogico.trim() === '') {
+    return acaoChegada && acaoChegada !== "MULTIPLAS_ENTRADAS" && acaoChegada !== "SEM_ENTRADA"
+      ? `Depois de ${acaoChegada.toLowerCase()}, você observa o ambiente.`
+      : 'Você observa o ambiente.';
+  }
+  const texto = textoLogico.trim();
+  const ancoramentoGenerico = /^você (se encontra|está|fica|nota|percebe|avança|para diante)/i;
+
+  if (acaoChegada && acaoChegada !== "MULTIPLAS_ENTRADAS" && acaoChegada !== "SEM_ENTRADA") {
+    if (ancoramentoGenerico.test(texto) || !/^Depois de|^Ao avançar/i.test(texto)) {
+      const verboCorrido = acaoChegada.toLowerCase();
+      let limpo = texto.replace(/^(você (se encontra|está|fica|nota|percebe|avança|para diante)\s*[,.]?\s*)/i, '');
+      limpo = limpo.replace(/^(Depois de [^,.]+, você\s*)/i, '');
+      limpo = limpo.replace(/^(Ao avançar para este local, você\s*)/i, '');
+      limpo = limpo.charAt(0).toUpperCase() + limpo.slice(1);
+      return `Depois de ${verboCorrido}, você ${limpo}`;
+    }
+    return texto;
+  }
+  if (acaoChegada === "MULTIPLAS_ENTRADAS") {
+    if (!/^Ao avançar para este local/i.test(texto)) {
+      let limpo = texto.replace(/^(você (se encontra|está|fica|nota|percebe|avança|para diante)\s*[,.]?\s*)/i, '');
+      limpo = limpo.replace(/^(Depois de [^,.]+, você\s*)/i, '');
+      limpo = limpo.replace(/^(Ao avançar para este local, você\s*)/i, '');
+      limpo = limpo.charAt(0).toUpperCase() + limpo.slice(1);
+      return `Ao avançar para este local, você ${limpo}`;
+    }
+    return texto;
+  }
+  if (acaoChegada === "SEM_ENTRADA") {
+    if (/^Depois de|^Ao avançar/i.test(texto)) {
+      let limpo = texto.replace(/^(Depois de [^,.]+, você\s*)/i, '');
+      limpo = limpo.replace(/^(Ao avançar para este local, você\s*)/i, '');
+      return limpo.charAt(0).toUpperCase() + limpo.slice(1);
+    }
+    return texto;
+  }
+  return texto;
+}
+
+function aplicarCorrecoesCenas(dados) {
+  const cenas = dados.cenas || [];
+  let modificado = false;
+  const logs = [];
+  const corAmarela = '#e8d9b0';
+  for (let cena of cenas) {
+    if (cena.texto_evento) {
+      let texto = cena.texto_evento.trim();
+      texto = texto.replace(/<\/?i>/g, '').replace(/<span[^>]*>/g, '').replace(/<\/span>/g, '');
+      cena.texto_evento = `<span style="color: ${corAmarela};">${texto}</span>`;
+      modificado = true;
+      logs.push(`Cena ${cena.sala_id}: cor amarela aplicada ao texto_evento.`);
+    }
+  }
+  return { modificado, logs };
+}
+
+function validarPlanoTopologia(plano, salaInicio, salaFim) {
+  const erros = [];
+  for (let i = salaInicio; i <= salaFim; i++) {
+    if (!plano[String(i)]) erros.push(`Sala ${i} ausente no plano.`);
+  }
+  for (const [idStr, sala] of Object.entries(plano)) {
+    const id = Number(idStr);
+    if (id < salaInicio || id > salaFim) continue;
+    if (!sala.saidas || !Array.isArray(sala.saidas)) {
+      erros.push(`Sala ${id} não tem saídas definidas.`);
+      continue;
+    }
+    for (const saida of sala.saidas) {
+      const destino = saida.destino;
+      if (destino > salaFim) continue;
+      const destinoPlano = plano[String(destino)];
+      if (!destinoPlano) { erros.push(`Sala ${id} aponta para ${destino} que não existe.`); continue; }
+      const temVolta = destinoPlano.saidas?.some(s => s.destino === id);
+      if (!temVolta) erros.push(`Sem volta: Sala ${destino} não retorna para Sala ${id}.`);
+    }
+  }
+  const visitados = new Set();
+  const fila = [salaInicio];
+  while (fila.length > 0) {
+    const atual = fila.shift();
+    if (visitados.has(atual)) continue;
+    visitados.add(atual);
+    const sala = plano[String(atual)];
+    if (!sala) continue;
+    for (const saida of (sala.saidas || [])) {
+      if (saida.destino <= salaFim && !visitados.has(saida.destino)) fila.push(saida.destino);
+    }
+  }
+  for (let i = salaInicio; i <= salaFim; i++) {
+    if (!visitados.has(i)) erros.push(`Sala ${i} inacessível a partir da entrada.`);
+  }
+  const temHub = Object.values(plano).some(sala => {
+    const saidasParaFrente = (sala.saidas || []).filter(s =>
+      s.destino <= salaFim && s.destino > Number(Object.keys(plano).find(k => Number(k) === salaInicio))
+    );
+    return saidasParaFrente.length >= 3;
+  });
+  if (!temHub) erros.push('Nenhum hub encontrado. Mapa é linear — rejeitado.');
+
+  const salaFronteira = Object.entries(plano).find(([_, s]) => s.para_proxima_zona === true);
+  if (!salaFronteira) erros.push(`Nenhuma sala de fronteira (para_proxima_zona: true).`);
+  else if (Number(salaFronteira[0]) !== salaFim)
+    erros.push(`Fronteira está em sala ${salaFronteira[0]}, deveria estar em ${salaFim}.`);
+
+  let totalVertices = 0, totalArestas = 0;
+  for (const [idStr, sala] of Object.entries(plano)) {
+    const id = Number(idStr);
+    if (id >= salaInicio && id <= salaFim) {
+      totalVertices++;
+      for (const saida of (sala.saidas || [])) {
+        if (saida.destino > id && saida.destino <= salaFim) totalArestas++;
+      }
+    }
+  }
+  if (totalArestas > totalVertices - 1) {
+    erros.push(`Falha Topológica 2D: O mapa gerou circuitos/anéis (${totalArestas} conexões para ${totalVertices} salas regulares). O layout deve ser uma árvore.`);
+  }
+  return erros;
+}
+
+function validarDensidadeAmbiental(textoLogico, opcoes) {
+  const erros = [];
+  if (!textoLogico || !opcoes || opcoes.length === 0) return erros;
+  for (const opcao of opcoes) {
+    const acao = opcao.acao || opcao.texto || '';
+    const nucleo = acao
+      .toLowerCase()
+      .replace(/^(subir|descer|atravessar|rastejar|passar|entrar|avançar|cruzar|caminhar|voltar|sair|abrir|fechar)\s+/i, '')
+      .replace(/^(pela|pelo|para a|para o|na|no|em|uma|um)\s+/i, '')
+      .trim();
+    if (!nucleo) continue;
+    const palavrasNucleo = nucleo.split(/\s+/);
+    let encontrado = false;
+    for (const palavra of palavrasNucleo) {
+      if (palavra.length < 3) continue;
+      if (textoLogico.toLowerCase().includes(palavra)) { encontrado = true; break; }
+    }
+    if (!encontrado) erros.push(`caminho "${acao}" não está descrito no ambiente (elemento: "${nucleo}")`);
+  }
+  return erros;
+}
+
+function validarCenas(cenas, plano, salaInicio, salaFim) {
+  const erros = [];
+  const avisos = [];
+
+  if (!Array.isArray(cenas)) {
+    erros.push('campo "cenas" não é um array.');
+    return { erros, avisos };
+  }
+
+  const idsInternos = [];
+  for (let i = 2; i <= 9; i++) idsInternos.push(i);
+  const cenasPorSala = cenas.map(c => c.sala_id).filter(id => idsInternos.includes(id));
+  if (cenasPorSala.length < 2) {
+    avisos.push(`Número de cenas (${cenasPorSala.length}) é menor que 2. Recomenda-se 2-3.`);
+  } else if (cenasPorSala.length > 3) {
+    avisos.push(`Número de cenas (${cenasPorSala.length}) é maior que 3. Recomenda-se 2-3.`);
+  }
+
+  for (let idx = 0; idx < cenas.length; idx++) {
+    const cena = cenas[idx];
+    const prefixo = `Cena ${idx + 1} (sala ${cena.sala_id || '?'})`;
+
+    if (!cena.sala_id || typeof cena.sala_id !== 'number') {
+      erros.push(`${prefixo}: sala_id inválido ou ausente.`);
+      continue;
+    }
+    const salaId = cena.sala_id;
+    if (!plano[String(salaId)]) {
+      erros.push(`${prefixo}: sala_id ${salaId} não existe no plano.`);
+      continue;
+    }
+    if (salaId === 1 || salaId === salaFim) {
+      erros.push(`${prefixo}: sala_id não pode ser entrada (1) ou fronteira (${salaFim}).`);
+    }
+
+    if (!cena.titulo || typeof cena.titulo !== 'string' || cena.titulo.trim() === '') {
+      erros.push(`${prefixo}: titulo ausente ou vazio.`);
+    }
+
+    if (!cena.texto_evento || typeof cena.texto_evento !== 'string' || cena.texto_evento.trim() === '') {
+      erros.push(`${prefixo}: texto_evento ausente ou vazio.`);
+    } else {
+      const limpo = cena.texto_evento.replace(/<[^>]+>/g, '');
+      const frases = limpo.split(/[.!?]+/).filter(s => s.trim().length > 0);
+      if (frases.length < 3 || frases.length > 5) {
+        avisos.push(`${prefixo}: texto_evento deve ter 3-4 frases (tem ${frases.length}).`);
+      }
+      const cliches = [/de repente/i, /frio na espinha/i, /bilhete/i, /papel/i, /mensagem/i, /escrita/i];
+      for (const cli of cliches) {
+        if (cli.test(limpo)) erros.push(`${prefixo}: texto_evento contém clichê proibido: "${cli.source}"`);
+      }
+      const metaforas = [/ganha peso/i, /ganha vida/i, /espera por alguém/i, /a escuridão/i];
+      for (const meta of metaforas) {
+        if (meta.test(limpo)) avisos.push(`${prefixo}: possível metáfora de intenção no texto_evento: "${meta.source}"`);
+      }
+    }
+
+    if (!cena.dilemas || !Array.isArray(cena.dilemas) || cena.dilemas.length === 0) {
+      erros.push(`${prefixo}: dilemas deve ser um array não vazio.`);
+      continue;
+    }
+
+    let qtdRamificacoes = 0;
+    for (const dilema of cena.dilemas) {
+      if (dilema.ramificacoes && Array.isArray(dilema.ramificacoes) && dilema.ramificacoes.length > 0) {
+        qtdRamificacoes++;
+      }
+    }
+    if (qtdRamificacoes !== 1) {
+      erros.push(`${prefixo}: deve haver exatamente 1 dilema com ramificações (encontrado ${qtdRamificacoes}).`);
+    }
+
+    let hasHighDamage = false;
+    for (let dIdx = 0; dIdx < cena.dilemas.length; dIdx++) {
+      const dilema = cena.dilemas[dIdx];
+      const dp = `${prefixo} dilema ${dIdx + 1}`;
+
+      if (!dilema.opcao_texto || typeof dilema.opcao_texto !== 'string' || dilema.opcao_texto.trim() === '') {
+        erros.push(`${dp}: opcao_texto ausente ou vazio.`);
+      }
+      if (!dilema.resultado_texto || typeof dilema.resultado_texto !== 'string' || dilema.resultado_texto.trim() === '') {
+        erros.push(`${dp}: resultado_texto ausente ou vazio.`);
+      } else {
+        if (/perde\s+\d+\s+de\s+energia/i.test(dilema.resultado_texto)) {
+          erros.push(`${dp}: resultado_texto menciona perda de energia diretamente (proibido).`);
+        }
+      }
+      if (dilema.dano === undefined || typeof dilema.dano !== 'number' || dilema.dano < 0 || dilema.dano > 20) {
+        erros.push(`${dp}: dano deve ser inteiro entre 0 e 20 (recebido ${dilema.dano}).`);
+      }
+      if (dilema.destino_id !== null && typeof dilema.destino_id !== 'number') {
+        erros.push(`${dp}: destino_id deve ser null ou número.`);
+      } else if (dilema.destino_id !== null) {
+        const dest = dilema.destino_id;
+        const saidas = plano[String(salaId)]?.saidas || [];
+        const destinosValidos = saidas.map(s => s.destino);
+        if (!destinosValidos.includes(dest)) {
+          erros.push(`${dp}: destino_id ${dest} não é uma saída válida da sala ${salaId}.`);
+        }
+        const verbosLocomocao = /\b(sair|subir|descer|atravessar|seguir|caminhar|passar|entrar|voltar|rastejar|escalar|saltar)\b/i;
+        if (verbosLocomocao.test(dilema.opcao_texto)) {
+          erros.push(`${dp}: opção com destino_id contém verbo de locomoção (proibido).`);
+        }
+      }
+
+      const ram = dilema.ramificacoes;
+      if (ram !== null && !Array.isArray(ram)) {
+        erros.push(`${dp}: ramificacoes deve ser null ou array.`);
+      } else if (Array.isArray(ram)) {
+        if (ram.length < 2 || ram.length > 3) {
+          avisos.push(`${dp}: ramificacoes deve ter 2-3 itens (tem ${ram.length}).`);
+        }
+        for (let rIdx = 0; rIdx < ram.length; rIdx++) {
+          const r = ram[rIdx];
+          const rp = `${dp} ramificação ${rIdx + 1}`;
+          if (!r.opcao_texto || typeof r.opcao_texto !== 'string' || r.opcao_texto.trim() === '') {
+            erros.push(`${rp}: opcao_texto ausente ou vazio.`);
+          }
+          if (!r.resultado_texto || typeof r.resultado_texto !== 'string' || r.resultado_texto.trim() === '') {
+            erros.push(`${rp}: resultado_texto ausente ou vazio.`);
+          } else {
+            if (/perde\s+\d+\s+de\s+energia/i.test(r.resultado_texto)) {
+              erros.push(`${rp}: resultado_texto menciona perda de energia diretamente (proibido).`);
+            }
+          }
+          if (r.dano === undefined || typeof r.dano !== 'number' || r.dano < 0 || r.dano > 20) {
+            erros.push(`${rp}: dano deve ser inteiro entre 0 e 20 (recebido ${r.dano}).`);
+          } else if (r.dano >= 8) {
+            hasHighDamage = true;
+          }
+          if (r.destino_id !== null && typeof r.destino_id !== 'number') {
+            erros.push(`${rp}: destino_id deve ser null ou número.`);
+          } else if (r.destino_id !== null) {
+            const dest = r.destino_id;
+            const saidas = plano[String(salaId)]?.saidas || [];
+            const destinosValidos = saidas.map(s => s.destino);
+            if (!destinosValidos.includes(dest)) {
+              erros.push(`${rp}: destino_id ${dest} não é uma saída válida da sala ${salaId}.`);
+            }
+            if (dest <= salaId) {
+              erros.push(`${rp}: destino_id ${dest} aponta para trás ou para a própria sala ${salaId}. Só é permitido avanço.`);
+            }
+            const verbosLocomocao = /\b(sair|subir|descer|atravessar|seguir|caminhar|passar|entrar|voltar|rastejar|escalar|saltar)\b/i;
+            if (verbosLocomocao.test(r.opcao_texto)) {
+              erros.push(`${rp}: opção com destino_id contém verbo de locomoção (proibido).`);
+            }
+          }
+        }
+      }
+
+      if (Array.isArray(ram) && ram.length > 0) {
+        if (dilema.dano !== 0) {
+          erros.push(`${dp}: dilema-pai com ramificações deve ter dano = 0 (tem ${dilema.dano}).`);
+        }
+        const frasesPai = (dilema.resultado_texto || '').replace(/<[^>]+>/g, '').split(/[.!?]+/).filter(s => s.trim().length > 0);
+        if (frasesPai.length < 2 || frasesPai.length > 4) {
+          avisos.push(`${dp}: resultado_texto do pai deve ter 2-3 frases (tem ${frasesPai.length}).`);
+        }
+      }
+    }
+
+    if (!hasHighDamage) {
+      erros.push(`${prefixo}: nenhuma ramificação ou consequência tem dano Alto (>=8) - obrigatório.`);
+    }
+
+    const salaTexto = plano[String(salaId)]?.texto_logico || '';
+    if (salaTexto && cena.texto_evento) {
+      const limpo = cena.texto_evento.replace(/<[^>]+>/g, '');
+      const palavrasAmbiente = /(chão|parede|teto|porta|janela|móvel|objeto|corredor|escada|azulejo|gaveta|mesa|cadeira|sofá|armário|lâmpada|fio|canalização|vidro|ferro|madeira|pedra|concreto|tinta|papel|desinfetante|mofo|ferrugem|cheiro|sombra|luz|escuro|claro)/i;
+      if (palavrasAmbiente.test(limpo)) {
+        avisos.push(`${prefixo}: texto_evento pode estar descrevendo ambiente (deveria focar na entidade/ação).`);
+      }
+    }
+  }
+
+  return { erros, avisos };
+}
+
+/* ============================================================
+   IMPORTAÇÃO — utilitários originais
+   ============================================================ */
+function expurgarViciosIA(texto) {
+  if (!texto) return texto;
+  let limpo = texto.replace(/(?:,\s*|\s+)\b(?:quase\s+)?como se\b[^.!?]*([.!?]|$)/gi, '$1');
+  limpo = limpo.replace(/(?:,\s*|\s+)\b(?:quase\s+)?como (?:um|uma)\b[^.!?]*([.!?]|$)/gi, '$1');
+  limpo = limpo.replace(/\b[Dd]e repente,?\s*/g, '');
+  return limpo.replace(/\s{2,}/g, ' ').trim();
+}
+
+const CAMPOS_PRESERVADOS_DA_SALA = [
+  'estados', 'interacoes_ambiente', 'usos_possiveis',
+  'puzzle_status', 'bloqueio', 'ind_disponivel', 'descricoes_itens_ativos'
 ];
-        const POOL_SUSPEITAS = [
-    "Algo aqui parece fora de lugar.",
-    "Este ponto da sala faz sua respiração mudar.",
-    "Você percebe que está parado, sem lembrar de ter parado.",
-    "Há uma qualidade no ar deste ponto que você não consegue nomear.",
-    "Seu corpo hesita antes de você decidir.",
-    "A luz aqui é sutilmente diferente do resto.",
-    "Você sente um arrepio que não vem do frio.",
-    "Algo neste ponto parece esperar.",
-    "O som do ambiente fica mais opaco ali.",
-    "Você não consegue lembrar de ter vindo por este lado.",
-    "Uma parte sua quer recuar sem motivo claro.",
-    "O cheiro aqui tem uma nota que não estava antes.",
-    "Seus olhos voltam para este ponto sem você mandar.",
-    "O ar parece mais denso deste lado.",
-    "Há uma vibração mínima que você sente nos dentes.",
-    "Você pisca e o mundo parece por um instante mais lento.",
-    "Este ponto da sala não combina com o resto.",
-    "Algo em você se prepara, sem saber para quê.",
-    "A sombra aqui parece um pouco mais funda.",
-    "Seu instinto diz que este lugar já viu algo.",
-    "Você segura a respiração sem ter decidido.",
-    "Um formigamento sobe pela sua nuca.",
-    "Este ponto parece ter sido tocado recentemente.",
-    "Você tem a impressão de já ter estado aqui.",
-    "Algo no canto do seu olho se recusa a se fixar.",
-    "O silêncio aqui tem uma textura diferente.",
-    "Você sente o peso do próprio corpo mudar.",
-    "Há um detalhe aqui que você não consegue nomear.",
-    "Seu passo fica mais curto sem você perceber.",
-    "Algo neste ponto parece estar te medindo."
+
+const POOL_SUSPEITAS = [
+  "Algo aqui parece fora de lugar.",
+  "Este ponto da sala faz sua respiração mudar.",
+  "Você percebe que está parado, sem lembrar de ter parado.",
+  "Há uma qualidade no ar deste ponto que você não consegue nomear.",
+  "Seu corpo hesita antes de você decidir.",
+  "A luz aqui é sutilmente diferente do resto.",
+  "Você sente um arrepio que não vem do frio.",
+  "Algo neste ponto parece esperar.",
+  "O som do ambiente fica mais opaco ali.",
+  "Você não consegue lembrar de ter vindo por este lado.",
+  "Uma parte sua quer recuar sem motivo claro.",
+  "O cheiro aqui tem uma nota que não estava antes.",
+  "Seus olhos voltam para este ponto sem você mandar.",
+  "O ar parece mais denso deste lado.",
+  "Há uma vibração mínima que você sente nos dentes.",
+  "Você pisca e o mundo parece por um instante mais lento.",
+  "Este ponto da sala não combina com o resto.",
+  "Algo em você se prepara, sem saber para quê.",
+  "A sombra aqui parece um pouco mais funda.",
+  "Seu instinto diz que este lugar já viu algo.",
+  "Você segura a respiração sem ter decidido.",
+  "Um formigamento sobe pela sua nuca.",
+  "Este ponto parece ter sido tocado recentemente.",
+  "Você tem a impressão de já ter estado aqui.",
+  "Algo no canto do seu olho se recusa a se fixar.",
+  "O silêncio aqui tem uma textura diferente.",
+  "Você sente o peso do próprio corpo mudar.",
+  "Há um detalhe aqui que você não consegue nomear.",
+  "Seu passo fica mais curto sem você perceber.",
+  "Algo neste ponto parece estar te medindo."
 ];
 
-        function preservarCamposRuntime(salaNova, salaExistente) {
-            if (!salaExistente) return salaNova;
-            for (const campo of CAMPOS_PRESERVADOS_DA_SALA) {
-                if (salaExistente[campo] !== undefined) {
-                    salaNova[campo] = salaExistente[campo];
-                }
-            }
-            // Itens: união (o JSON pode adicionar itens via cena; o Firestore
-            // pode ter itens adicionados por um puzzle import posterior).
-            if (Array.isArray(salaExistente.itens) && salaExistente.itens.length > 0) {
-                if (!Array.isArray(salaNova.itens)) salaNova.itens = [];
-                for (const itemId of salaExistente.itens) {
-                    if (!salaNova.itens.includes(itemId)) {
-                        salaNova.itens.push(itemId);
-                    }
-                }
-            }
-            return salaNova;
-        }
-
-
-        // ============================================================
-        // DISTRIBUIÇÃO DE SUSPEITAS (1 real + 2 falsas por zona)
-        // ============================================================
-                function distribuirSuspeitas(mapaMundo) {
-            const elegiveis = [];
-            const comInterceptor = [];
-
-            for (const salaId in mapaMundo) {
-                const sala = mapaMundo[salaId];
-                if (!sala.opcoes) continue;
-                for (const op of sala.opcoes) {
-                    if (op.arquiteto || op.dilema || !op.destino) continue;
-                    elegiveis.push({ salaId, op });
-                    if (op.interceptor_arquiteto) comInterceptor.push({ salaId, op });
-                }
-            }
-
-            if (comInterceptor.length === 0) {
-                log(`🔍 Suspeitas: nenhuma saída com interceptor — nada sinalizado nesta zona.`, 'info');
-                return;
-            }
-
-            const pool = [...POOL_SUSPEITAS];
-            for (let i = pool.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [pool[i], pool[j]] = [pool[j], pool[i]];
-            }
-            const frases = pool.slice(0, 3);
-
-            let idxFrase = 0;
-
-            for (const { salaId, op } of comInterceptor) {
-                op.suspeita_frase = frases[idxFrase % frases.length];
-                op._suspeitaConsumida = false;
-                log(`🔍 [REAL] Sala ${salaId} → saída "${op.texto}" | frase: "${op.suspeita_frase}"`, 'aviso');
-                idxFrase++;
-            }
-
-            const candidatasFalsas = elegiveis.filter(e => !e.op.interceptor_arquiteto);
-            for (let i = candidatasFalsas.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [candidatasFalsas[i], candidatasFalsas[j]] = [candidatasFalsas[j], candidatasFalsas[i]];
-            }
-            const numFalsas = Math.min(2, candidatasFalsas.length);
-
-            for (let k = 0; k < numFalsas; k++) {
-                const { salaId, op } = candidatasFalsas[k];
-                op.suspeita_frase = frases[idxFrase % frases.length];
-                op._suspeitaConsumida = false;
-                log(`🔍 [ISCA] Sala ${salaId} → saída "${op.texto}" | frase: "${op.suspeita_frase}"`, 'info');
-                idxFrase++;
-            }
-
-            log(`🔍 Suspeitas distribuídas: ${comInterceptor.length} real(is) + ${numFalsas} isca(s).`, 'ok');
-        }
-        
-        // ============================================================
-        // FUNÇÃO DE IMPORTAÇÃO COMPLETA (ZONA + PERIGOS)
-        // ============================================================
-        async function importarParaFirestore(dados, uid) {
-            const plano = dados.plano || {};
-            const salas = dados.salas || {};
-            const cenas = dados.cenas || [];
-
-            // 1. Construir mapaMundo básico com as saídas do plano
-            const mapaMundo = {};
-            for (const [id, sala] of Object.entries(salas)) {
-                const planoItem = plano[id];
-                if (!planoItem) continue;
-
-                const opcoes = (planoItem.saidas || []).map(s => ({
-                    texto: s.acao || s.texto || 'Avançar',
-                    destino: s.destino
-                }));
-
-                mapaMundo[id] = {
-                    nome: planoItem.local_fisico || `Sala ${id}`,
-                    texto_logico: sala.texto_logico || '',
-                    opcoes: opcoes
-                };
-            }
-
-            // 2. Injetar as cenas (texto_evento + dilemas) nas salas correspondentes
-            for (const cena of cenas) {
-                const salaId = String(cena.sala_id);
-                const sala = mapaMundo[salaId];
-                if (!sala) {
-                    log(`⚠️ Cena para sala ${salaId} ignorada: sala não existe.`, 'aviso');
-                    continue;
-                }
-
-                const titulo = (cena.titulo || 'Evento Inesperado').trim();
-                const textoEvento = expurgarViciosIA((cena.texto_evento || '').trim());
-
-                if (!textoEvento) {
-                    log(`⚠️ Cena "${titulo}" (sala ${salaId}) não tem "texto_evento" no JSON — nada foi injetado nesta sala.`, 'aviso');
-                    continue;
-                }
-
-                let textoBase = expurgarViciosIA((sala.texto_logico || '').trim());
-                sala.texto_logico = `${textoBase.replace(/[.\s]+$/, '')}. ${textoEvento}`;
-                sala.cena_titulo = titulo;
-                sala.cena_aplicada = true;
-
-                if (!sala.opcoes) sala.opcoes = [];
-
-                const salaIdNum = parseInt(salaId);
-                const destinosValidos = new Set(
-                    (sala.opcoes || [])
-                        .filter(o => o.destino && !o.arquiteto && o.destino > salaIdNum)
-                        .map(o => String(o.destino))
-                );
-
-                const dilemas = Array.isArray(cena.dilemas) ? cena.dilemas : [];
-
-                for (const dilema of dilemas) {
-                    const opcaoTexto = (dilema.opcao_texto || 'Observar com cautela').trim();
-                    const narrativaBruta = expurgarViciosIA((dilema.resultado_texto || '').trim());
-                    if (!narrativaBruta) continue;
-
-                    const dano = typeof dilema.dano === 'number'
-                        ? Math.min(20, Math.max(0, Math.round(dilema.dano)))
-                        : 0;
-
-                    const resultadoTexto = dano > 0
-                        ? `${narrativaBruta.replace(/[.\s]+$/, '')}. Você perde ${dano} de energia.`
-                        : narrativaBruta;
-
-                    const destinoRaw = dilema.destino_id ? String(dilema.destino_id) : null;
-                    const destinoValidado = (destinoRaw && destinosValidos.has(destinoRaw))
-                        ? parseInt(destinoRaw)
-                        : null;
-
-                    const ramsRaw = Array.isArray(dilema.ramificacoes) ? dilema.ramificacoes : [];
-                    const ramificacoes = ramsRaw
-                        .filter(r => r.opcao_texto && r.resultado_texto)
-                        .map(r => {
-                            const rDano = typeof r.dano === 'number'
-                                ? Math.min(20, Math.max(0, Math.round(r.dano)))
-                                : 0;
-                            const rDestinoRaw = r.destino_id ? String(r.destino_id) : null;
-                            const rDestino = (rDestinoRaw && destinosValidos.has(rDestinoRaw))
-                                ? parseInt(rDestinoRaw)
-                                : null;
-                            const rNarrativaLimpa = expurgarViciosIA((r.resultado_texto || '').trim());
-
-                            return {
-                                opcao_texto: r.opcao_texto.trim(),
-                                resultado_texto: rDano > 0
-                                    ? `${rNarrativaLimpa.replace(/[.\s]+$/, '')}. Você perde ${rDano} de energia.`
-                                    : rNarrativaLimpa,
-                                dano: rDano,
-                                destino: rDestino
-                            };
-                        });
-
-                    sala.opcoes.push({
-                        texto: opcaoTexto,
-                        arquiteto: true,
-                        dilema: true,
-                        resultado_texto: resultadoTexto,
-                        dano,
-                        destino: destinoValidado,
-                        disparado: false,
-                        ramificacoes: ramificacoes.length > 0 ? ramificacoes : null
-                    });
-                }
-
-                log(`🎭 "${titulo}" → Sala ${salaId} | texto_evento injetado, ${dilemas.length} dilema(s) processado(s)`, 'ok');
-            }
-
-            // 3. Injetar os perigos (interceptor / nova_opcao) nas salas restantes
-            const salasComCena = new Set(cenas.map(c => String(c.sala_id)));
-            const perigos = Array.isArray(dados.perigos) ? dados.perigos : [];
-            const salasComPerigos = new Set();
-
-            for (const perigo of perigos) {
-                const salaId = String(perigo.sala_id);
-                const sala = mapaMundo[salaId];
-                if (!sala) {
-                    log(`⚠️ Perigo para sala ${salaId} ignorado: sala não existe.`, 'aviso');
-                    continue;
-                }
-
-                salasComPerigos.add(salaId);
-
-                if (salasComCena.has(salaId)) {
-                    log(`⚠️ Sala ${salaId} tem cena E perigo no mesmo JSON — não deveria acontecer pelo design. Injetando o perigo mesmo assim.`, 'aviso');
-                }
-
-                const narrativaBruta = (perigo.resultado_texto || '').trim();
-                if (!narrativaBruta) {
-                    log(`⚠️ Perigo na sala ${salaId} sem "resultado_texto" — ignorado.`, 'aviso');
-                    continue;
-                }
-
-                const dano = typeof perigo.dano === 'number'
-                    ? Math.min(50, Math.max(0, Math.round(perigo.dano)))
-                    : 0;
-
-                const resultadoTexto = dano > 0
-                    ? `${narrativaBruta.replace(/[.\s]+$/, '')}. Você perde ${dano} de energia.`
-                    : narrativaBruta;
-
-                const tipoResultado = perigo.tipo_resultado || 'neutro';
-
-                if (!sala.opcoes) sala.opcoes = [];
-
-                if (perigo.tipo === 'nova_opcao') {
-                    sala.opcoes.push({
-                        texto: perigo.opcao_texto || 'Examinar anomalia',
-                        arquiteto: true,
-                        resultado_texto: resultadoTexto,
-                        dano,
-                        tipo_resultado: tipoResultado,
-                        disparado: false
-                    });
-                    log(`☠️ Nova opção "${perigo.opcao_texto}" (dano ${dano}) → Sala ${salaId}`, 'ok');
-                } else if (perigo.tipo === 'interceptor') {
-                    const opcaoAlvo = sala.opcoes.find(o =>
-                        o.texto === perigo.opcao_texto && o.destino && !o.arquiteto
-                    );
-
-                    if (opcaoAlvo) {
-                        opcaoAlvo.interceptor_arquiteto = {
-                            resultado_texto: resultadoTexto,
-                            dano,
-                            tipo_resultado: tipoResultado,
-                            disparado: false
-                        };
-                        log(`☠️ Interceptor em "${perigo.opcao_texto}" (dano ${dano}) → Sala ${salaId}`, 'ok');
-                    } else {
-                        sala.opcoes.push({
-                            texto: perigo.opcao_texto || 'Investigar caminho obstruído',
-                            arquiteto: true,
-                            resultado_texto: resultadoTexto,
-                            dano,
-                            tipo_resultado: tipoResultado,
-                            disparado: false
-                        });
-                        log(`⚠️ Interceptor "${perigo.opcao_texto}" não bateu com nenhuma saída da sala ${salaId} — injetado como opção nova (fallback).`, 'aviso');
-                    }
-                } else {
-                    log(`⚠️ Perigo na sala ${salaId} com "tipo" desconhecido ("${perigo.tipo}") — ignorado.`, 'aviso');
-                }
-            }
-
-            // 3.5. Distribuir suspeitas (1 real + 2 falsas por zona)
-            distribuirSuspeitas(mapaMundo);
-
-            // 4. Trava de segurança
-            if (Object.keys(mapaMundo).length === 0) {
-                throw new Error('Nenhuma sala válida foi montada a partir do JSON colado (faltam "plano" e/ou "salas"). NADA foi salvo no Firestore — confira se o JSON completo da zona está na caixa principal, não só os perigos.');
-            }
-
-            // ============================================================
-            // 5. PRESERVAR CAMPOS DE RUNTIME / IMPORTS ANTERIORES
-            // ============================================================
-            // Lê o documento UMA VEZ. Todas as salas recebem overlay dos
-            // campos que NÃO vêm do JSON de zona (puzzle_status, estados,
-            // interacoes_ambiente, usos_possiveis, bloqueio, ind_disponivel)
-            // e união de itens. Fim da perda de puzzles em re-import de zona.
-            const docRef = db.collection('players').doc(uid);
-            const docSnap = await docRef.get();
-            const dadosAtuais = docSnap.data() || {};
-            const mapaMundoAtual = dadosAtuais.mapaMundo || {};
-
-            const updatePayload = {};
-            for (const [id, salaNova] of Object.entries(mapaMundo)) {
-                const salaExistente = mapaMundoAtual[id];
-                preservarCamposRuntime(salaNova, salaExistente);
-                updatePayload[`mapaMundo.${id}`] = salaNova;
-
-                if (salaExistente) {
-                    const camposPreservados = CAMPOS_PRESERVADOS_DA_SALA
-                        .filter(c => salaExistente[c] !== undefined);
-                    if (camposPreservados.length > 0) {
-                        log(`🔄 Sala ${id}: preservados do Firestore → ${camposPreservados.join(', ')}`, 'info');
-                    }
-                }
-            }
-
-            if (mapaMundo["1"] && !dadosAtuais.zonaAtual) {
-                updatePayload["zonaAtual"] = 1;
-                updatePayload["secaoAtualId"] = "1";
-            }
-
-            await docRef.update(updatePayload);
-
-            return { mapaMundo };
-        }
-
-        // ============================================================
-        // FUNÇÃO PARA IMPORTAR APENAS PERIGOS (ATUALIZAÇÃO INTELIGENTE)
-        // ============================================================
-        // CORRIGIDO: usa uma cópia de trabalho única. Se o JSON trouxer
-        // mais de um perigo para a MESMA sala, todos são aplicados em
-        // sequência — antes, o segundo sobrescrevia o primeiro porque
-        // cada iteração relia do Firestore.
-        async function importarPerigosNoMapaAtual(perigos, uid) {
-            const docRef = db.collection('players').doc(uid);
-            const docSnap = await docRef.get();
-            if (!docSnap.exists) {
-                throw new Error('Nenhum documento do jogador encontrado. Importe a zona primeiro antes de atualizar perigos.');
-            }
-            const dadosAtuais = docSnap.data() || {};
-            const mapaMundoAtual = dadosAtuais.mapaMundo || {};
-
-            // Cópia de trabalho — todas as escritas vão aqui.
-            const mapaTrabalho = JSON.parse(JSON.stringify(mapaMundoAtual));
-            const salasTocadas = new Set();
-
-            for (const perigo of perigos) {
-                const salaId = String(perigo.sala_id);
-                const salaModificada = mapaTrabalho[salaId];
-                if (!salaModificada) {
-                    log(`⚠️ Perigo para sala ${salaId} ignorado: sala não existe no Firestore.`, 'aviso');
-                    continue;
-                }
-
-                // Remove perigos antigos (opções de arquiteto que não são dilemas)
-                // apenas na PRIMEIRA vez que tocamos esta sala nesta importação.
-                // Se o JSON traz dois perigos para a mesma sala, não queremos
-                // limpar entre eles.
-                if (!salasTocadas.has(salaId)) {
-                    if (salaModificada.opcoes) {
-                        salaModificada.opcoes = salaModificada.opcoes.filter(op => !(op.arquiteto === true && !op.dilema));
-                        salaModificada.opcoes.forEach(op => {
-                            if (op.interceptor_arquiteto) delete op.interceptor_arquiteto;
-                        });
-                    }
-                    salasTocadas.add(salaId);
-                }
-
-                const narrativaBruta = (perigo.resultado_texto || '').trim();
-                if (!narrativaBruta) {
-                    log(`⚠️ Perigo na sala ${salaId} sem "resultado_texto" — ignorado.`, 'aviso');
-                    continue;
-                }
-                const dano = typeof perigo.dano === 'number' ? Math.min(50, Math.max(0, Math.round(perigo.dano))) : 0;
-                const resultadoTexto = dano > 0 ? `${narrativaBruta.replace(/[.\s]+$/, '')}. Você perde ${dano} de energia.` : narrativaBruta;
-                const tipoResultado = perigo.tipo_resultado || 'neutro';
-
-                if (!salaModificada.opcoes) salaModificada.opcoes = [];
-
-                if (perigo.tipo === 'nova_opcao') {
-                    salaModificada.opcoes.push({
-                        texto: perigo.opcao_texto || 'Examinar anomalia',
-                        arquiteto: true,
-                        resultado_texto: resultadoTexto,
-                        dano,
-                        tipo_resultado: tipoResultado,
-                        disparado: false
-                    });
-                } else if (perigo.tipo === 'interceptor') {
-                    const opcaoAlvo = salaModificada.opcoes.find(o => o.texto === perigo.opcao_texto && o.destino && !o.arquiteto);
-                    if (opcaoAlvo) {
-                        opcaoAlvo.interceptor_arquiteto = {
-                            resultado_texto: resultadoTexto,
-                            dano,
-                            tipo_resultado: tipoResultado,
-                            disparado: false
-                        };
-                    } else {
-                        salaModificada.opcoes.push({
-                            texto: perigo.opcao_texto || 'Investigar caminho obstruído',
-                            arquiteto: true,
-                            resultado_texto: resultadoTexto,
-                            dano,
-                            tipo_resultado: tipoResultado,
-                            disparado: false
-                        });
-                    }
-                } else {
-                    log(`⚠️ Perigo na sala ${salaId} com "tipo" desconhecido ("${perigo.tipo}") — ignorado.`, 'aviso');
-                    continue;
-                }
-            }
-
-            // Distribuir suspeitas no mapa de trabalho.
-            distribuirSuspeitas(mapaTrabalho);
-
-            const updatePayload = {};
-            for (const salaId of salasTocadas) {
-                updatePayload[`mapaMundo.${salaId}`] = mapaTrabalho[salaId];
-                log(`🔄 Sala ${salaId}: perigos substituídos/inseridos.`, 'info');
-            }
-
-            if (Object.keys(updatePayload).length === 0) {
-                throw new Error('Nenhuma sala válida para atualizar perigos.');
-            }
-
-            await docRef.update(updatePayload);
-            return { atualizadas: [...salasTocadas] };
-        }
-
-        // ============================================================
-        // FUNÇÃO PARA IMPORTAR PUZZLES (SHADOWGATE)
-        // ============================================================
-        // CORRIGIDO: o bug original reescrevia updatePayload['mapaMundo.X']
-        // em cada fase, sempre relendo do snapshot congelado do Firestore.
-        // Isso fazia a fase de puzzles sobrescrever o texto que a fase de
-        // textos_modificados tinha escrito para a mesma sala — o "texto
-        // novo" nunca chegava ao Firestore. Agora há UMA cópia de trabalho
-        // (mapaTrabalho) que todas as fases compartilham.
-        async function importarPuzzles(dadosPuzzle, uid) {
-            const docRef = db.collection('players').doc(uid);
-            const docSnap = await docRef.get();
-            if (!docSnap.exists) {
-                throw new Error('Nenhum documento do jogador encontrado. Importe a zona primeiro.');
-            }
-            const dadosAtuais = docSnap.data() || {};
-            const mapaMundoAtual = dadosAtuais.mapaMundo || {};
-            const updatePayload = {};
-
-            // ============================================================
-            // CÓPIA DE TRABALHO ÚNICA
-            // ============================================================
-            // Fim do "última escrita vence". Todas as fases abaixo operam
-            // neste mesmo objeto; só no final emitimos o payload.
-            const mapaTrabalho = JSON.parse(JSON.stringify(mapaMundoAtual));
-            const salasTocadas = new Set();
-
-            function obterSala(salaId) {
-                if (!mapaTrabalho[salaId]) return null;
-                salasTocadas.add(salaId);
-                return mapaTrabalho[salaId];
-            }
-
-            // 1. Processar itens novos (salvar em um campo separado para mesclar no ITENS_DB)
-            if (dadosPuzzle.itens_novos && Object.keys(dadosPuzzle.itens_novos).length > 0) {
-                const itensNovosAtuais = dadosAtuais.itens_novos || {};
-                for (const [id, definicao] of Object.entries(dadosPuzzle.itens_novos)) {
-                    if (!itensNovosAtuais[id]) {
-                        itensNovosAtuais[id] = definicao;
-                    }
-                }
-                updatePayload['itens_novos'] = itensNovosAtuais;
-                log(`🧩 ${Object.keys(dadosPuzzle.itens_novos).length} novo(s) item(ns) adicionado(s).`, 'ok');
-            }
-
-            // 2. Aplicar modificações nos textos das salas
-            if (dadosPuzzle.textos_modificados) {
-                for (const [salaId, novoTexto] of Object.entries(dadosPuzzle.textos_modificados)) {
-                    const sala = obterSala(salaId);
-                    if (!sala) {
-                        log(`⚠️ Sala ${salaId} não encontrada para modificar texto.`, 'aviso');
-                        continue;
-                    }
-                    sala.texto_logico = novoTexto;
-                    log(`📝 Sala ${salaId}: texto_logico atualizado.`, 'info');
-                }
-            }
-
-            // 3. Adicionar itens ao chão das salas
-            if (dadosPuzzle.itens_adicionados) {
-                for (const [salaId, itensIds] of Object.entries(dadosPuzzle.itens_adicionados)) {
-                    const sala = obterSala(salaId);
-                    if (!sala) {
-                        log(`⚠️ Sala ${salaId} não encontrada para adicionar itens.`, 'aviso');
-                        continue;
-                    }
-                    if (!sala.itens) sala.itens = [];
-                    for (const itemId of itensIds) {
-                        if (!sala.itens.includes(itemId)) {
-                            sala.itens.push(itemId);
-                        }
-                    }
-                    log(`📦 Sala ${salaId}: itens adicionados: ${itensIds.join(', ')}.`, 'info');
-                }
-            }
-
-            // 3.5. Registrar descrições dos itens no chão
-// O runtime concatena estas frases ao texto_logico APENAS enquanto
-// o item estiver em sala.itens. Ao ser recolhido, a frase some sozinha.
-if (dadosPuzzle.descricoes_itens_ativos) {
+function preservarCamposRuntime(salaNova, salaExistente) {
+  if (!salaExistente) return salaNova;
+  for (const campo of CAMPOS_PRESERVADOS_DA_SALA) {
+    if (salaExistente[campo] !== undefined) {
+      salaNova[campo] = salaExistente[campo];
+    }
+  }
+  if (Array.isArray(salaExistente.itens) && salaExistente.itens.length > 0) {
+    if (!Array.isArray(salaNova.itens)) salaNova.itens = [];
+    for (const itemId of salaExistente.itens) {
+      if (!salaNova.itens.includes(itemId)) salaNova.itens.push(itemId);
+    }
+  }
+  return salaNova;
+}
+
+function distribuirSuspeitas(mapaMundo, logFn) {
+  const elegiveis = [];
+  const comInterceptor = [];
+
+  for (const salaId in mapaMundo) {
+    const sala = mapaMundo[salaId];
+    if (!sala.opcoes) continue;
+    for (const op of sala.opcoes) {
+      if (op.arquiteto || op.dilema || !op.destino) continue;
+      elegiveis.push({ salaId, op });
+      if (op.interceptor_arquiteto) comInterceptor.push({ salaId, op });
+    }
+  }
+
+  if (comInterceptor.length === 0) {
+    logFn(`🔍 Suspeitas: nenhuma saída com interceptor — nada sinalizado nesta zona.`, 'info');
+    return;
+  }
+
+  const pool = [...POOL_SUSPEITAS];
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  const frases = pool.slice(0, 3);
+
+  let idxFrase = 0;
+  for (const { salaId, op } of comInterceptor) {
+    op.suspeita_frase = frases[idxFrase % frases.length];
+    op._suspeitaConsumida = false;
+    logFn(`🔍 [REAL] Sala ${salaId} → saída "${op.texto}" | frase: "${op.suspeita_frase}"`, 'warn');
+    idxFrase++;
+  }
+
+  const candidatasFalsas = elegiveis.filter(e => !e.op.interceptor_arquiteto);
+  for (let i = candidatasFalsas.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [candidatasFalsas[i], candidatasFalsas[j]] = [candidatasFalsas[j], candidatasFalsas[i]];
+  }
+  const numFalsas = Math.min(2, candidatasFalsas.length);
+
+  for (let k = 0; k < numFalsas; k++) {
+    const { salaId, op } = candidatasFalsas[k];
+    op.suspeita_frase = frases[idxFrase % frases.length];
+    op._suspeitaConsumida = false;
+    logFn(`🔍 [ISCA] Sala ${salaId} → saída "${op.texto}" | frase: "${op.suspeita_frase}"`, 'info');
+    idxFrase++;
+  }
+
+  logFn(`🔍 Suspeitas distribuídas: ${comInterceptor.length} real(is) + ${numFalsas} isca(s).`, 'ok');
+}
+
+/* ============================================================
+   IMPORTAÇÃO — zona completa
+   ============================================================ */
+async function importarParaFirestore(dados, uid, logFn) {
+  const plano = dados.plano || {};
+  const salas = dados.salas || {};
+  const cenas = dados.cenas || [];
+
+  const mapaMundo = {};
+  for (const [id, sala] of Object.entries(salas)) {
+    const planoItem = plano[id];
+    if (!planoItem) continue;
+    const opcoes = (planoItem.saidas || []).map(s => ({
+      texto: s.acao || s.texto || 'Avançar',
+      destino: s.destino
+    }));
+    mapaMundo[id] = {
+      nome: planoItem.local_fisico || `Sala ${id}`,
+      texto_logico: sala.texto_logico || '',
+      opcoes: opcoes
+    };
+  }
+
+  for (const cena of cenas) {
+    const salaId = String(cena.sala_id);
+    const sala = mapaMundo[salaId];
+    if (!sala) { logFn(`⚠️ Cena para sala ${salaId} ignorada: sala não existe.`, 'warn'); continue; }
+
+    const titulo = (cena.titulo || 'Evento Inesperado').trim();
+    const textoEvento = expurgarViciosIA((cena.texto_evento || '').trim());
+    if (!textoEvento) { logFn(`⚠️ Cena "${titulo}" (sala ${salaId}) sem texto_evento — ignorada.`, 'warn'); continue; }
+
+    let textoBase = expurgarViciosIA((sala.texto_logico || '').trim());
+    sala.texto_logico = `${textoBase.replace(/[.\s]+$/, '')}. ${textoEvento}`;
+    sala.cena_titulo = titulo;
+    sala.cena_aplicada = true;
+
+    if (!sala.opcoes) sala.opcoes = [];
+    const salaIdNum = parseInt(salaId);
+    const destinosValidos = new Set(
+      (sala.opcoes || []).filter(o => o.destino && !o.arquiteto && o.destino > salaIdNum).map(o => String(o.destino))
+    );
+
+    const dilemas = Array.isArray(cena.dilemas) ? cena.dilemas : [];
+    for (const dilema of dilemas) {
+      const opcaoTexto = (dilema.opcao_texto || 'Observar com cautela').trim();
+      const narrativaBruta = expurgarViciosIA((dilema.resultado_texto || '').trim());
+      if (!narrativaBruta) continue;
+
+      const dano = typeof dilema.dano === 'number' ? Math.min(20, Math.max(0, Math.round(dilema.dano))) : 0;
+      const resultadoTexto = dano > 0
+        ? `${narrativaBruta.replace(/[.\s]+$/, '')}. Você perde ${dano} de energia.`
+        : narrativaBruta;
+
+      const destinoRaw = dilema.destino_id ? String(dilema.destino_id) : null;
+      const destinoValidado = (destinoRaw && destinosValidos.has(destinoRaw)) ? parseInt(destinoRaw) : null;
+
+      const ramsRaw = Array.isArray(dilema.ramificacoes) ? dilema.ramificacoes : [];
+      const ramificacoes = ramsRaw
+        .filter(r => r.opcao_texto && r.resultado_texto)
+        .map(r => {
+          const rDano = typeof r.dano === 'number' ? Math.min(20, Math.max(0, Math.round(r.dano))) : 0;
+          const rDestinoRaw = r.destino_id ? String(r.destino_id) : null;
+          const rDestino = (rDestinoRaw && destinosValidos.has(rDestinoRaw)) ? parseInt(rDestinoRaw) : null;
+          const rNarrativaLimpa = expurgarViciosIA((r.resultado_texto || '').trim());
+          return {
+            opcao_texto: r.opcao_texto.trim(),
+            resultado_texto: rDano > 0
+              ? `${rNarrativaLimpa.replace(/[.\s]+$/, '')}. Você perde ${rDano} de energia.`
+              : rNarrativaLimpa,
+            dano: rDano,
+            destino: rDestino
+          };
+        });
+
+      sala.opcoes.push({
+        texto: opcaoTexto,
+        arquiteto: true,
+        dilema: true,
+        resultado_texto: resultadoTexto,
+        dano,
+        destino: destinoValidado,
+        disparado: false,
+        ramificacoes: ramificacoes.length > 0 ? ramificacoes : null
+      });
+    }
+    logFn(`🎭 "${titulo}" → Sala ${salaId} | texto_evento injetado, ${dilemas.length} dilema(s) processado(s)`, 'ok');
+  }
+
+  const salasComCena = new Set(cenas.map(c => String(c.sala_id)));
+  const perigos = Array.isArray(dados.perigos) ? dados.perigos : [];
+
+  for (const perigo of perigos) {
+    const salaId = String(perigo.sala_id);
+    const sala = mapaMundo[salaId];
+    if (!sala) { logFn(`⚠️ Perigo para sala ${salaId} ignorado: sala não existe.`, 'warn'); continue; }
+
+    if (salasComCena.has(salaId)) {
+      logFn(`⚠️ Sala ${salaId} tem cena E perigo — não deveria acontecer. Injetando mesmo assim.`, 'warn');
+    }
+
+    const narrativaBruta = (perigo.resultado_texto || '').trim();
+    if (!narrativaBruta) { logFn(`⚠️ Perigo na sala ${salaId} sem resultado_texto — ignorado.`, 'warn'); continue; }
+
+    const dano = typeof perigo.dano === 'number' ? Math.min(50, Math.max(0, Math.round(perigo.dano))) : 0;
+    const resultadoTexto = dano > 0
+      ? `${narrativaBruta.replace(/[.\s]+$/, '')}. Você perde ${dano} de energia.`
+      : narrativaBruta;
+    const tipoResultado = perigo.tipo_resultado || 'neutro';
+
+    if (!sala.opcoes) sala.opcoes = [];
+
+    if (perigo.tipo === 'nova_opcao') {
+      sala.opcoes.push({
+        texto: perigo.opcao_texto || 'Examinar anomalia',
+        arquiteto: true,
+        resultado_texto: resultadoTexto,
+        dano,
+        tipo_resultado: tipoResultado,
+        disparado: false
+      });
+      logFn(`☠️ Nova opção "${perigo.opcao_texto}" (dano ${dano}) → Sala ${salaId}`, 'ok');
+    } else if (perigo.tipo === 'interceptor') {
+      const opcaoAlvo = sala.opcoes.find(o => o.texto === perigo.opcao_texto && o.destino && !o.arquiteto);
+      if (opcaoAlvo) {
+        opcaoAlvo.interceptor_arquiteto = { resultado_texto: resultadoTexto, dano, tipo_resultado: tipoResultado, disparado: false };
+        logFn(`☠️ Interceptor em "${perigo.opcao_texto}" (dano ${dano}) → Sala ${salaId}`, 'ok');
+      } else {
+        sala.opcoes.push({
+          texto: perigo.opcao_texto || 'Investigar caminho obstruído',
+          arquiteto: true,
+          resultado_texto: resultadoTexto,
+          dano,
+          tipo_resultado: tipoResultado,
+          disparado: false
+        });
+        logFn(`⚠️ Interceptor "${perigo.opcao_texto}" não bateu com nenhuma saída da sala ${salaId} — fallback.`, 'warn');
+      }
+    } else {
+      logFn(`⚠️ Perigo na sala ${salaId} com tipo desconhecido ("${perigo.tipo}") — ignorado.`, 'warn');
+    }
+  }
+
+  distribuirSuspeitas(mapaMundo, logFn);
+
+  if (Object.keys(mapaMundo).length === 0) {
+    throw new Error('Nenhuma sala válida foi montada (faltam "plano" e/ou "salas"). NADA foi salvo.');
+  }
+
+  const docRef = db.collection('players').doc(uid);
+  const docSnap = await docRef.get();
+  const dadosAtuais = docSnap.data() || {};
+  const mapaMundoAtual = dadosAtuais.mapaMundo || {};
+
+  const updatePayload = {};
+  for (const [id, salaNova] of Object.entries(mapaMundo)) {
+    const salaExistente = mapaMundoAtual[id];
+    preservarCamposRuntime(salaNova, salaExistente);
+    updatePayload[`mapaMundo.${id}`] = salaNova;
+    if (salaExistente) {
+      const campos = CAMPOS_PRESERVADOS_DA_SALA.filter(c => salaExistente[c] !== undefined);
+      if (campos.length > 0) logFn(`🔄 Sala ${id}: preservados do Firestore → ${campos.join(', ')}`, 'info');
+    }
+  }
+
+  if (mapaMundo["1"] && !dadosAtuais.zonaAtual) {
+    updatePayload["zonaAtual"] = 1;
+    updatePayload["secaoAtualId"] = "1";
+  }
+
+  await docRef.update(updatePayload);
+  return { mapaMundo };
+}
+
+/* ============================================================
+   IMPORTAÇÃO — apenas perigos
+   ============================================================ */
+async function importarPerigosNoMapaAtual(perigos, uid, logFn) {
+  const docRef = db.collection('players').doc(uid);
+  const docSnap = await docRef.get();
+  if (!docSnap.exists) throw new Error('Nenhum documento do jogador encontrado. Importe a zona primeiro.');
+
+  const dadosAtuais = docSnap.data() || {};
+  const mapaMundoAtual = dadosAtuais.mapaMundo || {};
+  const mapaTrabalho = JSON.parse(JSON.stringify(mapaMundoAtual));
+  const salasTocadas = new Set();
+
+  for (const perigo of perigos) {
+    const salaId = String(perigo.sala_id);
+    const salaModificada = mapaTrabalho[salaId];
+    if (!salaModificada) { logFn(`⚠️ Perigo para sala ${salaId} ignorado: sala não existe no Firestore.`, 'warn'); continue; }
+
+    if (!salasTocadas.has(salaId)) {
+      if (salaModificada.opcoes) {
+        salaModificada.opcoes = salaModificada.opcoes.filter(op => !(op.arquiteto === true && !op.dilema));
+        salaModificada.opcoes.forEach(op => { if (op.interceptor_arquiteto) delete op.interceptor_arquiteto; });
+      }
+      salasTocadas.add(salaId);
+    }
+
+    const narrativaBruta = (perigo.resultado_texto || '').trim();
+    if (!narrativaBruta) { logFn(`⚠️ Perigo na sala ${salaId} sem resultado_texto — ignorado.`, 'warn'); continue; }
+
+    const dano = typeof perigo.dano === 'number' ? Math.min(50, Math.max(0, Math.round(perigo.dano))) : 0;
+    const resultadoTexto = dano > 0
+      ? `${narrativaBruta.replace(/[.\s]+$/, '')}. Você perde ${dano} de energia.`
+      : narrativaBruta;
+    const tipoResultado = perigo.tipo_resultado || 'neutro';
+
+    if (!salaModificada.opcoes) salaModificada.opcoes = [];
+
+    if (perigo.tipo === 'nova_opcao') {
+      salaModificada.opcoes.push({
+        texto: perigo.opcao_texto || 'Examinar anomalia',
+        arquiteto: true,
+        resultado_texto: resultadoTexto,
+        dano, tipo_resultado: tipoResultado, disparado: false
+      });
+    } else if (perigo.tipo === 'interceptor') {
+      const alvo = salaModificada.opcoes.find(o => o.texto === perigo.opcao_texto && o.destino && !o.arquiteto);
+      if (alvo) {
+        alvo.interceptor_arquiteto = { resultado_texto: resultadoTexto, dano, tipo_resultado: tipoResultado, disparado: false };
+      } else {
+        salaModificada.opcoes.push({
+          texto: perigo.opcao_texto || 'Investigar caminho obstruído',
+          arquiteto: true, resultado_texto: resultadoTexto, dano, tipo_resultado: tipoResultado, disparado: false
+        });
+      }
+    } else {
+      logFn(`⚠️ Perigo na sala ${salaId} com tipo desconhecido ("${perigo.tipo}") — ignorado.`, 'warn');
+      continue;
+    }
+  }
+
+  distribuirSuspeitas(mapaTrabalho, logFn);
+
+  const updatePayload = {};
+  for (const salaId of salasTocadas) {
+    updatePayload[`mapaMundo.${salaId}`] = mapaTrabalho[salaId];
+    logFn(`🔄 Sala ${salaId}: perigos substituídos/inseridos.`, 'info');
+  }
+  if (Object.keys(updatePayload).length === 0) throw new Error('Nenhuma sala válida para atualizar perigos.');
+
+  await docRef.update(updatePayload);
+  return { atualizadas: [...salasTocadas] };
+}
+
+/* ============================================================
+   IMPORTAÇÃO — puzzles
+   ============================================================ */
+async function importarPuzzles(dadosPuzzle, uid, logFn) {
+  const docRef = db.collection('players').doc(uid);
+  const docSnap = await docRef.get();
+  if (!docSnap.exists) throw new Error('Nenhum documento do jogador encontrado. Importe a zona primeiro.');
+
+  const dadosAtuais = docSnap.data() || {};
+  const mapaMundoAtual = dadosAtuais.mapaMundo || {};
+  const updatePayload = {};
+
+  const mapaTrabalho = JSON.parse(JSON.stringify(mapaMundoAtual));
+  const salasTocadas = new Set();
+
+  function obterSala(salaId) {
+    if (!mapaTrabalho[salaId]) return null;
+    salasTocadas.add(salaId);
+    return mapaTrabalho[salaId];
+  }
+
+  if (dadosPuzzle.itens_novos && Object.keys(dadosPuzzle.itens_novos).length > 0) {
+    const itensNovosAtuais = dadosAtuais.itens_novos || {};
+    for (const [id, def] of Object.entries(dadosPuzzle.itens_novos)) {
+      if (!itensNovosAtuais[id]) itensNovosAtuais[id] = def;
+    }
+    updatePayload['itens_novos'] = itensNovosAtuais;
+    logFn(`🧩 ${Object.keys(dadosPuzzle.itens_novos).length} novo(s) item(ns) adicionado(s).`, 'ok');
+  }
+
+  if (dadosPuzzle.textos_modificados) {
+    for (const [salaId, novoTexto] of Object.entries(dadosPuzzle.textos_modificados)) {
+      const sala = obterSala(salaId);
+      if (!sala) { logFn(`⚠️ Sala ${salaId} não encontrada para modificar texto.`, 'warn'); continue; }
+      sala.texto_logico = novoTexto;
+      logFn(`📝 Sala ${salaId}: texto_logico atualizado.`, 'info');
+    }
+  }
+
+  if (dadosPuzzle.itens_adicionados) {
+    for (const [salaId, itensIds] of Object.entries(dadosPuzzle.itens_adicionados)) {
+      const sala = obterSala(salaId);
+      if (!sala) { logFn(`⚠️ Sala ${salaId} não encontrada para adicionar itens.`, 'warn'); continue; }
+      if (!sala.itens) sala.itens = [];
+      for (const itemId of itensIds) if (!sala.itens.includes(itemId)) sala.itens.push(itemId);
+      logFn(`📦 Sala ${salaId}: itens adicionados: ${itensIds.join(', ')}.`, 'info');
+    }
+  }
+
+  if (dadosPuzzle.descricoes_itens_ativos) {
     for (const [salaId, mapaItens] of Object.entries(dadosPuzzle.descricoes_itens_ativos)) {
-        const sala = obterSala(salaId);
-        if (!sala) {
-            log(`⚠️ Sala ${salaId} não encontrada para registrar descrições de itens.`, 'aviso');
-            continue;
-        }
-        if (!sala.descricoes_itens_ativos) sala.descricoes_itens_ativos = {};
-        Object.assign(sala.descricoes_itens_ativos, mapaItens);
-        log(`🔎 Sala ${salaId}: ${Object.keys(mapaItens).length} descrição(ões) de item registrada(s).`, 'info');
+      const sala = obterSala(salaId);
+      if (!sala) { logFn(`⚠️ Sala ${salaId} não encontrada para descrições de itens.`, 'warn'); continue; }
+      if (!sala.descricoes_itens_ativos) sala.descricoes_itens_ativos = {};
+      Object.assign(sala.descricoes_itens_ativos, mapaItens);
+      logFn(`🔎 Sala ${salaId}: ${Object.keys(mapaItens).length} descrição(ões) registrada(s).`, 'info');
     }
-}
+  }
 
-// 3.6. Sequestro de rota: remove a saída original do plano
-// A saída removida NÃO é uma opção de arquiteto (perigo/cena) — é uma
-// saída pura do plano original. Só ela é filtrada. Quando o puzzle
-// for resolvido no runtime, `usarItemNoAmbiente` faz push da rota de
-// volta (via `usos_possiveis[].destino`).
-if (dadosPuzzle.saidas_sequestradas) {
+  if (dadosPuzzle.saidas_sequestradas) {
     for (const [salaId, destinoId] of Object.entries(dadosPuzzle.saidas_sequestradas)) {
-        const sala = obterSala(salaId);
-        if (!sala) {
-            log(`⚠️ Sala ${salaId} não encontrada para sequestrar rota.`, 'aviso');
-            continue;
-        }
-        if (!Array.isArray(sala.opcoes)) continue;
-        const antes = sala.opcoes.length;
-        sala.opcoes = sala.opcoes.filter(o => !(o.destino === destinoId && !o.arquiteto));
-        const removidas = antes - sala.opcoes.length;
-        log(`🔒 Sala ${salaId}: rota para ${destinoId} sequestrada (${removidas} saída(s) removida(s)).`, 'ok');
+      const sala = obterSala(salaId);
+      if (!sala) { logFn(`⚠️ Sala ${salaId} não encontrada para sequestrar rota.`, 'warn'); continue; }
+      if (!Array.isArray(sala.opcoes)) continue;
+      const antes = sala.opcoes.length;
+      sala.opcoes = sala.opcoes.filter(o => !(o.destino === destinoId && !o.arquiteto));
+      logFn(`🔒 Sala ${salaId}: rota para ${destinoId} sequestrada (${antes - sala.opcoes.length} saída(s) removida(s)).`, 'ok');
     }
+  }
+
+  if (dadosPuzzle.puzzles) {
+    for (const [salaId, puzzleData] of Object.entries(dadosPuzzle.puzzles)) {
+      const sala = obterSala(salaId);
+      if (!sala) { logFn(`⚠️ Sala ${salaId} não encontrada para aplicar puzzle.`, 'warn'); continue; }
+
+      if (puzzleData.estados) {
+        if (!sala.estados) sala.estados = {};
+        Object.assign(sala.estados, puzzleData.estados);
+      }
+      if (puzzleData.interacoes_ambiente?.length) {
+        if (!sala.interacoes_ambiente) sala.interacoes_ambiente = [];
+        sala.interacoes_ambiente = sala.interacoes_ambiente.concat(puzzleData.interacoes_ambiente);
+      }
+      if (puzzleData.usos_possiveis?.length) {
+        if (!sala.usos_possiveis) sala.usos_possiveis = [];
+        sala.usos_possiveis = sala.usos_possiveis.concat(puzzleData.usos_possiveis);
+      }
+      logFn(`🧩 Sala ${salaId}: puzzle aplicado (${Object.keys(puzzleData).join(', ')}).`, 'ok');
+    }
+  }
+
+  for (const salaId of salasTocadas) {
+    updatePayload[`mapaMundo.${salaId}`] = mapaTrabalho[salaId];
+  }
+  if (Object.keys(updatePayload).length === 0) throw new Error('Nenhuma modificação de puzzle foi aplicada.');
+
+  await docRef.update(updatePayload);
+  return { atualizadas: [...salaTocadas] };
 }
-            
-            // 4. Aplicar puzzles (estados, interacoes_ambiente, usos_possiveis)
-            if (dadosPuzzle.puzzles) {
-                for (const [salaId, puzzleData] of Object.entries(dadosPuzzle.puzzles)) {
-                    const sala = obterSala(salaId);
-                    if (!sala) {
-                        log(`⚠️ Sala ${salaId} não encontrada para aplicar puzzle.`, 'aviso');
-                        continue;
-                    }
 
-                    if (puzzleData.estados) {
-                        if (!sala.estados) sala.estados = {};
-                        Object.assign(sala.estados, puzzleData.estados);
-                    }
+/* ============================================================
+   DETECÇÃO DE TIPO (para badge e preview)
+   ============================================================ */
+function detectarTipo(dados) {
+  if (!dados || typeof dados !== 'object') return null;
+  const temZona = !!(dados.plano || dados.salas || dados.cenas);
+  const temPerigos = Array.isArray(dados.perigos);
+  const temPuzzles = !!(dados.saidas_sequestradas || dados.itens_novos ||
+    dados.textos_modificados || dados.itens_adicionados ||
+    dados.descricoes_itens_ativos || dados.puzzles);
 
-                    if (puzzleData.interacoes_ambiente && puzzleData.interacoes_ambiente.length > 0) {
-                        if (!sala.interacoes_ambiente) sala.interacoes_ambiente = [];
-                        sala.interacoes_ambiente = sala.interacoes_ambiente.concat(puzzleData.interacoes_ambiente);
-                    }
+  if (temZona) return 'zona';
+  if (temPuzzles) return 'puzzles';
+  if (temPerigos) return 'perigos';
+  return null;
+}
 
-                    if (puzzleData.usos_possiveis && puzzleData.usos_possiveis.length > 0) {
-                        if (!sala.usos_possiveis) sala.usos_possiveis = [];
-                        sala.usos_possiveis = sala.usos_possiveis.concat(puzzleData.usos_possiveis);
-                    }
+function contarDados(dados) {
+  const c = {};
+  if (dados.plano) c.salas = Object.keys(dados.plano).length;
+  if (Array.isArray(dados.cenas)) {
+    c.cenas = dados.cenas.length;
+    let dilemas = 0;
+    for (const cena of dados.cenas) dilemas += (cena.dilemas || []).length;
+    c.dilemas = dilemas;
+  }
+  if (Array.isArray(dados.perigos)) c.perigos = dados.perigos.length;
+  if (dados.puzzles) c.puzzles = Object.keys(dados.puzzles).length;
+  if (dados.itens_novos) c.itens_novos = Object.keys(dados.itens_novos).length;
+  return c;
+}
 
-                    log(`🧩 Sala ${salaId}: puzzle aplicado (${Object.keys(puzzleData).join(', ')}).`, 'ok');
-                }
-            }
+function atualizarBadgeEPreview() {
+  const raw = $('jsonInput').value.trim();
+  const badge = $('mainBadge');
+  const preview = $('preview');
+  if (!raw) {
+    badge.className = 'badge badge-empty';
+    badge.textContent = 'aguardando JSON';
+    preview.hidden = true;
+    return;
+  }
+  let dados;
+  try { dados = JSON.parse(raw); }
+  catch (e) {
+    badge.className = 'badge badge-invalid';
+    badge.textContent = 'JSON inválido';
+    preview.hidden = true;
+    return;
+  }
+  const tipo = detectarTipo(dados);
+  if (!tipo) {
+    badge.className = 'badge badge-invalid';
+    badge.textContent = 'não reconhecido';
+    preview.hidden = true;
+    return;
+  }
+  const labels = { zona: 'zona completa', perigos: 'perigos', puzzles: 'puzzles' };
+  badge.className = `badge badge-${tipo}`;
+  badge.textContent = labels[tipo];
 
-            // ============================================================
-            // EMITIR O PAYLOAD FINAL — uma única chave por sala tocada
-            // ============================================================
-            for (const salaId of salasTocadas) {
-                updatePayload[`mapaMundo.${salaId}`] = mapaTrabalho[salaId];
-            }
+  const c = contarDados(dados);
+  const chips = [];
+  if (c.salas) chips.push(`${c.salas} salas`);
+  if (c.cenas) chips.push(`${c.cenas} cenas`);
+  if (c.dilemas) chips.push(`${c.dilemas} dilemas`);
+  if (c.perigos) chips.push(`${c.perigos} perigos`);
+  if (c.puzzles) chips.push(`${c.puzzles} puzzles`);
+  if (c.itens_novos) chips.push(`${c.itens_novos} itens novos`);
 
-            if (Object.keys(updatePayload).length === 0) {
-                throw new Error('Nenhuma modificação de puzzle foi aplicada.');
-            }
+  let acao = '';
+  if (tipo === 'zona') acao = 'Substitui o mapaMundo com as salas do JSON (preservando campos de runtime como puzzles, estados e itens).';
+  else if (tipo === 'perigos') acao = 'Apenas atualiza perigos no mapaMundo existente do Firestore.';
+  else if (tipo === 'puzzles') acao = 'Aplica puzzles, itens e modificações em salas já existentes.';
 
-            await docRef.update(updatePayload);
-            return { atualizadas: [...salasTocadas] };
-        }
+  preview.hidden = false;
+  preview.innerHTML = `
+    <div class="line"><span class="icon">🎯</span><span><strong>Tipo:</strong> ${labels[tipo]}${chips.length ? ' · ' + chips.join(' · ') : ''}</span></div>
+    <div class="line"><span class="icon">⚙️</span><span>${acao}</span></div>
+    <div class="line"><span class="icon">🛡️</span><span>Campos de runtime serão preservados automaticamente do Firestore.</span></div>
+  `;
+}
 
-        // ============================================================
-        // UI
-        // ============================================================
-        const statusDiv = document.getElementById('status');
-        const resultadoDiv = document.getElementById('resultado');
+/* ============================================================
+   LIMPAR
+   ============================================================ */
+function limparTudo() {
+  if (!confirm('Limpar o texto colado e o resultado?')) return;
+  $('jsonInput').value = '';
+  $('perigosInput').value = '';
+  $('importResult').hidden = true;
+  $('importResult').innerHTML = '';
+  $('validatorStats').hidden = true;
+  $('validatorStats').innerHTML = '';
+  $('validatorResult').innerHTML = '<div class="validator-empty">Cole um JSON no importador acima ou arraste um arquivo aqui para validar.</div>';
+  $('validatorBadges').innerHTML = '';
+  localStorage.removeItem('centelha.console.jsonInput');
+  localStorage.removeItem('centelha.console.perigosInput');
+  refreshEditorHighlight();
+  atualizarBadgeEPreview();
+  toast('Campos limpos.', 'info');
+}
 
-        function log(msg, tipo = 'info') {
-            const div = document.createElement('div');
-            div.className = tipo;
-            div.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
-            statusDiv.appendChild(div);
-            statusDiv.scrollTop = statusDiv.scrollHeight;
-        }
+/* ============================================================
+   IMPORTAR
+   ============================================================ */
+async function importarJSON() {
+  const jsonStr = $('jsonInput').value.trim();
+  const perigosStr = $('perigosInput').value.trim();
 
-        window.importarJSON = async function() {
-            const jsonStr = document.getElementById('jsonInput').value.trim();
-            const perigosStr = document.getElementById('perigosInput').value.trim();
+  if (!jsonStr) { toast('Cole o JSON principal.', 'warn'); return; }
 
-            if (!jsonStr) {
-                alert('Cole o JSON da zona, dos perigos ou dos puzzles, ou arraste um arquivo.');
-                return;
-            }
+  let dados;
+  try { dados = JSON.parse(jsonStr); }
+  catch (e) { toast('JSON principal inválido: ' + e.message, 'err'); return; }
 
-            try {
-                const dados = JSON.parse(jsonStr);
-                log('📂 JSON carregado com sucesso.', 'ok');
+  // Mescla perigos do campo separado
+  if (perigosStr) {
+    let dp;
+    try { dp = JSON.parse(perigosStr); }
+    catch (e) { toast('JSON de perigos inválido: ' + e.message, 'err'); return; }
+    if (!Array.isArray(dp.perigos)) { toast('O JSON de perigos precisa ter {"perigos":[...]}.', 'err'); return; }
+    dados.perigos = (dados.perigos || []).concat(dp.perigos);
+  }
 
-                let temZona = !!(dados.plano || dados.salas || dados.cenas);
-                let temPerigos = Array.isArray(dados.perigos);
-                let temPuzzles = !!(dados.saidas_sequestradas || dados.itens_novos || dados.textos_modificados || dados.itens_adicionados || dados.descricoes_itens_ativos || dados.puzzles);
+  const temZona = !!(dados.plano || dados.salas || dados.cenas);
+  const temPerigos = Array.isArray(dados.perigos) && dados.perigos.length > 0;
+  const temPuzzles = !!(dados.saidas_sequestradas || dados.itens_novos || dados.textos_modificados ||
+    dados.itens_adicionados || dados.descricoes_itens_ativos || dados.puzzles);
 
-                // Se houver perigos separados no campo secundário, mesclar
-                if (perigosStr) {
-                    let dadosPerigos;
-                    try {
-                        dadosPerigos = JSON.parse(perigosStr);
-                    } catch (e) {
-                        log(`❌ O JSON de perigos não é válido: ${e.message}`, 'erro');
-                        return;
-                    }
-                    if (!Array.isArray(dadosPerigos.perigos)) {
-                        log('❌ O JSON de perigos precisa ter a forma {"perigos": [...]}.', 'erro');
-                        return;
-                    }
-                    if (temPerigos) {
-                        dados.perigos = dados.perigos.concat(dadosPerigos.perigos);
-                    } else {
-                        dados.perigos = dadosPerigos.perigos;
-                    }
-                    temPerigos = true;
-                    log(`☠️ ${dadosPerigos.perigos.length} perigos (JSON separado) mesclados.`, 'ok');
-                }
+  if (!temZona && !temPerigos && !temPuzzles) {
+    toast('O JSON não contém zona, perigos nem puzzles.', 'warn');
+    return;
+  }
 
-                if (!temZona && !temPerigos && !temPuzzles) {
-                    alert('O JSON não contém zona (plano/salas/cenas), perigos nem puzzles.');
-                    return;
-                }
+  const user = firebase.auth().currentUser;
+  if (!user) { toast('Nenhum usuário logado. Faça login no jogo primeiro.', 'err'); return; }
 
-                const auth = firebase.auth();
-                const user = auth.currentUser;
-                if (!user) {
-                    log('❌ Nenhum usuário logado. Faça login no jogo primeiro.', 'erro');
-                    return;
-                }
-                log(`👤 Usuário: ${user.uid}`, 'info');
+  const startTime = performance.now();
+  const logs = [];
+  const logFn = (msg, tipo = 'info') => {
+    logs.push({ msg, type: tipo });
+    renderImportResult({ loading: true, logs });
+  };
 
-                if (temZona) {
-                    log('⏳ Importando zona completa...', 'info');
-                    const resultado = await importarParaFirestore(dados, user.uid);
-                    log('✅ Zona importada com sucesso!', 'ok');
-                    log(`📊 ${Object.keys(resultado.mapaMundo).length} salas injetadas.`, 'ok');
+  setProgress(true);
+  $('btnImport').disabled = true;
+  $('importResult').hidden = false;
 
-                    resultadoDiv.innerHTML = `
-                        <p class="ok">✅ Importação concluída!</p>
-                        <pre>${JSON.stringify(resultado, null, 2)}</pre>
-                        <button class="btn" onclick="window.location.href='./vamosla.html'">🎮 Voltar ao Jogo</button>
-                    `;
-                } else if (temPerigos) {
-                    log('⏳ Atualizando apenas perigos...', 'info');
-                    const resultado = await importarPerigosNoMapaAtual(dados.perigos, user.uid);
-                    log('✅ Perigos importados/atualizados com sucesso!', 'ok');
-                    log(`📊 Salas atualizadas: ${resultado.atualizadas.join(', ')}`, 'ok');
+  try {
+    logFn(`👤 Usuário: ${user.uid}`, 'info');
+    let chips = [];
 
-                    resultadoDiv.innerHTML = `
-                        <p class="ok">✅ Perigos atualizados!</p>
-                        <pre>${JSON.stringify(resultado, null, 2)}</pre>
-                        <button class="btn" onclick="window.location.href='./vamosla.html'">🎮 Voltar ao Jogo</button>
-                    `;
-                } else if (temPuzzles) {
-                    log('🧩 Importando puzzles...', 'info');
-                    const resultado = await importarPuzzles(dados, user.uid);
-                    log('✅ Puzzles importados com sucesso!', 'ok');
-                    log(`📊 Salas modificadas: ${resultado.atualizadas.join(', ')}`, 'ok');
+    if (temZona) {
+      logFn('⏳ Importando zona completa...', 'info');
+      const r = await importarParaFirestore(dados, user.uid, logFn);
+      const c = contarDados(dados);
+      chips = [`${Object.keys(r.mapaMundo).length} salas`];
+      if (c.cenas) chips.push(`${c.cenas} cenas`);
+      if (c.dilemas) chips.push(`${c.dilemas} dilemas`);
+      if (c.perigos) chips.push(`${c.perigos} perigos`);
+      logFn('✅ Zona importada com sucesso!', 'ok');
+    } else if (temPuzzles && !temPerigos) {
+      logFn('🧩 Importando puzzles...', 'info');
+      const r = await importarPuzzles(dados, user.uid, logFn);
+      chips = [`${r.atualizadas.length} salas modificadas`];
+      logFn('✅ Puzzles importados com sucesso!', 'ok');
+    } else if (temPerigos) {
+      logFn('⏳ Atualizando apenas perigos...', 'info');
+      const r = await importarPerigosNoMapaAtual(dados.perigos, user.uid, logFn);
+      chips = [`${r.atualizadas.length} salas atualizadas`];
+      logFn('✅ Perigos importados/atualizados com sucesso!', 'ok');
+    }
 
-                    resultadoDiv.innerHTML = `
-                        <p class="ok">✅ Puzzles aplicados!</p>
-                        <pre>${JSON.stringify(resultado, null, 2)}</pre>
-                        <button class="btn" onclick="window.location.href='./vamosla.html'">🎮 Voltar ao Jogo</button>
-                    `;
-                }
+    const elapsed = Math.round(performance.now() - startTime);
+    renderImportResult({ status: 'ok', time: elapsed, chips, logs });
+    toast('Importação concluída.', 'ok');
+  } catch (e) {
+    console.error(e);
+    logFn(`❌ Erro: ${e.message}`, 'err');
+    renderImportResult({ status: 'err', chips: [], logs, error: e.message });
+    toast('Erro: ' + e.message, 'err', 5000);
+  } finally {
+    setProgress(false);
+    $('btnImport').disabled = false;
+  }
+}
 
-            } catch (e) {
-                log(`❌ Erro: ${e.message}`, 'erro');
-                console.error(e);
-            }
-        };
+function renderImportResult({ loading, status, time, chips = [], logs = [], error }) {
+  const panel = $('importResult');
+  panel.hidden = false;
 
-        // ============================================================
-        // DRAG AND DROP
-        // ============================================================
-        const drop = document.getElementById('drop');
-        const fileInput = document.getElementById('fileInput');
+  const headerHTML = loading
+    ? `<div class="result-header"><span class="result-status" style="color:var(--gold)">⏳ Processando...</span></div>`
+    : `<div class="result-header">
+         <span class="result-status ${status === 'ok' ? 'ok' : 'err'}">${status === 'ok' ? '✅ Importado' : '❌ Falhou'}</span>
+         <span class="result-time">${time}ms</span>
+       </div>`;
 
-        drop.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            drop.classList.add('dragover');
-        });
+  const chipsHTML = chips.length
+    ? `<div class="result-chips">${chips.map(c => `<span class="chip ok">${c}</span>`).join('')}</div>`
+    : '';
 
-        drop.addEventListener('dragleave', () => {
-            drop.classList.remove('dragover');
-        });
+  const logsHTML = logs.map(l => `<div class="log-${l.type === 'warn' ? 'warn' : l.type === 'err' ? 'err' : l.type === 'ok' ? 'ok' : 'info'}">${escapeHTML(l.msg)}</div>`).join('');
 
-        drop.addEventListener('drop', (e) => {
-            e.preventDefault();
-            drop.classList.remove('dragover');
-            const file = e.dataTransfer.files[0];
-            if (file) lerArquivo(file);
-        });
+  const actionsHTML = !loading
+    ? `<div class="result-actions">
+         <button class="btn btn-primary btn-sm" onclick="window.location.href='./vamosla.html'">🎮 Voltar ao Jogo</button>
+         <button class="btn btn-ghost btn-sm" onclick="copiarLog()">📋 Copiar log</button>
+       </div>`
+    : '';
 
-        drop.addEventListener('click', () => fileInput.click());
-        fileInput.addEventListener('change', () => {
-            if (fileInput.files[0]) lerArquivo(fileInput.files[0]);
-        });
+  panel.innerHTML = `
+    ${headerHTML}
+    ${chipsHTML}
+    ${error ? `<div style="padding:0 18px 14px;color:var(--red);font-size:12px">${escapeHTML(error)}</div>` : ''}
+    <details class="result-details" ${loading || error ? 'open' : ''}>
+      <summary>Ver log completo (${logs.length})</summary>
+      <div><div class="log-panel" id="importLogPanel">${logsHTML}</div></div>
+    </details>
+    ${actionsHTML}
+  `;
 
-        function lerArquivo(file) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const texto = e.target.result;
+  const lp = $('importLogPanel');
+  if (lp) lp.scrollTop = lp.scrollHeight;
 
-                let destino = 'jsonInput';
-                let rotulo = 'zona (campo principal)';
-                try {
-                    const parsed = JSON.parse(texto);
-                    const temZona = parsed && (parsed.plano || parsed.salas || parsed.cenas);
-                    const soPerigos = parsed && Array.isArray(parsed.perigos) && !temZona;
-                    const soPuzzles = parsed && (parsed.itens_novos || parsed.textos_modificados || parsed.itens_adicionados || parsed.descricoes_itens_ativos || parsed.puzzles) && !temZona && !soPerigos;
-                    if (soPerigos) {
-                        if (!document.getElementById('jsonInput').value.trim()) {
-                            destino = 'jsonInput';
-                            rotulo = 'perigos (campo principal, apenas perigos)';
-                        } else {
-                            destino = 'perigosInput';
-                            rotulo = 'perigos (campo separado)';
-                        }
-                    } else if (soPuzzles) {
-                        destino = 'jsonInput';
-                        rotulo = 'puzzles (campo principal)';
-                    }
-                } catch (err) {
-                    // mantém no campo principal
-                }
+  window._lastImportLogs = logs;
+}
 
-                document.getElementById(destino).value = texto;
-                log(`📂 Arquivo carregado no campo de ${rotulo}. Clique em "Importar" para enviar.`, 'info');
-            };
-            reader.readAsText(file);
-        }
+function copiarLog() {
+  const logs = window._lastImportLogs || [];
+  const texto = logs.map(l => l.msg).join('\n');
+  navigator.clipboard.writeText(texto).then(() => toast('Log copiado.', 'ok'));
+}
 
-        // ============================================================
-        // VERIFICA AUTENTICAÇÃO INICIAL
-        // ============================================================
-        firebase.auth().onAuthStateChanged(user => {
-            if (user) {
-                log(`✅ Usuário autenticado: ${user.displayName || user.email || user.uid}`, 'ok');
-            } else {
-                log('⚠️ Nenhum usuário logado. Abra o jogo primeiro e faça login.', 'aviso');
-            }
-        });
+/* ============================================================
+   VALIDADOR — accordion
+   ============================================================ */
+function toggleValidator() {
+  const card = $('validatorCard');
+  card.classList.toggle('open');
+}
 
-        log('🔧 Importador pronto. Cole o JSON ou arraste um arquivo.', 'info');
-        log('📌 Para zona completa: inclua "plano", "salas" e opcionalmente "cenas" e "perigos". Para atualizar apenas perigos: cole somente {"perigos": [...]}. Para puzzles: cole {"itens_novos": {...}, "textos_modificados": {...}, "itens_adicionados": {...}, "puzzles": {...}}.', 'info');
-    </script>
+function validarAntesDeImportar() {
+  const raw = $('jsonInput').value.trim();
+  if (!raw) { toast('Cole um JSON no importador primeiro.', 'warn'); return; }
+  // Abre accordion se não estiver aberto
+  const card = $('validatorCard');
+  if (!card.classList.contains('open')) card.classList.add('open');
+  rodarValidacao(raw);
+  // Scroll até o validador
+  setTimeout(() => card.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+}
+
+function rodarValidacao(jsonStr) {
+  const resultDiv = $('validatorResult');
+  const statsDiv = $('validatorStats');
+  const badgesDiv = $('validatorBadges');
+
+  statsDiv.hidden = true;
+  statsDiv.innerHTML = '';
+  badgesDiv.innerHTML = '';
+
+  let dados;
+  try { dados = JSON.parse(jsonStr); }
+  catch (e) {
+    resultDiv.innerHTML = `<div class="vrow err"><strong>❌</strong><span class="detail">JSON inválido: ${escapeHTML(e.message)}</span></div>`;
+    badgesDiv.innerHTML = `<span class="mini err">JSON inválido</span>`;
+    return;
+  }
+
+  const plano = dados.plano || {};
+  const salas = dados.salas || {};
+  const cenas = dados.cenas || [];
+
+  const ids = Object.keys(salas).map(Number).sort((a, b) => a - b);
+  if (ids.length === 0) {
+    resultDiv.innerHTML = `<div class="vrow err"><strong>❌</strong><span class="detail">Nenhuma sala encontrada no campo "salas".</span></div>`;
+    badgesDiv.innerHTML = `<span class="mini err">sem salas</span>`;
+    return;
+  }
+
+  const salaInicio = Math.min(...ids);
+  const salaFim = Math.max(...ids);
+  const totalSalas = ids.length;
+
+  let html = '';
+  let salasComErro = 0;
+  let salasCorrigidas = 0;
+  let totalErrosDensidade = 0;
+
+  // 1. TOPOLOGIA
+  const errosTopo = validarPlanoTopologia(plano, salaInicio, salaFim);
+  if (errosTopo.length === 0) {
+    html += `<h3>Topologia</h3><div class="vrow ok"><strong>✅</strong><span class="detail">Topologia aprovada.</span></div>`;
+  } else {
+    html += `<h3>Topologia</h3>`;
+    for (const err of errosTopo) {
+      html += `<div class="vrow err"><strong>❌</strong><span class="detail">${escapeHTML(err)}</span></div>`;
+    }
+  }
+
+  // 2. PROSA E DENSIDADE
+  html += `<h3>Prosa e Densidade</h3>`;
+  let dadosCorrigidos = JSON.parse(JSON.stringify(dados));
+  let houveCorrecaoAncoragem = false;
+
+  for (const [id, sala] of Object.entries(salas)) {
+    const planoItem = plano[id];
+    const opcoes = planoItem?.saidas || [];
+    const acao = opcoes[0]?.acao || null;
+
+    let acaoChegada = acao;
+    if (id == salaInicio) acaoChegada = "SEM_ENTRADA";
+    else {
+      const entradas = Object.values(plano).flatMap(s => (s.saidas || [])).filter(s => s.destino == id);
+      if (entradas.length > 1) acaoChegada = "MULTIPLAS_ENTRADAS";
+    }
+
+    const errosAncora = validarTextoLogico(sala.texto_logico, acaoChegada);
+    const errosDensidade = validarDensidadeAmbiental(sala.texto_logico, opcoes);
+    totalErrosDensidade += errosDensidade.length;
+
+    const todos = [...errosAncora, ...errosDensidade];
+    if (todos.length === 0) {
+      html += `<div class="vrow ok"><strong>✅ Sala ${id}</strong><span class="detail">aprovada</span></div>`;
+    } else {
+      salasComErro++;
+      const textoCorrigido = corrigirAncoragem(sala.texto_logico, acaoChegada);
+      const corrigiu = textoCorrigido !== sala.texto_logico;
+      if (corrigiu) {
+        dadosCorrigidos.salas[id].texto_logico = textoCorrigido;
+        houveCorrecaoAncoragem = true;
+        salasCorrigidas++;
+      }
+      html += `<div class="vrow err"><strong>❌ Sala ${id}</strong><span class="detail">`;
+      html += todos.map(t => `<span class="${errosAncora.includes(t) ? 'err' : 'warn'}">${escapeHTML(t)}</span>`).join('<br>');
+      if (corrigiu) html += `<br><span class="ok">→ ancoragem corrigida automaticamente</span>`;
+      html += `</span></div>`;
+    }
+  }
+
+  // 3. CENAS
+  html += `<h3>Cenas e Dilemas</h3>`;
+  const validacaoCenas = validarCenas(cenas, plano, salaInicio, salaFim);
+  if (validacaoCenas.erros.length === 0 && validacaoCenas.avisos.length === 0) {
+    html += `<div class="vrow ok"><strong>✅</strong><span class="detail">Cenas e dilemas aprovados.</span></div>`;
+  } else {
+    for (const err of validacaoCenas.erros) {
+      html += `<div class="vrow err"><strong>❌</strong><span class="detail">${escapeHTML(err)}</span></div>`;
+    }
+    for (const aviso of validacaoCenas.avisos) {
+      html += `<div class="vrow warn"><strong>⚠️</strong><span class="detail">${escapeHTML(aviso)}</span></div>`;
+    }
+  }
+
+  // 4. CORREÇÕES AUTOMÁTICAS DE CENAS (cor amarela)
+  const resultadoCorrecao = aplicarCorrecoesCenas(dadosCorrigidos);
+  if (resultadoCorrecao.logs.length > 0) {
+    html += `<h3>Correções automáticas</h3>`;
+    for (const logMsg of resultadoCorrecao.logs) {
+      html += `<div class="vrow ok"><strong>🔧</strong><span class="detail">${escapeHTML(logMsg)}</span></div>`;
+    }
+  }
+
+  // Ações
+  const houveCorrecaoTotal = houveCorrecaoAncoragem || resultadoCorrecao.modificado;
+  const errosTopoFatais = errosTopo.length > 0;
+  const bloqueiaEnvio = validacaoCenas.erros.length > 0 || errosTopoFatais;
+
+  html += `<div class="validator-actions">`;
+  if (houveCorrecaoTotal) {
+    html += `<button class="btn btn-primary btn-sm" onclick="enviarCorrigidoParaImportador()">📤 Enviar corrigido ao importador</button>`;
+    html += `<button class="btn btn-ghost btn-sm" onclick="baixarCorrigido()">⬇️ Baixar JSON corrigido</button>`;
+    window._dadosCorrigidos = dadosCorrigidos;
+  }
+  if (bloqueiaEnvio) {
+    html += `<div class="vrow warn" style="margin-top:10px"><strong>⚠️</strong><span class="detail">Erros de ${errosTopoFatais ? 'topologia' : 'cenas'} impedem o envio direto. Corrija o JSON original.</span></div>`;
+  }
+  html += `</div>`;
+
+  resultDiv.innerHTML = html;
+
+  // Stats
+  const totalErrosCenas = validacaoCenas.erros.length;
+  const totalAvisosCenas = validacaoCenas.avisos.length;
+  const totalProblemas = errosTopo.length + salasComErro + totalErrosCenas;
+
+  statsDiv.hidden = false;
+  statsDiv.innerHTML = `
+    <span class="vstat ${totalProblemas === 0 ? 'ok' : 'err'}">📊 ${totalSalas} salas</span>
+    <span class="vstat ${errosTopo.length === 0 ? 'ok' : 'err'}">${errosTopo.length === 0 ? '✅' : '❌'} topologia: ${errosTopo.length}</span>
+    <span class="vstat ${salasComErro === 0 ? 'ok' : 'err'}">${salasComErro === 0 ? '✅' : '❌'} salas com erro: ${salasComErro}</span>
+    <span class="vstat ${totalErrosDensidade === 0 ? 'ok' : 'err'}">${totalErrosDensidade === 0 ? '✅' : '❌'} densidade: ${totalErrosDensidade}</span>
+    <span class="vstat ${totalErrosCenas === 0 ? 'ok' : 'err'}">${totalErrosCenas === 0 ? '✅' : '❌'} cenas: ${totalErrosCenas}</span>
+    <span class="vstat ${totalAvisosCenas === 0 ? 'ok' : 'warn'}">${totalAvisosCenas === 0 ? '✅' : '⚠️'} avisos: ${totalAvisosCenas}</span>
+    ${salasCorrigidas > 0 ? `<span class="vstat warn">🔧 ${salasCorrigidas} corrigida(s)</span>` : ''}
+  `;
+
+  // Badges no cabeçalho
+  const badges = [];
+  if (errosTopo.length > 0) badges.push(`<span class="mini err">❌ topo ${errosTopo.length}</span>`);
+  if (salasComErro > 0) badges.push(`<span class="mini err">❌ salas ${salasComErro}</span>`);
+  if (totalErrosCenas > 0) badges.push(`<span class="mini err">❌ cenas ${totalErrosCenas}</span>`);
+  if (totalAvisosCenas > 0) badges.push(`<span class="mini warn">⚠️ ${totalAvisosCenas}</span>`);
+  if (badges.length === 0) badges.push(`<span class="mini ok">✅ ok</span>`);
+  badgesDiv.innerHTML = badges.join('');
+}
+
+function enviarCorrigidoParaImportador() {
+  if (!window._dadosCorrigidos) { toast('Nada a enviar.', 'warn'); return; }
+  const json = JSON.stringify(window._dadosCorrigidos, null, 2);
+  $('jsonInput').value = json;
+  localStorage.setItem('centelha.console.jsonInput', json);
+  refreshEditorHighlight();
+  atualizarBadgeEPreview();
+  toast('JSON corrigido enviado ao importador.', 'ok');
+  // Fecha o validador e rola para o importador
+  $('validatorCard').classList.remove('open');
+  setTimeout(() => {
+    document.querySelector('.importer-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 150);
+}
+
+function baixarCorrigido() {
+  if (!window._dadosCorrigidos) { toast('Nada para baixar.', 'warn'); return; }
+  const blob = new Blob([JSON.stringify(window._dadosCorrigidos, null, 2)], { type: 'application/json' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'dados_corrigidos.json';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(link.href);
+  toast('Download iniciado.', 'ok');
+}
+
+/* ============================================================
+   DRAG & DROP (importador principal + validador)
+   ============================================================ */
+function configurarDrop(target, onFile) {
+  target.addEventListener('dragover', e => {
+    e.preventDefault();
+    target.classList.add('dragover');
+  });
+  target.addEventListener('dragleave', e => {
+    if (!target.contains(e.relatedTarget)) target.classList.remove('dragover');
+  });
+  target.addEventListener('drop', e => {
+    e.preventDefault();
+    target.classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file) onFile(file);
+  });
+}
+
+function lerArquivo(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = e => res(e.target.result);
+    r.onerror = () => rej(new Error('Erro ao ler arquivo.'));
+    r.readAsText(file);
+  });
+}
+
+// Importador principal
+const mainWrap = $('mainInputWrap');
+configurarDrop(mainWrap, async file => {
+  try {
+    const texto = await lerArquivo(file);
+    // Auto-detecta destino
+    let destino = 'jsonInput';
+    let rotulo = 'principal';
+    try {
+      const parsed = JSON.parse(texto);
+      const temZona = parsed && (parsed.plano || parsed.salas || parsed.cenas);
+      const soPerigos = parsed && Array.isArray(parsed.perigos) && !temZona;
+      const soPuzzles = parsed && (parsed.itens_novos || parsed.textos_modificados ||
+        parsed.itens_adicionados || parsed.descricoes_itens_ativos || parsed.puzzles) && !temZona && !soPerigos;
+      if (soPerigos && $('jsonInput').value.trim()) {
+        destino = 'perigosInput';
+        rotulo = 'perigos';
+      } else if (soPerigos) {
+        destino = 'jsonInput';
+        rotulo = 'perigos';
+      } else if (soPuzzles) {
+        destino = 'jsonInput';
+        rotulo = 'puzzles';
+      } else if (temZona) {
+        destino = 'jsonInput';
+        rotulo = 'zona';
+      }
+    } catch (_) { /* deixa no principal */ }
+
+    $(destino).value = texto;
+    if (destino === 'jsonInput') {
+      localStorage.setItem('centelha.console.jsonInput', texto);
+      refreshEditorHighlight();
+      atualizarBadgeEPreview();
+    } else {
+      localStorage.setItem('centelha.console.perigosInput', texto);
+      $('secondaryInput').open = true;
+    }
+    toast(`Arquivo carregado (${rotulo}).`, 'ok');
+  } catch (e) {
+    toast('Erro: ' + e.message, 'err');
+  }
+});
+
+// Validador (drop zone dedicada)
+const validatorDrop = $('validatorDrop');
+const validatorFile = $('validatorFile');
+configurarDrop(validatorDrop, async file => {
+  try {
+    const texto = await lerArquivo(file);
+    $('jsonInput').value = texto;
+    localStorage.setItem('centelha.console.jsonInput', texto);
+    refreshEditorHighlight();
+    atualizarBadgeEPreview();
+    rodarValidacao(texto);
+    toast('Arquivo validado.', 'ok');
+  } catch (e) {
+    toast('Erro: ' + e.message, 'err');
+  }
+});
+validatorDrop.addEventListener('click', () => validatorFile.click());
+validatorFile.addEventListener('change', async () => {
+  if (validatorFile.files[0]) {
+    const texto = await lerArquivo(validatorFile.files[0]);
+    $('jsonInput').value = texto;
+    localStorage.setItem('centelha.console.jsonInput', texto);
+    refreshEditorHighlight();
+    atualizarBadgeEPreview();
+    rodarValidacao(texto);
+  }
+});
+
+/* ============================================================
+   AUTO-VALIDATE (debounce)
+   ============================================================ */
+let autoValidateTimer = null;
+let refreshEditorHighlight = () => {};
+
+function agendarAutoValidate() {
+  if (!$('autoValidate').checked) return;
+  clearTimeout(autoValidateTimer);
+  autoValidateTimer = setTimeout(() => {
+    const raw = $('jsonInput').value.trim();
+    if (raw) rodarValidacao(raw);
+  }, 800);
+}
+
+/* ============================================================
+   BOOTSTRAP
+   ============================================================ */
+window.addEventListener('DOMContentLoaded', () => {
+  const ta = $('jsonInput');
+  const pre = $('editorHighlight');
+  refreshEditorHighlight = setupEditor(ta, pre);
+
+  // Restaura do localStorage
+  const saved = localStorage.getItem('centelha.console.jsonInput');
+  if (saved) { ta.value = saved; refreshEditorHighlight(); }
+  const savedP = localStorage.getItem('centelha.console.perigosInput');
+  if (savedP) { $('perigosInput').value = savedP; $('secondaryInput').open = true; }
+
+  atualizarBadgeEPreview();
+
+  ta.addEventListener('input', () => {
+    localStorage.setItem('centelha.console.jsonInput', ta.value);
+    atualizarBadgeEPreview();
+    agendarAutoValidate();
+  });
+  $('perigosInput').addEventListener('input', () => {
+    localStorage.setItem('centelha.console.perigosInput', $('perigosInput').value);
+  });
+  $('autoValidate').addEventListener('change', () => {
+    if ($('autoValidate').checked) agendarAutoValidate();
+  });
+});
+
+/* ============================================================
+   AUTH STATE
+   ============================================================ */
+firebase.auth().onAuthStateChanged(user => {
+  const el = $('authStatus');
+  const lbl = el.querySelector('.auth-label');
+  el.classList.remove('ok', 'warn', 'err');
+  if (user) {
+    el.classList.add('ok');
+    lbl.textContent = user.displayName || user.email || user.uid.slice(0, 12);
+    toast('Autenticado.', 'ok');
+  } else {
+    el.classList.add('warn');
+    lbl.textContent = 'sem login';
+    toast('Faça login no jogo antes de importar.', 'warn');
+  }
+});
+
+/* ============================================================
+   INICIAL
+   ============================================================ */
+console.log('%c⚡ Centelha · Console de Zonas', 'color:#d9a441;font-weight:bold;font-size:14px');
+console.log('📋 Validadores ativos: topologia, ancoragem, entry-point leak, densidade e dilemas.');
+console.log('📥 Importadores: zona completa, perigos (isolado), puzzles (Shadowgate).');
+</script>
+
 </body>
 </html>
