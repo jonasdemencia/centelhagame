@@ -117,12 +117,32 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
 .prompts-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
   margin-bottom:20px;overflow:hidden}
 .prompts-header{display:flex;justify-content:space-between;align-items:center;
-  padding:16px 24px 14px;border-bottom:1px solid var(--border)}
+  padding:14px 24px;gap:14px;cursor:pointer;transition:background .15s;user-select:none}
+.prompts-header:hover{background:var(--surface-2)}
 .prompts-title{display:flex;align-items:center;gap:12px;font-size:15px;font-weight:700;
   color:var(--gold);letter-spacing:.5px}
 .prompts-title .icon{color:var(--gold);font-size:16px}
-.prompts-subtitle{font-size:11px;color:var(--text-dim);font-weight:400;letter-spacing:0}
-.prompts-body{padding:16px 24px 22px;display:flex;flex-direction:column;gap:18px}
+.prompts-subtitle{font-size:11px;color:var(--text-dim);font-weight:400;letter-spacing:0;margin-top:2px}
+.prompts-header-actions{display:flex;align-items:center;gap:12px;flex-shrink:0}
+
+.prompts-mini-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;
+  padding:0 24px 20px;border-top:1px solid var(--border);padding-top:16px}
+.prompts-mini{display:flex;flex-direction:column;gap:10px;padding:14px;
+  background:var(--surface-2);border:1px solid var(--border-2);border-radius:var(--radius);
+  transition:border-color .2s}
+.prompts-mini:hover{border-color:rgba(217,164,65,.25)}
+.prompts-mini-title{font-size:12px;font-weight:700;color:var(--text);letter-spacing:.4px}
+.prompts-mini-actions{display:flex;justify-content:flex-start}
+.prompts-mini-summary{font-size:11px;color:var(--text-dim);line-height:1.75;
+  padding-top:10px;border-top:1px dashed var(--border);word-break:break-word;min-height:2.6em}
+.prompts-mini-summary .mini-label{color:var(--gold);font-weight:500}
+.prompts-mini-summary .mini-dim{color:var(--text-dimmer)}
+
+.prompts-panel{max-height:0;overflow:hidden;transition:max-height .4s ease}
+.prompts-card.open .prompts-panel{max-height:6000px}
+.prompts-card.open .prompts-mini-grid{display:none}
+.prompts-card.open .chevron{transform:rotate(90deg)}
+.prompts-body{padding:16px 24px 22px;display:flex;flex-direction:column;gap:18px;border-top:1px solid var(--border)}
 .prompt-block{border:1px solid var(--border-2);border-radius:var(--radius);
   background:var(--surface-2);overflow:hidden;transition:border-color .2s}
 .prompt-block:focus-within{border-color:rgba(217,164,65,.35)}
@@ -143,6 +163,10 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
 .prompt-footer .warn{color:var(--gold)}
 .prompt-footer .err{color:var(--red)}
 .prompt-footer .icon{color:var(--text-dimmer)}
+
+@media (max-width:720px){
+  .prompts-mini-grid{grid-template-columns:1fr}
+}
 
 /* ============ IMPORTER ============ */
 .importer-toggle{display:flex;align-items:center;gap:14px;width:100%;
@@ -371,7 +395,8 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
 
   <!-- ===================== PROMPTS ===================== -->
   <section class="card prompts-card" id="promptsCard">
-    <div class="prompts-header">
+    <div class="prompts-header" onclick="togglePrompts()" role="button" tabindex="0"
+         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();togglePrompts();}">
       <div class="prompts-title">
         <span class="icon">📝</span>
         <div>
@@ -379,62 +404,106 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
           <div class="prompts-subtitle">Cabeçalho regenerado a cada sincronização · corpo editável e persistente</div>
         </div>
       </div>
-      <button class="btn btn-ghost btn-sm" onclick="sincronizarPrompts()">
-        <span class="btn-icon">🔄</span> Atualizar prompts
-      </button>
+      <div class="prompts-header-actions">
+        <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation(); sincronizarPrompts()">
+          <span class="btn-icon">🔄</span> Atualizar prompts
+        </button>
+        <span class="chevron">▸</span>
+      </div>
     </div>
-    <div class="prompts-body">
-      <!-- Topologia + Cenas -->
-      <div class="prompt-block">
-        <div class="prompt-block-header">
-          <span class="prompt-block-title">🎭 Topologia + Cenas</span>
-          <div class="prompt-block-actions">
-            <span class="prompt-etapa">Etapa 1 de 3</span>
-            <button class="btn btn-ghost btn-sm" onclick="copiarPrompt('topologia')">
-              <span class="btn-icon">📋</span> Copiar
-            </button>
-          </div>
+
+    <!-- Estado FECHADO: 3 mini-cards -->
+    <div class="prompts-mini-grid" id="promptsMiniGrid">
+      <div class="prompts-mini">
+        <div class="prompts-mini-title">🎭 Topologia + Cenas</div>
+        <div class="prompts-mini-actions">
+          <button class="btn btn-ghost btn-sm" onclick="copiarPrompt('topologia')">
+            <span class="btn-icon">📋</span> Copiar
+          </button>
         </div>
-        <textarea class="prompt-textarea" id="prompt_topologia" spellcheck="false"></textarea>
-        <div class="prompt-footer">
-          <span class="icon">▸</span>
-          <span id="statusTopologia">aguardando login</span>
+        <div class="prompts-mini-summary" id="miniTopologia">
+          <span class="mini-dim">aguardando login</span>
         </div>
       </div>
-
-      <!-- Perigos -->
-      <div class="prompt-block">
-        <div class="prompt-block-header">
-          <span class="prompt-block-title">☠️ Perigos</span>
-          <div class="prompt-block-actions">
-            <span class="prompt-etapa">Etapa 2 de 3</span>
-            <button class="btn btn-ghost btn-sm" onclick="copiarPrompt('perigos')">
-              <span class="btn-icon">📋</span> Copiar
-            </button>
-          </div>
+      <div class="prompts-mini">
+        <div class="prompts-mini-title">☠️ Perigos</div>
+        <div class="prompts-mini-actions">
+          <button class="btn btn-ghost btn-sm" onclick="copiarPrompt('perigos')">
+            <span class="btn-icon">📋</span> Copiar
+          </button>
         </div>
-        <textarea class="prompt-textarea" id="prompt_perigos" spellcheck="false"></textarea>
-        <div class="prompt-footer">
-          <span class="icon">▸</span>
-          <span id="statusPerigos">aguardando login</span>
+        <div class="prompts-mini-summary" id="miniPerigos">
+          <span class="mini-dim">aguardando login</span>
         </div>
       </div>
+      <div class="prompts-mini">
+        <div class="prompts-mini-title">🧩 Puzzles</div>
+        <div class="prompts-mini-actions">
+          <button class="btn btn-ghost btn-sm" onclick="copiarPrompt('puzzles')">
+            <span class="btn-icon">📋</span> Copiar
+          </button>
+        </div>
+        <div class="prompts-mini-summary" id="miniPuzzles">
+          <span class="mini-dim">aguardando login</span>
+        </div>
+      </div>
+    </div>
 
-      <!-- Puzzles -->
-      <div class="prompt-block">
-        <div class="prompt-block-header">
-          <span class="prompt-block-title">🧩 Puzzles</span>
-          <div class="prompt-block-actions">
-            <span class="prompt-etapa">Etapa 3 de 3</span>
-            <button class="btn btn-ghost btn-sm" onclick="copiarPrompt('puzzles')">
-              <span class="btn-icon">📋</span> Copiar
-            </button>
+    <!-- Estado ABERTO: 3 blocos com textarea -->
+    <div class="prompts-panel" id="promptsPanel">
+      <div class="prompts-body">
+        <!-- Topologia + Cenas -->
+        <div class="prompt-block">
+          <div class="prompt-block-header">
+            <span class="prompt-block-title">🎭 Topologia + Cenas</span>
+            <div class="prompt-block-actions">
+              <span class="prompt-etapa">Etapa 1 de 3</span>
+              <button class="btn btn-ghost btn-sm" onclick="copiarPrompt('topologia')">
+                <span class="btn-icon">📋</span> Copiar
+              </button>
+            </div>
+          </div>
+          <textarea class="prompt-textarea" id="prompt_topologia" spellcheck="false"></textarea>
+          <div class="prompt-footer">
+            <span class="icon">▸</span>
+            <span id="statusTopologia">aguardando login</span>
           </div>
         </div>
-        <textarea class="prompt-textarea" id="prompt_puzzles" spellcheck="false"></textarea>
-        <div class="prompt-footer">
-          <span class="icon">▸</span>
-          <span id="statusPuzzles">aguardando login</span>
+
+        <!-- Perigos -->
+        <div class="prompt-block">
+          <div class="prompt-block-header">
+            <span class="prompt-block-title">☠️ Perigos</span>
+            <div class="prompt-block-actions">
+              <span class="prompt-etapa">Etapa 2 de 3</span>
+              <button class="btn btn-ghost btn-sm" onclick="copiarPrompt('perigos')">
+                <span class="btn-icon">📋</span> Copiar
+              </button>
+            </div>
+          </div>
+          <textarea class="prompt-textarea" id="prompt_perigos" spellcheck="false"></textarea>
+          <div class="prompt-footer">
+            <span class="icon">▸</span>
+            <span id="statusPerigos">aguardando login</span>
+          </div>
+        </div>
+
+        <!-- Puzzles -->
+        <div class="prompt-block">
+          <div class="prompt-block-header">
+            <span class="prompt-block-title">🧩 Puzzles</span>
+            <div class="prompt-block-actions">
+              <span class="prompt-etapa">Etapa 3 de 3</span>
+              <button class="btn btn-ghost btn-sm" onclick="copiarPrompt('puzzles')">
+                <span class="btn-icon">📋</span> Copiar
+              </button>
+            </div>
+          </div>
+          <textarea class="prompt-textarea" id="prompt_puzzles" spellcheck="false"></textarea>
+          <div class="prompt-footer">
+            <span class="icon">▸</span>
+            <span id="statusPuzzles">aguardando login</span>
+          </div>
         </div>
       </div>
     </div>
@@ -623,6 +692,11 @@ function setupEditor(textarea, highlight) {
    PROMPTS — corpos padrão
    ============================================================ */
 const PROMPT_KEYS = ['topologia', 'perigos', 'puzzles'];
+const MINI_IDS = {
+  topologia: 'miniTopologia',
+  perigos: 'miniPerigos',
+  puzzles: 'miniPuzzles'
+};
 
 const DEFAULT_BODIES = {
   topologia: [
@@ -816,11 +890,37 @@ function construirCabecalho(key, n, ctx) {
   return linhas.join('\n');
 }
 
-// Corpo = tudo após o primeiro "\n\n". Cabeçalho nunca contém linha em branco.
+function construirResumo(key, n, ctx) {
+  const start = (n - 1) * SALAS_POR_ZONA + 1;
+  const end = n * SALAS_POR_ZONA;
+  const linhas = [
+    `SALA_INICIAL = ${start}`,
+    `SALA_FINAL   = ${end}`
+  ];
+  if (key === 'perigos') {
+    linhas.push(`QUANTIDADE_PERIGOS = 3`);
+  } else if (key === 'puzzles') {
+    const itens = ctx.itens_legado_pendentes || [];
+    if (itens.length > 0) {
+      const items = itens.map(i =>
+        `• ${escapeHTML(i.id)} <span class="mini-dim">(sala ${i.sala_plantio ?? '?'})</span>`
+      ).join('<br>');
+      linhas.push(`<span class="mini-label">itens_legado_pendentes:</span><br>${items}`);
+    } else {
+      linhas.push(`<span class="mini-label">itens_legado_pendentes:</span> <span class="mini-dim">nenhum</span>`);
+    }
+    const salas = ctx.salas_ocupadas || [];
+    const salasTxt = salas.length > 0 ? `[${salas.join(', ')}]` : '[]';
+    linhas.push(`<span class="mini-label">salas_ocupadas:</span> ${salasTxt}`);
+  }
+  return linhas.join('<br>');
+}
+
+// Corpo = tudo após o primeiro "\n\n". Cabeçalho nunca contém linha em branco interna.
 function extrairCorpo(texto) {
   if (!texto) return '';
   const idx = texto.indexOf('\n\n');
-  if (idx < 0) return texto; // sem separador: trata tudo como corpo (fallback)
+  if (idx < 0) return texto;
   return texto.slice(idx + 2);
 }
 
@@ -844,7 +944,6 @@ function initPromptTextareas() {
   for (const key of PROMPT_KEYS) {
     const ta = $(`prompt_${key}`);
     if (!ta) continue;
-    // Pré-carrega com header provisório (será reescrito na primeira sync)
     const header = `CONFIGURAÇÕES DA ZONA\nSALA_INICIAL = ?\nSALA_FINAL   = ?`;
     ta.value = header + '\n\n' + carregarCorpoPersistido(key);
     ta.addEventListener('input', () => {
@@ -902,6 +1001,7 @@ async function sincronizarPrompts(silent = false) {
   const user = firebase.auth().currentUser;
   if (!user) {
     setStatusPromptsNoLogin();
+    setResumosNoLogin();
     if (!silent) toast('Faça login para sincronizar os prompts.', 'warn');
     return;
   }
@@ -919,13 +1019,15 @@ async function sincronizarPrompts(silent = false) {
 
     for (const key of PROMPT_KEYS) {
       const ta = $(`prompt_${key}`);
-      if (!ta) continue;
-      // Preserva edições pendentes do usuário antes de reescrever
-      if (ta.value) {
-        const corpoAtual = extrairCorpo(ta.value);
-        if (corpoAtual) salvarCorpoPersistido(key, corpoAtual);
+      if (ta) {
+        if (ta.value) {
+          const corpoAtual = extrairCorpo(ta.value);
+          if (corpoAtual) salvarCorpoPersistido(key, corpoAtual);
+        }
+        ta.value = montarTextoCompleto(key, n, ctx);
       }
-      ta.value = montarTextoCompleto(key, n, ctx);
+      const miniEl = $(MINI_IDS[key]);
+      if (miniEl) miniEl.innerHTML = construirResumo(key, n, ctx);
     }
 
     atualizarStatusPrompts(mapaMundo, n);
@@ -972,6 +1074,13 @@ function setStatusPromptsNoLogin() {
   }
 }
 
+function setResumosNoLogin() {
+  for (const key of PROMPT_KEYS) {
+    const el = $(MINI_IDS[key]);
+    if (el) el.innerHTML = '<span class="mini-dim">aguardando login</span>';
+  }
+}
+
 function copiarPrompt(key) {
   const ta = $(`prompt_${key}`);
   if (!ta) return;
@@ -980,6 +1089,18 @@ function copiarPrompt(key) {
   navigator.clipboard.writeText(texto)
     .then(() => toast('Prompt copiado.', 'ok'))
     .catch(e => toast('Erro ao copiar: ' + e.message, 'err'));
+}
+
+function togglePrompts() {
+  const card = $('promptsCard');
+  card.classList.toggle('open');
+  const aberto = card.classList.contains('open');
+  localStorage.setItem('centelha.console.promptsAberto', aberto ? '1' : '0');
+}
+
+function restaurarEstadoPrompts() {
+  const aberto = localStorage.getItem('centelha.console.promptsAberto') === '1';
+  if (aberto) $('promptsCard').classList.add('open');
 }
 
 /* ============================================================
@@ -2417,6 +2538,7 @@ async function sincronizarMirror() {
   if (!user) {
     renderMirrorEmpty('Faça login para ver o espelho do Firestore.');
     setStatusPromptsNoLogin();
+    setResumosNoLogin();
     return;
   }
 
@@ -2589,6 +2711,8 @@ window.addEventListener('DOMContentLoaded', () => {
   // Prompts: pré-carrega do localStorage antes de sincronizar
   initPromptTextareas();
   setStatusPromptsNoLogin();
+  setResumosNoLogin();
+  restaurarEstadoPrompts();
 
   restaurarVisibilidadeMirror();
   carregarMirrorCache();
@@ -2614,6 +2738,7 @@ firebase.auth().onAuthStateChanged(user => {
     renderMirrorEmpty('Faça login para ver o espelho do Firestore.');
     atualizarMirrorAuthInfo();
     setStatusPromptsNoLogin();
+    setResumosNoLogin();
   }
 });
 
@@ -2622,7 +2747,7 @@ firebase.auth().onAuthStateChanged(user => {
    ============================================================ */
 console.log('%c⚡ Centelha · Console de Zonas', 'color:#d9a441;font-weight:bold;font-size:14px');
 console.log('📋 Validadores ativos: topologia, ancoragem, entry-point leak, densidade e dilemas.');
-console.log('📝 Prompts: Topologia+Cenas, Perigos, Puzzles — cabeçalho dinâmico, corpo editável.');
+console.log('📝 Prompts: Topologia+Cenas, Perigos, Puzzles — recolhível com resumo por etapa.');
 console.log('📥 Importadores: zona completa, perigos (isolado), puzzles (Shadowgate).');
 console.log('📊 Espelho: leitura read-only do doc players/{uid}, sem criar documentos novos.');
 </script>
