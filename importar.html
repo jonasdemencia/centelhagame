@@ -3322,14 +3322,18 @@ window.addEventListener('DOMContentLoaded', () => {
 
   setupDrops();
 
+  // Popover: impede que cliques internos borbulhem para o "clicar fora"
+  const popEl = $('preencherPopover');
+  if (popEl) popEl.addEventListener('click', e => e.stopPropagation());
+
   // Popover: fecha ao clicar fora ou Esc
   document.addEventListener('click', (e) => {
     const pop = $('preencherPopover');
     if (!pop || pop.hidden) return;
-    if (pop.contains(e.target)) return;
     if (e.target.closest('#mirrorVaziasBtn')) return;
     fecharPopoverPreencher();
   });
+  
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       const pop = $('preencherPopover');
