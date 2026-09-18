@@ -80,8 +80,11 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
 
 .zones-bar{display:flex;gap:2px;height:14px}
 .zone-seg{flex:1;position:relative;background:#141414;border:1px solid #1f1f1f;border-radius:2px;
-  overflow:hidden;cursor:help;transition:border-color .15s}
+  overflow:hidden;cursor:pointer;transition:border-color .15s, box-shadow .15s}
 .zone-seg:hover{border-color:var(--gold)}
+.zone-seg.selected{border-color:var(--gold);
+  box-shadow:0 0 0 1px var(--gold), 0 0 10px rgba(217,164,65,.45);
+  z-index:1}
 .zone-seg::after{content:'';position:absolute;inset:0;width:var(--fill,0%);background:var(--gold);
   transition:width .35s ease}
 .zone-seg.empty::after{background:transparent}
@@ -92,8 +95,21 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
 .zones-ticks{position:relative;height:12px;margin-top:4px;font-size:9px;color:var(--text-dimmer)}
 .zones-ticks span{position:absolute;transform:translateX(-50%);white-space:nowrap}
 
+/* ============ MIRROR SCOPE ============ */
+.mirror-scope{display:flex;align-items:center;gap:10px;margin-top:16px;padding:7px 12px;
+  background:var(--surface-2);border:1px solid var(--border-2);border-radius:var(--radius);
+  font-size:11px;color:var(--text-dim);transition:border-color .2s}
+.mirror-scope[hidden]{display:none}
+.mirror-scope-label{color:var(--gold);font-weight:700;letter-spacing:.5px;font-size:11px}
+.mirror-scope-label .range{color:var(--text-dim);font-weight:400;margin-left:6px;letter-spacing:0}
+.mirror-scope-clear{margin-left:auto;padding:3px 10px;background:transparent;border:1px solid var(--border-2);
+  color:var(--text-dim);font-family:inherit;font-size:10.5px;cursor:pointer;border-radius:14px;
+  transition:.15s;letter-spacing:.3px}
+.mirror-scope-clear:hover{color:var(--gold);border-color:rgba(217,164,65,.4);background:var(--gold-dim)}
+
 .mini-bars{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
   gap:6px 22px;margin-top:16px}
+.mirror-scope:not([hidden]) + .mini-bars{margin-top:10px}
 .mini-bar{display:grid;grid-template-columns:20px 68px 1fr 60px;align-items:center;gap:8px;
   font-size:11px;color:var(--text-dim);cursor:help;padding:3px 0;border-radius:4px;transition:background .15s}
 .mini-bar:hover{background:rgba(217,164,65,.04)}
@@ -394,6 +410,10 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
         </div>
         <div class="zones-bar" id="zonesBar"></div>
         <div class="zones-ticks" id="zonesTicks"></div>
+        <div class="mirror-scope" id="mirrorScope" hidden>
+          <span class="mirror-scope-label" id="mirrorScopeLabel"></span>
+          <button class="mirror-scope-clear" onclick="limparEscopoZona()" title="Voltar ao total">× TOTAL</button>
+        </div>
         <div class="mini-bars" id="miniBars"></div>
         <div class="mirror-footer">
           <span class="mirror-timestamp" id="mirrorTimestamp">📡 aguardando sincronização</span>
@@ -2536,6 +2556,44 @@ function analisarMapaMundo(mapaMundo, itens_novos) {
 }
 
 /* ============================================================
+   MIRROR — escopo (zona selecionada)
+   ============================================================ */
+let _zonaSelecionada = null;   // null = TOTAL, 1..30 = zona
+let _ultimaAnalise = null;     // cache da última análise renderizada
+
+function isSalaNaZona(salaId, zonaN) {
+  const start = (zonaN - 1) * SALAS_POR_ZONA + 1;
+  const end = zonaN * SALAS_POR_ZONA;
+  return salaId >= start && salaId <= end;
+}
+
+function selecionarZona(n) {
+  if (_zonaSelecionada === n) _zonaSelecionada = null;
+  else _zonaSelecionada = n;
+  if (_ultimaAnalise) renderMirror(_ultimaAnalise);
+}
+
+function limparEscopoZona() {
+  if (_zonaSelecionada === null) return;
+  _zonaSelecionada = null;
+  if (_ultimaAnalise) renderMirror(_ultimaAnalise);
+}
+
+function renderMirrorScope() {
+  const el = $('mirrorScope');
+  const label = $('mirrorScopeLabel');
+  if (!el || !label) return;
+  if (_zonaSelecionada === null) {
+    el.hidden = true;
+    return;
+  }
+  const start = (_zonaSelecionada - 1) * SALAS_POR_ZONA + 1;
+  const end = _zonaSelecionada * SALAS_POR_ZONA;
+  label.innerHTML = `Escopo: ZONA ${_zonaSelecionada}<span class="range">(salas ${start}–${end})</span>`;
+  el.hidden = false;
+}
+
+/* ============================================================
    MIRROR — render
    ============================================================ */
 function truncarListaSalas(arr, max = 12) {
@@ -2546,6 +2604,7 @@ function truncarListaSalas(arr, max = 12) {
 }
 
 function renderMirror(analise) {
+  _ultimaAnalise = analise;
   $('mirrorEmpty').hidden = true;
   $('mirrorContent').hidden = false;
 
@@ -2557,6 +2616,7 @@ function renderMirror(analise) {
   const zonesBar = $('zonesBar');
   let html = '';
   for (let z = 0; z < TOTAL_ZONAS; z++) {
+    const zonaN = z + 1;
     const start = z * SALAS_POR_ZONA + 1;
     let count = 0;
     for (let i = start; i < start + SALAS_POR_ZONA; i++) {
@@ -2567,8 +2627,10 @@ function renderMirror(analise) {
     if (count === SALAS_POR_ZONA) cls += ' complete';
     else if (count > 0) cls += ' partial';
     else cls += ' empty';
-    const title = `Zona ${z + 1} · ${count}/${SALAS_POR_ZONA} salas`;
-    html += `<div class="${cls}" style="--fill:${fillPct}%" title="${title}"></div>`;
+    if (_zonaSelecionada === zonaN) cls += ' selected';
+    const prefix = (_zonaSelecionada === zonaN) ? '▸ ' : '';
+    const title = `${prefix}Zona ${zonaN} · ${count}/${SALAS_POR_ZONA} salas`;
+    html += `<div class="${cls}" style="--fill:${fillPct}%" title="${title}" onclick="selecionarZona(${zonaN})"></div>`;
   }
   zonesBar.innerHTML = html;
 
@@ -2581,26 +2643,69 @@ function renderMirror(analise) {
     ticks.appendChild(el);
   });
 
-  const totalSalas = analise.totalSalas;
+  renderMirrorScope();
+  renderMiniBars(analise);
+}
+
+function renderMiniBars(analise) {
+  let scoped;
+  let denom;
+
+  if (_zonaSelecionada === null) {
+    scoped = {
+      cenas: analise.cenas,
+      puzzles: analise.puzzles,
+      perigos: analise.perigos,
+      itens: analise.itens,
+      rotas: analise.rotas,
+      cenasSalas: analise.cenasSalas,
+      puzzlesSalas: analise.puzzlesSalas,
+      perigosSalas: analise.perigosSalas,
+      itensSalas: analise.itensSalas,
+      rotasSalas: analise.rotasSalas,
+      itens_novos_count: analise.itens_novos_count
+    };
+    denom = analise.totalSalas;
+  } else {
+    const z = _zonaSelecionada;
+    const fil = arr => arr.filter(id => isSalaNaZona(id, z));
+    scoped = {
+      cenas: 0, puzzles: 0, perigos: 0, itens: 0, rotas: 0,
+      cenasSalas: fil(analise.cenasSalas),
+      puzzlesSalas: fil(analise.puzzlesSalas),
+      perigosSalas: fil(analise.perigosSalas),
+      itensSalas: fil(analise.itensSalas),
+      rotasSalas: fil(analise.rotasSalas),
+      itens_novos_count: 0
+    };
+    scoped.cenas = scoped.cenasSalas.length;
+    scoped.puzzles = scoped.puzzlesSalas.length;
+    scoped.perigos = scoped.perigosSalas.length;
+    scoped.itens = scoped.itensSalas.length;
+    scoped.rotas = scoped.rotasSalas.length;
+    denom = SALAS_POR_ZONA;
+  }
+
   const bars = [
-    { icon: '🎭', label: 'Cenas', value: analise.cenas, salas: analise.cenasSalas, extra: '' },
-    { icon: '🧩', label: 'Puzzles', value: analise.puzzles, salas: analise.puzzlesSalas, extra: '' },
-    { icon: '☠️', label: 'Perigos', value: analise.perigos, salas: analise.perigosSalas, extra: '' },
-    { icon: '📦', label: 'Itens', value: analise.itens, salas: analise.itensSalas,
-      extra: analise.itens_novos_count > 0 ? ` · +${analise.itens_novos_count} novos em itens_novos` : '' },
-    { icon: '🔒', label: 'Rotas', value: analise.rotas, salas: analise.rotasSalas, extra: '' }
+    { icon: '🎭', label: 'Cenas', value: scoped.cenas, salas: scoped.cenasSalas, extra: '' },
+    { icon: '🧩', label: 'Puzzles', value: scoped.puzzles, salas: scoped.puzzlesSalas, extra: '' },
+    { icon: '☠️', label: 'Perigos', value: scoped.perigos, salas: scoped.perigosSalas, extra: '' },
+    { icon: '📦', label: 'Itens', value: scoped.itens, salas: scoped.itensSalas,
+      extra: (_zonaSelecionada === null && scoped.itens_novos_count > 0)
+        ? ` · +${scoped.itens_novos_count} novos em itens_novos` : '' },
+    { icon: '🔒', label: 'Rotas', value: scoped.rotas, salas: scoped.rotasSalas, extra: '' }
   ];
 
   const mb = $('miniBars');
   mb.innerHTML = bars.map(b => {
-    const pct = totalSalas > 0 ? (b.value / totalSalas * 100) : 0;
+    const pct = denom > 0 ? (b.value / denom * 100) : 0;
     const cls = b.value === 0 ? 'mini-bar empty' : 'mini-bar';
     const tooltip = `Salas: ${truncarListaSalas(b.salas)}${b.extra}`;
     return `<div class="${cls}" title="${tooltip}">
       <span class="mb-icon">${b.icon}</span>
       <span class="mb-label">${b.label}</span>
       <div class="mb-track"><div class="mb-fill" style="width:${pct}%"></div></div>
-      <span class="mb-count">${b.value}/${totalSalas}</span>
+      <span class="mb-count">${b.value}/${denom}</span>
     </div>`;
   }).join('');
 }
@@ -2858,7 +2963,7 @@ console.log('%c⚡ Centelha · Console de Zonas', 'color:#d9a441;font-weight:bol
 console.log('📋 Validadores ativos: topologia, ancoragem, entry-point leak, densidade e dilemas.');
 console.log('📝 Prompts: zona controlada manualmente por [−]/[+] · 🔄 recarrega dados do Firestore.');
 console.log('📥 Importadores: zona completa, perigos (isolado), puzzles (Shadowgate).');
-console.log('📊 Espelho: leitura read-only do doc players/{uid}, sem criar documentos novos.');
+console.log('📊 Espelho: leitura read-only do doc players/{uid}, com drill-down por zona.');
 </script>
 
 </body>
