@@ -2809,17 +2809,14 @@ function renderVazias(analise) {
   if (!wrap || !labelEl || !listEl || !btnEl) return;
 
   const vazias = analise.salasVazias || [];
-  const comuns = vazias.filter(v => v.classe === 'comum');
-  const naoEntrada = vazias.filter(v => v.classe !== 'entrada');
+  const preenchiveisGlobal = vazias.filter(v => v.classe === 'comum' || v.classe === 'fronteira');
 
   if (_zonaSelecionada === null) {
-    const zonasComVazias = new Set(comuns.map(v => v.zona));
-    if (comuns.length === 0) {
-      labelEl.textContent = naoEntrada.length > 0
-        ? '🕳️ Vazias (global) · nenhuma preenchível'
-        : '🕳️ Vazias (global) · nenhuma';
+    const zonasComVazias = new Set(preenchiveisGlobal.map(v => v.zona));
+    if (preenchiveisGlobal.length === 0) {
+      labelEl.textContent = '🕳️ Vazias (global) · nenhuma preenchível';
     } else {
-      labelEl.textContent = `🕳️ Vazias (global) · ${comuns.length} sala${comuns.length === 1 ? '' : 's'} preenchível${comuns.length === 1 ? '' : 'eis'} em ${zonasComVazias.size} zona${zonasComVazias.size === 1 ? '' : 's'}`;
+      labelEl.textContent = `🕳️ Vazias (global) · ${preenchiveisGlobal.length} sala${preenchiveisGlobal.length === 1 ? '' : 's'} preenchível${preenchiveisGlobal.length === 1 ? '' : 'eis'} em ${zonasComVazias.size} zona${zonasComVazias.size === 1 ? '' : 's'}`;
     }
     listEl.textContent = '';
     btnEl.hidden = true;
@@ -2829,9 +2826,7 @@ function renderVazias(analise) {
 
   const zonaN = _zonaSelecionada;
   const daZona = vazias.filter(v => v.zona === zonaN);
-  const comunsZ = daZona.filter(v => v.classe === 'comum');
-  const fronteiraZ = daZona.filter(v => v.classe === 'fronteira');
-  const entradaZ = daZona.filter(v => v.classe === 'entrada');
+  const preenchiveis = daZona.filter(v => v.classe === 'comum' || v.classe === 'fronteira');
 
   if (daZona.length === 0) {
     labelEl.textContent = '🕳️ Vazias · nenhuma';
@@ -2841,11 +2836,8 @@ function renderVazias(analise) {
     return;
   }
 
-  if (comunsZ.length === 0) {
-    const parts = [];
-    if (fronteiraZ.length > 0) parts.push(`fronteira ${fronteiraZ.map(v => v.sala).join(', ')} (não preenchível)`);
-    if (entradaZ.length > 0) parts.push('entrada (não preenchível)');
-    labelEl.textContent = '🕳️ Vazias · ' + parts.join(' · ');
+  if (preenchiveis.length === 0) {
+    labelEl.textContent = '🕳️ Vazias · entrada (não preenchível)';
     listEl.innerHTML = '';
     btnEl.hidden = true;
     wrap.hidden = false;
@@ -2853,13 +2845,10 @@ function renderVazias(analise) {
   }
 
   labelEl.textContent = '🕳️ Vazias ·';
-  const items = [];
-  for (const v of comunsZ) {
-    items.push(`<span class="vazia-item">${v.sala} <span class="vazia-classe">(comum)</span></span>`);
-  }
-  for (const v of fronteiraZ) {
-    items.push(`<span class="vazia-item">${v.sala} <span class="vazia-classe">(fronteira · não preenchível)</span></span>`);
-  }
+  const items = preenchiveis.map(v => {
+    const classe = v.classe === 'fronteira' ? 'fronteira' : 'comum';
+    return `<span class="vazia-item">${v.sala} <span class="vazia-classe">(${classe})</span></span>`;
+  });
   listEl.innerHTML = items.join('');
   btnEl.hidden = false;
   wrap.hidden = false;
@@ -3034,13 +3023,15 @@ function restaurarVisibilidadeMirror() {
    PREENCHER — popover + geração de prompt
    ============================================================ */
 let _popoverZona = null;
-let _popoverSalasAlvo = [];   // [{sala, classe}] — sempre comum
+let _popoverSalasAlvo = [];
 
 function abrirPopoverPreencher(anchor) {
   if (_zonaSelecionada === null) return;
   const vazias = (_ultimaAnalise && _ultimaAnalise.salasVazias) || [];
-  const preenchiveis = vazias.filter(v => v.zona === _zonaSelecionada && v.classe === 'comum');
-  if (preenchiveis.length === 0) { toast('Nenhuma sala comum vazia nesta zona.', 'warn'); return; }
+  const preenchiveis = vazias.filter(v =>
+    v.zona === _zonaSelecionada && (v.classe === 'comum' || v.classe === 'fronteira')
+  );
+  if (preenchiveis.length === 0) { toast('Nenhuma sala vazia preenchível nesta zona.', 'warn'); return; }
 
   _popoverZona = _zonaSelecionada;
   _popoverSalasAlvo = preenchiveis.map(v => ({ sala: v.sala, classe: v.classe }));
@@ -3217,11 +3208,9 @@ window.addEventListener('DOMContentLoaded', () => {
 
   setupDrops();
 
-  // Popover: impede que cliques internos borbulhem para o "clicar fora"
   const popEl = $('preencherPopover');
   if (popEl) popEl.addEventListener('click', e => e.stopPropagation());
 
-  // Popover: fecha ao clicar fora ou Esc
   document.addEventListener('click', (e) => {
     const pop = $('preencherPopover');
     if (!pop || pop.hidden) return;
