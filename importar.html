@@ -380,21 +380,6 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
 .popover-close{width:24px;height:24px;background:transparent;border:1px solid transparent;
   color:var(--text-dim);cursor:pointer;border-radius:4px;font-family:inherit;font-size:14px;padding:0;line-height:1}
 .popover-close:hover{color:var(--text);border-color:var(--border-2);background:var(--surface-2)}
-.popover-context{padding:10px 16px;font-size:11px;color:var(--text-dim);border-bottom:1px solid var(--border);
-  background:var(--surface-2);line-height:1.6}
-.popover-context .classe{color:var(--text-dimmer);font-size:10.5px}
-.popover-options{padding:14px 16px;display:flex;flex-direction:column;gap:8px}
-.popover-option{display:flex;align-items:center;gap:10px;padding:10px 12px;
-  background:var(--surface-2);border:1px solid var(--border-2);border-radius:var(--radius);
-  cursor:pointer;transition:.15s;font-size:12px}
-.popover-option:hover:not(.disabled){border-color:rgba(217,164,65,.35);background:var(--surface-3)}
-.popover-option.disabled{opacity:.45;cursor:not-allowed}
-.popover-option input{appearance:none;width:14px;height:14px;border:1px solid var(--border-2);
-  border-radius:50%;background:var(--surface);position:relative;cursor:pointer;flex-shrink:0;margin:0}
-.popover-option input:checked{background:var(--gold);border-color:var(--gold)}
-.popover-option input:checked::after{content:'';position:absolute;inset:3px;border-radius:50%;background:#0a0a0a}
-.popover-option input:disabled{cursor:not-allowed}
-.popover-hint{margin-left:auto;font-size:10.5px;color:var(--text-dimmer)}
 .popover-actions{display:flex;gap:10px;padding:12px 16px;border-top:1px solid var(--border);
   background:var(--surface-3);justify-content:flex-end;flex-wrap:wrap}
 .popover-textarea{width:100%;min-height:340px;max-height:60vh;padding:14px 16px;
@@ -973,10 +958,10 @@ const DEFAULT_BODIES = {
 /* ============================================================
    PROMPTS — estado
    ============================================================ */
-let _promptZona = 1;              // zona atual exibida nos prompts
-let _promptZonaManual = false;    // true se o usuário já escolheu manualmente (ou se foi auto-setado alguma vez)
-let _lastDados = null;            // último snapshot do doc players/{uid}
-let _promptsReady = false;        // true após a primeira renderização com dados reais
+let _promptZona = 1;
+let _promptZonaManual = false;
+let _lastDados = null;
+let _promptsReady = false;
 
 /* ============================================================
    PROMPTS — persistência / cálculo
@@ -2181,7 +2166,6 @@ async function importarJSON() {
     const elapsed = Math.round(performance.now() - startTime);
     renderImportResult({ status: 'ok', time: elapsed, chips, logs });
     toast('Importação concluída.', 'ok');
-    // Sucesso: limpa o banner de alvo (se houver) e sincroniza o espelho.
     fecharBannerAlvo();
     sincronizarMirror();
   } catch (e) {
@@ -2644,7 +2628,6 @@ function analisarMapaMundo(mapaMundo, itens_novos) {
     if (completo) result.zonasCompletas++;
   }
 
-  // Coleta de salas vazias (presentes, sem cena, sem perigo, sem puzzle)
   for (let z = 1; z <= TOTAL_ZONAS; z++) {
     const start = (z - 1) * SALAS_POR_ZONA + 1;
     const end = z * SALAS_POR_ZONA;
@@ -2665,8 +2648,8 @@ function analisarMapaMundo(mapaMundo, itens_novos) {
 /* ============================================================
    MIRROR — escopo (zona selecionada)
    ============================================================ */
-let _zonaSelecionada = null;   // null = TOTAL, 1..30 = zona
-let _ultimaAnalise = null;     // cache da última análise renderizada
+let _zonaSelecionada = null;
+let _ultimaAnalise = null;
 
 function isSalaNaZona(salaId, zonaN) {
   const start = (zonaN - 1) * SALAS_POR_ZONA + 1;
@@ -2826,14 +2809,17 @@ function renderVazias(analise) {
   if (!wrap || !labelEl || !listEl || !btnEl) return;
 
   const vazias = analise.salasVazias || [];
+  const comuns = vazias.filter(v => v.classe === 'comum');
+  const naoEntrada = vazias.filter(v => v.classe !== 'entrada');
 
   if (_zonaSelecionada === null) {
-    const preenchiveis = vazias.filter(v => v.classe !== 'entrada');
-    const zonasComVazias = new Set(preenchiveis.map(v => v.zona));
-    if (preenchiveis.length === 0) {
-      labelEl.textContent = '🕳️ Vazias (global) · nenhuma preenchível';
+    const zonasComVazias = new Set(comuns.map(v => v.zona));
+    if (comuns.length === 0) {
+      labelEl.textContent = naoEntrada.length > 0
+        ? '🕳️ Vazias (global) · nenhuma preenchível'
+        : '🕳️ Vazias (global) · nenhuma';
     } else {
-      labelEl.textContent = `🕳️ Vazias (global) · ${preenchiveis.length} sala${preenchiveis.length === 1 ? '' : 's'} em ${zonasComVazias.size} zona${zonasComVazias.size === 1 ? '' : 's'}`;
+      labelEl.textContent = `🕳️ Vazias (global) · ${comuns.length} sala${comuns.length === 1 ? '' : 's'} preenchível${comuns.length === 1 ? '' : 'eis'} em ${zonasComVazias.size} zona${zonasComVazias.size === 1 ? '' : 's'}`;
     }
     listEl.textContent = '';
     btnEl.hidden = true;
@@ -2843,7 +2829,9 @@ function renderVazias(analise) {
 
   const zonaN = _zonaSelecionada;
   const daZona = vazias.filter(v => v.zona === zonaN);
-  const preenchiveis = daZona.filter(v => v.classe !== 'entrada');
+  const comunsZ = daZona.filter(v => v.classe === 'comum');
+  const fronteiraZ = daZona.filter(v => v.classe === 'fronteira');
+  const entradaZ = daZona.filter(v => v.classe === 'entrada');
 
   if (daZona.length === 0) {
     labelEl.textContent = '🕳️ Vazias · nenhuma';
@@ -2853,8 +2841,11 @@ function renderVazias(analise) {
     return;
   }
 
-  if (preenchiveis.length === 0) {
-    labelEl.textContent = '🕳️ Vazias · apenas a entrada (não preenchível)';
+  if (comunsZ.length === 0) {
+    const parts = [];
+    if (fronteiraZ.length > 0) parts.push(`fronteira ${fronteiraZ.map(v => v.sala).join(', ')} (não preenchível)`);
+    if (entradaZ.length > 0) parts.push('entrada (não preenchível)');
+    labelEl.textContent = '🕳️ Vazias · ' + parts.join(' · ');
     listEl.innerHTML = '';
     btnEl.hidden = true;
     wrap.hidden = false;
@@ -2862,10 +2853,14 @@ function renderVazias(analise) {
   }
 
   labelEl.textContent = '🕳️ Vazias ·';
-  listEl.innerHTML = preenchiveis.map(v => {
-    const classe = v.classe === 'fronteira' ? 'fronteira → só puzzle' : 'comum';
-    return `<span class="vazia-item">${v.sala} <span class="vazia-classe">(${classe})</span></span>`;
-  }).join('');
+  const items = [];
+  for (const v of comunsZ) {
+    items.push(`<span class="vazia-item">${v.sala} <span class="vazia-classe">(comum)</span></span>`);
+  }
+  for (const v of fronteiraZ) {
+    items.push(`<span class="vazia-item">${v.sala} <span class="vazia-classe">(fronteira · não preenchível)</span></span>`);
+  }
+  listEl.innerHTML = items.join('');
   btnEl.hidden = false;
   wrap.hidden = false;
 }
@@ -3039,26 +3034,21 @@ function restaurarVisibilidadeMirror() {
    PREENCHER — popover + geração de prompt
    ============================================================ */
 let _popoverZona = null;
-let _popoverSalasAlvo = [];   // [{sala, classe}]
-let _popoverTipo = null;      // 'perigos' | 'puzzles' | 'ambos'
-let _popoverPasso = 1;
+let _popoverSalasAlvo = [];   // [{sala, classe}] — sempre comum
 
 function abrirPopoverPreencher(anchor) {
   if (_zonaSelecionada === null) return;
   const vazias = (_ultimaAnalise && _ultimaAnalise.salasVazias) || [];
-  const preenchiveis = vazias
-    .filter(v => v.zona === _zonaSelecionada && v.classe !== 'entrada');
-  if (preenchiveis.length === 0) { toast('Nenhuma sala vazia preenchível nesta zona.', 'warn'); return; }
+  const preenchiveis = vazias.filter(v => v.zona === _zonaSelecionada && v.classe === 'comum');
+  if (preenchiveis.length === 0) { toast('Nenhuma sala comum vazia nesta zona.', 'warn'); return; }
 
   _popoverZona = _zonaSelecionada;
   _popoverSalasAlvo = preenchiveis.map(v => ({ sala: v.sala, classe: v.classe }));
-  _popoverTipo = null;
-  _popoverPasso = 1;
 
   const pop = $('preencherPopover');
   pop.hidden = false;
+  renderPopoverStep2();
   posicionarPopover(anchor);
-  renderPopoverStep1();
 }
 
 function posicionarPopover(anchor) {
@@ -3070,7 +3060,7 @@ function posicionarPopover(anchor) {
   if (left + pw > window.innerWidth - 16) left = window.innerWidth - pw - 16;
   if (left < 16) left = 16;
   let top = rect.bottom + gap;
-  const estimatedH = 360;
+  const estimatedH = 420;
   if (top + estimatedH > window.innerHeight - 16) {
     top = Math.max(16, rect.top - estimatedH - gap);
   }
@@ -3078,76 +3068,16 @@ function posicionarPopover(anchor) {
   pop.style.top = top + 'px';
 }
 
-function renderPopoverStep1() {
-  const vazias = _popoverSalasAlvo;
-  const temComum = vazias.some(v => v.classe === 'comum');
-  const temFronteira = vazias.some(v => v.classe === 'fronteira');
-  const podePerigos = temComum;
-  const podePuzzles = temComum || temFronteira;
-  const podeAmbos = temComum;
-
-  const alvoTxt = vazias.map(v => {
-    const classe = v.classe === 'fronteira' ? 'fronteira → só puzzle' : 'comum';
-    return `${v.sala} <span class="classe">(${classe})</span>`;
-  }).join(', ');
-
-  const body = $('preencherPopoverBody');
-  body.innerHTML = `
-    <div class="popover-header">
-      <span class="popover-title">Preencher vazias · Zona ${_popoverZona}</span>
-      <button class="popover-close" onclick="fecharPopoverPreencher()" title="Fechar">✕</button>
-    </div>
-    <div class="popover-context">Alvo: ${alvoTxt}</div>
-    <div class="popover-options">
-      <label class="popover-option ${!podePerigos ? 'disabled' : ''}">
-        <input type="radio" name="popoverTipo" value="perigos" ${!podePerigos ? 'disabled' : ''} ${_popoverTipo === 'perigos' ? 'checked' : ''}>
-        <span>☠️ Perigos</span>
-        ${!podePerigos ? '<span class="popover-hint">sem salas comuns vazias</span>' : ''}
-      </label>
-      <label class="popover-option ${!podePuzzles ? 'disabled' : ''}">
-        <input type="radio" name="popoverTipo" value="puzzles" ${!podePuzzles ? 'disabled' : ''} ${_popoverTipo === 'puzzles' ? 'checked' : ''}>
-        <span>🧩 Puzzles</span>
-        ${!podePuzzles ? '<span class="popover-hint">nenhuma elegível</span>' : ''}
-      </label>
-      <label class="popover-option ${!podeAmbos ? 'disabled' : ''}">
-        <input type="radio" name="popoverTipo" value="ambos" ${!podeAmbos ? 'disabled' : ''} ${_popoverTipo === 'ambos' ? 'checked' : ''}>
-        <span>☠️🧩 Ambos</span>
-        ${!podeAmbos ? '<span class="popover-hint">requer salas comuns vazias</span>' : ''}
-      </label>
-    </div>
-    <div class="popover-actions">
-      <button class="btn btn-primary btn-sm" onclick="confirmarTipoPopover()">Gerar prompt</button>
-    </div>
-  `;
-}
-
-function confirmarTipoPopover() {
-  const radios = document.querySelectorAll('input[name="popoverTipo"]');
-  let escolhido = null;
-  for (const r of radios) {
-    if (r.checked && !r.disabled) { escolhido = r.value; break; }
-  }
-  if (!escolhido) { toast('Escolha um tipo de preenchimento.', 'warn'); return; }
-  _popoverTipo = escolhido;
-  _popoverPasso = 2;
-  renderPopoverStep2();
-}
-
 function renderPopoverStep2() {
-  const prompt = montarPromptPreenchimento(_popoverZona, _popoverTipo, _popoverSalasAlvo);
-  const tipoLabel = _popoverTipo === 'perigos' ? '☠️ Perigos'
-    : _popoverTipo === 'puzzles' ? '🧩 Puzzles'
-    : '☠️🧩 Ambos';
-
+  const prompt = montarPromptPreenchimento(_popoverZona, _popoverSalasAlvo);
   const body = $('preencherPopoverBody');
   body.innerHTML = `
     <div class="popover-header">
-      <span class="popover-title">Prompt de preenchimento · Zona ${_popoverZona} · ${tipoLabel}</span>
+      <span class="popover-title">Preenchimento · Zona ${_popoverZona} · Perigos leves</span>
       <button class="popover-close" onclick="fecharPopoverPreencher()" title="Fechar">✕</button>
     </div>
     <textarea class="popover-textarea" id="preencherTextarea" spellcheck="false">${escapeHTML(prompt)}</textarea>
     <div class="popover-actions">
-      <button class="btn btn-ghost btn-sm" onclick="voltarPopover()">← Voltar</button>
       <button class="btn btn-primary btn-sm" onclick="copiarPromptPreenchimento()">📋 Copiar</button>
     </div>
   `;
@@ -3155,20 +3085,13 @@ function renderPopoverStep2() {
   if (ta) { ta.scrollTop = 0; ta.focus(); }
 }
 
-function voltarPopover() {
-  _popoverPasso = 1;
-  renderPopoverStep1();
-}
-
 function fecharPopoverPreencher() {
   $('preencherPopover').hidden = true;
   _popoverZona = null;
   _popoverSalasAlvo = [];
-  _popoverTipo = null;
-  _popoverPasso = 1;
 }
 
-function montarPromptPreenchimento(zonaN, tipo, salasAlvo) {
+function montarPromptPreenchimento(zonaN, salasAlvo) {
   const start = (zonaN - 1) * SALAS_POR_ZONA + 1;
   const end = zonaN * SALAS_POR_ZONA;
   const mapaMundo = (_lastDados && _lastDados.mapaMundo) || {};
@@ -3181,19 +3104,11 @@ function montarPromptPreenchimento(zonaN, tipo, salasAlvo) {
     `SALAS_ALVO   = [${salasAlvo.map(v => v.sala).join(', ')}]`
   ].join('\n');
 
-  const salasInfo = salasAlvo.map(v => {
-    const restricao = v.classe === 'fronteira'
-      ? 'fronteira → só puzzle; perigo é proibido aqui'
-      : 'comum → aceita perigo OU puzzle (escolha um)';
-    return `- Sala ${v.sala} (${restricao})`;
-  }).join('\n');
-
   const ctxSalas = {};
   for (const v of salasAlvo) {
     const s = mapaMundo[String(v.sala)];
     if (!s) continue;
     ctxSalas[String(v.sala)] = {
-      classe: v.classe,
       texto_logico: s.texto_logico || '',
       opcoes: (s.opcoes || [])
         .filter(o => o && o.destino !== undefined && o.destino !== null)
@@ -3202,44 +3117,28 @@ function montarPromptPreenchimento(zonaN, tipo, salasAlvo) {
   }
 
   const preambulo = [
-    'MODO DE PREENCHIMENTO',
-    'Você NÃO está gerando uma zona nova. Está preenchendo APENAS as salas listadas em SALAS_ALVO de uma zona já existente. Ignore todas as outras salas.',
+    'MODO DE PREENCHIMENTO — PERIGOS LEVES (nova_opcao)',
+    '',
+    'Você NÃO está gerando uma zona nova. Está adicionando APENAS perigos do tipo "nova_opcao" nas salas listadas em SALAS_ALVO.',
+    '',
+    'REGRAS DURAS (sobrepõem qualquer regra do corpo abaixo):',
+    '- "tipo" deve ser SEMPRE "nova_opcao". NUNCA use "interceptor".',
+    '- Cada perigo é uma opção de EXAME que NÃO navega para lugar nenhum.',
+    '- O objeto examinado DEVE estar literalmente descrito no texto_logico da sala.',
+    '- NUNCA crie itens, itens_legado, itens_novos, saidas_sequestradas, textos_modificados ou puzzles.',
+    '- Uma sala recebe no máximo 1 perigo. Nunca repita sala.',
+    '- Devolva APENAS {"perigos": [...]}. Nada mais.',
     '',
     'Salas-alvo:',
-    salasInfo,
+    salasAlvo.map(v => `- Sala ${v.sala}`).join('\n'),
     '',
-    'Contexto das salas-alvo (NÃO repita no output):',
+    'Contexto das salas-alvo (NÃO repetir no output):',
     JSON.stringify({ salas_alvo: ctxSalas }, null, 2),
     '',
     'Respeite o tema e o tom da zona atual.'
   ].join('\n');
 
-  let corpo;
-  if (tipo === 'perigos') {
-    corpo = carregarCorpoPersistido('perigos');
-  } else if (tipo === 'puzzles') {
-    corpo = carregarCorpoPersistido('puzzles');
-  } else {
-    const cPerigos = carregarCorpoPersistido('perigos');
-    const cPuzzles = carregarCorpoPersistido('puzzles');
-    corpo = [
-      '=== PARTE 1: PERIGOS ===',
-      '',
-      cPerigos,
-      '',
-      '---',
-      '',
-      '=== PARTE 2: PUZZLES ===',
-      '',
-      cPuzzles,
-      '',
-      '---',
-      '',
-      'Se você for gerar ambos, devolva um único JSON com as duas chaves:',
-      '{ "perigos": [...], "puzzles": {...}, ... }',
-      'Perigos vão apenas para salas comuns. Puzzles vão para comuns remanescentes e fronteira.'
-    ].join('\n');
-  }
+  const corpo = carregarCorpoPersistido('perigos');
 
   return header + '\n\n' + preambulo + '\n\n' + corpo;
 }
@@ -3252,12 +3151,8 @@ function copiarPromptPreenchimento() {
 
   navigator.clipboard.writeText(texto)
     .then(() => {
-      // Banner no importador
       const alvos = _popoverSalasAlvo.map(v => v.sala).join(', ');
-      const zonaLabel = `zona ${_popoverZona}`;
-      const tipoLabel = _popoverTipo === 'perigos' ? 'perigos'
-        : _popoverTipo === 'puzzles' ? 'puzzles' : 'perigos + puzzles';
-      mostrarBannerAlvo(`🎯 Alvo: ${zonaLabel} · salas [${alvos}] · ${tipoLabel}`);
+      mostrarBannerAlvo(`🎯 Alvo: zona ${_popoverZona} · salas [${alvos}] · perigos leves`);
       toast('Prompt copiado.', 'ok');
       fecharPopoverPreencher();
     })
@@ -3333,7 +3228,6 @@ window.addEventListener('DOMContentLoaded', () => {
     if (e.target.closest('#mirrorVaziasBtn')) return;
     fecharPopoverPreencher();
   });
-  
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       const pop = $('preencherPopover');
