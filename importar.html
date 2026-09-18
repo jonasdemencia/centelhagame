@@ -122,6 +122,16 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
 .mini-bar.empty .mb-count{color:var(--text-dimmer)}
 .mb-count{text-align:right;font-size:10.5px;color:var(--text-dim)}
 
+/* ============ MIRROR VAZIAS ============ */
+.mirror-vazias{display:flex;align-items:center;gap:10px;margin-top:14px;padding:8px 12px;
+  background:var(--surface-2);border:1px solid var(--border-2);border-radius:var(--radius);
+  font-size:11.5px;color:var(--text-dim);flex-wrap:wrap}
+.mirror-vazias-label{color:var(--gold);font-weight:700;letter-spacing:.4px;font-size:11px}
+.mirror-vazias-list{color:var(--text);font-size:11px}
+.mirror-vazias-list .vazia-item{display:inline-block;margin-right:8px;white-space:nowrap}
+.mirror-vazias-list .vazia-classe{color:var(--text-dimmer);font-size:10.5px}
+.mirror-vazias-btn{margin-left:auto;padding:5px 12px;font-size:11px}
+
 .mirror-footer{display:flex;align-items:center;gap:12px;margin-top:14px;padding-top:12px;
   border-top:1px solid var(--border);font-size:10.5px;color:var(--text-dimmer);flex-wrap:wrap}
 .mirror-footer .btn{margin-left:auto;padding:5px 10px;font-size:10.5px}
@@ -141,7 +151,6 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
 .prompts-subtitle{font-size:11px;color:var(--text-dim);font-weight:400;letter-spacing:0;margin-top:2px}
 .prompts-header-actions{display:flex;align-items:center;gap:10px;flex-shrink:0;flex-wrap:wrap}
 
-/* Controle de zona [−] Zona N [+] */
 .zone-control{display:inline-flex;align-items:center;gap:0;
   background:var(--surface-2);border:1px solid var(--border-2);border-radius:var(--radius);
   padding:2px;overflow:hidden;user-select:none}
@@ -211,6 +220,15 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
 .importer-card.open .importer-panel{max-height:5000px}
 .importer-card.open .chevron{transform:rotate(90deg)}
 .importer-body{padding:20px 24px 24px;border-top:1px solid var(--border)}
+
+.import-target-banner{display:flex;align-items:center;gap:10px;padding:8px 14px;
+  background:var(--gold-dim);border:1px solid rgba(217,164,65,.35);border-radius:var(--radius);
+  margin-bottom:14px;font-size:11.5px;color:var(--gold)}
+.import-target-banner[hidden]{display:none}
+.import-target-banner .banner-close{margin-left:auto;background:transparent;border:0;
+  color:var(--gold);cursor:pointer;font-family:inherit;font-size:13px;padding:0 4px;opacity:.7;line-height:1}
+.import-target-banner .banner-close:hover{opacity:1}
+
 .editor-wrap{position:relative;border:1px solid var(--border-2);border-radius:var(--radius);
   background:var(--surface-2);transition:border-color .2s, background .2s}
 .editor-wrap.dragover{border-color:var(--gold);background:var(--gold-dim)}
@@ -351,6 +369,41 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
 .validator-empty{padding:20px;text-align:center;color:var(--text-dimmer);font-size:11.5px}
 .validator-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
 
+/* ============ PREENCHER POPOVER ============ */
+.preencher-popover{position:fixed;z-index:3000;width:min(620px,calc(100vw - 32px));
+  background:var(--surface);border:1px solid var(--border-2);border-radius:var(--radius-lg);
+  box-shadow:0 20px 60px rgba(0,0,0,.75);overflow:hidden;font-size:12px}
+.preencher-popover[hidden]{display:none}
+.popover-header{display:flex;align-items:center;justify-content:space-between;
+  padding:12px 16px;border-bottom:1px solid var(--border);background:var(--surface-3)}
+.popover-title{font-size:12px;font-weight:700;color:var(--gold);letter-spacing:.5px}
+.popover-close{width:24px;height:24px;background:transparent;border:1px solid transparent;
+  color:var(--text-dim);cursor:pointer;border-radius:4px;font-family:inherit;font-size:14px;padding:0;line-height:1}
+.popover-close:hover{color:var(--text);border-color:var(--border-2);background:var(--surface-2)}
+.popover-context{padding:10px 16px;font-size:11px;color:var(--text-dim);border-bottom:1px solid var(--border);
+  background:var(--surface-2);line-height:1.6}
+.popover-context .classe{color:var(--text-dimmer);font-size:10.5px}
+.popover-options{padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.popover-option{display:flex;align-items:center;gap:10px;padding:10px 12px;
+  background:var(--surface-2);border:1px solid var(--border-2);border-radius:var(--radius);
+  cursor:pointer;transition:.15s;font-size:12px}
+.popover-option:hover:not(.disabled){border-color:rgba(217,164,65,.35);background:var(--surface-3)}
+.popover-option.disabled{opacity:.45;cursor:not-allowed}
+.popover-option input{appearance:none;width:14px;height:14px;border:1px solid var(--border-2);
+  border-radius:50%;background:var(--surface);position:relative;cursor:pointer;flex-shrink:0;margin:0}
+.popover-option input:checked{background:var(--gold);border-color:var(--gold)}
+.popover-option input:checked::after{content:'';position:absolute;inset:3px;border-radius:50%;background:#0a0a0a}
+.popover-option input:disabled{cursor:not-allowed}
+.popover-hint{margin-left:auto;font-size:10.5px;color:var(--text-dimmer)}
+.popover-actions{display:flex;gap:10px;padding:12px 16px;border-top:1px solid var(--border);
+  background:var(--surface-3);justify-content:flex-end;flex-wrap:wrap}
+.popover-textarea{width:100%;min-height:340px;max-height:60vh;padding:14px 16px;
+  background:var(--surface-2);border:0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);
+  color:var(--text);font-family:inherit;font-size:11.5px;line-height:1.6;outline:none;resize:vertical;display:block;
+  tab-size:2}
+.popover-textarea:focus{background:var(--surface-3)}
+.popover-textarea::selection{background:rgba(217,164,65,.25)}
+
 .toasts{position:fixed;bottom:24px;right:24px;display:flex;flex-direction:column;gap:10px;z-index:2000;pointer-events:none}
 .toast{pointer-events:auto;padding:12px 18px;background:var(--surface-2);border:1px solid var(--border-2);
   border-radius:var(--radius);font-size:12px;color:var(--text);max-width:340px;
@@ -415,6 +468,14 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
           <button class="mirror-scope-clear" onclick="limparEscopoZona()" title="Voltar ao total">× TOTAL</button>
         </div>
         <div class="mini-bars" id="miniBars"></div>
+        <div class="mirror-vazias" id="mirrorVazias" hidden>
+          <span class="mirror-vazias-label" id="mirrorVaziasLabel"></span>
+          <span class="mirror-vazias-list" id="mirrorVaziasList"></span>
+          <button class="btn btn-ghost btn-sm mirror-vazias-btn" id="mirrorVaziasBtn"
+            onclick="abrirPopoverPreencher(this)" hidden>
+            <span class="btn-icon">🎯</span> Preencher
+          </button>
+        </div>
         <div class="mirror-footer">
           <span class="mirror-timestamp" id="mirrorTimestamp">📡 aguardando sincronização</span>
           <span class="mirror-auth-info" id="mirrorAuthInfo"></span>
@@ -560,6 +621,11 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
     </button>
     <div class="importer-panel" id="importerPanel">
       <div class="importer-body">
+      <div class="import-target-banner" id="importTargetBanner" hidden>
+        <span id="importTargetText"></span>
+        <button class="banner-close" onclick="fecharBannerAlvo()" title="Dispensar">✕</button>
+      </div>
+
       <div class="editor-wrap" id="mainInputWrap">
         <div class="editor-badge">
           <span class="badge badge-empty" id="mainBadge">aguardando JSON</span>
@@ -638,6 +704,10 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
     </div>
   </section>
 </main>
+
+<div class="preencher-popover" id="preencherPopover" hidden>
+  <div id="preencherPopoverBody"></div>
+</div>
 
 <div class="toasts" id="toasts"></div>
 
@@ -948,7 +1018,6 @@ function salvarCorpoPersistido(key, corpo) {
   localStorage.setItem(`centelha.prompt.${key}.corpo`, corpo);
 }
 
-// Corpo = tudo após o primeiro "\n\n". Cabeçalho nunca contém linha em branco interna.
 function extrairCorpo(texto) {
   if (!texto) return '';
   const idx = texto.indexOf('\n\n');
@@ -1090,7 +1159,6 @@ function aplicarPrompts() {
   for (const key of PROMPT_KEYS) {
     const ta = $(`prompt_${key}`);
     if (ta) {
-      // Preserva o corpo que o usuário editou antes de reescrever o cabeçalho
       if (ta.value) {
         const corpoAtual = extrairCorpo(ta.value);
         if (corpoAtual) salvarCorpoPersistido(key, corpoAtual);
@@ -1170,7 +1238,6 @@ async function sincronizarPromptsManual() {
   try {
     const snap = await db.collection('players').doc(user.uid).get();
     _lastDados = snap.data() || {};
-    // Se é a primeira vez que temos dados reais, inicializa a zona (auto) se o usuário nunca escolheu
     if (!_promptsReady) {
       if (!_promptZonaManual) {
         _promptZona = calcularZonaAuto(_lastDados.mapaMundo || {});
@@ -2114,7 +2181,8 @@ async function importarJSON() {
     const elapsed = Math.round(performance.now() - startTime);
     renderImportResult({ status: 'ok', time: elapsed, chips, logs });
     toast('Importação concluída.', 'ok');
-    // Sincroniza espelho (NÃO mexe nos prompts — controle é manual)
+    // Sucesso: limpa o banner de alvo (se houver) e sincroniza o espelho.
+    fecharBannerAlvo();
     sincronizarMirror();
   } catch (e) {
     console.error(e);
@@ -2483,6 +2551,31 @@ function agendarAutoValidate() {
 /* ============================================================
    MIRROR — análise do mapaMundo
    ============================================================ */
+function salaEstaVazia(sala) {
+  if (!sala) return false;
+  if (sala.cena_aplicada === true) return false;
+  if (Array.isArray(sala.opcoes)) {
+    for (const op of sala.opcoes) {
+      if (op.interceptor_arquiteto) return false;
+      if (op.arquiteto === true && op.dilema !== true) return false;
+    }
+  }
+  const temEstado = sala.puzzle_status !== undefined ||
+    (sala.estados && Object.keys(sala.estados).length > 0);
+  const temUso = Array.isArray(sala.usos_possiveis) && sala.usos_possiveis.length > 0;
+  const temInteracao = Array.isArray(sala.interacoes_ambiente) && sala.interacoes_ambiente.length > 0;
+  if (temEstado || temUso || temInteracao) return false;
+  return true;
+}
+
+function subclasseSala(salaId, zonaN) {
+  const start = (zonaN - 1) * SALAS_POR_ZONA + 1;
+  const end = zonaN * SALAS_POR_ZONA;
+  if (salaId === start) return 'entrada';
+  if (salaId === end) return 'fronteira';
+  return 'comum';
+}
+
 function analisarMapaMundo(mapaMundo, itens_novos) {
   const result = {
     totalSalas: 0,
@@ -2490,7 +2583,8 @@ function analisarMapaMundo(mapaMundo, itens_novos) {
     salasPresentes: new Set(),
     cenas: 0, puzzles: 0, perigos: 0, itens: 0, rotas: 0,
     itens_novos_count: 0,
-    cenasSalas: [], puzzlesSalas: [], perigosSalas: [], itensSalas: [], rotasSalas: []
+    cenasSalas: [], puzzlesSalas: [], perigosSalas: [], itensSalas: [], rotasSalas: [],
+    salasVazias: []
   };
 
   if (!mapaMundo) return result;
@@ -2548,6 +2642,19 @@ function analisarMapaMundo(mapaMundo, itens_novos) {
       if (!result.salasPresentes.has(i)) { completo = false; break; }
     }
     if (completo) result.zonasCompletas++;
+  }
+
+  // Coleta de salas vazias (presentes, sem cena, sem perigo, sem puzzle)
+  for (let z = 1; z <= TOTAL_ZONAS; z++) {
+    const start = (z - 1) * SALAS_POR_ZONA + 1;
+    const end = z * SALAS_POR_ZONA;
+    for (let i = start; i <= end; i++) {
+      const sala = mapaMundo[String(i)];
+      if (!sala) continue;
+      if (salaEstaVazia(sala)) {
+        result.salasVazias.push({ sala: i, zona: z, classe: subclasseSala(i, z) });
+      }
+    }
   }
 
   if (itens_novos) result.itens_novos_count = Object.keys(itens_novos).length;
@@ -2645,6 +2752,7 @@ function renderMirror(analise) {
 
   renderMirrorScope();
   renderMiniBars(analise);
+  renderVazias(analise);
 }
 
 function renderMiniBars(analise) {
@@ -2708,6 +2816,58 @@ function renderMiniBars(analise) {
       <span class="mb-count">${b.value}/${denom}</span>
     </div>`;
   }).join('');
+}
+
+function renderVazias(analise) {
+  const wrap = $('mirrorVazias');
+  const labelEl = $('mirrorVaziasLabel');
+  const listEl = $('mirrorVaziasList');
+  const btnEl = $('mirrorVaziasBtn');
+  if (!wrap || !labelEl || !listEl || !btnEl) return;
+
+  const vazias = analise.salasVazias || [];
+
+  if (_zonaSelecionada === null) {
+    const preenchiveis = vazias.filter(v => v.classe !== 'entrada');
+    const zonasComVazias = new Set(preenchiveis.map(v => v.zona));
+    if (preenchiveis.length === 0) {
+      labelEl.textContent = '🕳️ Vazias (global) · nenhuma preenchível';
+    } else {
+      labelEl.textContent = `🕳️ Vazias (global) · ${preenchiveis.length} sala${preenchiveis.length === 1 ? '' : 's'} em ${zonasComVazias.size} zona${zonasComVazias.size === 1 ? '' : 's'}`;
+    }
+    listEl.textContent = '';
+    btnEl.hidden = true;
+    wrap.hidden = false;
+    return;
+  }
+
+  const zonaN = _zonaSelecionada;
+  const daZona = vazias.filter(v => v.zona === zonaN);
+  const preenchiveis = daZona.filter(v => v.classe !== 'entrada');
+
+  if (daZona.length === 0) {
+    labelEl.textContent = '🕳️ Vazias · nenhuma';
+    listEl.innerHTML = '';
+    btnEl.hidden = true;
+    wrap.hidden = false;
+    return;
+  }
+
+  if (preenchiveis.length === 0) {
+    labelEl.textContent = '🕳️ Vazias · apenas a entrada (não preenchível)';
+    listEl.innerHTML = '';
+    btnEl.hidden = true;
+    wrap.hidden = false;
+    return;
+  }
+
+  labelEl.textContent = '🕳️ Vazias ·';
+  listEl.innerHTML = preenchiveis.map(v => {
+    const classe = v.classe === 'fronteira' ? 'fronteira → só puzzle' : 'comum';
+    return `<span class="vazia-item">${v.sala} <span class="vazia-classe">(${classe})</span></span>`;
+  }).join('');
+  btnEl.hidden = false;
+  wrap.hidden = false;
 }
 
 function renderMirrorEmpty(msg) {
@@ -2775,16 +2935,14 @@ async function sincronizarMirror() {
           puzzlesSalas: analise.puzzlesSalas,
           perigosSalas: analise.perigosSalas,
           itensSalas: analise.itensSalas,
-          rotasSalas: analise.rotasSalas
+          rotasSalas: analise.rotasSalas,
+          salasVazias: analise.salasVazias
         },
         ts: mirrorLastSync
       };
       localStorage.setItem('centelha.console.mirrorSnapshot', JSON.stringify(cache));
     } catch (_) { }
 
-    // Atualiza o cache interno dos prompts, mas NÃO re-renderiza.
-    // Exceção: primeira vez que temos dados reais — aí inicializa a zona (auto se nunca escolhida)
-    // e faz a renderização inicial dos prompts. A partir daí, os prompts só mudam por ação do usuário.
     _lastDados = dados;
     if (!_promptsReady) {
       if (!_promptZonaManual) {
@@ -2834,7 +2992,8 @@ function carregarMirrorCache() {
     if (!a) return false;
     const analise = {
       ...a,
-      salasPresentes: new Set(a.salasPresentes || [])
+      salasPresentes: new Set(a.salasPresentes || []),
+      salasVazias: a.salasVazias || []
     };
     renderMirror(analise);
     mirrorLastSync = cache.ts || 0;
@@ -2874,6 +3033,248 @@ function restaurarVisibilidadeMirror() {
     $('mirrorCard').style.display = 'none';
     $('mirrorToggleBtn').classList.add('active');
   }
+}
+
+/* ============================================================
+   PREENCHER — popover + geração de prompt
+   ============================================================ */
+let _popoverZona = null;
+let _popoverSalasAlvo = [];   // [{sala, classe}]
+let _popoverTipo = null;      // 'perigos' | 'puzzles' | 'ambos'
+let _popoverPasso = 1;
+
+function abrirPopoverPreencher(anchor) {
+  if (_zonaSelecionada === null) return;
+  const vazias = (_ultimaAnalise && _ultimaAnalise.salasVazias) || [];
+  const preenchiveis = vazias
+    .filter(v => v.zona === _zonaSelecionada && v.classe !== 'entrada');
+  if (preenchiveis.length === 0) { toast('Nenhuma sala vazia preenchível nesta zona.', 'warn'); return; }
+
+  _popoverZona = _zonaSelecionada;
+  _popoverSalasAlvo = preenchiveis.map(v => ({ sala: v.sala, classe: v.classe }));
+  _popoverTipo = null;
+  _popoverPasso = 1;
+
+  const pop = $('preencherPopover');
+  pop.hidden = false;
+  posicionarPopover(anchor);
+  renderPopoverStep1();
+}
+
+function posicionarPopover(anchor) {
+  const pop = $('preencherPopover');
+  const rect = anchor.getBoundingClientRect();
+  const pw = pop.offsetWidth || 620;
+  const gap = 8;
+  let left = rect.left;
+  if (left + pw > window.innerWidth - 16) left = window.innerWidth - pw - 16;
+  if (left < 16) left = 16;
+  let top = rect.bottom + gap;
+  const estimatedH = 360;
+  if (top + estimatedH > window.innerHeight - 16) {
+    top = Math.max(16, rect.top - estimatedH - gap);
+  }
+  pop.style.left = left + 'px';
+  pop.style.top = top + 'px';
+}
+
+function renderPopoverStep1() {
+  const vazias = _popoverSalasAlvo;
+  const temComum = vazias.some(v => v.classe === 'comum');
+  const temFronteira = vazias.some(v => v.classe === 'fronteira');
+  const podePerigos = temComum;
+  const podePuzzles = temComum || temFronteira;
+  const podeAmbos = temComum;
+
+  const alvoTxt = vazias.map(v => {
+    const classe = v.classe === 'fronteira' ? 'fronteira → só puzzle' : 'comum';
+    return `${v.sala} <span class="classe">(${classe})</span>`;
+  }).join(', ');
+
+  const body = $('preencherPopoverBody');
+  body.innerHTML = `
+    <div class="popover-header">
+      <span class="popover-title">Preencher vazias · Zona ${_popoverZona}</span>
+      <button class="popover-close" onclick="fecharPopoverPreencher()" title="Fechar">✕</button>
+    </div>
+    <div class="popover-context">Alvo: ${alvoTxt}</div>
+    <div class="popover-options">
+      <label class="popover-option ${!podePerigos ? 'disabled' : ''}">
+        <input type="radio" name="popoverTipo" value="perigos" ${!podePerigos ? 'disabled' : ''} ${_popoverTipo === 'perigos' ? 'checked' : ''}>
+        <span>☠️ Perigos</span>
+        ${!podePerigos ? '<span class="popover-hint">sem salas comuns vazias</span>' : ''}
+      </label>
+      <label class="popover-option ${!podePuzzles ? 'disabled' : ''}">
+        <input type="radio" name="popoverTipo" value="puzzles" ${!podePuzzles ? 'disabled' : ''} ${_popoverTipo === 'puzzles' ? 'checked' : ''}>
+        <span>🧩 Puzzles</span>
+        ${!podePuzzles ? '<span class="popover-hint">nenhuma elegível</span>' : ''}
+      </label>
+      <label class="popover-option ${!podeAmbos ? 'disabled' : ''}">
+        <input type="radio" name="popoverTipo" value="ambos" ${!podeAmbos ? 'disabled' : ''} ${_popoverTipo === 'ambos' ? 'checked' : ''}>
+        <span>☠️🧩 Ambos</span>
+        ${!podeAmbos ? '<span class="popover-hint">requer salas comuns vazias</span>' : ''}
+      </label>
+    </div>
+    <div class="popover-actions">
+      <button class="btn btn-primary btn-sm" onclick="confirmarTipoPopover()">Gerar prompt</button>
+    </div>
+  `;
+}
+
+function confirmarTipoPopover() {
+  const radios = document.querySelectorAll('input[name="popoverTipo"]');
+  let escolhido = null;
+  for (const r of radios) {
+    if (r.checked && !r.disabled) { escolhido = r.value; break; }
+  }
+  if (!escolhido) { toast('Escolha um tipo de preenchimento.', 'warn'); return; }
+  _popoverTipo = escolhido;
+  _popoverPasso = 2;
+  renderPopoverStep2();
+}
+
+function renderPopoverStep2() {
+  const prompt = montarPromptPreenchimento(_popoverZona, _popoverTipo, _popoverSalasAlvo);
+  const tipoLabel = _popoverTipo === 'perigos' ? '☠️ Perigos'
+    : _popoverTipo === 'puzzles' ? '🧩 Puzzles'
+    : '☠️🧩 Ambos';
+
+  const body = $('preencherPopoverBody');
+  body.innerHTML = `
+    <div class="popover-header">
+      <span class="popover-title">Prompt de preenchimento · Zona ${_popoverZona} · ${tipoLabel}</span>
+      <button class="popover-close" onclick="fecharPopoverPreencher()" title="Fechar">✕</button>
+    </div>
+    <textarea class="popover-textarea" id="preencherTextarea" spellcheck="false">${escapeHTML(prompt)}</textarea>
+    <div class="popover-actions">
+      <button class="btn btn-ghost btn-sm" onclick="voltarPopover()">← Voltar</button>
+      <button class="btn btn-primary btn-sm" onclick="copiarPromptPreenchimento()">📋 Copiar</button>
+    </div>
+  `;
+  const ta = $('preencherTextarea');
+  if (ta) { ta.scrollTop = 0; ta.focus(); }
+}
+
+function voltarPopover() {
+  _popoverPasso = 1;
+  renderPopoverStep1();
+}
+
+function fecharPopoverPreencher() {
+  $('preencherPopover').hidden = true;
+  _popoverZona = null;
+  _popoverSalasAlvo = [];
+  _popoverTipo = null;
+  _popoverPasso = 1;
+}
+
+function montarPromptPreenchimento(zonaN, tipo, salasAlvo) {
+  const start = (zonaN - 1) * SALAS_POR_ZONA + 1;
+  const end = zonaN * SALAS_POR_ZONA;
+  const mapaMundo = (_lastDados && _lastDados.mapaMundo) || {};
+
+  const header = [
+    'CONFIGURAÇÕES DA ZONA',
+    `SALA_INICIAL = ${start}`,
+    `SALA_FINAL   = ${end}`,
+    `MODO         = preenchimento`,
+    `SALAS_ALVO   = [${salasAlvo.map(v => v.sala).join(', ')}]`
+  ].join('\n');
+
+  const salasInfo = salasAlvo.map(v => {
+    const restricao = v.classe === 'fronteira'
+      ? 'fronteira → só puzzle; perigo é proibido aqui'
+      : 'comum → aceita perigo OU puzzle (escolha um)';
+    return `- Sala ${v.sala} (${restricao})`;
+  }).join('\n');
+
+  const ctxSalas = {};
+  for (const v of salasAlvo) {
+    const s = mapaMundo[String(v.sala)];
+    if (!s) continue;
+    ctxSalas[String(v.sala)] = {
+      classe: v.classe,
+      texto_logico: s.texto_logico || '',
+      opcoes: (s.opcoes || [])
+        .filter(o => o && o.destino !== undefined && o.destino !== null)
+        .map(o => ({ texto: o.texto, destino: o.destino }))
+    };
+  }
+
+  const preambulo = [
+    'MODO DE PREENCHIMENTO',
+    'Você NÃO está gerando uma zona nova. Está preenchendo APENAS as salas listadas em SALAS_ALVO de uma zona já existente. Ignore todas as outras salas.',
+    '',
+    'Salas-alvo:',
+    salasInfo,
+    '',
+    'Contexto das salas-alvo (NÃO repita no output):',
+    JSON.stringify({ salas_alvo: ctxSalas }, null, 2),
+    '',
+    'Respeite o tema e o tom da zona atual.'
+  ].join('\n');
+
+  let corpo;
+  if (tipo === 'perigos') {
+    corpo = carregarCorpoPersistido('perigos');
+  } else if (tipo === 'puzzles') {
+    corpo = carregarCorpoPersistido('puzzles');
+  } else {
+    const cPerigos = carregarCorpoPersistido('perigos');
+    const cPuzzles = carregarCorpoPersistido('puzzles');
+    corpo = [
+      '=== PARTE 1: PERIGOS ===',
+      '',
+      cPerigos,
+      '',
+      '---',
+      '',
+      '=== PARTE 2: PUZZLES ===',
+      '',
+      cPuzzles,
+      '',
+      '---',
+      '',
+      'Se você for gerar ambos, devolva um único JSON com as duas chaves:',
+      '{ "perigos": [...], "puzzles": {...}, ... }',
+      'Perigos vão apenas para salas comuns. Puzzles vão para comuns remanescentes e fronteira.'
+    ].join('\n');
+  }
+
+  return header + '\n\n' + preambulo + '\n\n' + corpo;
+}
+
+function copiarPromptPreenchimento() {
+  const ta = $('preencherTextarea');
+  if (!ta) return;
+  const texto = ta.value;
+  if (!texto.trim()) { toast('Prompt vazio.', 'warn'); return; }
+
+  navigator.clipboard.writeText(texto)
+    .then(() => {
+      // Banner no importador
+      const alvos = _popoverSalasAlvo.map(v => v.sala).join(', ');
+      const zonaLabel = `zona ${_popoverZona}`;
+      const tipoLabel = _popoverTipo === 'perigos' ? 'perigos'
+        : _popoverTipo === 'puzzles' ? 'puzzles' : 'perigos + puzzles';
+      mostrarBannerAlvo(`🎯 Alvo: ${zonaLabel} · salas [${alvos}] · ${tipoLabel}`);
+      toast('Prompt copiado.', 'ok');
+      fecharPopoverPreencher();
+    })
+    .catch(e => toast('Erro ao copiar: ' + e.message, 'err'));
+}
+
+function mostrarBannerAlvo(texto) {
+  const banner = $('importTargetBanner');
+  const textEl = $('importTargetText');
+  if (!banner || !textEl) return;
+  textEl.textContent = texto;
+  banner.hidden = false;
+}
+
+function fecharBannerAlvo() {
+  const banner = $('importTargetBanner');
+  if (banner) banner.hidden = true;
 }
 
 /* ============================================================
@@ -2921,7 +3322,25 @@ window.addEventListener('DOMContentLoaded', () => {
 
   setupDrops();
 
-  // Prompts: pré-carrega do localStorage antes de sincronizar
+  // Popover: fecha ao clicar fora ou Esc
+  document.addEventListener('click', (e) => {
+    const pop = $('preencherPopover');
+    if (!pop || pop.hidden) return;
+    if (pop.contains(e.target)) return;
+    if (e.target.closest('#mirrorVaziasBtn')) return;
+    fecharPopoverPreencher();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      const pop = $('preencherPopover');
+      if (pop && !pop.hidden) fecharPopoverPreencher();
+    }
+  });
+  window.addEventListener('resize', () => {
+    const pop = $('preencherPopover');
+    if (pop && !pop.hidden) fecharPopoverPreencher();
+  });
+
   initPromptTextareas();
   restaurarZonaSalva();
   setStatusPromptsNoLogin();
@@ -2963,7 +3382,7 @@ console.log('%c⚡ Centelha · Console de Zonas', 'color:#d9a441;font-weight:bol
 console.log('📋 Validadores ativos: topologia, ancoragem, entry-point leak, densidade e dilemas.');
 console.log('📝 Prompts: zona controlada manualmente por [−]/[+] · 🔄 recarrega dados do Firestore.');
 console.log('📥 Importadores: zona completa, perigos (isolado), puzzles (Shadowgate).');
-console.log('📊 Espelho: leitura read-only do doc players/{uid}, com drill-down por zona.');
+console.log('📊 Espelho: leitura read-only com drill-down por zona e preenchimento de vazias.');
 </script>
 
 </body>
