@@ -139,6 +139,38 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
 .mirror-auth-info{display:flex;align-items:center;gap:6px}
 .mirror-empty{padding:32px 20px;text-align:center;color:var(--text-dimmer);font-size:12px}
 
+/* ============ AVENTURA CARD ============ */
+.aventura-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
+  margin-bottom:20px;overflow:hidden;transition:border-color .2s}
+.aventura-toggle{display:flex;align-items:center;gap:14px;width:100%;
+  padding:18px 24px;background:transparent;border:0;color:var(--text);font-family:inherit;
+  font-size:15px;font-weight:700;cursor:pointer;letter-spacing:.5px;transition:background .15s;text-align:left}
+.aventura-toggle:hover{background:var(--surface-2)}
+.aventura-title{display:flex;align-items:center;gap:12px;color:var(--gold);flex-shrink:0}
+.aventura-title .icon{color:var(--gold);font-size:16px}
+.aventura-subtitle{font-size:11px;color:var(--text-dim);font-weight:400;flex:1;
+  letter-spacing:0;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left}
+.aventura-panel{max-height:0;overflow:hidden;transition:max-height .4s ease}
+.aventura-card.open .aventura-panel{max-height:3000px}
+.aventura-card.open .chevron{transform:rotate(90deg)}
+.aventura-body{padding:20px 24px 24px;border-top:1px solid var(--border);
+  display:flex;flex-direction:column;gap:14px}
+.aventura-field{display:flex;flex-direction:column;gap:6px}
+.aventura-field label{font-size:10.5px;color:var(--gold);font-weight:700;letter-spacing:.8px;text-transform:uppercase}
+.aventura-field-header{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.aventura-counter{font-size:10.5px;color:var(--text-dimmer);letter-spacing:.3px;padding:2px 8px;
+  background:var(--surface-2);border:1px solid var(--border-2);border-radius:10px;font-weight:500}
+.aventura-counter.ok{color:var(--green);border-color:rgba(76,175,80,.3)}
+.aventura-counter.warn{color:var(--gold);border-color:rgba(217,164,65,.3)}
+.aventura-field input[type="text"],
+.aventura-field textarea{width:100%;background:var(--surface-2);border:1px solid var(--border-2);
+  border-radius:var(--radius);padding:10px 14px;color:var(--text);font-family:inherit;
+  font-size:12.5px;line-height:1.55;outline:none;transition:.15s;resize:vertical}
+.aventura-field input[type="text"]:focus,
+.aventura-field textarea:focus{border-color:rgba(217,164,65,.35);background:var(--surface-3)}
+.aventura-field textarea{min-height:160px;max-height:400px;tab-size:2}
+.aventura-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px}
+
 /* ============ PROMPTS CARD ============ */
 .prompts-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
   margin-bottom:20px;overflow:hidden}
@@ -473,6 +505,48 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
     </div>
   </section>
 
+  <!-- ===================== AVENTURA ===================== -->
+  <section class="card aventura-card" id="aventuraCard">
+    <button class="aventura-toggle" id="aventuraToggle" onclick="toggleAventura()" aria-expanded="false">
+      <span class="aventura-title">
+        <span class="icon">🗺️</span>
+        <span>Aventura</span>
+      </span>
+      <span class="aventura-subtitle" id="aventuraSubtitle">sem tom, lore ou temas</span>
+      <span class="chevron">▸</span>
+    </button>
+    <div class="aventura-panel" id="aventuraPanel">
+      <div class="aventura-body">
+        <div class="aventura-field">
+          <label for="aventuraTom">TOM</label>
+          <input type="text" id="aventuraTom" spellcheck="false"
+            placeholder="Ex: Suspense com conspirações detalhadas">
+        </div>
+        <div class="aventura-field">
+          <label for="aventuraLore">LORE CENTRAL</label>
+          <input type="text" id="aventuraLore" spellcheck="false"
+            placeholder="Ex: Um anjo habita o complexo">
+        </div>
+        <div class="aventura-field">
+          <div class="aventura-field-header">
+            <label for="aventuraTemas">TEMAS DAS ZONAS</label>
+            <span class="aventura-counter" id="aventuraCounter">0/30</span>
+          </div>
+          <textarea id="aventuraTemas" spellcheck="false"
+            placeholder="Uma linha por zona, formato N: texto&#10;1: Átrio da Anunciação — Recepção, Triagem e Cláusulas de Confidencialidade&#10;2: Jardins Suspensos e Residências Garden — Famílias Fundadoras e Baixo Risco&#10;...&#10;30: As Catacumbas do Anjo e o Crematório Oculto"></textarea>
+        </div>
+        <div class="aventura-actions">
+          <button class="btn btn-primary btn-sm" onclick="salvarAventuraManual()">
+            <span class="btn-icon">💾</span> Salvar
+          </button>
+          <button class="btn btn-ghost btn-sm" onclick="limparAventura()">
+            <span class="btn-icon">🗑️</span> Limpar
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- ===================== PROMPTS ===================== -->
   <section class="card prompts-card" id="promptsCard">
     <div class="prompts-header" onclick="togglePrompts()" role="button" tabindex="0"
@@ -783,6 +857,157 @@ function setupEditor(textarea, highlight) {
 }
 
 /* ============================================================
+   AVENTURA — tom, lore, temas por zona
+   ============================================================ */
+const AVENTURA_KEY = 'centelha.aventura';
+let _aventura = { tom: '', lore: '', temas: {} };
+
+function carregarAventura() {
+  try {
+    const raw = localStorage.getItem(AVENTURA_KEY);
+    if (!raw) return;
+    const obj = JSON.parse(raw) || {};
+    _aventura = {
+      tom: obj.tom || '',
+      lore: obj.lore || '',
+      temas: (obj.temas && typeof obj.temas === 'object') ? obj.temas : {}
+    };
+  } catch (_) { _aventura = { tom: '', lore: '', temas: {} }; }
+}
+
+function salvarAventura() {
+  try { localStorage.setItem(AVENTURA_KEY, JSON.stringify(_aventura)); } catch (_) {}
+}
+
+function parseTemas(texto) {
+  const temas = {};
+  if (!texto) return temas;
+  const linhas = texto.split(/\r?\n/);
+  for (const linha of linhas) {
+    const m = linha.match(/^\s*(\d+)\s*[:=\-]\s*(.+?)\s*$/);
+    if (!m) continue;
+    const n = parseInt(m[1], 10);
+    if (!Number.isFinite(n) || n < 1 || n > TOTAL_ZONAS) continue;
+    temas[n] = m[2];
+  }
+  return temas;
+}
+
+function temasParaTexto(temas) {
+  const linhas = [];
+  for (let i = 1; i <= TOTAL_ZONAS; i++) {
+    if (temas[i]) linhas.push(`${i}: ${temas[i]}`);
+  }
+  return linhas.join('\n');
+}
+
+function getTemaZona(n) {
+  return _aventura.temas[n] || '';
+}
+
+function atualizarDisplayAventura() {
+  const elTom = $('aventuraTom');
+  const elLore = $('aventuraLore');
+  const elTemas = $('aventuraTemas');
+  if (elTom && elTom.value !== _aventura.tom) elTom.value = _aventura.tom;
+  if (elLore && elLore.value !== _aventura.lore) elLore.value = _aventura.lore;
+  if (elTemas) {
+    const textoAtual = temasParaTexto(_aventura.temas);
+    if (elTemas.value !== textoAtual) elTemas.value = textoAtual;
+  }
+  const total = Object.keys(_aventura.temas).length;
+  const counter = $('aventuraCounter');
+  if (counter) {
+    counter.textContent = `${total}/${TOTAL_ZONAS}`;
+    counter.className = 'aventura-counter' + (total === TOTAL_ZONAS ? ' ok' : total > 0 ? ' warn' : '');
+  }
+  const sub = $('aventuraSubtitle');
+  if (sub) {
+    const partes = [];
+    if (_aventura.tom) partes.push(`TOM: ${_aventura.tom}`);
+    if (_aventura.lore) partes.push(`LORE: ${_aventura.lore}`);
+    partes.push(`${total}/${TOTAL_ZONAS} temas`);
+    sub.textContent = partes.join(' · ');
+  }
+}
+
+function toggleAventura() {
+  const card = $('aventuraCard');
+  card.classList.toggle('open');
+  $('aventuraToggle').setAttribute('aria-expanded', card.classList.contains('open'));
+  localStorage.setItem('centelha.console.aventuraAberto', card.classList.contains('open') ? '1' : '0');
+}
+
+function restaurarEstadoAventura() {
+  const aberto = localStorage.getItem('centelha.console.aventuraAberto') === '1';
+  if (aberto) $('aventuraCard').classList.add('open');
+}
+
+function atualizarContadorTemas() {
+  const elTemas = $('aventuraTemas');
+  if (!elTemas) return;
+  const total = Object.keys(parseTemas(elTemas.value)).length;
+  const counter = $('aventuraCounter');
+  if (counter) {
+    counter.textContent = `${total}/${TOTAL_ZONAS}`;
+    counter.className = 'aventura-counter' + (total === TOTAL_ZONAS ? ' ok' : total > 0 ? ' warn' : '');
+  }
+}
+
+function salvarAventuraManual() {
+  const tom = $('aventuraTom').value.trim();
+  const lore = $('aventuraLore').value.trim();
+  const temasTexto = $('aventuraTemas').value;
+  _aventura.tom = tom;
+  _aventura.lore = lore;
+  _aventura.temas = parseTemas(temasTexto);
+  salvarAventura();
+  atualizarDisplayAventura();
+  aplicarPrompts();
+  toast('Aventura salva.', 'ok');
+}
+
+function limparAventura() {
+  if (!confirm('Limpar tom, lore e temas?')) return;
+  _aventura = { tom: '', lore: '', temas: {} };
+  salvarAventura();
+  atualizarDisplayAventura();
+  aplicarPrompts();
+  toast('Aventura limpa.', 'info');
+}
+
+function setupAventura() {
+  const elTom = $('aventuraTom');
+  const elLore = $('aventuraLore');
+  const elTemas = $('aventuraTemas');
+  if (elTom) {
+    elTom.addEventListener('blur', () => {
+      _aventura.tom = elTom.value.trim();
+      salvarAventura();
+      atualizarDisplayAventura();
+      aplicarPrompts();
+    });
+  }
+  if (elLore) {
+    elLore.addEventListener('blur', () => {
+      _aventura.lore = elLore.value.trim();
+      salvarAventura();
+      atualizarDisplayAventura();
+      aplicarPrompts();
+    });
+  }
+  if (elTemas) {
+    elTemas.addEventListener('input', atualizarContadorTemas);
+    elTemas.addEventListener('blur', () => {
+      _aventura.temas = parseTemas(elTemas.value);
+      salvarAventura();
+      atualizarDisplayAventura();
+      aplicarPrompts();
+    });
+  }
+}
+
+/* ============================================================
    PROMPTS — corpos padrão
    ============================================================ */
 const PROMPT_KEYS = ['topologia', 'perigos', 'puzzles'];
@@ -794,10 +1019,6 @@ const MINI_IDS = {
 
 const DEFAULT_BODIES = {
   topologia: [
-    'TEMA: Complexo residencial hiper luxuoso',
-    'TOM: Suspense com conspirações detalhadas',
-    'LORE CENTRAL: Um anjo habita o complexo',
-    '',
     'Você é um gerador de conteúdo para um jogo textual chamado "Centelha". Sua tarefa é gerar um JSON com plano, salas e cenas (dilemas) para uma zona de 10 salas delimitada pelo intervalo de [SALA_INICIAL] a [SALA_FINAL].',
     '',
     'REGRAS DE TOPOLOGIA (PLANO)',
@@ -1202,6 +1423,10 @@ function construirCabecalho(key, n, ctx) {
     `SALA_INICIAL = ${start}`,
     `SALA_FINAL   = ${end}`
   ];
+  const tema = getTemaZona(n);
+  if (tema) linhas.push(`TEMA         = ${tema}`);
+  if (_aventura.tom) linhas.push(`TOM          = ${_aventura.tom}`);
+  if (_aventura.lore) linhas.push(`LORE CENTRAL = ${_aventura.lore}`);
   if (key === 'perigos') {
     linhas.push(`QUANTIDADE_PERIGOS = 3`);
   } else if (key === 'puzzles') {
@@ -1217,10 +1442,11 @@ function construirCabecalho(key, n, ctx) {
 function construirResumo(key, n, ctx) {
   const start = (n - 1) * SALAS_POR_ZONA + 1;
   const end = n * SALAS_POR_ZONA;
-  const linhas = [
-    `SALA_INICIAL = ${start}`,
-    `SALA_FINAL   = ${end}`
-  ];
+  const linhas = [];
+  const tema = getTemaZona(n);
+  if (tema) linhas.push(`<span class="mini-label">TEMA:</span> ${escapeHTML(tema)}`);
+  linhas.push(`SALA_INICIAL = ${start}`);
+  linhas.push(`SALA_FINAL   = ${end}`);
   if (key === 'perigos') {
     linhas.push(`QUANTIDADE_PERIGOS = 3`);
   } else if (key === 'puzzles') {
@@ -3268,13 +3494,18 @@ function montarPromptPreenchimento(zonaN, salasAlvo) {
   const end = zonaN * SALAS_POR_ZONA;
   const mapaMundo = (_lastDados && _lastDados.mapaMundo) || {};
 
-  const header = [
+  const headerLinhas = [
     'CONFIGURAÇÕES DA ZONA',
     `SALA_INICIAL = ${start}`,
-    `SALA_FINAL   = ${end}`,
-    `MODO         = preenchimento`,
-    `SALAS_ALVO   = [${salasAlvo.map(v => v.sala).join(', ')}]`
-  ].join('\n');
+    `SALA_FINAL   = ${end}`
+  ];
+  const tema = getTemaZona(zonaN);
+  if (tema) headerLinhas.push(`TEMA         = ${tema}`);
+  if (_aventura.tom) headerLinhas.push(`TOM          = ${_aventura.tom}`);
+  if (_aventura.lore) headerLinhas.push(`LORE CENTRAL = ${_aventura.lore}`);
+  headerLinhas.push(`MODO         = preenchimento`);
+  headerLinhas.push(`SALAS_ALVO   = [${salasAlvo.map(v => v.sala).join(', ')}]`);
+  const header = headerLinhas.join('\n');
 
   const ctxSalas = {};
   for (const v of salasAlvo) {
@@ -3409,6 +3640,11 @@ window.addEventListener('DOMContentLoaded', () => {
     if (pop && !pop.hidden) fecharPopoverPreencher();
   });
 
+  carregarAventura();
+  atualizarDisplayAventura();
+  setupAventura();
+  restaurarEstadoAventura();
+
   initPromptTextareas();
   restaurarZonaSalva();
   setStatusPromptsNoLogin();
@@ -3451,6 +3687,7 @@ console.log('📋 Validadores ativos: topologia, ancoragem, entry-point leak, de
 console.log('📝 Prompts: zona controlada manualmente por [−]/[+] · 🔄 recarrega dados do Firestore.');
 console.log('📥 Importadores: zona completa, perigos (isolado), puzzles (Shadowgate).');
 console.log('📊 Espelho: leitura read-only com drill-down por zona e preenchimento de vazias.');
+console.log('🗺️ Aventura: TOM + LORE + 30 temas por zona injetados no cabeçalho dos prompts.');
 </script>
 
 </body>
