@@ -1055,11 +1055,11 @@ const DEFAULT_BODIES = {
     'O array dilemas deve conter exatamente 1 objeto (o dilema-pai), que terá ramificacoes com exatamente 3 objetos — o padrão da zona. Use 2 ramificações apenas em casos excepcionais, quando a terceira opção for comprovadamente supérflua ou redundante. Nunca 1, nunca 4+. As ramificações são as verdadeiras escolhas do dilema — cada uma com seu próprio resultado_texto, dano e destino_id (se houver). Como o jogo não tem botões, o resultado_texto do pai deve terminar enunciando em prosa as 3 opções, para o jogador saber o que digitar.',
     '',
     'REGRAS DO CAMPO destino_id (VIOLAÇÃO = FALHA CRÍTICA):',
-   '- destino_id SÓ pode apontar para uma sala de número MAIOR que a sala atual (avanço). Nunca aponte para trás.',
-'- Até 2 ramificações podem ter destino_id válido, desde que cada destino seja uma saída da sala atual no plano (ou uma sala à frente já conectada por ela). Não é obrigatório que apenas uma ramificação avance.',
-'- Ao preencher destino_id numa ramificação, o motor BLOQUEIA a locomoção comum que levava àquela sala até o jogador passar pelo dilema — o dilema vira a única via de avanço para aquele destino específico.',
-'- Se a ramificação não conduz para uma sala à frente, use destino_id: null.',
-'- Regra de ouro: se a sala atual tem 2 ou 3 saídas para frente, o dilema pode distribuir essas saídas entre as ramificações, com custos e resultados diferentes. O jogador escolhe para onde ir, não apenas se paga ou não.',
+    '- destino_id SÓ pode apontar para uma sala de número MAIOR que a sala atual (avanço). Nunca aponte para trás.',
+    '- Até 2 ramificações podem ter destino_id válido, desde que cada destino seja uma saída da sala atual no plano (ou uma sala à frente já conectada por ela). Não é obrigatório que apenas uma ramificação avance.',
+    '- Ao preencher destino_id numa ramificação, o motor BLOQUEIA a locomoção comum que levava àquela sala até o jogador passar pelo dilema — o dilema vira a única via de avanço para aquele destino específico.',
+    '- Se a ramificação não conduz para uma sala à frente, use destino_id: null.',
+    '- Regra de ouro: se a sala atual tem 2 ou 3 saídas para frente, o dilema pode distribuir essas saídas entre as ramificações, com custos e resultados diferentes. O jogador escolhe para onde ir, não apenas se paga ou não.',
     '- O resultado_texto do pai é uma ponte narrativa de 2–3 frases que descreve a reação imediata à ação do jogador, sem encerrar o dilema. O pai NUNCA pode ter destino_id.',
     '',
     '"texto_evento" (3–4 frases): o elemento central deve parecer que sempre esteve ali, esperando.',
@@ -1074,9 +1074,18 @@ const DEFAULT_BODIES = {
     'a) Custo físico (dano > 0): 1 frase concreta e específica sobre ferimento. Proibido escrever "perde X de energia" — descreva o efeito no corpo ou na alma.',
     'b) Custo moral/existencial (dano > 0): 1 frase concreta e específica sobre ferimento. Proibido escrever "perde X de energia" — descreva o efeito na mente, nos afetos ou na alma.',
     '',
-    '- Apenas uma das 3 cenas da zona (escolhida aleatoriamente) deve conter uma ramificação com custo alto (físico 10–20 ou moral/existencial de alta gravidade). Nas demais cenas, os custos devem ser moderados (físico 1–9) ou sem dano.',
-    '- Custos assimétricos são encorajados: ex. ramificação A = dano 0 + destino X; ramificação B = dano 5 + destino Y; ramificação C = dano 12 + destino null. O jogador não pode avaliar só pelo dano.
+    '- Custos assimétricos são encorajados: ex. ramificação A = dano 0 + destino X; ramificação B = dano 5 + destino Y; ramificação C = dano 12 + destino null. O jogador não pode avaliar só pelo dano.',
     '- Proibições: opções sem destino_id usando verbos de locomoção (sair, subir, atravessar); resultado_texto do pai descrevendo ação que o jogador não executou na opcao_texto; dilemas que se resolvam com pura força física.',
+    '',
+    'EFEITO PERSISTENTE DAS RAMIFICAÇÕES:',
+    '- Cada ramificação pode ter, além do custo, um efeito persistente opcional:',
+    '- define_estado: nome do estado global ativado (string) ou null. O estado é gravado no doc do jogador e visível em qualquer sala da zona.',
+    '- adiciona_item: id do item concedido (string) ou null. O item aparece na loot-area da sala atual para o jogador coletar.',
+    '- O efeito persiste independente do custo. Uma ramificação pode ter dano 0 e conceder item, ou dano alto e não conceder nada.',
+    '- Pelo menos uma ramificação por zona deve definir um estado OU adicionar um item que seja consumido por puzzle da mesma zona.',
+    '- Todo define_estado precisa ter usos_possiveis ou interacoes_ambiente correspondente em algum puzzle da zona, com condicao_estado igual ao nome do estado.',
+    '- Todo adiciona_item precisa ter usos_possiveis correspondente em algum puzzle da zona, com item_id igual ao id do item.',
+    '- Se a zona criar item novo, adicione um campo "itens_novos" no topo do JSON, no formato {id: {id, content, description}}.',
     '',
     'ESTRUTURA EXATA DO JSON',
     '{',
@@ -1097,6 +1106,9 @@ const DEFAULT_BODIES = {
     '  "salas": {',
     '    "[SALA_INICIAL]": { "texto_logico": "Descrição direta do ambiente (sem âncora)." },',
     '    "[SALA_FINAL]": { "texto_logico": "Ao avançar para este local, você [...]." }',
+    '  },',
+    '  "itens_novos": {',
+    '    "id_do_item": { "id": "id_do_item", "content": "Nome", "description": "Descrição" }',
     '  },',
     '  "cenas": [',
     '    {',
@@ -1434,13 +1446,15 @@ function construirCabecalho(key, n, ctx) {
   if (_aventura.lore) linhas.push(`LORE CENTRAL = ${_aventura.lore}`);
   if (key === 'perigos') {
     linhas.push(`QUANTIDADE_PERIGOS = 3`);
-  } else if (key === 'puzzles') {
+ } else if (key === 'puzzles') {
     const itens = ctx.itens_legado_pendentes || [];
     if (itens.length > 0) {
       linhas.push(`itens_legado_pendentes: ${JSON.stringify(itens)}`);
     }
     linhas.push(`salas_ocupadas: ${JSON.stringify(ctx.salas_ocupadas || [])}`);
-  }
+    linhas.push(`estados_de_cena: ${JSON.stringify(ctx.estados_de_cena || [])}`);
+    linhas.push(`itens_de_cena: ${JSON.stringify(ctx.itens_de_cena || [])}`);
+}
   return linhas.join('\n');
 }
 
@@ -1454,7 +1468,7 @@ function construirResumo(key, n, ctx) {
   linhas.push(`SALA_FINAL   = ${end}`);
   if (key === 'perigos') {
     linhas.push(`QUANTIDADE_PERIGOS = 3`);
-  } else if (key === 'puzzles') {
+    } else if (key === 'puzzles') {
     const itens = ctx.itens_legado_pendentes || [];
     if (itens.length > 0) {
       const items = itens.map(i =>
@@ -1467,6 +1481,10 @@ function construirResumo(key, n, ctx) {
     const salas = ctx.salas_ocupadas || [];
     const salasTxt = salas.length > 0 ? `[${salas.join(', ')}]` : '[]';
     linhas.push(`<span class="mini-label">salas_ocupadas:</span> ${salasTxt}`);
+    const estadosTxt = (ctx.estados_de_cena || []).map(e => `• ${escapeHTML(e.id)} <span class="mini-dim">(sala ${e.sala_origem})</span>`).join('<br>');
+    const itensCenaTxt = (ctx.itens_de_cena || []).map(e => `• ${escapeHTML(e.id)} <span class="mini-dim">(sala ${e.sala_origem})</span>`).join('<br>');
+    linhas.push(`<span class="mini-label">estados_de_cena:</span><br>${estadosTxt || '<span class="mini-dim">nenhum</span>'}`);
+    linhas.push(`<span class="mini-label">itens_de_cena:</span><br>${itensCenaTxt || '<span class="mini-dim">nenhum</span>'}`);
   }
   return linhas.join('<br>');
 }
@@ -1518,13 +1536,49 @@ function coletarItensLegado(dados) {
     .map(x => ({ id: x.id, sala_plantio: x.sala_plantio ?? null }));
 }
 
+  function coletarEstadosDeCena(mapaMundo, n) {
+  const start = (n - 1) * SALAS_POR_ZONA + 1;
+  const end = n * SALAS_POR_ZONA;
+  const out = [];
+  for (let i = start; i <= end; i++) {
+    const sala = mapaMundo[String(i)];
+    if (!sala?.opcoes) continue;
+    for (const op of sala.opcoes) {
+      if (!op.dilema || !op.ramificacoes) continue;
+      for (const ram of op.ramificacoes) {
+        if (ram.define_estado) out.push({ id: ram.define_estado, sala_origem: i });
+      }
+    }
+  }
+  return out;
+}
+
+function coletarItensDeCena(mapaMundo, n) {
+  const start = (n - 1) * SALAS_POR_ZONA + 1;
+  const end = n * SALAS_POR_ZONA;
+  const out = [];
+  for (let i = start; i <= end; i++) {
+    const sala = mapaMundo[String(i)];
+    if (!sala?.opcoes) continue;
+    for (const op of sala.opcoes) {
+      if (!op.dilema || !op.ramificacoes) continue;
+      for (const ram of op.ramificacoes) {
+        if (ram.adiciona_item) out.push({ id: ram.adiciona_item, sala_origem: i });
+      }
+    }
+  }
+  return out;
+}
+
 function ctxParaZona(n) {
   const dados = _lastDados || {};
   const mapaMundo = dados.mapaMundo || {};
   return {
     salas_ocupadas: coletarSalasOcupadas(mapaMundo, n),
-    itens_legado_pendentes: coletarItensLegado(dados)
-  };
+    itens_legado_pendentes: coletarItensLegado(dados),
+    estados_de_cena: coletarEstadosDeCena(mapaMundo, n),
+    itens_de_cena: coletarItensDeCena(mapaMundo, n)
+};
 }
 
 function analisarZona(mapaMundo, n) {
@@ -2089,7 +2143,31 @@ function distribuirSuspeitas(mapaMundo, logFn) {
   }
   logFn(`🔍 Suspeitas distribuídas: ${comInterceptor.length} real(is) + ${numFalsas} isca(s).`, 'ok');
 }
-
+  
+function validarOrfaos(mapaMundo, logFn) {
+    const estadosDefinidos = new Set();
+    const itensAdicionados = new Set();
+    const estadosConsumidos = new Set();
+    const itensUsados = new Set();
+    for (const [id, sala] of Object.entries(mapaMundo)) {
+        for (const op of (sala.opcoes || [])) {
+            if (!op.dilema || !op.ramificacoes) continue;
+            for (const ram of op.ramificacoes) {
+                if (ram.define_estado) estadosDefinidos.add(ram.define_estado);
+                if (ram.adiciona_item) itensAdicionados.add(ram.adiciona_item);
+            }
+        }
+        for (const uso of (sala.usos_possiveis || [])) {
+            if (uso.condicao_estado) estadosConsumidos.add(uso.condicao_estado);
+            if (uso.item_id) itensUsados.add(uso.item_id);
+        }
+        for (const inter of (sala.interacoes_ambiente || [])) {
+            if (inter.condicao_estado) estadosConsumidos.add(inter.condicao_estado);
+        }
+    }
+    for (const e of estadosDefinidos) if (!estadosConsumidos.has(e)) logFn(`⚠️ ÓRFÃO: estado "${e}" definido por cena mas não consumido.`, 'warn');
+    for (const i of itensAdicionados) if (!itensUsados.has(i)) logFn(`⚠️ ÓRFÃO: item "${i}" concedido por cena mas não usado em puzzle.`, 'warn');
+}
 /* ============================================================
    IMPORTAÇÃO — zona completa
    ============================================================ */
@@ -2148,11 +2226,13 @@ async function importarParaFirestore(dados, uid, logFn) {
           const rNarrativaLimpa = expurgarViciosIA((r.resultado_texto || '').trim());
           return {
             opcao_texto: r.opcao_texto.trim(),
-            resultado_texto: rDano > 0
-              ? `${rNarrativaLimpa.replace(/[.\s]+$/, '')}. Você perde ${rDano} de energia.`
-              : rNarrativaLimpa,
-            dano: rDano,
-            destino: rDestino
+    resultado_texto: rDano > 0
+        ? `${rNarrativaLimpa.replace(/[.\s]+$/, '')}. Você perde ${rDano} de energia.`
+        : rNarrativaLimpa,
+    dano: rDano,
+    destino: rDestino,
+    define_estado: r.define_estado || null,
+    adiciona_item: r.adiciona_item || null
           };
         });
       sala.opcoes.push({
@@ -2227,6 +2307,13 @@ async function importarParaFirestore(dados, uid, logFn) {
     updatePayload["zonaAtual"] = 1;
     updatePayload["secaoAtualId"] = "1";
   }
+
+  if (dados.itens_novos && Object.keys(dados.itens_novos).length > 0) {
+    const atuais = dadosAtuais.itens_novos || {};
+    updatePayload['itens_novos'] = { ...atuais, ...dados.itens_novos };
+    logFn(`🧩 ${Object.keys(dados.itens_novos).length} item(ns) novos registrados.`, 'ok');
+}
+validarOrfaos(mapaMundo, logFn);
   await docRef.update(updatePayload);
   return { mapaMundo };
 }
