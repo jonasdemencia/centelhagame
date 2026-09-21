@@ -1685,6 +1685,7 @@ ANSWER:`
                 } else {
                     window.sistemaChaves = { portasTrancadas: {}, chavesAnexadas: {} };
                 }
+                window.playerFlags = data.playerFlags || {};
             } else {
                 const dadosPadrao = {
                     energy: { total: 40, initial: 40 },
@@ -1741,6 +1742,7 @@ ANSWER:`
                 secaoAtualId: secaoAtualId,
                 dnaGlobal: dnaGlobal,
                 zonaAtual: zonaAtual,
+                playerFlags: window.playerFlags || {},
                 salasVisitadas: [...salasVisitadas],
             };
             await updateDoc(doc(db, "players", uidAtual), dadosAtualizados);
@@ -2224,6 +2226,20 @@ if (salaAtualObj && opcao && opcao.destino !== undefined) {
             await salvarEstadoJogador();
         }
 
+        if (ram.define_estado) {
+    if (!window.playerFlags) window.playerFlags = {};
+    window.playerFlags[ram.define_estado] = true;
+    await salvarEstadoJogador();
+}
+
+if (ram.adiciona_item) {
+    const salaAtual = mapaMundo[secaoAtualId];
+    if (!salaAtual.itens) salaAtual.itens = [];
+    salaAtual.itens.push(ram.adiciona_item);
+    await salvarEstadoJogador();
+    atualizarLootRoom();
+}
+
         if (ram.destino) {
             const container = document.getElementById('map-controls');
             container.innerHTML = '';
@@ -2563,17 +2579,34 @@ if (salaAtualObj && opcao && opcao.destino !== undefined) {
                 if (tempElement) tempElement.remove();
 
                 if (melhorMatch.tipo === 'interacao_ambiente') {
-                    const interacao = melhorMatch.opcaoOriginal;
-                    adicionarMensagem(interacao.resposta || "Algo muda sutilmente ao seu redor.", 'system');
-                    if (!salaAtual.estados) salaAtual.estados = {};
-                    if (interacao.define_estado) salaAtual.estados[interacao.define_estado] = true;
-                    if (interacao.reutilizavel !== true) interacao.usado = true;
-                    await salvarEstadoJogador();
-                    sendBtn.disabled = false;
-                    userInput.disabled = false;
-                    userInput.focus();
-                    return;
-                }
+    const interacao = melhorMatch.opcaoOriginal;
+    const condicaoOk = !interacao.condicao_estado
+        || salaAtual.estados?.[interacao.condicao_estado] === true
+        || window.playerFlags?.[interacao.condicao_estado] === true;
+    if (!condicaoOk) {
+        adicionarMensagem(interacao.mensagem_falha || "Nada acontece.", 'system');
+    } else {
+        adicionarMensagem(interacao.resposta || "Algo muda sutilmente ao seu redor.", 'system');
+        if (!salaAtual.estados) salaAtual.estados = {};
+        if (interacao.define_estado) salaAtual.estados[interacao.define_estado] = true;
+        if (interacao.destino !== undefined && salaAtual.opcoes) {
+            const jaExiste = salaAtual.opcoes.some(o => o.destino === interacao.destino);
+            if (!jaExiste) {
+                salaAtual.opcoes.push({
+                    texto: interacao.texto_nova_saida || "Seguir pela passagem revelada",
+                    destino: interacao.destino
+                });
+            }
+        }
+        if (interacao.reutilizavel !== true) interacao.usado = true;
+        await salvarEstadoJogador();
+        atualizarBotoesNavegacao();
+    }
+    sendBtn.disabled = false;
+    userInput.disabled = false;
+    userInput.focus();
+    return;
+}
 
                 const textoExibido = melhorMatch.tipo === 'ramificacao'
                     ? melhorMatch.opcaoOriginal.opcao_texto
@@ -2747,7 +2780,9 @@ if (salaAtualObj && opcao && opcao.destino !== undefined) {
             return { sucesso: false };
         }
 
-        const condicaoOk = !uso.condicao_estado || sala.estados[uso.condicao_estado] === true;
+        const condicaoOk = !uso.condicao_estado
+    || sala.estados[uso.condicao_estado] === true
+    || window.playerFlags?.[uso.condicao_estado] === true;
         if (!condicaoOk) {
             adicionarMensagem(uso.mensagem_falha || "Não há nada aqui para usar esse item.", 'system');
             return { sucesso: false };
