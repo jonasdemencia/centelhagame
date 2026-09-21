@@ -1686,6 +1686,7 @@ ANSWER:`
                     window.sistemaChaves = { portasTrancadas: {}, chavesAnexadas: {} };
                 }
                 window.playerFlags = data.playerFlags || {};
+                window.playerFlagsMeta = data.playerFlagsMeta || {};
             } else {
                 const dadosPadrao = {
                     energy: { total: 40, initial: 40 },
@@ -1743,6 +1744,7 @@ ANSWER:`
                 dnaGlobal: dnaGlobal,
                 zonaAtual: zonaAtual,
                 playerFlags: window.playerFlags || {},
+                playerFlagsMeta: window.playerFlagsMeta || {},
                 salasVisitadas: [...salasVisitadas],
             };
             await updateDoc(doc(db, "players", uidAtual), dadosAtualizados);
@@ -2229,6 +2231,11 @@ if (salaAtualObj && opcao && opcao.destino !== undefined) {
         if (ram.define_estado) {
     if (!window.playerFlags) window.playerFlags = {};
     window.playerFlags[ram.define_estado] = true;
+    if (!window.playerFlagsMeta) window.playerFlagsMeta = {};
+    if (!window.playerFlagsMeta[ram.define_estado]) {
+        window.playerFlagsMeta[ram.define_estado] = { zona_criacao: zonaAtual, consumida: false, ativa: false };
+    }
+    window.playerFlagsMeta[ram.define_estado].ativa = true;
     await salvarEstadoJogador();
 }
 
