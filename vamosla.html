@@ -2255,6 +2255,12 @@ if (ram.adiciona_item) {
     await salvarEstadoJogador();
     atualizarLootRoom();
 }
+        if (ram.remove_item) {
+    await removerItemDoInventarioFirestore(ram.remove_item);
+    if (typeof window.atualizarInterfaceInventario === 'function') {
+        window.atualizarInterfaceInventario();
+    }
+}
 
         if (ram.destino) {
             const container = document.getElementById('map-controls');
