@@ -2282,16 +2282,17 @@ async function importarParaFirestore(dados, uid, logFn) {
           const rDestinoRaw = r.destino_id ? String(r.destino_id) : null;
           const rDestino = (rDestinoRaw && destinosValidos.has(rDestinoRaw)) ? parseInt(rDestinoRaw) : null;
           const rNarrativaLimpa = expurgarViciosIA((r.resultado_texto || '').trim());
-          return {
-            opcao_texto: r.opcao_texto.trim(),
+         return {
+    opcao_texto: r.opcao_texto.trim(),
     resultado_texto: rDano > 0
         ? `${rNarrativaLimpa.replace(/[.\s]+$/, '')}. Você perde ${rDano} de energia.`
         : rNarrativaLimpa,
     dano: rDano,
     destino: rDestino,
     define_estado: r.define_estado || null,
-    adiciona_item: r.adiciona_item || null
-          };
+    adiciona_item: r.adiciona_item || null,
+    requer_item: r.requer_item || null
+};
         });
             sala.opcoes.push({
         texto: opcaoTexto,
