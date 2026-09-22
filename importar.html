@@ -2833,25 +2833,18 @@ async function importarPuzzles(dadosPuzzle, uid, logFn, zonaAtual) {
     }
   }
   
-    // Registrar em playerFlagsMeta qualquer define_estado de puzzle ainda não visto
-  {
-    const flagsNovas = [];
-    for (const sala of Object.values(mapaTrabalho)) {
-      for (const uso of (sala.usos_possiveis || [])) {
-        if (uso && uso.define_estado) flagsNovas.push(uso.define_estado);
+        // Preparar meta com estados novos ANTES de recalcular
+  const metaParaRecalcular = { ...(dadosAtuais.playerFlagsMeta || {}) };
+  for (const sala of Object.values(mapaTrabalho)) {
+    for (const uso of (sala.usos_possiveis || [])) {
+      if (uso && uso.define_estado && !metaParaRecalcular[uso.define_estado]) {
+        metaParaRecalcular[uso.define_estado] = {
+          zona_criacao: zonaAtual,
+          consumida: false,
+          ativa: false
+        };
+        logFn(`🚩 Novo estado registrado (puzzle): ${uso.define_estado}`, 'info');
       }
-    }
-    if (flagsNovas.length > 0) {
-      const meta = { ...(dadosAtuais.playerFlagsMeta || {}) };
-      let alterou = false;
-      for (const flag of flagsNovas) {
-        if (!meta[flag]) {
-          meta[flag] = { zona_criacao: zonaAtual, consumida: false, ativa: false };
-          alterou = true;
-          logFn(`🚩 Novo estado registrado (puzzle): ${flag}`, 'info');
-        }
-      }
-      if (alterou) updatePayload['playerFlagsMeta'] = meta;
     }
   }
 
@@ -2860,7 +2853,7 @@ async function importarPuzzles(dadosPuzzle, uid, logFn, zonaAtual) {
     // Recalcular consumidas a partir do mapaTrabalho final (fonte de verdade)
   const recalc = recalcularConsumidas(
     mapaTrabalho,
-    dadosAtuais.playerFlagsMeta || {},
+    metaParaRecalcular,
     dadosAtuais.itensDeCenaMeta || {},
     itensLegadoAtuais
   );
