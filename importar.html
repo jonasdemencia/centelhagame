@@ -2802,7 +2802,7 @@ async function importarPuzzles(dadosPuzzle, uid, logFn, zonaAtual) {
     }
   }
 
-    // Auto-registrar como legado qualquer item plantado por puzzle que sobreviveu à zona.
+     // Auto-registrar como legado qualquer item plantado por puzzle que sobreviveu à zona.
   // Não depende do LLM declarar em itens_legado.
   {
     const itensConsumidos = new Set();
@@ -2832,7 +2832,7 @@ async function importarPuzzles(dadosPuzzle, uid, logFn, zonaAtual) {
       updatePayload['itens_legado'] = itensLegadoAtuais;
     }
   }
-
+  
     // Registrar em playerFlagsMeta qualquer define_estado de puzzle ainda não visto
   {
     const flagsNovas = [];
