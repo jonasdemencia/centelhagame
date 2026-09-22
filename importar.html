@@ -2296,14 +2296,14 @@ function distribuirSuspeitas(mapaMundo, logFn) {
 /* ============================================================
    FIX 1 — recalcular consumida a partir do mapaMundo
    ============================================================ */
-function recalcularConsumidas(mapaMundo, playerFlagsMeta, itensDeCenaMeta) {
+function recalcularConsumidas(mapaMundo, playerFlagsMeta, itensDeCenaMeta, itensLegado) {
   const estadosConsumidos = new Set();
   const itensConsumidos = new Set();
 
   for (const sala of Object.values(mapaMundo || {})) {
     for (const uso of (sala.usos_possiveis || [])) {
       if (uso && uso.condicao_estado) estadosConsumidos.add(uso.condicao_estado);
-      if (uso && uso.item_id) itensConsumidos.add(uso.item_id);
+      if (uso && uso.item_id && uso.remove_item === true) itensConsumidos.add(uso.item_id);
     }
     for (const inter of (sala.interacoes_ambiente || [])) {
       if (inter && inter.condicao_estado) estadosConsumidos.add(inter.condicao_estado);
@@ -2322,9 +2322,17 @@ function recalcularConsumidas(mapaMundo, playerFlagsMeta, itensDeCenaMeta) {
     info.consumida = itensConsumidos.has(itemId);
   }
 
-  return { playerFlagsMeta: novasFlags, itensDeCenaMeta: novosItens };
-}
+  const novoLegado = { ...(itensLegado || {}) };
+  for (const itemId of Object.keys(novoLegado)) {
+    if (itensConsumidos.has(itemId)) delete novoLegado[itemId];
+  }
 
+  return {
+    playerFlagsMeta: novasFlags,
+    itensDeCenaMeta: novosItens,
+    itens_legado: novoLegado
+  };
+}
 /* ============================================================
    FIX 2 — validarOrfaos como gate (retorna lista e respeita intencionais)
    ============================================================ */
@@ -2587,14 +2595,18 @@ async function importarParaFirestore(dados, uid, logFn) {
   // NOTA: o gate de órfãos foi movido para importarPuzzles (fim do pipeline).
   // Aqui só registramos os metadados (idade). Nenhum bloqueio.
 
-  const mapaMerge = { ...mapaMundoAtual, ...mapaMundo };
+    const mapaMerge = { ...mapaMundoAtual, ...mapaMundo };
   const recalc = recalcularConsumidas(
     mapaMerge,
     dadosAtuais.playerFlagsMeta || {},
-    dadosAtuais.itensDeCenaMeta || {}
+    dadosAtuais.itensDeCenaMeta || {},
+    dadosAtuais.itens_legado || {}
   );
   updatePayload['playerFlagsMeta'] = recalc.playerFlagsMeta;
   updatePayload['itensDeCenaMeta'] = recalc.itensDeCenaMeta;
+  if (Object.keys(recalc.itens_legado).length !== Object.keys(dadosAtuais.itens_legado || {}).length) {
+    updatePayload['itens_legado'] = recalc.itens_legado;
+  }
 
   await docRef.update(updatePayload);
   return { mapaMundo };
@@ -2784,16 +2796,40 @@ async function importarPuzzles(dadosPuzzle, uid, logFn, zonaAtual) {
     }
   }
 
+    // Registrar em playerFlagsMeta qualquer define_estado de puzzle ainda não visto
+  {
+    const flagsNovas = [];
+    for (const sala of Object.values(mapaTrabalho)) {
+      for (const uso of (sala.usos_possiveis || [])) {
+        if (uso && uso.define_estado) flagsNovas.push(uso.define_estado);
+      }
+    }
+    if (flagsNovas.length > 0) {
+      const meta = { ...(dadosAtuais.playerFlagsMeta || {}) };
+      let alterou = false;
+      for (const flag of flagsNovas) {
+        if (!meta[flag]) {
+          meta[flag] = { zona_criacao: zonaAtual, consumida: false, ativa: false };
+          alterou = true;
+          logFn(`🚩 Novo estado registrado (puzzle): ${flag}`, 'info');
+        }
+      }
+      if (alterou) updatePayload['playerFlagsMeta'] = meta;
+    }
+  }
+
   for (const salaId of salasTocadas) updatePayload[`mapaMundo.${salaId}`] = mapaTrabalho[salaId];
 
-  // Recalcular consumidas a partir do mapaTrabalho final (fonte de verdade)
+    // Recalcular consumidas a partir do mapaTrabalho final (fonte de verdade)
   const recalc = recalcularConsumidas(
     mapaTrabalho,
     dadosAtuais.playerFlagsMeta || {},
-    dadosAtuais.itensDeCenaMeta || {}
+    dadosAtuais.itensDeCenaMeta || {},
+    itensLegadoAtuais
   );
   updatePayload['playerFlagsMeta'] = recalc.playerFlagsMeta;
   updatePayload['itensDeCenaMeta'] = recalc.itensDeCenaMeta;
+  updatePayload['itens_legado'] = recalc.itens_legado;
 
   // GATE DE ÓRFÃOS POR IDADE — agora sim, no fim do pipeline da zona
   const orfaosIntencionais = Array.isArray(dadosPuzzle.orfao_intencional) ? dadosPuzzle.orfao_intencional : [];
