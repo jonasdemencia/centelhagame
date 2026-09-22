@@ -2338,6 +2338,7 @@ async function importarParaFirestore(dados, uid, logFn) {
       opcoes: opcoes
     };
   }
+    const flagsParaRegistrar = [];
   for (const cena of cenas) {
     const salaId = String(cena.sala_id);
     const sala = mapaMundo[salaId];
@@ -2397,16 +2398,9 @@ async function importarParaFirestore(dados, uid, logFn) {
         ramificacoes: ramificacoes.length > 0 ? ramificacoes : null
       });
 
-      for (const ram of ramificacoes) {
+            for (const ram of ramificacoes) {
         if (ram.define_estado) {
-          if (!dadosAtuais.playerFlagsMeta) dadosAtuais.playerFlagsMeta = {};
-          if (!dadosAtuais.playerFlagsMeta[ram.define_estado]) {
-            dadosAtuais.playerFlagsMeta[ram.define_estado] = {
-              zona_criacao: _promptZona,
-              consumida: false,
-              ativa: false
-            };
-          }
+          flagsParaRegistrar.push(ram.define_estado);
         }
       }
     }
@@ -2453,11 +2447,24 @@ async function importarParaFirestore(dados, uid, logFn) {
   if (Object.keys(mapaMundo).length === 0) {
     throw new Error('Nenhuma sala válida foi montada (faltam "plano" e/ou "salas"). NADA foi salvo.');
   }
-  const docRef = db.collection('players').doc(uid);
+    const docRef = db.collection('players').doc(uid);
   const docSnap = await docRef.get();
   const dadosAtuais = docSnap.data() || {};
   const mapaMundoAtual = dadosAtuais.mapaMundo || {};
   const updatePayload = {};
+
+  if (flagsParaRegistrar.length > 0) {
+    if (!dadosAtuais.playerFlagsMeta) dadosAtuais.playerFlagsMeta = {};
+    for (const flag of flagsParaRegistrar) {
+      if (!dadosAtuais.playerFlagsMeta[flag]) {
+        dadosAtuais.playerFlagsMeta[flag] = {
+          zona_criacao: _promptZona,
+          consumida: false,
+          ativa: false
+        };
+      }
+    }
+  }
   for (const [id, salaNova] of Object.entries(mapaMundo)) {
     const salaExistente = mapaMundoAtual[id];
     preservarCamposRuntime(salaNova, salaExistente);
