@@ -1081,6 +1081,7 @@ const DEFAULT_BODIES = {
     '- Cada ramificação pode ter, além do custo, um efeito persistente opcional:',
     '- define_estado: nome do estado global ativado (string) ou null. O estado é gravado no doc do jogador e visível em qualquer sala da zona.',
     '- adiciona_item: id do item concedido (string) ou null. O item aparece na loot-area da sala atual para o jogador coletar.',
+    '- requer_item: id do item exigido (string) ou null. Se preenchido, a ramificação só executa se o jogador tiver o item. Use quando a ação só faz sentido com o item em mãos.',
     '- O efeito persiste independente do custo. Uma ramificação pode ter dano 0 e conceder item, ou dano alto e não conceder nada.',
     '- Pelo menos uma ramificação por zona deve definir um estado OU adicionar um item que seja consumido por puzzle da mesma zona.',
     '- Todo define_estado precisa ter usos_possiveis ou interacoes_ambiente correspondente em algum puzzle da zona, com condicao_estado igual ao nome do estado.',
