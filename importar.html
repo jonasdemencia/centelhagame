@@ -1708,7 +1708,7 @@ function coletarEstadosPendentes(dados, zonaAtual) {
   const out = [];
   for (const [flag, info] of Object.entries(meta)) {
     if (!info || info.consumida === true) continue;
-    if (info.ativa !== true) continue;
+    // (linha "if (info.ativa !== true) continue;" foi removida)
     const zonaCriacao = info.zona_criacao ?? 1;
     const idade = Math.max(0, zonaAtual - zonaCriacao);
     out.push({ id: flag, zona_criacao: zonaCriacao, idade });
