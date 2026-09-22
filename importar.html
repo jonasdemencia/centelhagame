@@ -1082,6 +1082,7 @@ const DEFAULT_BODIES = {
     '- define_estado: nome do estado global ativado (string) ou null. O estado é gravado no doc do jogador e visível em qualquer sala da zona.',
     '- adiciona_item: id do item concedido (string) ou null. O item aparece na loot-area da sala atual para o jogador coletar.',
     '- requer_item: id do item exigido (string) ou null. Se preenchido, a ramificação só executa se o jogador tiver o item. Use quando a ação só faz sentido com o item em mãos.',
+    '- remove_item: id do item removido do inventário (string) ou null. Use quando a ação consome o item.',
     '- O efeito persiste independente do custo. Uma ramificação pode ter dano 0 e conceder item, ou dano alto e não conceder nada.',
     '- Pelo menos uma ramificação por zona deve definir um estado OU adicionar um item que seja consumido por puzzle da mesma zona.',
     '- Todo define_estado precisa ter usos_possiveis ou interacoes_ambiente correspondente em algum puzzle da zona, com condicao_estado igual ao nome do estado.',
@@ -1480,9 +1481,9 @@ function construirCabecalho(key, n, ctx) {
   if (tema) linhas.push(`TEMA         = ${tema}`);
   if (_aventura.tom) linhas.push(`TOM          = ${_aventura.tom}`);
   if (_aventura.lore) linhas.push(`LORE CENTRAL = ${_aventura.lore}`);
-  if (key === 'perigos') {
+    if (key === 'perigos') {
     linhas.push(`QUANTIDADE_PERIGOS = 3`);
- } else if (key === 'puzzles') {
+  } else if (key === 'puzzles') {
     const itens = ctx.itens_legado_pendentes || [];
     if (itens.length > 0) {
       linhas.push(`itens_legado_pendentes: ${JSON.stringify(itens)}`);
@@ -1491,10 +1492,15 @@ function construirCabecalho(key, n, ctx) {
     linhas.push(`estados_de_cena: ${JSON.stringify(ctx.estados_de_cena || [])}`);
     linhas.push(`itens_de_cena: ${JSON.stringify(ctx.itens_de_cena || [])}`);
     linhas.push(`estados_pendentes: ${JSON.stringify(ctx.estados_pendentes || [])}`);
-}
+  } else if (key === 'topologia') {
+    const itens = ctx.itens_legado_pendentes || [];
+    if (itens.length > 0) {
+      linhas.push(`itens_legado_pendentes: ${JSON.stringify(itens)}`);
+    }
+    linhas.push(`estados_pendentes: ${JSON.stringify(ctx.estados_pendentes || [])}`);
+  }
   return linhas.join('\n');
 }
-
 function construirResumo(key, n, ctx) {
   const start = (n - 1) * SALAS_POR_ZONA + 1;
   const end = n * SALAS_POR_ZONA;
@@ -1626,18 +1632,29 @@ function calcularIdadeLegado(itens, zonaAtual) {
     idade: Math.max(0, zonaAtual - (i.zona_criacao ?? 1))
   }));
 }
+
+  function coletarEstadosPendentes(dados, zonaAtual) {
+  const meta = dados.playerFlagsMeta || {};
+  const out = [];
+  for (const [flag, info] of Object.entries(meta)) {
+    if (!info || info.consumida === true) continue;
+    if (info.ativa !== true) continue;
+    out.push({ id: flag, zona_criacao: info.zona_criacao ?? 1 });
+  }
+  return out;
+}
   
 
 function ctxParaZona(n) {
   const dados = _lastDados || {};
   const mapaMundo = dados.mapaMundo || {};
   return {
-  salas_ocupadas: coletarSalasOcupadas(mapaMundo, n),
-  itens_legado_pendentes: calcularIdadeLegado(coletarItensLegado(dados), n),
-  estados_de_cena: coletarEstadosDeCena(mapaMundo, n),
-  itens_de_cena: coletarItensDeCena(mapaMundo, n),
-  estados_pendentes: coletarEstadosPendentes(dados, n)
-};
+    salas_ocupadas: coletarSalasOcupadas(mapaMundo, n),
+    itens_legado_pendentes: coletarItensLegado(dados),
+    estados_de_cena: coletarEstadosDeCena(mapaMundo, n),
+    itens_de_cena: coletarItensDeCena(mapaMundo, n),
+    estados_pendentes: coletarEstadosPendentes(dados, n)
+  };
 }
 
 function analisarZona(mapaMundo, n) {
@@ -2292,6 +2309,7 @@ async function importarParaFirestore(dados, uid, logFn) {
     destino: rDestino,
     define_estado: r.define_estado || null,
     adiciona_item: r.adiciona_item || null,
+            remove_item: r.remove_item || null,
     requer_item: r.requer_item || null
 };
         });
