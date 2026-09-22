@@ -1468,6 +1468,30 @@ function extrairCorpo(texto) {
 }
 
 /* ============================================================
+   FIX 4 + FIX 6 — Cota calculada e ordenação por idade
+   ============================================================ */
+function calcularCota(ctx) {
+  const itens = ctx.itens_legado_pendentes || [];
+  const estados = ctx.estados_pendentes || [];
+  const todos = [
+    ...itens.map(i => ({ id: i.id, idade: i.idade ?? 0, tipo: 'item' })),
+    ...estados.map(e => ({ id: e.id, idade: e.idade ?? 0, tipo: 'estado' }))
+  ];
+  const vencidos = todos.filter(x => x.idade >= 4);
+  const maduros = todos.filter(x => x.idade >= 2 && x.idade <= 3);
+  if (vencidos.length === 0 && maduros.length === 0) return null;
+  const partes = [];
+  const cotaVencidos = vencidos.length >= 3 ? 2 : (vencidos.length >= 1 ? 1 : 0);
+  if (cotaVencidos > 0) {
+    partes.push(`consuma ≥${cotaVencidos} VENCIDO(S): ${vencidos.map(v => v.id).join(', ')}`);
+  }
+  if (maduros.length > 0) {
+    partes.push(`preferir MADURO(S): ${maduros.map(m => m.id).join(', ')}`);
+  }
+  return partes.join(' · ');
+}
+
+/* ============================================================
    PROMPTS — construção de conteúdo
    ============================================================ */
 function construirCabecalho(key, n, ctx) {
@@ -1485,20 +1509,24 @@ function construirCabecalho(key, n, ctx) {
     if (key === 'perigos') {
     linhas.push(`QUANTIDADE_PERIGOS = 3`);
   } else if (key === 'puzzles') {
-    const itens = ctx.itens_legado_pendentes || [];
+    const itens = [...(ctx.itens_legado_pendentes || [])].sort((a, b) => (b.idade ?? 0) - (a.idade ?? 0));
     if (itens.length > 0) {
       linhas.push(`itens_legado_pendentes: ${JSON.stringify(itens)}`);
     }
     linhas.push(`salas_ocupadas: ${JSON.stringify(ctx.salas_ocupadas || [])}`);
     linhas.push(`estados_de_cena: ${JSON.stringify(ctx.estados_de_cena || [])}`);
     linhas.push(`itens_de_cena: ${JSON.stringify(ctx.itens_de_cena || [])}`);
-    linhas.push(`estados_pendentes: ${JSON.stringify(ctx.estados_pendentes || [])}`);
+    const estadosOrd = [...(ctx.estados_pendentes || [])].sort((a, b) => (b.idade ?? 0) - (a.idade ?? 0));
+    linhas.push(`estados_pendentes: ${JSON.stringify(estadosOrd)}`);
+    const cota = calcularCota(ctx);
+    if (cota) linhas.push(`COTA_OBRIGATÓRIA: ${cota}`);
   } else if (key === 'topologia') {
-    const itens = ctx.itens_legado_pendentes || [];
+    const itens = [...(ctx.itens_legado_pendentes || [])].sort((a, b) => (b.idade ?? 0) - (a.idade ?? 0));
     if (itens.length > 0) {
       linhas.push(`itens_legado_pendentes: ${JSON.stringify(itens)}`);
     }
-    linhas.push(`estados_pendentes: ${JSON.stringify(ctx.estados_pendentes || [])}`);
+    const estadosOrd = [...(ctx.estados_pendentes || [])].sort((a, b) => (b.idade ?? 0) - (a.idade ?? 0));
+    linhas.push(`estados_pendentes: ${JSON.stringify(estadosOrd)}`);
   }
   return linhas.join('\n');
 }
@@ -1513,10 +1541,10 @@ function construirResumo(key, n, ctx) {
   if (key === 'perigos') {
     linhas.push(`QUANTIDADE_PERIGOS = 3`);
     } else if (key === 'puzzles') {
-    const itens = ctx.itens_legado_pendentes || [];
+    const itens = [...(ctx.itens_legado_pendentes || [])].sort((a, b) => (b.idade ?? 0) - (a.idade ?? 0));
     if (itens.length > 0) {
       const items = itens.map(i =>
-        `• ${escapeHTML(i.id)} <span class="mini-dim">(sala ${i.sala_plantio ?? '?'})</span>`
+        `• ${escapeHTML(i.id)} <span class="mini-dim">(sala ${i.sala_plantio ?? '?'} · idade ${i.idade ?? 0})</span>`
       ).join('<br>');
       linhas.push(`<span class="mini-label">itens_legado_pendentes:</span><br>${items}`);
     } else {
@@ -1529,6 +1557,13 @@ function construirResumo(key, n, ctx) {
     const itensCenaTxt = (ctx.itens_de_cena || []).map(e => `• ${escapeHTML(e.id)} <span class="mini-dim">(sala ${e.sala_origem})</span>`).join('<br>');
     linhas.push(`<span class="mini-label">estados_de_cena:</span><br>${estadosTxt || '<span class="mini-dim">nenhum</span>'}`);
     linhas.push(`<span class="mini-label">itens_de_cena:</span><br>${itensCenaTxt || '<span class="mini-dim">nenhum</span>'}`);
+    const estadosPend = [...(ctx.estados_pendentes || [])].sort((a, b) => (b.idade ?? 0) - (a.idade ?? 0));
+    const estadosPendTxt = estadosPend.map(e => `• ${escapeHTML(e.id)} <span class="mini-dim">(idade ${e.idade ?? 0})</span>`).join('<br>');
+    linhas.push(`<span class="mini-label">estados_pendentes:</span><br>${estadosPendTxt || '<span class="mini-dim">nenhum</span>'}`);
+    const cota = calcularCota(ctx);
+    if (cota) {
+      linhas.push(`<span class="mini-label">COTA_OBRIGATÓRIA:</span> <span class="mini-dim">${escapeHTML(cota)}</span>`);
+    }
   }
   return linhas.join('<br>');
 }
@@ -1573,14 +1608,24 @@ function coletarSalasOcupadas(mapaMundo, n) {
   return salas;
 }
 
-function coletarItensLegado(dados) {
+// FIX 6 — agora devolve idade calculada
+function coletarItensLegado(dados, zonaAtual) {
   const obj = (dados && dados.itens_legado) || {};
   return Object.values(obj)
     .filter(x => x && x.id)
-    .map(x => ({ id: x.id, sala_plantio: x.sala_plantio ?? null }));
+    .map(x => {
+      const zonaCriacao = x.zona_criacao ?? 1;
+      return {
+        id: x.id,
+        sala_plantio: x.sala_plantio ?? null,
+        zona_criacao: zonaCriacao,
+        idade: Math.max(0, (zonaAtual ?? 1) - zonaCriacao)
+      };
+    })
+    .sort((a, b) => b.idade - a.idade);
 }
 
-  function coletarEstadosDeCena(mapaMundo, n) {
+function coletarEstadosDeCena(mapaMundo, n) {
   const start = (n - 1) * SALAS_POR_ZONA + 1;
   const end = n * SALAS_POR_ZONA;
   const out = [];
@@ -1614,44 +1659,27 @@ function coletarItensDeCena(mapaMundo, n) {
   return out;
 }
 
-  function coletarEstadosPendentes(dados, zonaAtual) {
+// FIX 6 — unificado e ordenado por idade DESC
+function coletarEstadosPendentes(dados, zonaAtual) {
   const meta = dados.playerFlagsMeta || {};
   const out = [];
   for (const [flag, info] of Object.entries(meta)) {
     if (!info || info.consumida === true) continue;
     if (info.ativa !== true) continue;
-    const idade = Math.max(0, zonaAtual - (info.zona_criacao ?? 1));
-    out.push({ id: flag, zona_criacao: info.zona_criacao ?? 1, idade });
+    const zonaCriacao = info.zona_criacao ?? 1;
+    const idade = Math.max(0, zonaAtual - zonaCriacao);
+    out.push({ id: flag, zona_criacao: zonaCriacao, idade });
   }
+  out.sort((a, b) => b.idade - a.idade);
   return out;
 }
-
-function calcularIdadeLegado(itens, zonaAtual) {
-  return (itens || []).map(i => ({
-    ...i,
-    zona_criacao: i.zona_criacao ?? 1,
-    idade: Math.max(0, zonaAtual - (i.zona_criacao ?? 1))
-  }));
-}
-
-  function coletarEstadosPendentes(dados, zonaAtual) {
-  const meta = dados.playerFlagsMeta || {};
-  const out = [];
-  for (const [flag, info] of Object.entries(meta)) {
-    if (!info || info.consumida === true) continue;
-    if (info.ativa !== true) continue;
-    out.push({ id: flag, zona_criacao: info.zona_criacao ?? 1 });
-  }
-  return out;
-}
-  
 
 function ctxParaZona(n) {
   const dados = _lastDados || {};
   const mapaMundo = dados.mapaMundo || {};
   return {
     salas_ocupadas: coletarSalasOcupadas(mapaMundo, n),
-    itens_legado_pendentes: coletarItensLegado(dados),
+    itens_legado_pendentes: coletarItensLegado(dados, n),
     estados_de_cena: coletarEstadosDeCena(mapaMundo, n),
     itens_de_cena: coletarItensDeCena(mapaMundo, n),
     estados_pendentes: coletarEstadosPendentes(dados, n)
@@ -2220,41 +2248,79 @@ function distribuirSuspeitas(mapaMundo, logFn) {
   }
   logFn(`🔍 Suspeitas distribuídas: ${comInterceptor.length} real(is) + ${numFalsas} isca(s).`, 'ok');
 }
-  
-function validarOrfaos(mapaMundo, logFn) {
-    const estadosDefinidos = new Set();
-    const itensAdicionados = new Set();
-    const estadosConsumidos = new Set();
-    const itensUsados = new Set();
-    for (const [id, sala] of Object.entries(mapaMundo)) {
-        for (const op of (sala.opcoes || [])) {
-            if (!op.dilema || !op.ramificacoes) continue;
-            for (const ram of op.ramificacoes) {
-                if (ram.define_estado) estadosDefinidos.add(ram.define_estado);
-                if (ram.adiciona_item) itensAdicionados.add(ram.adiciona_item);
-            }
-        }
-        for (const uso of (sala.usos_possiveis || [])) {
-            if (uso.condicao_estado) estadosConsumidos.add(uso.condicao_estado);
-            if (uso.item_id) itensUsados.add(uso.item_id);
-        }
-        for (const inter of (sala.interacoes_ambiente || [])) {
-            if (inter.condicao_estado) estadosConsumidos.add(inter.condicao_estado);
-        }
+
+/* ============================================================
+   FIX 1 — recalcular consumida a partir do mapaMundo
+   ============================================================ */
+function recalcularConsumidas(mapaMundo, meta) {
+  const consumidos = new Set();
+  for (const sala of Object.values(mapaMundo || {})) {
+    for (const uso of (sala.usos_possiveis || [])) {
+      if (uso && uso.condicao_estado) consumidos.add(uso.condicao_estado);
     }
-    for (const e of estadosDefinidos) if (!estadosConsumidos.has(e)) logFn(`⚠️ ÓRFÃO: estado "${e}" definido por cena mas não consumido.`, 'warn');
-    for (const i of itensAdicionados) if (!itensUsados.has(i)) logFn(`⚠️ ÓRFÃO: item "${i}" concedido por cena mas não usado em puzzle.`, 'warn');
+    for (const inter of (sala.interacoes_ambiente || [])) {
+      if (inter && inter.condicao_estado) consumidos.add(inter.condicao_estado);
+    }
+  }
+  const novas = { ...(meta || {}) };
+  for (const [flag, info] of Object.entries(novas)) {
+    if (!info) continue;
+    info.consumida = consumidos.has(flag);
+  }
+  return novas;
 }
+
+/* ============================================================
+   FIX 2 — validarOrfaos como gate (retorna lista e respeita intencionais)
+   ============================================================ */
+function validarOrfaos(mapaMundo, logFn, opcoes = {}) {
+  const estadosDefinidos = new Set();
+  const itensAdicionados = new Set();
+  const estadosConsumidos = new Set();
+  const itensUsados = new Set();
+  const orfaosIntencionais = new Set(opcoes.orfaosIntencionais || []);
+
+  for (const [id, sala] of Object.entries(mapaMundo)) {
+    for (const op of (sala.opcoes || [])) {
+      if (!op.dilema || !op.ramificacoes) continue;
+      for (const ram of op.ramificacoes) {
+        if (ram.define_estado) estadosDefinidos.add(ram.define_estado);
+        if (ram.adiciona_item) itensAdicionados.add(ram.adiciona_item);
+      }
+    }
+    for (const uso of (sala.usos_possiveis || [])) {
+      if (uso.condicao_estado) estadosConsumidos.add(uso.condicao_estado);
+      if (uso.item_id) itensUsados.add(uso.item_id);
+    }
+    for (const inter of (sala.interacoes_ambiente || [])) {
+      if (inter.condicao_estado) estadosConsumidos.add(inter.condicao_estado);
+    }
+  }
+
+  const orfaos = [];
+  for (const e of estadosDefinidos) {
+    if (!estadosConsumidos.has(e) && !orfaosIntencionais.has(e)) {
+      orfaos.push({ tipo: 'estado', id: e });
+      logFn(`⚠️ ÓRFÃO: estado "${e}" definido por cena mas não consumido.`, 'warn');
+    } else if (orfaosIntencionais.has(e)) {
+      logFn(`🎭 ÓRFÃO INTENCIONAL (red herring): estado "${e}" — permitido.`, 'info');
+    }
+  }
+  for (const i of itensAdicionados) {
+    if (!itensUsados.has(i) && !orfaosIntencionais.has(i)) {
+      orfaos.push({ tipo: 'item', id: i });
+      logFn(`⚠️ ÓRFÃO: item "${i}" concedido por cena mas não usado em puzzle.`, 'warn');
+    } else if (orfaosIntencionais.has(i)) {
+      logFn(`🎭 ÓRFÃO INTENCIONAL (red herring): item "${i}" — permitido.`, 'info');
+    }
+  }
+  return orfaos;
+}
+
 /* ============================================================
    IMPORTAÇÃO — zona completa
    ============================================================ */
 async function importarParaFirestore(dados, uid, logFn) {
-  // 👇 leitura do Firestore movida para cá (antes de qualquer uso de dadosAtuais)
-  const docRef = db.collection('players').doc(uid);
-  const docSnap = await docRef.get();
-  const dadosAtuais = docSnap.data() || {};
-  if (!dadosAtuais.playerFlagsMeta) dadosAtuais.playerFlagsMeta = {};
-
   const plano = dados.plano || {};
   const salas = dados.salas || {};
   const cenas = dados.cenas || [];
@@ -2331,8 +2397,9 @@ async function importarParaFirestore(dados, uid, logFn) {
         ramificacoes: ramificacoes.length > 0 ? ramificacoes : null
       });
 
-            for (const ram of ramificacoes) {
+      for (const ram of ramificacoes) {
         if (ram.define_estado) {
+          if (!dadosAtuais.playerFlagsMeta) dadosAtuais.playerFlagsMeta = {};
           if (!dadosAtuais.playerFlagsMeta[ram.define_estado]) {
             dadosAtuais.playerFlagsMeta[ram.define_estado] = {
               zona_criacao: _promptZona,
@@ -2386,7 +2453,10 @@ async function importarParaFirestore(dados, uid, logFn) {
   if (Object.keys(mapaMundo).length === 0) {
     throw new Error('Nenhuma sala válida foi montada (faltam "plano" e/ou "salas"). NADA foi salvo.');
   }
-   const mapaMundoAtual = dadosAtuais.mapaMundo || {};
+  const docRef = db.collection('players').doc(uid);
+  const docSnap = await docRef.get();
+  const dadosAtuais = docSnap.data() || {};
+  const mapaMundoAtual = dadosAtuais.mapaMundo || {};
   const updatePayload = {};
   for (const [id, salaNova] of Object.entries(mapaMundo)) {
     const salaExistente = mapaMundoAtual[id];
@@ -2407,10 +2477,22 @@ async function importarParaFirestore(dados, uid, logFn) {
     updatePayload['itens_novos'] = { ...atuais, ...dados.itens_novos };
     logFn(`🧩 ${Object.keys(dados.itens_novos).length} item(ns) novos registrados.`, 'ok');
 }
-validarOrfaos(mapaMundo, logFn);
-  if (dadosAtuais.playerFlagsMeta) {
-    updatePayload['playerFlagsMeta'] = dadosAtuais.playerFlagsMeta;
-}
+
+  // FIX 2 — gate de órfãos (bloqueia salvo override explícito)
+  const orfaosIntencionais = Array.isArray(dados.orfao_intencional) ? dados.orfao_intencional : [];
+  const orfaos = validarOrfaos(mapaMundo, logFn, { orfaosIntencionais });
+  if (orfaos.length > 0 && !dados.forcar_orfaos) {
+    const lista = orfaos.map(o => `${o.tipo}:${o.id}`).join(', ');
+    throw new Error(`Importação bloqueada — ${orfaos.length} órfão(s): ${lista}. Crie o consumo no puzzle da zona, marque em "orfao_intencional" ou envie "forcar_orfaos": true.`);
+  }
+  if (orfaos.length > 0) {
+    logFn(`⚠️ ${orfaos.length} órfão(s) aceito(s) por "forcar_orfaos": ${orfaos.map(o => o.id).join(', ')}`, 'warn');
+  }
+
+  // FIX 1 — recalcular consumida a partir do mapa mergeado (não confiar no JSON)
+  const mapaMerge = { ...mapaMundoAtual, ...mapaMundo };
+  updatePayload['playerFlagsMeta'] = recalcularConsumidas(mapaMerge, dadosAtuais.playerFlagsMeta || {});
+
   await docRef.update(updatePayload);
   return { mapaMundo };
 }
@@ -2498,13 +2580,13 @@ async function importarPuzzles(dadosPuzzle, uid, logFn, zonaAtual) {
   const estadosConsumidos = Array.isArray(dadosPuzzle.estados_pendentes_consumidos)
     ? dadosPuzzle.estados_pendentes_consumidos
     : [];
-const metaAtual = dadosAtuais.playerFlagsMeta || {};
-for (const flag of estadosConsumidos) {
-    if (metaAtual[flag]) {
-        metaAtual[flag].consumida = true;
-        logFn(`🚩 Flag consumida: ${flag}`, 'info');
-    }
-}
+
+  // FIX 1 — não grava consumida aqui. Só loga intenção; o recálculo real
+  // acontece no fim, sobre o mapaTrabalho já com os puzzles aplicados.
+  if (estadosConsumidos.length > 0) {
+    logFn(`🚩 Declaração de consumo (será recalculada no final): ${estadosConsumidos.join(', ')}`, 'info');
+  }
+
   const legadoConsumidos = Array.isArray(dadosPuzzle.itens_legado_consumidos)
     ? dadosPuzzle.itens_legado_consumidos
     : [];
@@ -2531,10 +2613,6 @@ for (const flag of estadosConsumidos) {
   if (legadoConsumidos.length > 0 || (Array.isArray(dadosPuzzle.itens_legado) && dadosPuzzle.itens_legado.length > 0)) {
     updatePayload['itens_legado'] = itensLegadoAtuais;
   }
-
-  if (estadosConsumidos.length > 0) {
-    updatePayload['playerFlagsMeta'] = metaAtual;
-}
 
   if (dadosPuzzle.itens_novos && Object.keys(dadosPuzzle.itens_novos).length > 0) {
     const itensNovosAtuais = dadosAtuais.itens_novos || {};
@@ -2600,6 +2678,10 @@ for (const flag of estadosConsumidos) {
     }
   }
   for (const salaId of salasTocadas) updatePayload[`mapaMundo.${salaId}`] = mapaTrabalho[salaId];
+
+  // FIX 1 — recalcular consumida a partir do mapaTrabalho final (fonte de verdade)
+  updatePayload['playerFlagsMeta'] = recalcularConsumidas(mapaTrabalho, dadosAtuais.playerFlagsMeta || {});
+
   if (Object.keys(updatePayload).length === 0) throw new Error('Nenhuma modificação de puzzle foi aplicada.');
   await docRef.update(updatePayload);
   return { atualizadas: [...salasTocadas] };
@@ -3893,6 +3975,8 @@ console.log('📝 Prompts: zona controlada manualmente por [−]/[+] · 🔄 rec
 console.log('📥 Importadores: zona completa, perigos (isolado), puzzles (Shadowgate).');
 console.log('📊 Espelho: leitura read-only com drill-down por zona e preenchimento de vazias.');
 console.log('🗺️ Aventura: TOM + LORE + 30 temas por zona injetados no cabeçalho dos prompts.');
+console.log('🔒 Órfãos: bloquear a importação se houver estado/item sem consumidor (override: forcar_orfaos / orfao_intencional).');
+console.log('🚩 Consumidas: recalculadas a partir do mapaMundo, nunca confiando em playerFlagsMeta do JSON.');
 </script>
 
 </body>
