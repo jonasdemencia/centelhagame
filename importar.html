@@ -2308,6 +2308,12 @@ function recalcularConsumidas(mapaMundo, playerFlagsMeta, itensDeCenaMeta, itens
     for (const inter of (sala.interacoes_ambiente || [])) {
       if (inter && inter.condicao_estado) estadosConsumidos.add(inter.condicao_estado);
     }
+    for (const op of (sala.opcoes || [])) {
+      if (!op.ramificacoes) continue;
+      for (const ram of op.ramificacoes) {
+        if (ram && ram.remove_item) itensConsumidos.add(ram.remove_item);
+      }
+    }
   }
 
   const novasFlags = { ...(playerFlagsMeta || {}) };
