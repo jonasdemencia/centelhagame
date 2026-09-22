@@ -1471,15 +1471,20 @@ function extrairCorpo(texto) {
    FIX 4 + FIX 6 — Cota calculada e ordenação por idade
    ============================================================ */
 function calcularCota(ctx) {
-  const itens = ctx.itens_legado_pendentes || [];
+  const itensLegado = ctx.itens_legado_pendentes || [];
+  const itensCena = ctx.itens_de_cena_pendentes || [];
   const estados = ctx.estados_pendentes || [];
+
   const todos = [
-    ...itens.map(i => ({ id: i.id, idade: i.idade ?? 0, tipo: 'item' })),
+    ...itensLegado.map(i => ({ id: i.id, idade: i.idade ?? 0, tipo: 'item_legado' })),
+    ...itensCena.map(i => ({ id: i.id, idade: i.idade ?? 0, tipo: 'item_cena' })),
     ...estados.map(e => ({ id: e.id, idade: e.idade ?? 0, tipo: 'estado' }))
   ];
+
   const vencidos = todos.filter(x => x.idade >= 4);
   const maduros = todos.filter(x => x.idade >= 2 && x.idade <= 3);
   if (vencidos.length === 0 && maduros.length === 0) return null;
+
   const partes = [];
   const cotaVencidos = vencidos.length >= 3 ? 2 : (vencidos.length >= 1 ? 1 : 0);
   if (cotaVencidos > 0) {
@@ -1508,10 +1513,14 @@ function construirCabecalho(key, n, ctx) {
   if (_aventura.lore) linhas.push(`LORE CENTRAL = ${_aventura.lore}`);
     if (key === 'perigos') {
     linhas.push(`QUANTIDADE_PERIGOS = 3`);
-  } else if (key === 'puzzles') {
+    } else if (key === 'puzzles') {
     const itens = [...(ctx.itens_legado_pendentes || [])].sort((a, b) => (b.idade ?? 0) - (a.idade ?? 0));
     if (itens.length > 0) {
       linhas.push(`itens_legado_pendentes: ${JSON.stringify(itens)}`);
+    }
+    const itensCena = [...(ctx.itens_de_cena_pendentes || [])].sort((a, b) => (b.idade ?? 0) - (a.idade ?? 0));
+    if (itensCena.length > 0) {
+      linhas.push(`itens_de_cena_pendentes: ${JSON.stringify(itensCena)}`);
     }
     linhas.push(`salas_ocupadas: ${JSON.stringify(ctx.salas_ocupadas || [])}`);
     linhas.push(`estados_de_cena: ${JSON.stringify(ctx.estados_de_cena || [])}`);
@@ -1530,6 +1539,7 @@ function construirCabecalho(key, n, ctx) {
   }
   return linhas.join('\n');
 }
+  
 function construirResumo(key, n, ctx) {
   const start = (n - 1) * SALAS_POR_ZONA + 1;
   const end = n * SALAS_POR_ZONA;
@@ -1538,9 +1548,10 @@ function construirResumo(key, n, ctx) {
   if (tema) linhas.push(`<span class="mini-label">TEMA:</span> ${escapeHTML(tema)}`);
   linhas.push(`SALA_INICIAL = ${start}`);
   linhas.push(`SALA_FINAL   = ${end}`);
+
   if (key === 'perigos') {
     linhas.push(`QUANTIDADE_PERIGOS = 3`);
-    } else if (key === 'puzzles') {
+  } else if (key === 'puzzles') {
     const itens = [...(ctx.itens_legado_pendentes || [])].sort((a, b) => (b.idade ?? 0) - (a.idade ?? 0));
     if (itens.length > 0) {
       const items = itens.map(i =>
@@ -1550,24 +1561,38 @@ function construirResumo(key, n, ctx) {
     } else {
       linhas.push(`<span class="mini-label">itens_legado_pendentes:</span> <span class="mini-dim">nenhum</span>`);
     }
+
+    const itensCena = [...(ctx.itens_de_cena_pendentes || [])].sort((a, b) => (b.idade ?? 0) - (a.idade ?? 0));
+    if (itensCena.length > 0) {
+      const items = itensCena.map(i =>
+        `• ${escapeHTML(i.id)} <span class="mini-dim">(sala ${i.sala_origem ?? '?'} · idade ${i.idade ?? 0})</span>`
+      ).join('<br>');
+      linhas.push(`<span class="mini-label">itens_de_cena_pendentes:</span><br>${items}`);
+    } else {
+      linhas.push(`<span class="mini-label">itens_de_cena_pendentes:</span> <span class="mini-dim">nenhum</span>`);
+    }
+
     const salas = ctx.salas_ocupadas || [];
     const salasTxt = salas.length > 0 ? `[${salas.join(', ')}]` : '[]';
     linhas.push(`<span class="mini-label">salas_ocupadas:</span> ${salasTxt}`);
+
     const estadosTxt = (ctx.estados_de_cena || []).map(e => `• ${escapeHTML(e.id)} <span class="mini-dim">(sala ${e.sala_origem})</span>`).join('<br>');
     const itensCenaTxt = (ctx.itens_de_cena || []).map(e => `• ${escapeHTML(e.id)} <span class="mini-dim">(sala ${e.sala_origem})</span>`).join('<br>');
     linhas.push(`<span class="mini-label">estados_de_cena:</span><br>${estadosTxt || '<span class="mini-dim">nenhum</span>'}`);
     linhas.push(`<span class="mini-label">itens_de_cena:</span><br>${itensCenaTxt || '<span class="mini-dim">nenhum</span>'}`);
+
     const estadosPend = [...(ctx.estados_pendentes || [])].sort((a, b) => (b.idade ?? 0) - (a.idade ?? 0));
     const estadosPendTxt = estadosPend.map(e => `• ${escapeHTML(e.id)} <span class="mini-dim">(idade ${e.idade ?? 0})</span>`).join('<br>');
     linhas.push(`<span class="mini-label">estados_pendentes:</span><br>${estadosPendTxt || '<span class="mini-dim">nenhum</span>'}`);
+
     const cota = calcularCota(ctx);
     if (cota) {
       linhas.push(`<span class="mini-label">COTA_OBRIGATÓRIA:</span> <span class="mini-dim">${escapeHTML(cota)}</span>`);
     }
   }
+
   return linhas.join('<br>');
 }
-
 function montarTextoCompleto(key, n, ctx) {
   const header = construirCabecalho(key, n, ctx);
   const corpo = carregarCorpoPersistido(key);
@@ -1659,6 +1684,24 @@ function coletarItensDeCena(mapaMundo, n) {
   return out;
 }
 
+  function coletarItensDeCenaPendentes(dados, zonaAtual) {
+  const meta = dados.itensDeCenaMeta || {};
+  const out = [];
+  for (const [itemId, info] of Object.entries(meta)) {
+    if (!info || info.consumida === true) continue;
+    const zonaCriacao = info.zona_criacao ?? 1;
+    const idade = Math.max(0, zonaAtual - zonaCriacao);
+    out.push({
+      id: itemId,
+      zona_criacao: zonaCriacao,
+      idade,
+      sala_origem: info.sala_origem ?? null
+    });
+  }
+  out.sort((a, b) => b.idade - a.idade);
+  return out;
+}
+
 // FIX 6 — unificado e ordenado por idade DESC
 function coletarEstadosPendentes(dados, zonaAtual) {
   const meta = dados.playerFlagsMeta || {};
@@ -1682,6 +1725,7 @@ function ctxParaZona(n) {
     itens_legado_pendentes: coletarItensLegado(dados, n),
     estados_de_cena: coletarEstadosDeCena(mapaMundo, n),
     itens_de_cena: coletarItensDeCena(mapaMundo, n),
+    itens_de_cena_pendentes: coletarItensDeCenaPendentes(dados, n),
     estados_pendentes: coletarEstadosPendentes(dados, n)
   };
 }
@@ -2252,35 +2296,54 @@ function distribuirSuspeitas(mapaMundo, logFn) {
 /* ============================================================
    FIX 1 — recalcular consumida a partir do mapaMundo
    ============================================================ */
-function recalcularConsumidas(mapaMundo, meta) {
-  const consumidos = new Set();
+function recalcularConsumidas(mapaMundo, playerFlagsMeta, itensDeCenaMeta) {
+  const estadosConsumidos = new Set();
+  const itensConsumidos = new Set();
+
   for (const sala of Object.values(mapaMundo || {})) {
     for (const uso of (sala.usos_possiveis || [])) {
-      if (uso && uso.condicao_estado) consumidos.add(uso.condicao_estado);
+      if (uso && uso.condicao_estado) estadosConsumidos.add(uso.condicao_estado);
+      if (uso && uso.item_id) itensConsumidos.add(uso.item_id);
     }
     for (const inter of (sala.interacoes_ambiente || [])) {
-      if (inter && inter.condicao_estado) consumidos.add(inter.condicao_estado);
+      if (inter && inter.condicao_estado) estadosConsumidos.add(inter.condicao_estado);
     }
   }
-  const novas = { ...(meta || {}) };
-  for (const [flag, info] of Object.entries(novas)) {
+
+  const novasFlags = { ...(playerFlagsMeta || {}) };
+  for (const [flag, info] of Object.entries(novasFlags)) {
     if (!info) continue;
-    info.consumida = consumidos.has(flag);
+    info.consumida = estadosConsumidos.has(flag);
   }
-  return novas;
+
+  const novosItens = { ...(itensDeCenaMeta || {}) };
+  for (const [itemId, info] of Object.entries(novosItens)) {
+    if (!info) continue;
+    info.consumida = itensConsumidos.has(itemId);
+  }
+
+  return { playerFlagsMeta: novasFlags, itensDeCenaMeta: novosItens };
 }
 
 /* ============================================================
    FIX 2 — validarOrfaos como gate (retorna lista e respeita intencionais)
    ============================================================ */
-function validarOrfaos(mapaMundo, logFn, opcoes = {}) {
+function validarOrfaos(mapaMundo, opts) {
+  const {
+    playerFlagsMeta = {},
+    itensDeCenaMeta = {},
+    zonaAtual = 1,
+    logFn = () => {},
+    orfaosIntencionais = []
+  } = opts || {};
+  const intencionais = new Set(orfaosIntencionais);
+
   const estadosDefinidos = new Set();
   const itensAdicionados = new Set();
   const estadosConsumidos = new Set();
   const itensUsados = new Set();
-  const orfaosIntencionais = new Set(opcoes.orfaosIntencionais || []);
 
-  for (const [id, sala] of Object.entries(mapaMundo)) {
+  for (const sala of Object.values(mapaMundo || {})) {
     for (const op of (sala.opcoes || [])) {
       if (!op.dilema || !op.ramificacoes) continue;
       for (const ram of op.ramificacoes) {
@@ -2289,34 +2352,50 @@ function validarOrfaos(mapaMundo, logFn, opcoes = {}) {
       }
     }
     for (const uso of (sala.usos_possiveis || [])) {
-      if (uso.condicao_estado) estadosConsumidos.add(uso.condicao_estado);
-      if (uso.item_id) itensUsados.add(uso.item_id);
+      if (uso && uso.condicao_estado) estadosConsumidos.add(uso.condicao_estado);
+      if (uso && uso.item_id) itensUsados.add(uso.item_id);
     }
     for (const inter of (sala.interacoes_ambiente || [])) {
-      if (inter.condicao_estado) estadosConsumidos.add(inter.condicao_estado);
+      if (inter && inter.condicao_estado) estadosConsumidos.add(inter.condicao_estado);
     }
   }
 
   const orfaos = [];
-  for (const e of estadosDefinidos) {
-    if (!estadosConsumidos.has(e) && !orfaosIntencionais.has(e)) {
-      orfaos.push({ tipo: 'estado', id: e });
-      logFn(`⚠️ ÓRFÃO: estado "${e}" definido por cena mas não consumido.`, 'warn');
-    } else if (orfaosIntencionais.has(e)) {
-      logFn(`🎭 ÓRFÃO INTENCIONAL (red herring): estado "${e}" — permitido.`, 'info');
+
+  function avaliar(tipo, id, meta) {
+    if (intencionais.has(id)) {
+      logFn(`🎭 ÓRFÃO INTENCIONAL (red herring): ${tipo} "${id}" — permitido.`, 'info');
+      return;
     }
+    const zonaCriacao = meta?.zona_criacao ?? zonaAtual;
+    const idade = Math.max(0, zonaAtual - zonaCriacao);
+    let severidade;
+    if (idade >= 4) severidade = 'vencido';
+    else if (idade >= 2) severidade = 'maduro';
+    else severidade = 'fresco';
+
+    orfaos.push({ tipo, id, idade, severidade, bloqueia: severidade === 'vencido' });
+
+    if (severidade === 'vencido') {
+      logFn(`⚠️ ÓRFÃO VENCIDO (idade ${idade}): ${tipo} "${id}" — bloqueia importação.`, 'err');
+    } else if (severidade === 'maduro') {
+      logFn(`⚠️ ÓRFÃO MADURO (idade ${idade}): ${tipo} "${id}" — uso preferencial.`, 'warn');
+    } else {
+      logFn(`🔸 ÓRFÃO FRESCO (idade ${idade}): ${tipo} "${id}" — aguardando consumo futuro.`, 'info');
+    }
+  }
+
+  for (const e of estadosDefinidos) {
+    if (estadosConsumidos.has(e)) continue;
+    avaliar('estado', e, playerFlagsMeta[e]);
   }
   for (const i of itensAdicionados) {
-    if (!itensUsados.has(i) && !orfaosIntencionais.has(i)) {
-      orfaos.push({ tipo: 'item', id: i });
-      logFn(`⚠️ ÓRFÃO: item "${i}" concedido por cena mas não usado em puzzle.`, 'warn');
-    } else if (orfaosIntencionais.has(i)) {
-      logFn(`🎭 ÓRFÃO INTENCIONAL (red herring): item "${i}" — permitido.`, 'info');
-    }
+    if (itensUsados.has(i)) continue;
+    avaliar('item', i, itensDeCenaMeta[i]);
   }
+
   return orfaos;
 }
-
 /* ============================================================
    IMPORTAÇÃO — zona completa
    ============================================================ */
@@ -2338,7 +2417,10 @@ async function importarParaFirestore(dados, uid, logFn) {
       opcoes: opcoes
     };
   }
-    const flagsParaRegistrar = [];
+
+  const flagsParaRegistrar = [];
+  const itensCenaParaRegistrar = [];
+
   for (const cena of cenas) {
     const salaId = String(cena.sala_id);
     const sala = mapaMundo[salaId];
@@ -2374,20 +2456,20 @@ async function importarParaFirestore(dados, uid, logFn) {
           const rDestinoRaw = r.destino_id ? String(r.destino_id) : null;
           const rDestino = (rDestinoRaw && destinosValidos.has(rDestinoRaw)) ? parseInt(rDestinoRaw) : null;
           const rNarrativaLimpa = expurgarViciosIA((r.resultado_texto || '').trim());
-         return {
-    opcao_texto: r.opcao_texto.trim(),
-    resultado_texto: rDano > 0
-        ? `${rNarrativaLimpa.replace(/[.\s]+$/, '')}. Você perde ${rDano} de energia.`
-        : rNarrativaLimpa,
-    dano: rDano,
-    destino: rDestino,
-    define_estado: r.define_estado || null,
-    adiciona_item: r.adiciona_item || null,
+          return {
+            opcao_texto: r.opcao_texto.trim(),
+            resultado_texto: rDano > 0
+              ? `${rNarrativaLimpa.replace(/[.\s]+$/, '')}. Você perde ${rDano} de energia.`
+              : rNarrativaLimpa,
+            dano: rDano,
+            destino: rDestino,
+            define_estado: r.define_estado || null,
+            adiciona_item: r.adiciona_item || null,
             remove_item: r.remove_item || null,
-    requer_item: r.requer_item || null
-};
+            requer_item: r.requer_item || null
+          };
         });
-            sala.opcoes.push({
+      sala.opcoes.push({
         texto: opcaoTexto,
         arquiteto: true,
         dilema: true,
@@ -2398,14 +2480,14 @@ async function importarParaFirestore(dados, uid, logFn) {
         ramificacoes: ramificacoes.length > 0 ? ramificacoes : null
       });
 
-            for (const ram of ramificacoes) {
-        if (ram.define_estado) {
-          flagsParaRegistrar.push(ram.define_estado);
-        }
+      for (const ram of ramificacoes) {
+        if (ram.define_estado) flagsParaRegistrar.push(ram.define_estado);
+        if (ram.adiciona_item) itensCenaParaRegistrar.push({ id: ram.adiciona_item, sala_origem: salaIdNum });
       }
     }
     logFn(`🎭 "${titulo}" → Sala ${salaId} | texto_evento injetado, ${dilemas.length} dilema(s) processado(s)`, 'ok');
   }
+
   const salasComCena = new Set(cenas.map(c => String(c.sala_id)));
   const perigos = Array.isArray(dados.perigos) ? dados.perigos : [];
   for (const perigo of perigos) {
@@ -2444,10 +2526,12 @@ async function importarParaFirestore(dados, uid, logFn) {
     }
   }
   distribuirSuspeitas(mapaMundo, logFn);
+
   if (Object.keys(mapaMundo).length === 0) {
     throw new Error('Nenhuma sala válida foi montada (faltam "plano" e/ou "salas"). NADA foi salvo.');
   }
-    const docRef = db.collection('players').doc(uid);
+
+  const docRef = db.collection('players').doc(uid);
   const docSnap = await docRef.get();
   const dadosAtuais = docSnap.data() || {};
   const mapaMundoAtual = dadosAtuais.mapaMundo || {};
@@ -2465,6 +2549,20 @@ async function importarParaFirestore(dados, uid, logFn) {
       }
     }
   }
+
+  if (itensCenaParaRegistrar.length > 0) {
+    if (!dadosAtuais.itensDeCenaMeta) dadosAtuais.itensDeCenaMeta = {};
+    for (const { id, sala_origem } of itensCenaParaRegistrar) {
+      if (!dadosAtuais.itensDeCenaMeta[id]) {
+        dadosAtuais.itensDeCenaMeta[id] = {
+          zona_criacao: _promptZona,
+          consumida: false,
+          sala_origem
+        };
+      }
+    }
+  }
+
   for (const [id, salaNova] of Object.entries(mapaMundo)) {
     const salaExistente = mapaMundoAtual[id];
     preservarCamposRuntime(salaNova, salaExistente);
@@ -2474,6 +2572,7 @@ async function importarParaFirestore(dados, uid, logFn) {
       if (campos.length > 0) logFn(`🔄 Sala ${id}: preservados do Firestore → ${campos.join(', ')}`, 'info');
     }
   }
+
   if (mapaMundo["1"] && !dadosAtuais.zonaAtual) {
     updatePayload["zonaAtual"] = 1;
     updatePayload["secaoAtualId"] = "1";
@@ -2483,27 +2582,23 @@ async function importarParaFirestore(dados, uid, logFn) {
     const atuais = dadosAtuais.itens_novos || {};
     updatePayload['itens_novos'] = { ...atuais, ...dados.itens_novos };
     logFn(`🧩 ${Object.keys(dados.itens_novos).length} item(ns) novos registrados.`, 'ok');
-}
-
-  // FIX 2 — gate de órfãos (bloqueia salvo override explícito)
-  const orfaosIntencionais = Array.isArray(dados.orfao_intencional) ? dados.orfao_intencional : [];
-  const orfaos = validarOrfaos(mapaMundo, logFn, { orfaosIntencionais });
-  if (orfaos.length > 0 && !dados.forcar_orfaos) {
-    const lista = orfaos.map(o => `${o.tipo}:${o.id}`).join(', ');
-    throw new Error(`Importação bloqueada — ${orfaos.length} órfão(s): ${lista}. Crie o consumo no puzzle da zona, marque em "orfao_intencional" ou envie "forcar_orfaos": true.`);
-  }
-  if (orfaos.length > 0) {
-    logFn(`⚠️ ${orfaos.length} órfão(s) aceito(s) por "forcar_orfaos": ${orfaos.map(o => o.id).join(', ')}`, 'warn');
   }
 
-  // FIX 1 — recalcular consumida a partir do mapa mergeado (não confiar no JSON)
+  // NOTA: o gate de órfãos foi movido para importarPuzzles (fim do pipeline).
+  // Aqui só registramos os metadados (idade). Nenhum bloqueio.
+
   const mapaMerge = { ...mapaMundoAtual, ...mapaMundo };
-  updatePayload['playerFlagsMeta'] = recalcularConsumidas(mapaMerge, dadosAtuais.playerFlagsMeta || {});
+  const recalc = recalcularConsumidas(
+    mapaMerge,
+    dadosAtuais.playerFlagsMeta || {},
+    dadosAtuais.itensDeCenaMeta || {}
+  );
+  updatePayload['playerFlagsMeta'] = recalc.playerFlagsMeta;
+  updatePayload['itensDeCenaMeta'] = recalc.itensDeCenaMeta;
 
   await docRef.update(updatePayload);
   return { mapaMundo };
 }
-
 /* ============================================================
    IMPORTAÇÃO — apenas perigos
    ============================================================ */
@@ -2577,6 +2672,7 @@ async function importarPuzzles(dadosPuzzle, uid, logFn, zonaAtual) {
   const updatePayload = {};
   const mapaTrabalho = JSON.parse(JSON.stringify(mapaMundoAtual));
   const salasTocadas = new Set();
+
   function obterSala(salaId) {
     if (!mapaTrabalho[salaId]) return null;
     salasTocadas.add(salaId);
@@ -2588,8 +2684,6 @@ async function importarPuzzles(dadosPuzzle, uid, logFn, zonaAtual) {
     ? dadosPuzzle.estados_pendentes_consumidos
     : [];
 
-  // FIX 1 — não grava consumida aqui. Só loga intenção; o recálculo real
-  // acontece no fim, sobre o mapaTrabalho já com os puzzles aplicados.
   if (estadosConsumidos.length > 0) {
     logFn(`🚩 Declaração de consumo (será recalculada no final): ${estadosConsumidos.join(', ')}`, 'info');
   }
@@ -2606,14 +2700,14 @@ async function importarPuzzles(dadosPuzzle, uid, logFn, zonaAtual) {
 
   if (Array.isArray(dadosPuzzle.itens_legado) && dadosPuzzle.itens_legado.length > 0) {
     for (const entrada of dadosPuzzle.itens_legado) {
-  if (!entrada || !entrada.id) continue;
-  const existente = itensLegadoAtuais[entrada.id];
-  itensLegadoAtuais[entrada.id] = {
-    id: entrada.id,
-    sala_plantio: entrada.sala_plantio ?? null,
-    zona_criacao: existente?.zona_criacao ?? zonaAtual
-  };
-}
+      if (!entrada || !entrada.id) continue;
+      const existente = itensLegadoAtuais[entrada.id];
+      itensLegadoAtuais[entrada.id] = {
+        id: entrada.id,
+        sala_plantio: entrada.sala_plantio ?? null,
+        zona_criacao: existente?.zona_criacao ?? zonaAtual
+      };
+    }
     logFn(`🎁 ${dadosPuzzle.itens_legado.length} item(ns) de legado registrado(s) para a próxima zona.`, 'ok');
   }
 
@@ -2629,6 +2723,7 @@ async function importarPuzzles(dadosPuzzle, uid, logFn, zonaAtual) {
     updatePayload['itens_novos'] = itensNovosAtuais;
     logFn(`🧩 ${Object.keys(dadosPuzzle.itens_novos).length} novo(s) item(ns) adicionado(s).`, 'ok');
   }
+
   if (dadosPuzzle.textos_modificados) {
     for (const [salaId, novoTexto] of Object.entries(dadosPuzzle.textos_modificados)) {
       const sala = obterSala(salaId);
@@ -2637,6 +2732,7 @@ async function importarPuzzles(dadosPuzzle, uid, logFn, zonaAtual) {
       logFn(`📝 Sala ${salaId}: texto_logico atualizado.`, 'info');
     }
   }
+
   if (dadosPuzzle.itens_adicionados) {
     for (const [salaId, itensIds] of Object.entries(dadosPuzzle.itens_adicionados)) {
       const sala = obterSala(salaId);
@@ -2646,6 +2742,7 @@ async function importarPuzzles(dadosPuzzle, uid, logFn, zonaAtual) {
       logFn(`📦 Sala ${salaId}: itens adicionados: ${itensIds.join(', ')}.`, 'info');
     }
   }
+
   if (dadosPuzzle.descricoes_itens_ativos) {
     for (const [salaId, mapaItens] of Object.entries(dadosPuzzle.descricoes_itens_ativos)) {
       const sala = obterSala(salaId);
@@ -2655,6 +2752,7 @@ async function importarPuzzles(dadosPuzzle, uid, logFn, zonaAtual) {
       logFn(`🔎 Sala ${salaId}: ${Object.keys(mapaItens).length} descrição(ões) registrada(s).`, 'info');
     }
   }
+
   if (dadosPuzzle.saidas_sequestradas) {
     for (const [salaId, destinoId] of Object.entries(dadosPuzzle.saidas_sequestradas)) {
       const sala = obterSala(salaId);
@@ -2665,6 +2763,7 @@ async function importarPuzzles(dadosPuzzle, uid, logFn, zonaAtual) {
       logFn(`🔒 Sala ${salaId}: rota para ${destinoId} sequestrada (${antes - sala.opcoes.length} saída(s) removida(s)).`, 'ok');
     }
   }
+
   if (dadosPuzzle.puzzles) {
     for (const [salaId, puzzleData] of Object.entries(dadosPuzzle.puzzles)) {
       const sala = obterSala(salaId);
@@ -2684,10 +2783,44 @@ async function importarPuzzles(dadosPuzzle, uid, logFn, zonaAtual) {
       logFn(`🧩 Sala ${salaId}: puzzle aplicado (${Object.keys(puzzleData).join(', ')}).`, 'ok');
     }
   }
+
   for (const salaId of salasTocadas) updatePayload[`mapaMundo.${salaId}`] = mapaTrabalho[salaId];
 
-  // FIX 1 — recalcular consumida a partir do mapaTrabalho final (fonte de verdade)
-  updatePayload['playerFlagsMeta'] = recalcularConsumidas(mapaTrabalho, dadosAtuais.playerFlagsMeta || {});
+  // Recalcular consumidas a partir do mapaTrabalho final (fonte de verdade)
+  const recalc = recalcularConsumidas(
+    mapaTrabalho,
+    dadosAtuais.playerFlagsMeta || {},
+    dadosAtuais.itensDeCenaMeta || {}
+  );
+  updatePayload['playerFlagsMeta'] = recalc.playerFlagsMeta;
+  updatePayload['itensDeCenaMeta'] = recalc.itensDeCenaMeta;
+
+  // GATE DE ÓRFÃOS POR IDADE — agora sim, no fim do pipeline da zona
+  const orfaosIntencionais = Array.isArray(dadosPuzzle.orfao_intencional) ? dadosPuzzle.orfao_intencional : [];
+  const orfaos = validarOrfaos(mapaTrabalho, {
+    playerFlagsMeta: recalc.playerFlagsMeta,
+    itensDeCenaMeta: recalc.itensDeCenaMeta,
+    zonaAtual,
+    logFn,
+    orfaosIntencionais
+  });
+
+  const bloqueantes = orfaos.filter(o => o.bloqueia);
+  if (bloqueantes.length > 0 && !dadosPuzzle.forcar_orfaos) {
+    const lista = bloqueantes.map(o => `${o.tipo}:${o.id} (idade ${o.idade})`).join(', ');
+    throw new Error(`Importação bloqueada — ${bloqueantes.length} órfão(s) VENCIDO(S): ${lista}. Consuma em puzzle desta zona, marque em "orfao_intencional" ou envie "forcar_orfaos": true.`);
+  }
+  if (bloqueantes.length > 0 && dadosPuzzle.forcar_orfaos) {
+    logFn(`⚠️ ${bloqueantes.length} órfão(s) VENCIDO(S) aceito(s) por "forcar_orfaos": ${bloqueantes.map(o => o.id).join(', ')}`, 'warn');
+  }
+  const maduros = orfaos.filter(o => o.severidade === 'maduro');
+  if (maduros.length > 0) {
+    logFn(`⚠️ ${maduros.length} órfão(s) MADURO(S) — considere consumir na próxima zona: ${maduros.map(o => o.id).join(', ')}`, 'warn');
+  }
+  const frescos = orfaos.filter(o => o.severidade === 'fresco');
+  if (frescos.length > 0) {
+    logFn(`🔸 ${frescos.length} órfão(s) FRESCO(S) — aguardando consumo futuro: ${frescos.map(o => o.id).join(', ')}`, 'info');
+  }
 
   if (Object.keys(updatePayload).length === 0) throw new Error('Nenhuma modificação de puzzle foi aplicada.');
   await docRef.update(updatePayload);
