@@ -2796,6 +2796,37 @@ async function importarPuzzles(dadosPuzzle, uid, logFn, zonaAtual) {
     }
   }
 
+    // Auto-registrar como legado qualquer item plantado por puzzle que sobreviveu à zona.
+  // Não depende do LLM declarar em itens_legado.
+  {
+    const itensConsumidos = new Set();
+    for (const sala of Object.values(mapaTrabalho)) {
+      for (const uso of (sala.usos_possiveis || [])) {
+        if (uso && uso.item_id && uso.remove_item === true) itensConsumidos.add(uso.item_id);
+      }
+    }
+
+    let registrou = 0;
+    if (dadosPuzzle.itens_adicionados) {
+      for (const [salaId, arr] of Object.entries(dadosPuzzle.itens_adicionados)) {
+        for (const itemId of arr) {
+          if (itensConsumidos.has(itemId)) continue;
+          if (itensLegadoAtuais[itemId]) continue;
+          itensLegadoAtuais[itemId] = {
+            id: itemId,
+            sala_plantio: parseInt(salaId),
+            zona_criacao: zonaAtual
+          };
+          registrou++;
+          logFn(`🎁 Item plantado não consumido → registrado como legado: ${itemId} (sala ${salaId})`, 'info');
+        }
+      }
+    }
+    if (registrou > 0) {
+      updatePayload['itens_legado'] = itensLegadoAtuais;
+    }
+  }
+
     // Registrar em playerFlagsMeta qualquer define_estado de puzzle ainda não visto
   {
     const flagsNovas = [];
