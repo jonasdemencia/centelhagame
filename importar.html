@@ -1094,7 +1094,7 @@ const DEFAULT_BODIES = {
     'PENDÊNCIAS HERDADAS (do input):',
     '- O cabeçalho pode incluir itens_legado_pendentes e estados_pendentes com idade em zonas.',
     '- FRESCO (0–1 zona): uso opcional. MADURO (2–3): uso preferencial. VENCIDO (4+): prioridade máxima.',
-    '- Cenas não são o consumidor principal (isso é o puzzle), mas podem criar ganchos visuais que o puzzle da zona usa.',
+    '- Cenas podem consumir pendências herdadas via requer_item (item) e condicao_estado (estado) nas ramificações. Prefira MADURO/VENCIDO quando couber na narrativa.',
     '- NUNCA crie item ou estado novo se uma pendência herdada equivalente puder ocupar o mesmo papel.',
     '',
     'CONTRATO DE SAÍDA — ESTRUTURA EXATA DO JSON',
