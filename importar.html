@@ -615,10 +615,13 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
         <div class="prompt-block">
           <div class="prompt-block-header">
             <span class="prompt-block-title">🎭 Topologia + Cenas</span>
-            <div class="prompt-block-actions">
+                        <div class="prompt-block-actions">
               <span class="prompt-etapa">Etapa 1 de 3</span>
               <button class="btn btn-ghost btn-sm" onclick="copiarPrompt('topologia')">
                 <span class="btn-icon">📋</span> Copiar
+              </button>
+              <button class="btn btn-ghost btn-sm" onclick="restaurarPromptPadrao('topologia')" title="Volta ao prompt original">
+                <span class="btn-icon">↺</span> Restaurar
               </button>
             </div>
           </div>
@@ -638,6 +641,9 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
               <button class="btn btn-ghost btn-sm" onclick="copiarPrompt('perigos')">
                 <span class="btn-icon">📋</span> Copiar
               </button>
+                <button class="btn btn-ghost btn-sm" onclick="restaurarPromptPadrao('perigos')" title="Volta ao prompt original">
+                <span class="btn-icon">↺</span> Restaurar
+              </button>
             </div>
           </div>
           <textarea class="prompt-textarea" id="prompt_perigos" spellcheck="false"></textarea>
@@ -655,6 +661,9 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
               <span class="prompt-etapa">Etapa 3 de 3</span>
               <button class="btn btn-ghost btn-sm" onclick="copiarPrompt('puzzles')">
                 <span class="btn-icon">📋</span> Copiar
+              </button>
+                <button class="btn btn-ghost btn-sm" onclick="restaurarPromptPadrao('perigos')" title="Volta ao prompt original">
+                <span class="btn-icon">↺</span> Restaurar
               </button>
             </div>
           </div>
@@ -1019,75 +1028,67 @@ const MINI_IDS = {
 
 const DEFAULT_BODIES = {
   topologia: [
-    'Você é um gerador de conteúdo para um jogo textual de sobrevivência e mistério chamado "Centelha". Sua tarefa é gerar um JSON com plano, salas e cenas (dilemas) para uma zona de 10 salas delimitada pelo intervalo de [SALA_INICIAL] a [SALA_FINAL].',
+    'Você é o gerador de conteúdo do jogo textual de sobrevivência e mistério "Centelha". Gere um único JSON com plano, salas e cenas (dilemas) para uma zona de 10 salas, delimitada pelo intervalo de [SALA_INICIAL] a [SALA_FINAL].',
     '',
     'REGRAS DE TOPOLOGIA (PLANO)',
-    '- Sala [SALA_INICIAL] = entrada. Sala [SALA_FINAL] = fronteira (com "para_proxima_zona": true).',
+    '- Sala [SALA_INICIAL] = entrada; sala [SALA_FINAL] = fronteira (com "para_proxima_zona": true).',
     '- OBRIGATÓRIO, DEFINA ANTES DE TUDO: escolha 1 sala intermediária para ser o HUB e dê a ela exatamente 3 saídas. As demais salas têm de 1 a 3 saídas.',
-    '- Toda conexão de ida (A → B) tem uma de volta (B → A) com ação inversa (ex: "Subir" ↔ "Descer"). Os IDs de destino devem estar estritamente dentro da zona atual.',
+    '- Toda conexão de ida (A → B) tem uma de volta (B → A) com ação inversa (ex: "Subir" ↔ "Descer"); os IDs de destino devem estar estritamente dentro da zona atual.',
     '- A estrutura é uma árvore, sem ciclos.',
     '',
     'REGRAS DE PROSA PARA "texto_logico"',
+    '',
+    'Âncora de abertura:',
     '- Sala [SALA_INICIAL]: descrição direta, sem "Depois de" ou "Ao avançar".',
-    '- Salas intermediárias com UMA ÚNICA entrada: primeira frase começa com "Depois de [ação EXATA que levou a esta sala], você...".',
-    '- Qualquer sala com múltiplas entradas (não só a [SALA_FINAL]) usa "Ao avançar para este local, você...".',
-    '- Toda sala ancorada com "Ao avançar para este local" tem o ponto de entrada INVISÍVEL ao texto: proibido "a porta pela qual entrou", "por onde veio" ou equivalentes.',
-    '- PROIBIDO como primeira frase: "Você se encontra", "Você está", "Você nota".',
-    '- PROIBIDO repetir na primeira frase palavras da ação de chegada (entry-point leak).',
-    '- Todo elemento físico citado nas "opcoes" de saída DEVE estar visivelmente descrito no texto — nunca crie uma opção sem âncora visual no texto.',
-    '- SÍNTESE ORGÂNICA (ESTILO LIVINGSTONE/JACKSON): Proibido criar "listas de compras" (Ex: "Há uma mesa. O ar cheira a mofo. Há duas portas."). Você DEVE entrelaçar os requisitos. O dado sensorial (cheiro, som, temperatura) deve emanar dos objetos do cenário.',
-    '- VERBOS ATIVOS: Cenários inanimados devem parecer ameaçadores. Use verbos de ação para objetos (ex: em vez de "exibe uma fonte e um relógio", use "uma fonte murmura enquanto o tique-taque de um relógio ecoa").',
-    '- GEOMETRIA DO ESPAÇO: A primeira frase DEVE definir o formato, tamanho ou proporção do recinto (ex: "uma vasta câmara circular", "um corredor estreito de teto alto", "um salão hexagonal").',
-    '- FÓRMULA DO TEXTO LÓGICO: 1) Geometria do espaço + 2) 3+ OBJETOS FÍSICOS DE CENÁRIO (mobília, maquinário, destroços, pertences e etc) fundidos com 1+ dado sensorial ancorado a um desses objetos + 3) Âncoras visuais das saídas distribuídas pela estrutura neutra do ambiente. Som/cheiro sem objeto visível associado NÃO conta como elemento.',    
-    '- SAÍDAS NEUTRAS (falha crítica): nenhuma saída pode ser marcada como a de chegada. Proibido: "pela qual entrou", "atrás de você", "por onde veio", "de volta". Descreva toda porta/escada como objeto neutro, sem indicar origem. O jogador não sabe pelo texto por onde entrou — o motor pode tê-lo trazido por qualquer uma.',
+    '- Sala intermediária com entrada única: primeira frase = "Depois de [ação EXATA que levou a esta sala], você...".',
+    '- Sala com múltiplas entradas (inclui [SALA_FINAL]): primeira frase = "Ao avançar para este local, você...".',
+    '',
+    'Ponto de entrada invisível (regra transversal — falha crítica se violada):',
+    '- Toda sala ancorada com "Ao avançar para este local" NUNCA revela o ponto de entrada: proibido "a porta pela qual entrou", "por onde veio", "atrás de você", "de volta" ou equivalentes.',
+    '- PROIBIDO como primeira frase: "Você se encontra", "Você está", "Você nota"; também proibido repetir na primeira frase palavras da ação de chegada (entry-point leak).',
+    '- SAÍDAS NEUTRAS: nenhuma saída é marcada como a de chegada — toda porta/escada é descrita como objeto neutro, sem indicar origem (o motor pode ter trazido o jogador por qualquer uma).',
     '',
     'Errado: "No fundo, a porta de carvalho pela qual entrou permanece visível."',
     'Certo: "Uma porta de carvalho e uma escadaria de mármore dividem as paredes opostas."',
     '',
-    '---',
+    'Fórmula do texto_logico (estilo Livingstone/Jackson — fundido em prosa única, nunca como lista):',
+    '1) Geometria do espaço: a primeira frase define formato, tamanho ou proporção do recinto (ex: "uma vasta câmara circular", "um corredor estreito de teto alto", "um salão hexagonal").',
+    '2) 3+ objetos físicos de cenário (mobília, maquinário, destroços, pertences etc.) fundidos com 1+ dado sensorial ancorado a um desses objetos — proibido "lista de compras" (ex: "Há uma mesa. O ar cheira a mofo. Há duas portas."); entrelace os requisitos, com o dado sensorial emanando do objeto.',
+    '3) Âncoras visuais das saídas distribuídas pela estrutura neutra do ambiente: todo elemento citado nas "opcoes" de saída DEVE estar visivelmente descrito no texto — nunca crie uma opção sem âncora visual.',
+    'Verbos ativos: cenários inanimados devem parecer ameaçadores — use verbos de ação para objetos (ex: em vez de "exibe uma fonte e um relógio", "uma fonte murmura enquanto o tique-taque de um relógio ecoa").',
     '',
     'REGRAS PARA CENAS E DILEMAS (ARQUITETO DE CENAS)',
-    'Sua função é criar cenas memoráveis e dilemas perigosos — com tensão real, perigos implacáveis (físicos ou psicológicos), escolhas difíceis e consequências assimétricas. Contudo, o tom deve ser sutil, misterioso e atmosférico. Evite terror explícito, sustos baratos. A ameaça deve ser velada, ambígua e gradual — o desconforto vem do estranhamento, das implicações morais e da erosão silenciosa da certeza.',
+    'Sua função é criar cenas memoráveis e dilemas perigosos — com tensão real, perigos implacáveis (físicos ou psicológicos), escolhas difíceis e consequências assimétricas. Contudo, o tom deve ser sutil, misterioso e atmosférico: evite terror explícito e sustos baratos. A ameaça deve ser velada, ambígua e gradual — o desconforto vem do estranhamento, das implicações morais e da erosão silenciosa da certeza.',
     '',
-    'Selecione aleatoriamente 2-3 salas intermediárias (ignorando a [SALA_INICIAL]) para receber uma cena. As demais não têm cena.',
+    'Selecione aleatoriamente 2-3 salas para receber uma cena. As demais não têm cena.',
     '',
     'ÂNCORA LÉXICA E ESTRUTURA DE DILEMAS:',
-    '- O texto_evento deve descrever a cena e, no máximo, indicar UMA ação que leva ao dilema-pai (ex: "Se desejar, você pode examinar a pena"). PROIBIDO usar "ou" no texto_evento para listar alternativas de ação — as demais escolhas serão introduzidas exclusivamente nas ramificações do pai.',
-    'O array dilemas deve conter exatamente 1 objeto (o dilema-pai), que terá ramificacoes com exatamente 3 objetos — o padrão da zona. Use 2 ramificações apenas em casos excepcionais, quando a terceira opção for comprovadamente supérflua ou redundante. Nunca 1, nunca 4+. As ramificações são as verdadeiras escolhas do dilema — cada uma com seu próprio resultado_texto, dano e destino_id (se houver). Como o jogo não tem botões, o resultado_texto do pai deve terminar enunciando em prosa as 3 opções, para o jogador saber o que digitar.',
+    '- texto_evento (3–4 frases) descreve a cena — o elemento central deve parecer que sempre esteve ali, esperando — e, no máximo, indica UMA ação que leva ao dilema-pai (ex: "Se desejar, você pode examinar a pena"). PROIBIDO usar "ou" no texto_evento para listar alternativas — as demais escolhas entram só nas ramificações do pai.',
+    '- dilemas contém exatamente 1 objeto (o dilema-pai) com ramificacoes de exatamente 3 objetos — o padrão da zona. Use 2 apenas em casos excepcionais, quando a terceira for comprovadamente supérflua; nunca 1, nunca 4+. As ramificações são as escolhas reais, cada uma com seu próprio resultado_texto, dano e destino_id (se houver). Como o jogo não tem botões, o resultado_texto do pai deve terminar enunciando em prosa as 3 opções, para o jogador saber o que digitar.',
+    '',
+    'TOM DO ENCONTRO — escolha um:',
+    '- MISTÉRIO: descreva a entidade, NPC ou acontecimento com foco na estranheza e no enigmático. A entidade não deve ser monstruosa ou abertamente hostil — deve ser enigmática, com comportamento ritualístico, melancólico, indiferente ou mecânico. Seu perigo está no que ela exige, revela ou cobra, não em ataques físicos diretos.',
+    '- MORAL/EXISTENCIAL: não precisa haver hostilidade direta — pode ser uma descoberta ou vestígio que implica o jogador num dilema. A tensão vem de uma verdade incômoda ou algo misterioso no mundo. PROIBIDO coincidências biográficas imediatas — nada de "sua caligrafia", "sua data", "seu nome", "alguém igual a você".',
     '',
     'REGRAS DO CAMPO destino_id (VIOLAÇÃO = FALHA CRÍTICA):',
-    '- destino_id SÓ pode apontar para uma sala de número MAIOR que a sala atual (avanço). Nunca aponte para trás.',
-    '- Até 2 ramificações podem ter destino_id válido, desde que cada destino seja uma saída da sala atual no plano (ou uma sala à frente já conectada por ela). Não é obrigatório que apenas uma ramificação avance.',
-    '- Ao preencher destino_id numa ramificação, o motor BLOQUEIA a locomoção comum que levava àquela sala até o jogador passar pelo dilema — o dilema vira a única via de avanço para aquele destino específico.',
-    '- Se a ramificação não conduz para uma sala à frente, use destino_id: null.',
-    '- Regra de ouro: se a sala atual tem 2 ou 3 saídas para frente, o dilema pode distribuir essas saídas entre as ramificações, com custos e resultados diferentes. O jogador escolhe para onde ir, não apenas se paga ou não.',
+    '- destino_id só aponta para uma sala de número MAIOR que a atual (avanço; nunca para trás). Se a ramificação não leva a uma sala à frente, use destino_id: null.',
+    '- Até 2 ramificações podem ter destino_id válido, cada uma apontando para uma saída real da sala atual no plano (ou uma sala à frente já conectada por ela) — não é obrigatório que só uma ramificação avance. Regra de ouro: se a sala tem 2-3 saídas para frente, o dilema pode distribuí-las entre as ramificações com custos e resultados diferentes — o jogador escolhe para onde ir, não apenas se paga ou não.',
+    '- Ao preencher destino_id numa ramificação, o motor BLOQUEIA a locomoção comum que levava àquele destino até o jogador passar pelo dilema — o dilema vira a única via de avanço para aquele destino específico.',
     '- O resultado_texto do pai é uma ponte narrativa de 2–3 frases que descreve a reação imediata à ação do jogador, sem encerrar o dilema. O pai NUNCA pode ter destino_id.',
     '',
-    '"texto_evento" (3–4 frases): o elemento central deve parecer que sempre esteve ali, esperando.',
-    '',
-    'ENCONTRO (MISTÉRIO):',
-    'Descreva a entidade, NPC ou acontecimento com foco na estranheza, na tensão do desconhecido, no enigmático e na aura de mistério. A entidade não deve ser monstruosa ou abertamente hostil — deve ser enigmática, com comportamento ritualístico, melancólico, indiferente ou mecânico. Seu perigo está no que ela exige, revela ou cobra, não em ataques físicos diretos.',
-    '',
-    'MORAL/EXISTENCIAL:',
-    'Não precisa haver hostilidade direta — pode ser uma descoberta, um vestígio que implica o jogador em um dilema. A tensão vem de uma verdade incômoda ou algo misterioso no mundo. PROIBIDO coincidências biográficas imediatas — nada de "sua caligrafia", "sua data", "seu nome", "alguém igual a você".',
-    '',
-    'Cada ramificação pode ter custo (dano > 0) ou não ter custo (dano = 0). O custo, quando presente, é de um destes dois tipos — nunca misture os dois numa mesma ramificação:',
-    'a) Custo físico (dano > 0): 1 frase concreta e específica sobre ferimento. Proibido escrever "perde X de energia" — descreva o efeito no corpo ou na alma.',
-    'b) Custo moral/existencial (dano > 0): 1 frase concreta e específica sobre ferimento. Proibido escrever "perde X de energia" — descreva o efeito na mente, nos afetos ou na alma.',
-    '',
-    '- Custos assimétricos são encorajados: ex. ramificação A = dano 0 + destino X; ramificação B = dano 5 + destino Y; ramificação C = dano 12 + destino null. O jogador não pode avaliar só pelo dano. Dano 0 é permitido e significa ausência de custo imediato, não ausência de consequência — a ramificação ainda pode ter efeito persistente ou destino.',
+    'CUSTOS E EFEITOS DAS RAMIFICAÇÕES:',
+    '- Custo (dano > 0) é de um único tipo por ramificação — nunca misture: (a) físico: 1 frase concreta e específica sobre o efeito no corpo; (b) moral/existencial: 1 frase concreta e específica sobre o efeito na mente, nos afetos ou na alma. Em ambos, PROIBIDO escrever "perde X de energia" — descreva o efeito real. Sem custo, dano = 0.',
+    '- Custos assimétricos são encorajados: ex. ramificação A = dano 0 + destino X; ramificação B = dano 5 + destino Y; ramificação C = dano 12 + destino null — o jogador não pode avaliar só pelo dano. Dano 0 é permitido e significa ausência de custo imediato, não ausência de consequência: a ramificação ainda pode ter efeito persistente ou destino.',
     '- Proibições: opções sem destino_id usando verbos de locomoção (sair, subir, atravessar); resultado_texto do pai descrevendo ação que o jogador não executou na opcao_texto; dilemas que se resolvam com pura força física.',
-    '',
-    'EFEITO PERSISTENTE DAS RAMIFICAÇÕES:',
-    '- Cada ramificação pode ter, além do custo, um efeito persistente opcional:',
-    '- define_estado: nome do estado global ativado (string) ou null. O estado é gravado no doc do jogador e visível em qualquer sala da zona.',
-    '- adiciona_item: id do item concedido (string) ou null. O item aparece na loot-area da sala atual para o jogador coletar.',
-    '- requer_item: id do item exigido (string) ou null. Se preenchido, a ramificação só executa se o jogador tiver o item. Use quando a ação só faz sentido com o item em mãos.',
-    '- remove_item: id do item removido do inventário (string) ou null. Use quando a ação consome o item.',
-    '- O efeito persiste independente do custo. Uma ramificação pode ter dano 0 e conceder item, ou dano alto e não conceder nada.',
-    '- Pelo menos uma ramificação por zona deve definir um estado OU adicionar um item que seja consumido por puzzle da mesma zona.',
-    '- Todo define_estado precisa ter usos_possiveis ou interacoes_ambiente correspondente em algum puzzle da zona, com condicao_estado igual ao nome do estado.',
-    '- Todo adiciona_item precisa ter usos_possiveis correspondente em algum puzzle da zona, com item_id igual ao id do item.',
+    '- Efeito persistente opcional por ramificação, além do custo:',
+    '  · define_estado (string|null): nome do estado global ativado; gravado no doc do jogador, visível em qualquer sala da zona.',
+    '  · adiciona_item (string|null): id do item concedido; aparece na loot-area da sala atual.',
+    '  · requer_item (string|null): id do item exigido — a ramificação só executa se o jogador o tiver (use quando a ação exige o item em mãos).',
+    '  · remove_item (string|null): id do item removido do inventário (a ação consome o item).',
+    '- condicao_estado: nome do estado global exigido (string) ou null. Se preenchido, a ramificação só executa se o estado já estiver ativo (criado por cena ou puzzle de zona anterior). Use quando a ação depende de uma descoberta anterior.',
+    '- mensagem_condicao_falha: texto mostrado quando condicao_estado não está ativo (string) ou null. Se omitido, o motor usa uma mensagem genérica.',
+    '- O efeito persiste independente do custo: uma ramificação pode ter dano 0 e conceder item, ou dano alto e não conceder nada.',
+    '- Pelo menos uma ramificação por zona deve definir um estado OU adicionar um item consumido por puzzle da mesma zona. Todo define_estado precisa ter usos_possiveis ou interacoes_ambiente correspondente na zona (condicao_estado = nome do estado); todo adiciona_item precisa ter usos_possiveis correspondente (item_id = id do item).',
     '- Se a zona criar item novo, adicione um campo "itens_novos" no topo do JSON, no formato {id: {id, content, description}}.',
     '',
     'PENDÊNCIAS HERDADAS (do input):',
@@ -1096,7 +1097,7 @@ const DEFAULT_BODIES = {
     '- Cenas não são o consumidor principal (isso é o puzzle), mas podem criar ganchos visuais que o puzzle da zona usa.',
     '- NUNCA crie item ou estado novo se uma pendência herdada equivalente puder ocupar o mesmo papel.',
     '',
-    'ESTRUTURA EXATA DO JSON',
+    'CONTRATO DE SAÍDA — ESTRUTURA EXATA DO JSON',
     '{',
     '  "plano": {',
     '    "[SALA_INICIAL]": {',
@@ -1139,14 +1140,13 @@ const DEFAULT_BODIES = {
     '    }',
     '  ]',
     '}',
-    '- cenas contém apenas as 2–3 salas escolhidas. As demais não têm entrada.',
-    '- dilemas é sempre um array, mesmo com um único objeto (o pai).',
-    '- Todo destino_id usado existe nas saidas da sala, ou é null.',
-    '- dano é sempre inteiro entre 0 e 20.',
+    '',
+    'Validação do contrato:',
+    '- cenas contém apenas as 2–3 salas escolhidas; as demais não têm entrada. dilemas é sempre um array, mesmo com um único objeto (o pai).',
+    '- Todo destino_id usado existe nas saidas da sala, ou é null. dano é sempre inteiro entre 0 e 20.',
     '- opcao_texto: ações de 2 a 4 palavras, com verbo forte + objeto/alvo, obrigatoriamente ancoradas nas palavras exatas do texto lido.',
     '',
     'EXEMPLO DE CENA MORAL/EXISTENCIAL VÁLIDA',
-    '',
     '{',
     '  "sala_id": [ID],',
     '  "titulo": "A Voz Atrás da Grade",',
@@ -1865,6 +1865,16 @@ function copiarPrompt(key) {
     .catch(e => toast('Erro ao copiar: ' + e.message, 'err'));
 }
 
+  function restaurarPromptPadrao(key) {
+  if (!confirm(`Restaurar o prompt de "${key}" ao padrão? Suas edições serão perdidas.`)) return;
+  localStorage.removeItem(`centelha.prompt.${key}.corpo`);
+  const ta = $(`prompt_${key}`);
+  if (ta) ta.value = '';  // impede o re-salvamento automático dentro de aplicarPrompts
+  aplicarPrompts();
+  toast(`Prompt "${key}" restaurado ao padrão.`, 'ok');
+}
+window.restaurarPromptPadrao = restaurarPromptPadrao;
+
 function togglePrompts() {
   const card = $('promptsCard');
   card.classList.toggle('open');
@@ -2308,10 +2318,11 @@ function recalcularConsumidas(mapaMundo, playerFlagsMeta, itensDeCenaMeta, itens
     for (const inter of (sala.interacoes_ambiente || [])) {
       if (inter && inter.condicao_estado) estadosConsumidos.add(inter.condicao_estado);
     }
-    for (const op of (sala.opcoes || [])) {
+        for (const op of (sala.opcoes || [])) {
       if (!op.ramificacoes) continue;
       for (const ram of op.ramificacoes) {
         if (ram && ram.remove_item) itensConsumidos.add(ram.remove_item);
+        if (ram && ram.condicao_estado) estadosConsumidos.add(ram.condicao_estado);
       }
     }
   }
@@ -2470,7 +2481,7 @@ async function importarParaFirestore(dados, uid, logFn) {
           const rDestinoRaw = r.destino_id ? String(r.destino_id) : null;
           const rDestino = (rDestinoRaw && destinosValidos.has(rDestinoRaw)) ? parseInt(rDestinoRaw) : null;
           const rNarrativaLimpa = expurgarViciosIA((r.resultado_texto || '').trim());
-          return {
+                    return {
             opcao_texto: r.opcao_texto.trim(),
             resultado_texto: rDano > 0
               ? `${rNarrativaLimpa.replace(/[.\s]+$/, '')}. Você perde ${rDano} de energia.`
@@ -2480,7 +2491,9 @@ async function importarParaFirestore(dados, uid, logFn) {
             define_estado: r.define_estado || null,
             adiciona_item: r.adiciona_item || null,
             remove_item: r.remove_item || null,
-            requer_item: r.requer_item || null
+            requer_item: r.requer_item || null,
+            condicao_estado: r.condicao_estado || null,
+            mensagem_condicao_falha: r.mensagem_condicao_falha || null
           };
         });
       sala.opcoes.push({
