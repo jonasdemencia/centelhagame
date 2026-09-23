@@ -1549,7 +1549,26 @@ function construirResumo(key, n, ctx) {
   linhas.push(`SALA_INICIAL = ${start}`);
   linhas.push(`SALA_FINAL   = ${end}`);
 
-  if (key === 'perigos') {
+    if (key === 'topologia') {
+    const itens = [...(ctx.itens_legado_pendentes || [])].sort((a, b) => (b.idade ?? 0) - (a.idade ?? 0));
+    if (itens.length > 0) {
+      const items = itens.map(i =>
+        `• ${escapeHTML(i.id)} <span class="mini-dim">(idade ${i.idade ?? 0})</span>`
+      ).join('<br>');
+      linhas.push(`<span class="mini-label">itens_legado_pendentes:</span><br>${items}`);
+    } else {
+      linhas.push(`<span class="mini-label">itens_legado_pendentes:</span> <span class="mini-dim">nenhum</span>`);
+    }
+    const estadosPend = [...(ctx.estados_pendentes || [])].sort((a, b) => (b.idade ?? 0) - (a.idade ?? 0));
+    if (estadosPend.length > 0) {
+      const items = estadosPend.map(e =>
+        `• ${escapeHTML(e.id)} <span class="mini-dim">(idade ${e.idade ?? 0})</span>`
+      ).join('<br>');
+      linhas.push(`<span class="mini-label">estados_pendentes:</span><br>${items}`);
+    } else {
+      linhas.push(`<span class="mini-label">estados_pendentes:</span> <span class="mini-dim">nenhum</span>`);
+    }
+  } else if (key === 'perigos') {
     linhas.push(`QUANTIDADE_PERIGOS = 3`);
   } else if (key === 'puzzles') {
     const itens = [...(ctx.itens_legado_pendentes || [])].sort((a, b) => (b.idade ?? 0) - (a.idade ?? 0));
