@@ -2177,10 +2177,20 @@ if (salaAtualObj && opcao && opcao.destino !== undefined) {
     async function executarDilemaComRamificacao(pai, ram, silent = false, pularPonte = false) {
     if (window._transicaoEmAndamento) return;
 
-    if (ram.requer_item) {
+        if (ram.requer_item) {
         const temItem = await verificarItemNoInventarioFirestore(ram.requer_item);
         if (!temItem) {
             adicionarMensagem("Você não tem o que é necessário para isso.", 'system');
+            return;
+        }
+    }
+
+    if (ram.condicao_estado) {
+        const salaAtualObj = mapaMundo?.[secaoAtualId];
+        const ativo = salaAtualObj?.estados?.[ram.condicao_estado] === true
+                    || window.playerFlags?.[ram.condicao_estado] === true;
+        if (!ativo) {
+            adicionarMensagem(ram.mensagem_condicao_falha || "Algo ainda falta para isso.", 'system');
             return;
         }
     }
