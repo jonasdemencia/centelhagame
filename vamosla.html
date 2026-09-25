@@ -2397,11 +2397,58 @@ if (ram.adiciona_item) {
     window._transicaoEmAndamento = false;
 }
 
+        // ============================================================
+    // COMANDO "CAMINHOS" — consulta de locomoção
+    // ============================================================
+    function ehPedidoDeCaminhos(texto) {
+        if (!texto) return false;
+        const t = texto.toLowerCase().trim().replace(/[?!.]+$/, '');
+        const exatas = [
+            'caminhos', 'caminhos disponíveis', 'caminhos disponiveis',
+            'saídas', 'saidas', 'saídas disponíveis', 'saidas disponiveis',
+            'opções', 'opcoes', 'passagens', 'rotas',
+            'por onde posso ir', 'por onde ir'
+        ];
+        if (exatas.includes(t)) return true;
+        const verboConsulta = /^(quais|mostre|mostrar|liste|listar|ver|exiba|exibir)\b/;
+        const substCaminho = /\b(caminhos?|saídas?|saidas?|passagens?|rotas?|opções?|opcoes?)\b/;
+        return verboConsulta.test(t) && substCaminho.test(t);
+    }
+
+    function listarCaminhosDisponiveis(sala) {
+        if (!sala) return 'Não há passagem visível daqui.';
+        const textos = [];
+        for (const op of (sala.opcoes || [])) {
+            if (op.dilema === true) continue;
+            if (op.destino == null) continue;
+            if (op.arquiteto === true && !op.texto) continue;
+            textos.push(op.texto);
+        }
+        const seq = sala.saidas_sequestradas || {};
+        for (const destino in seq) {
+            const info = seq[destino];
+            if (info && info.texto) textos.push(`${info.texto} (obstruída)`);
+        }
+        if (textos.length === 0) return 'Não há passagem visível daqui.';
+        if (textos.length === 1) return `Você pode: ${textos[0]}.`;
+        const ultimo = textos.pop();
+        return `Você pode: ${textos.join(', ')} ou ${ultimo}.`;
+    }
+
+    
     // ============================================================
     // FUNÇÃO PRINCIPAL window.enviar
     // ============================================================
-    window.enviar = async function(mensagemUsuario = null) {
+        window.enviar = async function(mensagemUsuario = null) {
         const isInitial = mensagemUsuario === null;
+
+        // [PATCH] Comando de consulta — não conta turno, não roda matcher
+        if (!isInitial && ehPedidoDeCaminhos(mensagemUsuario)) {
+            if (window._transicaoEmAndamento) return;
+            adicionarMensagem(mensagemUsuario, 'user');
+            adicionarMensagem(listarCaminhosDisponiveis(mapaMundo?.[secaoAtualId]), 'system');
+            return;
+        }
 
         if (!isInitial) {
             turnosJogados++;
