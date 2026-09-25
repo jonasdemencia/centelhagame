@@ -1209,11 +1209,12 @@ const DEFAULT_BODIES = {
     '- "interceptor": emboscada NO TRAJETO de uma saída que já existe na sala. O opcao_texto deve ser idêntico, palavra por palavra, ao acao de uma das saidas daquela sala no plano. Nunca intercepte uma ação de "voltar"/retorno.',
     '- "nova_opcao": uma ação de EXAME que surge na sala (não navega para lugar nenhum). O objeto/elemento examinado DEVE já estar descrito literalmente no texto_logico daquela sala — nunca invente um item novo que não esteja no texto. Se a sala não tiver nenhum elemento aproveitável para exame, prefira "interceptor" nessa sala.',
     '',
-'INTERCEPTOR — dois campos extras obrigatórios:',
+'INTERCEPTOR — três campos extras obrigatórios:',
 '· "elemento_fisico_curto": 2–4 palavras com artigo, objeto físico JÁ presente no texto_logico que denuncia o perigo (ex: "o corrimão", "a água parada"). Adjacente ao trajeto — nunca o mesmo objeto do opcao_texto. Só gera a frase de exame; o objeto continua integrado à prosa normalmente.',
-'· "revelacao": 1 frase vista ao examinar esse objeto. Revela algo sobre o perigo (padrão, origem, comportamento) SEM prescrever solução e SEM nomear a ação segura (ex: "Os arranhões são irregulares, feitos por unhas. Como se o corpo soubesse onde a lâmina ia passar.").',
+'· "revelacao": 1 frase vista ao examinar esse objeto. Revela algo concreto e observável sobre o perigo (uma marca, um som, um cheiro, um detalhe físico) — SEM prescrever solução, SEM nomear a ação segura (ex: "Os arranhões são irregulares, feitos por unhas. Como se o corpo soubesse onde a lâmina ia passar.").',
+'· "sucesso_texto": 1–2 frases descrevendo o MESMO perigo de resultado_texto se manifestando e sendo evitado. Funciona tanto para quem examinou (antecipação) quanto para quem não examinou (acaso) — sem verbo de percepção ("você percebe", "você nota"), sem citar exame, atributo ou sorte.',
 '',
-'Para "nova_opcao", estes dois campos são omitidos.',
+'Para "nova_opcao", estes três campos são omitidos.',
     '',
     'Isso importa porque as opções ficam ocultas no jogo — o jogador não vê botões, só digita o que imagina fazer. Se o objeto do exame não estiver no texto, é impossível a pessoa adivinhar que a opção existe.',
     '',
@@ -1248,6 +1249,7 @@ const DEFAULT_BODIES = {
 '      "opcao_texto": "Atravessar o corredor inundado",',
 '      "elemento_fisico_curto": "a água parada",',
 '      "revelacao": "A água não corre para lugar nenhum — está parada há tempo demais para um corredor com essa inclinação. Sob a superfície opaca, algo cedeu.",',
+'      "sucesso_texto": "O piso cede sob seu peso, mas você já saltou — as vigas apodrecidas desabam na água turva, engolindo o vão inteiro atrás de você.",',
 '      "resultado_texto": "A água parada esconde um buraco no piso. Seu pé afunda até o joelho entre vigas apodrecidas, e a borda serrilhada do concreto abre um corte fundo na canela.",',
 '      "dano": 9,',
 '      "tipo_resultado": "perigo"',
@@ -2486,12 +2488,13 @@ async function importarParaFirestore(dados, uid, logFn) {
       }
       const opcaoAlvo = sala.opcoes.find(o => o.texto === perigo.opcao_texto && o.destino && !o.arquiteto);
       if (opcaoAlvo) {
-        const interceptorData = {
+                const interceptorData = {
           resultado_texto: resultadoTexto,
           dano,
           tipo_resultado: tipoResultado,
           disparado: false
         };
+        if (perigo.sucesso_texto) interceptorData.sucesso_texto = perigo.sucesso_texto;
         if (estadoObservado) interceptorData.requer_estado_para_teste = estadoObservado;
         opcaoAlvo.interceptor_arquiteto = interceptorData;
         logFn(`☠️ Interceptor em "${perigo.opcao_texto}" (dano ${dano}) → Sala ${salaId}`, 'ok');
@@ -2638,12 +2641,13 @@ async function importarPerigosNoMapaAtual(perigos, uid, logFn) {
       }
       const alvo = salaModificada.opcoes.find(o => o.texto === perigo.opcao_texto && o.destino && !o.arquiteto);
       if (alvo) {
-        const interceptorData = {
+                const interceptorData = {
           resultado_texto: resultadoTexto,
           dano,
           tipo_resultado: tipoResultado,
           disparado: false
         };
+        if (perigo.sucesso_texto) interceptorData.sucesso_texto = perigo.sucesso_texto;
         if (estadoObservado) interceptorData.requer_estado_para_teste = estadoObservado;
         alvo.interceptor_arquiteto = interceptorData;
       } else {
