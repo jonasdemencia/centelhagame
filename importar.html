@@ -2655,7 +2655,6 @@ async function importarPerigosNoMapaAtual(perigos, uid, logFn) {
       continue;
     }
   }
-  distribuirSuspeitas(mapaTrabalho, logFn);
   const updatePayload = {};
   for (const salaId of salasTocadas) {
     updatePayload[`mapaMundo.${salaId}`] = mapaTrabalho[salaId];
