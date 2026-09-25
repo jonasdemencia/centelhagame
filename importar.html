@@ -2476,11 +2476,12 @@ async function importarParaFirestore(dados, uid, logFn) {
         if (!sala.interacoes_ambiente) sala.interacoes_ambiente = [];
         const jaExiste = sala.interacoes_ambiente.some(i => i.define_estado === estadoObservado);
         if (!jaExiste) {
-          sala.interacoes_ambiente.push({
-            frase_gatilho: `examinar ${perigo.elemento_fisico_curto}`,
-            resposta: perigo.revelacao,
-            define_estado: estadoObservado
-          });
+         sala.interacoes_ambiente.push({
+  frase_gatilho: `examinar ${perigo.elemento_fisico_curto}`,
+  resposta: perigo.revelacao,
+  define_estado: estadoObservado,
+  origem: 'perigo_interceptor'
+});
         }
       }
       const opcaoAlvo = sala.opcoes.find(o => o.texto === perigo.opcao_texto && o.destino && !o.arquiteto);
@@ -2628,10 +2629,11 @@ async function importarPerigosNoMapaAtual(perigos, uid, logFn) {
         const jaExiste = salaModificada.interacoes_ambiente.some(i => i.define_estado === estadoObservado);
         if (!jaExiste) {
           salaModificada.interacoes_ambiente.push({
-            frase_gatilho: `examinar ${perigo.elemento_fisico_curto}`,
-            resposta: perigo.revelacao,
-            define_estado: estadoObservado
-          });
+  frase_gatilho: `examinar ${perigo.elemento_fisico_curto}`,
+  resposta: perigo.revelacao,
+  define_estado: estadoObservado,
+  origem: 'perigo_interceptor'
+});
         }
       }
       const alvo = salaModificada.opcoes.find(o => o.texto === perigo.opcao_texto && o.destino && !o.arquiteto);
@@ -3431,10 +3433,13 @@ function salaEstaVazia(sala) {
       if (op.arquiteto === true && op.dilema !== true) return false;
     }
   }
-  const temEstado = sala.puzzle_status !== undefined ||
-    (sala.estados && Object.keys(sala.estados).length > 0);
+  const interacoes = Array.isArray(sala.interacoes_ambiente) ? sala.interacoes_ambiente : [];
+  const interacoesReais = interacoes.filter(i => !interacaoEhDePerigo(i));
+  const estadosDePerigo = new Set(interacoes.filter(interacaoEhDePerigo).map(i => i.define_estado));
+  const estadosReais = sala.estados ? Object.keys(sala.estados).filter(k => !estadosDePerigo.has(k)) : [];
+  const temEstado = sala.puzzle_status !== undefined || estadosReais.length > 0;
   const temUso = Array.isArray(sala.usos_possiveis) && sala.usos_possiveis.length > 0;
-  const temInteracao = Array.isArray(sala.interacoes_ambiente) && sala.interacoes_ambiente.length > 0;
+  const temInteracao = interacoesReais.length > 0;
   if (temEstado || temUso || temInteracao) return false;
   return true;
 }
@@ -3471,10 +3476,13 @@ function analisarMapaMundo(mapaMundo, itens_novos) {
       result.cenasSalas.push(id);
     }
 
-    const temEstado = sala.puzzle_status !== undefined ||
-      (sala.estados && Object.keys(sala.estados).length > 0);
+        const interacoes = Array.isArray(sala.interacoes_ambiente) ? sala.interacoes_ambiente : [];
+    const interacoesReais = interacoes.filter(i => !interacaoEhDePerigo(i));
+    const estadosDePerigo = new Set(interacoes.filter(interacaoEhDePerigo).map(i => i.define_estado));
+    const estadosReais = sala.estados ? Object.keys(sala.estados).filter(k => !estadosDePerigo.has(k)) : [];
+    const temEstado = sala.puzzle_status !== undefined || estadosReais.length > 0;
     const temUso = Array.isArray(sala.usos_possiveis) && sala.usos_possiveis.length > 0;
-    const temInteracao = Array.isArray(sala.interacoes_ambiente) && sala.interacoes_ambiente.length > 0;
+    const temInteracao = interacoesReais.length > 0;
     if (temEstado || temUso || temInteracao) {
       result.puzzles++;
       result.puzzlesSalas.push(id);
@@ -3532,6 +3540,14 @@ function analisarMapaMundo(mapaMundo, itens_novos) {
   return result;
 }
 
+
+  function interacaoEhDePerigo(i) {
+  if (!i) return false;
+  if (i.origem === 'perigo_interceptor') return true;
+  // fallback p/ dados já importados sem a flag
+  return typeof i.define_estado === 'string' && /^sala_\d+_observado$/.test(i.define_estado);
+}
+  
 /* ============================================================
    MIRROR — escopo (zona selecionada)
    ============================================================ */
