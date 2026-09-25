@@ -1803,8 +1803,8 @@ ANSWER:`
         chatBox.scrollTop = chatBox.scrollHeight;
     }
 
-        async function realizarTestePerigo(atributoForcado = null) {
-        const atributo = atributoForcado ?? (Math.random() < 0.5 ? 'SORTE' : 'HABILIDADE');
+                async function realizarTestePerigo(atributoForcado = null, textoSucesso = null) {
+        const atributo = atributoForcado ?? 'SORTE';
         await animarTextoTeste(`TESTE DE ${atributo}`);
         await criarBotaoRolar();
         const semente = Math.floor(Math.random() * 20) + 1;
@@ -1815,9 +1815,9 @@ ANSWER:`
         if (resultado === 'SUCESSO') {
             const divEvasao = document.createElement('div');
             divEvasao.className = 'result-message';
-            divEvasao.innerText = atributo === 'HABILIDADE'
+            divEvasao.innerText = textoSucesso ?? (atributo === 'HABILIDADE'
                 ? 'Seus reflexos disparam antes do impacto. O perigo raspa o ar ao seu lado e se dissipa.'
-                : 'O acaso dobra inexplicavelmente em seu favor. O perigo recua sem deixar rastro.';
+                : 'O acaso dobra inexplicavelmente em seu favor. O perigo recua sem deixar rastro.');
             chatBox.appendChild(divEvasao);
             chatBox.scrollTop = chatBox.scrollHeight;
         }
@@ -1945,11 +1945,11 @@ if (salaAtualObj && opcao && opcao.destino !== undefined) {
             const estadoAtivo = estadoNecessario
                 && salaDoTeste?.estados?.[estadoNecessario] === true;
 
-            if (estadoAtivo) {
-                const resultadoTeste = await realizarTestePerigo('HABILIDADE');
+                        if (estadoAtivo) {
+                const resultadoTeste = await realizarTestePerigo('HABILIDADE', interceptor.sucesso_texto);
                 if (resultadoTeste === 'SUCESSO') perigoBloqueadoInterceptor = true;
             } else if (interceptor.dano > 10) {
-                const resultadoTeste = await realizarTestePerigo();
+                const resultadoTeste = await realizarTestePerigo('SORTE', interceptor.sucesso_texto);
                 if (resultadoTeste === 'SUCESSO') perigoBloqueadoInterceptor = true;
             }
             if (!perigoBloqueadoInterceptor) {
