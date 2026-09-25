@@ -2217,7 +2217,8 @@ function expurgarViciosIA(texto) {
 
 const CAMPOS_PRESERVADOS_DA_SALA = [
   'estados', 'interacoes_ambiente', 'usos_possiveis',
-  'puzzle_status', 'bloqueio', 'ind_disponivel', 'descricoes_itens_ativos'
+  'puzzle_status', 'bloqueio', 'ind_disponivel', 'descricoes_itens_ativos',
+  'saidas_sequestradas'
 ];
 
 
@@ -2764,11 +2765,17 @@ async function importarPuzzles(dadosPuzzle, uid, logFn, zonaAtual) {
     }
   }
 
-  if (dadosPuzzle.saidas_sequestradas) {
+    if (dadosPuzzle.saidas_sequestradas) {
     for (const [salaId, destinoId] of Object.entries(dadosPuzzle.saidas_sequestradas)) {
       const sala = obterSala(salaId);
       if (!sala) { logFn(`⚠️ Sala ${salaId} não encontrada para sequestrar rota.`, 'warn'); continue; }
       if (!Array.isArray(sala.opcoes)) continue;
+      // [PATCH] guarda o texto da opção sequestrada antes de removê-la
+      if (!sala.saidas_sequestradas) sala.saidas_sequestradas = {};
+      const opRemovida = sala.opcoes.find(o => o.destino === destinoId && !o.arquiteto);
+      if (opRemovida) {
+        sala.saidas_sequestradas[String(destinoId)] = { texto: opRemovida.texto };
+      }
       const antes = sala.opcoes.length;
       sala.opcoes = sala.opcoes.filter(o => !(o.destino === destinoId && !o.arquiteto));
       logFn(`🔒 Sala ${salaId}: rota para ${destinoId} sequestrada (${antes - sala.opcoes.length} saída(s) removida(s)).`, 'ok');
