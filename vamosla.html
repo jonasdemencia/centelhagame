@@ -1765,44 +1765,7 @@ ANSWER:`
         return div.id;
     }
 
-        // ============================================================
-    // SUSPEITA DE PERIGO — hesitação antes da transição
-    // ============================================================
-    function confirmarSuspeita(frase) {
-        return new Promise(resolve => {
-            adicionarMensagem(frase, 'system');
-
-            const container = document.getElementById('map-controls');
-            container.innerHTML = '';
-            container.style.pointerEvents = 'auto';
-
-            const btnSim = document.createElement('button');
-            btnSim.className = 'btn-continuar-interceptor';
-            btnSim.innerText = '> CONTINUAR';
-            btnSim.style.background = '#1a2a1a';
-            btnSim.style.borderColor = '#4caf50';
-            btnSim.style.color = '#4caf50';
-
-            const btnNao = document.createElement('button');
-            btnNao.className = 'btn-continuar-interceptor';
-            btnNao.innerText = '> NÃO CONTINUAR';
-
-            btnSim.onclick = () => {
-                container.innerHTML = '';
-                container.style.pointerEvents = 'none';
-                resolve(true);
-            };
-            btnNao.onclick = () => {
-                container.innerHTML = '';
-                container.style.pointerEvents = 'none';
-                resolve(false);
-            };
-
-            container.appendChild(btnSim);
-            container.appendChild(btnNao);
-        });
-    }
-
+    
     // ============================================================
     // SISTEMA DE TESTES / DADOS
     // ============================================================
@@ -1840,8 +1803,8 @@ ANSWER:`
         chatBox.scrollTop = chatBox.scrollHeight;
     }
 
-    async function realizarTestePerigo() {
-        const atributo = Math.random() < 0.5 ? 'SORTE' : 'HABILIDADE';
+        async function realizarTestePerigo(atributoForcado = null) {
+        const atributo = atributoForcado ?? (Math.random() < 0.5 ? 'SORTE' : 'HABILIDADE');
         await animarTextoTeste(`TESTE DE ${atributo}`);
         await criarBotaoRolar();
         const semente = Math.floor(Math.random() * 20) + 1;
@@ -1940,16 +1903,6 @@ ANSWER:`
             }
         }
 
-        // Suspense antes de atravessar um ponto sinalizado.
-        if (opcao && opcao.suspeita_frase && !opcao._suspeitaConsumida) {
-            window._transicaoEmAndamento = true;
-            const prossegue = await confirmarSuspeita(opcao.suspeita_frase);
-            opcao._suspeitaConsumida = true;
-            await salvarEstadoJogador();
-            window._transicaoEmAndamento = false;
-            if (!prossegue) return;
-        }
-
         window._transicaoEmAndamento = true;
 
         const salaAtualObj = mapaMundo?.[secaoAtualId];
@@ -1986,8 +1939,16 @@ if (salaAtualObj && opcao && opcao.destino !== undefined) {
                 adicionarMensagem(`> ${textoAcao || opcao.texto}`, 'user');
             }
 
-            let perigoBloqueadoInterceptor = false;
-            if (interceptor.dano > 10) {
+                        let perigoBloqueadoInterceptor = false;
+            const estadoNecessario = interceptor.requer_estado_para_teste;
+            const salaDoTeste = mapaMundo[secaoAtualId];
+            const estadoAtivo = estadoNecessario
+                && salaDoTeste?.estados?.[estadoNecessario] === true;
+
+            if (estadoAtivo) {
+                const resultadoTeste = await realizarTestePerigo('HABILIDADE');
+                if (resultadoTeste === 'SUCESSO') perigoBloqueadoInterceptor = true;
+            } else if (interceptor.dano > 10) {
                 const resultadoTeste = await realizarTestePerigo();
                 if (resultadoTeste === 'SUCESSO') perigoBloqueadoInterceptor = true;
             }
