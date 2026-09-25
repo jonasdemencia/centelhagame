@@ -1209,6 +1209,12 @@ const DEFAULT_BODIES = {
     '- "interceptor": emboscada NO TRAJETO de uma saída que já existe na sala. O opcao_texto deve ser idêntico, palavra por palavra, ao acao de uma das saidas daquela sala no plano. Nunca intercepte uma ação de "voltar"/retorno.',
     '- "nova_opcao": uma ação de EXAME que surge na sala (não navega para lugar nenhum). O objeto/elemento examinado DEVE já estar descrito literalmente no texto_logico daquela sala — nunca invente um item novo que não esteja no texto. Se a sala não tiver nenhum elemento aproveitável para exame, prefira "interceptor" nessa sala.',
     '',
+'INTERCEPTOR — dois campos extras obrigatórios:',
+'· "elemento_fisico_curto": 2–4 palavras com artigo, objeto físico JÁ presente no texto_logico da sala que denuncia o perigo (ex: "o corrimão", "a grade lateral"). O objeto em si continua integrado à prosa normalmente — este campo só serve para gerar a frase de exame.',
+'· "revelacao": 1 frase vista ao examinar esse objeto. Revela algo sobre o perigo (padrão, origem, comportamento) SEM prescrever solução e SEM nomear a ação segura (ex: "Os arranhões são irregulares, feitos por unhas. Como se o corpo soubesse onde a lâmina ia passar.").',
+'',
+'Para "nova_opcao", estes dois campos são omitidos.',
+    '',
     'Isso importa porque as opções ficam ocultas no jogo — o jogador não vê botões, só digita o que imagina fazer. Se o objeto do exame não estiver no texto, é impossível a pessoa adivinhar que a opção existe.',
     '',
     '---',
@@ -1239,10 +1245,12 @@ const DEFAULT_BODIES = {
     '    {',
     '      "sala_id": [UM ID DE SALA INTERMEDIÁRIA ELEGÍVEL],',
     '      "tipo": "interceptor",',
-    '      "opcao_texto": "Atravessar o corredor inundado",',
-    '      "resultado_texto": "A água parada esconde um buraco no piso. Seu pé afunda até o joelho entre vigas apodrecidas, e a borda serrilhada do concreto abre um corte fundo na canela.",',
-    '      "dano": 9,',
-    '      "tipo_resultado": "perigo"',
+'      "opcao_texto": "Atravessar o corredor inundado",',
+'      "elemento_fisico_curto": "a água parada",',
+'      "revelacao": "A água não corre para lugar nenhum — está parada há tempo demais para um corredor com essa inclinação. Sob a superfície opaca, algo cedeu.",',
+'      "resultado_texto": "A água parada esconde um buraco no piso. Seu pé afunda até o joelho entre vigas apodrecidas, e a borda serrilhada do concreto abre um corte fundo na canela.",',
+'      "dano": 9,',
+'      "tipo_resultado": "perigo"',
     '    },',
     '    {',
     '      "sala_id": [OUTRO ID DE SALA INTERMEDIÁRIA ELEGÍVEL],',
@@ -2210,38 +2218,6 @@ const CAMPOS_PRESERVADOS_DA_SALA = [
   'puzzle_status', 'bloqueio', 'ind_disponivel', 'descricoes_itens_ativos'
 ];
 
-const POOL_SUSPEITAS = [
-  "Algo aqui parece fora de lugar.",
-  "Este ponto da sala faz sua respiração mudar.",
-  "Você percebe que está parado, sem lembrar de ter parado.",
-  "Há uma qualidade no ar deste ponto que você não consegue nomear.",
-  "Seu corpo hesita antes de você decidir.",
-  "A luz aqui é sutilmente diferente do resto.",
-  "Você sente um arrepio que não vem do frio.",
-  "Algo neste ponto parece esperar.",
-  "O som do ambiente fica mais opaco ali.",
-  "Você não consegue lembrar de ter vindo por este lado.",
-  "Uma parte sua quer recuar sem motivo claro.",
-  "O cheiro aqui tem uma nota que não estava antes.",
-  "Seus olhos voltam para este ponto sem você mandar.",
-  "O ar parece mais denso deste lado.",
-  "Há uma vibração mínima que você sente nos dentes.",
-  "Você pisca e o mundo parece por um instante mais lento.",
-  "Este ponto da sala não combina com o resto.",
-  "Algo em você se prepara, sem saber para quê.",
-  "A sombra aqui parece um pouco mais funda.",
-  "Seu instinto diz que este lugar já viu algo.",
-  "Você segura a respiração sem ter decidido.",
-  "Um formigamento sobe pela sua nuca.",
-  "Este ponto parece ter sido tocado recentemente.",
-  "Você tem a impressão de já ter estado aqui.",
-  "Algo no canto do seu olho se recusa a se fixar.",
-  "O silêncio aqui tem uma textura diferente.",
-  "Você sente o peso do próprio corpo mudar.",
-  "Há um detalhe aqui que você não consegue nomear.",
-  "Seu passo fica mais curto sem você perceber.",
-  "Algo neste ponto parece estar te medindo."
-];
 
 function preservarCamposRuntime(salaNova, salaExistente) {
   if (!salaExistente) return salaNova;
@@ -2255,51 +2231,6 @@ function preservarCamposRuntime(salaNova, salaExistente) {
     }
   }
   return salaNova;
-}
-
-function distribuirSuspeitas(mapaMundo, logFn) {
-  const elegiveis = [];
-  const comInterceptor = [];
-  for (const salaId in mapaMundo) {
-    const sala = mapaMundo[salaId];
-    if (!sala.opcoes) continue;
-    for (const op of sala.opcoes) {
-      if (op.arquiteto || op.dilema || !op.destino) continue;
-      elegiveis.push({ salaId, op });
-      if (op.interceptor_arquiteto) comInterceptor.push({ salaId, op });
-    }
-  }
-  if (comInterceptor.length === 0) {
-    logFn(`🔍 Suspeitas: nenhuma saída com interceptor — nada sinalizado nesta zona.`, 'info');
-    return;
-  }
-  const pool = [...POOL_SUSPEITAS];
-  for (let i = pool.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [pool[i], pool[j]] = [pool[j], pool[i]];
-  }
-  const frases = pool.slice(0, 3);
-  let idxFrase = 0;
-  for (const { salaId, op } of comInterceptor) {
-    op.suspeita_frase = frases[idxFrase % frases.length];
-    op._suspeitaConsumida = false;
-    logFn(`🔍 [REAL] Sala ${salaId} → saída "${op.texto}" | frase: "${op.suspeita_frase}"`, 'warn');
-    idxFrase++;
-  }
-  const candidatasFalsas = elegiveis.filter(e => !e.op.interceptor_arquiteto);
-  for (let i = candidatasFalsas.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [candidatasFalsas[i], candidatasFalsas[j]] = [candidatasFalsas[j], candidatasFalsas[i]];
-  }
-  const numFalsas = Math.min(2, candidatasFalsas.length);
-  for (let k = 0; k < numFalsas; k++) {
-    const { salaId, op } = candidatasFalsas[k];
-    op.suspeita_frase = frases[idxFrase % frases.length];
-    op._suspeitaConsumida = false;
-    logFn(`🔍 [ISCA] Sala ${salaId} → saída "${op.texto}" | frase: "${op.suspeita_frase}"`, 'info');
-    idxFrase++;
-  }
-  logFn(`🔍 Suspeitas distribuídas: ${comInterceptor.length} real(is) + ${numFalsas} isca(s).`, 'ok');
 }
 
 /* ============================================================
@@ -2535,10 +2466,33 @@ async function importarParaFirestore(dados, uid, logFn) {
         arquiteto: true, resultado_texto: resultadoTexto, dano, tipo_resultado: tipoResultado, disparado: false
       });
       logFn(`☠️ Nova opção "${perigo.opcao_texto}" (dano ${dano}) → Sala ${salaId}`, 'ok');
-    } else if (perigo.tipo === 'interceptor') {
+        } else if (perigo.tipo === 'interceptor') {
+      let estadoObservado = null;
+      if (perigo.revelacao && perigo.elemento_fisico_curto) {
+        const salaIdNum = parseInt(salaId);
+        estadoObservado = `sala_${salaIdNum}_observado`;
+        if (!sala.estados) sala.estados = {};
+        if (sala.estados[estadoObservado] === undefined) sala.estados[estadoObservado] = false;
+        if (!sala.interacoes_ambiente) sala.interacoes_ambiente = [];
+        const jaExiste = sala.interacoes_ambiente.some(i => i.define_estado === estadoObservado);
+        if (!jaExiste) {
+          sala.interacoes_ambiente.push({
+            frase_gatilho: `examinar ${perigo.elemento_fisico_curto}`,
+            resposta: perigo.revelacao,
+            define_estado: estadoObservado
+          });
+        }
+      }
       const opcaoAlvo = sala.opcoes.find(o => o.texto === perigo.opcao_texto && o.destino && !o.arquiteto);
       if (opcaoAlvo) {
-        opcaoAlvo.interceptor_arquiteto = { resultado_texto: resultadoTexto, dano, tipo_resultado: tipoResultado, disparado: false };
+        const interceptorData = {
+          resultado_texto: resultadoTexto,
+          dano,
+          tipo_resultado: tipoResultado,
+          disparado: false
+        };
+        if (estadoObservado) interceptorData.requer_estado_para_teste = estadoObservado;
+        opcaoAlvo.interceptor_arquiteto = interceptorData;
         logFn(`☠️ Interceptor em "${perigo.opcao_texto}" (dano ${dano}) → Sala ${salaId}`, 'ok');
       } else {
         sala.opcoes.push({
@@ -2551,7 +2505,6 @@ async function importarParaFirestore(dados, uid, logFn) {
       logFn(`⚠️ Perigo na sala ${salaId} com tipo desconhecido ("${perigo.tipo}") — ignorado.`, 'warn');
     }
   }
-  distribuirSuspeitas(mapaMundo, logFn);
 
   if (Object.keys(mapaMundo).length === 0) {
     throw new Error('Nenhuma sala válida foi montada (faltam "plano" e/ou "salas"). NADA foi salvo.');
@@ -2664,10 +2617,33 @@ async function importarPerigosNoMapaAtual(perigos, uid, logFn) {
         texto: perigo.opcao_texto || 'Examinar anomalia',
         arquiteto: true, resultado_texto: resultadoTexto, dano, tipo_resultado: tipoResultado, disparado: false
       });
-    } else if (perigo.tipo === 'interceptor') {
+        } else if (perigo.tipo === 'interceptor') {
+      let estadoObservado = null;
+      if (perigo.revelacao && perigo.elemento_fisico_curto) {
+        const salaIdNum = parseInt(salaId);
+        estadoObservado = `sala_${salaIdNum}_observado`;
+        if (!salaModificada.estados) salaModificada.estados = {};
+        if (salaModificada.estados[estadoObservado] === undefined) salaModificada.estados[estadoObservado] = false;
+        if (!salaModificada.interacoes_ambiente) salaModificada.interacoes_ambiente = [];
+        const jaExiste = salaModificada.interacoes_ambiente.some(i => i.define_estado === estadoObservado);
+        if (!jaExiste) {
+          salaModificada.interacoes_ambiente.push({
+            frase_gatilho: `examinar ${perigo.elemento_fisico_curto}`,
+            resposta: perigo.revelacao,
+            define_estado: estadoObservado
+          });
+        }
+      }
       const alvo = salaModificada.opcoes.find(o => o.texto === perigo.opcao_texto && o.destino && !o.arquiteto);
       if (alvo) {
-        alvo.interceptor_arquiteto = { resultado_texto: resultadoTexto, dano, tipo_resultado: tipoResultado, disparado: false };
+        const interceptorData = {
+          resultado_texto: resultadoTexto,
+          dano,
+          tipo_resultado: tipoResultado,
+          disparado: false
+        };
+        if (estadoObservado) interceptorData.requer_estado_para_teste = estadoObservado;
+        alvo.interceptor_arquiteto = interceptorData;
       } else {
         salaModificada.opcoes.push({
           texto: perigo.opcao_texto || 'Investigar caminho obstruído',
