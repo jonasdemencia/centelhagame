@@ -44,6 +44,36 @@ export const monsterData = {
         ]
     },
 
+ "rato": {
+    nome: "Rato Cinzento",
+    imagem: "https://via.placeholder.com/150",
+    descricao: "Um roedor de olhos vermelhos, maior que o normal.",
+    habilidade: 3,
+    couraça: 0,
+    energiaDados: "2d6",
+    experiencia: 20,
+    dano: "1d4",
+    ataques: [
+        {
+            id: "mordida",
+            nome: "Mordida Rápida",
+            dano: "1d4",
+            peso: 80,
+            pesoHPBaixo: 60,
+            telegrafado: false
+        },
+        {
+            id: "arranhao",
+            nome: "Arranhão Desesperado",
+            dano: "1d6",
+            peso: 20,
+            pesoHPBaixo: 40,
+            telegrafado: false
+        }
+    ],
+    drops: []
+},
+
     "doberman": {
     nome: "Doberman de Guarda",
     imagem: "https://via.placeholder.com/150",
