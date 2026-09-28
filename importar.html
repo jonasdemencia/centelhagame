@@ -194,7 +194,7 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
 .zone-label{font-size:11px;color:var(--text-dim);padding:0 10px;white-space:nowrap;letter-spacing:.4px}
 .zone-label strong{color:var(--gold);font-weight:700;font-size:12.5px;margin-left:3px}
 
-.prompts-mini-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;
+.prompts-mini-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;
   padding:0 24px 20px;border-top:1px solid var(--border);padding-top:16px}
 .prompts-mini{display:flex;flex-direction:column;gap:10px;padding:14px;
   background:var(--surface-2);border:1px solid var(--border-2);border-radius:var(--radius);
@@ -273,6 +273,7 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
 .badge-zona{background:var(--gold-dim);color:var(--gold);border:1px solid rgba(217,164,65,.35)}
 .badge-perigos{background:var(--red-dim);color:#ff7a70;border:1px solid rgba(229,57,53,.35)}
 .badge-puzzles{background:var(--blue-dim);color:var(--blue);border:1px solid rgba(90,143,191,.35)}
+.badge-monstros{background:rgba(200,120,80,.10);color:#e0a080;border:1px solid rgba(200,120,80,.35)}
 .badge-invalid{background:var(--red-dim);color:var(--red);border:1px solid rgba(229,57,53,.35)}
 
 .editor{position:relative;min-height:280px;max-height:520px;overflow:hidden}
@@ -571,7 +572,7 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
       </div>
     </div>
 
-    <!-- Estado FECHADO: 3 mini-cards -->
+    <!-- Estado FECHADO: mini-cards -->
     <div class="prompts-mini-grid" id="promptsMiniGrid">
       <div class="prompts-mini">
         <div class="prompts-mini-title">🎭 Topologia + Cenas</div>
@@ -606,9 +607,20 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
           <span class="mini-dim">aguardando login</span>
         </div>
       </div>
+      <div class="prompts-mini">
+        <div class="prompts-mini-title">🐺 Monstros</div>
+        <div class="prompts-mini-actions">
+          <button class="btn btn-ghost btn-sm" onclick="copiarPrompt('monstros')">
+            <span class="btn-icon">📋</span> Copiar
+          </button>
+        </div>
+        <div class="prompts-mini-summary" id="miniMonstros">
+          <span class="mini-dim">aguardando login</span>
+        </div>
+      </div>
     </div>
 
-    <!-- Estado ABERTO: 3 blocos com textarea -->
+    <!-- Estado ABERTO: blocos com textarea -->
     <div class="prompts-panel" id="promptsPanel">
       <div class="prompts-body">
         <!-- Topologia + Cenas -->
@@ -616,7 +628,7 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
           <div class="prompt-block-header">
             <span class="prompt-block-title">🎭 Topologia + Cenas</span>
                         <div class="prompt-block-actions">
-              <span class="prompt-etapa">Etapa 1 de 3</span>
+              <span class="prompt-etapa">Etapa 1 de 4</span>
               <button class="btn btn-ghost btn-sm" onclick="copiarPrompt('topologia')">
                 <span class="btn-icon">📋</span> Copiar
               </button>
@@ -637,7 +649,7 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
           <div class="prompt-block-header">
             <span class="prompt-block-title">☠️ Perigos</span>
             <div class="prompt-block-actions">
-              <span class="prompt-etapa">Etapa 2 de 3</span>
+              <span class="prompt-etapa">Etapa 2 de 4</span>
               <button class="btn btn-ghost btn-sm" onclick="copiarPrompt('perigos')">
                 <span class="btn-icon">📋</span> Copiar
               </button>
@@ -658,7 +670,7 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
           <div class="prompt-block-header">
             <span class="prompt-block-title">🧩 Puzzles</span>
             <div class="prompt-block-actions">
-              <span class="prompt-etapa">Etapa 3 de 3</span>
+              <span class="prompt-etapa">Etapa 3 de 4</span>
               <button class="btn btn-ghost btn-sm" onclick="copiarPrompt('puzzles')">
                 <span class="btn-icon">📋</span> Copiar
               </button>
@@ -671,6 +683,27 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
           <div class="prompt-footer">
             <span class="icon">▸</span>
             <span id="statusPuzzles">aguardando login</span>
+          </div>
+        </div>
+
+        <!-- Monstros -->
+        <div class="prompt-block">
+          <div class="prompt-block-header">
+            <span class="prompt-block-title">🐺 Monstros</span>
+            <div class="prompt-block-actions">
+              <span class="prompt-etapa">Etapa 4 de 4</span>
+              <button class="btn btn-ghost btn-sm" onclick="copiarPrompt('monstros')">
+                <span class="btn-icon">📋</span> Copiar
+              </button>
+              <button class="btn btn-ghost btn-sm" onclick="restaurarPromptPadrao('monstros')" title="Volta ao prompt original">
+                <span class="btn-icon">↺</span> Restaurar
+              </button>
+            </div>
+          </div>
+          <textarea class="prompt-textarea" id="prompt_monstros" spellcheck="false"></textarea>
+          <div class="prompt-footer">
+            <span class="icon">▸</span>
+            <span id="statusMonstros">aguardando login</span>
           </div>
         </div>
       </div>
@@ -701,7 +734,7 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
         <div class="editor">
           <pre class="editor-highlight" id="editorHighlight" aria-hidden="true"></pre>
           <textarea class="editor-input" id="jsonInput" spellcheck="false"
-            placeholder='Cole aqui o JSON da zona (plano + salas + cenas) OU {"perigos": [...]} OU {"puzzles": {...}}'></textarea>
+            placeholder='Cole aqui o JSON da zona (plano + salas + cenas) OU {"perigos": [...]} OU {"puzzles": {...}} OU {"monstros": [...]}'></textarea>
         </div>
       </div>
 
@@ -804,6 +837,45 @@ const db = firebase.firestore();
 const TOTAL_SALAS = 300;
 const TOTAL_ZONAS = 30;
 const SALAS_POR_ZONA = 10;
+
+/* ============================================================
+   CONSTANTES DE MONSTROS
+   ============================================================ */
+const DROPS_PERMITIDOS_LISTA = [
+  'pocao-cura-menor','pocao-cura-completa','kitmedico','latadesardinha',
+  'pequeno-saco-ervas','pao-mofado',
+  'municao-9mm','municao-12','municao-38','municao-45','municao-50',
+  'municao-357','municao-473','municao-762',
+  'canivete','adaga','punhal-ceremonial','espadalonga',
+  'revolver-38','colt1848','beretta-92','lugerp08','colt-python',
+  'desert-eagle','escopeta-12','ak-47','amt-502d','motoserra',
+  'chavedeferro','esqueiro','tocha','velas','corda',
+  'grilo','la','pedaco-couro',
+  'aneldafe','amuletodaarmaduranatual','amuletodaserpentedourada',
+  'armaduradecouro','habito-monastico','peitoral-de-aço',
+  'escudo-pequeno-de-madeira','escudograndedemetal','mascara-de-gas',
+  'pequenabolsaouro','calicereliquia','coroareliquia',
+  'estatuetaareliquia','estatuetabreliquia','estatuetacreliquia',
+  'granada-mao','granada-de-concussao','granada-incendiaria'
+];
+
+function rollDice(dadoStr) {
+  const s = String(dadoStr).toLowerCase().replace(/\s+/g, '');
+  let mod = 0, base = s;
+  const idx = s.search(/[+\-]\d+$/);
+  if (idx > 0) { mod = parseInt(s.slice(idx)); base = s.slice(0, idx); }
+  const parts = base.split('d');
+  if (parts.length !== 2) return 1;
+  const n = parseInt(parts[0]) || 1;
+  const sides = parseInt(parts[1]) || 1;
+  let total = mod;
+  for (let i = 0; i < n; i++) total += Math.floor(Math.random() * sides) + 1;
+  return total;
+}
+
+function mapaMundoGlobal() {
+  return (_lastDados && _lastDados.mapaMundo) || {};
+}
 
 /* ============================================================
    UI UTILS
@@ -1019,11 +1091,12 @@ function setupAventura() {
 /* ============================================================
    PROMPTS — corpos padrão
    ============================================================ */
-const PROMPT_KEYS = ['topologia', 'perigos', 'puzzles'];
+const PROMPT_KEYS = ['topologia', 'perigos', 'puzzles', 'monstros'];
 const MINI_IDS = {
   topologia: 'miniTopologia',
   perigos: 'miniPerigos',
-  puzzles: 'miniPuzzles'
+  puzzles: 'miniPuzzles',
+  monstros: 'miniMonstros'
 };
 
 const DEFAULT_BODIES = {
@@ -1400,6 +1473,138 @@ const DEFAULT_BODIES = {
     '    }',
     '  }',
     '}'
+  ].join('\n'),
+
+  monstros: [
+    'Você gera monstros para o jogo de horror realista "Centelha". O jogo é difícil e avarento com recompensas.',
+    '',
+    '## ENTRADA',
+    'Você receberá: tema da zona, número da zona (1-10), texto lógico das salas elegíveis.',
+    '',
+    '## SAÍDA',
+    '{"monstros": [ {...}, {...} ]}',
+    'Retorne APENAS JSON válido. Sem markdown, sem comentários, sem prosa.',
+    '',
+    '## SALAS',
+    '- Todo monstro aponta pra uma sala via campo "sala_id".',
+    '- Só use salas listadas em SALAS_ELEGIVEIS. NUNCA use salas fora dessa lista.',
+    '- Máximo 1 monstro por sala. Nunca repita sala_id.',
+    '- Gere 1 a 2 monstros por zona, dosando pela densidade e pelo tom.',
+    '',
+    '## TIERS',
+    'A zona define o tier recomendado. Escolha stats dentro da faixa:',
+    '',
+    '| Tier | habilidade | couraça | energiaDados | experiencia | dano base |',
+    '|------|-----------|---------|--------------|-------------|-----------|',
+    '| 1    | 3-5       | 0-2     | 2d6 a 3d8    | 20-50       | 1d6 a 1d8 |',
+    '| 2    | 5-7       | 1-3     | 3d8 a 5d8    | 50-100      | 1d8 a 1d10 |',
+    '| 3    | 7-9       | 2-5     | 5d8 a 8d8    | 100-200     | 1d10 a 2d6 |',
+    '| 4    | 9-12      | 4-7     | 8d8 a 12d8   | 200-350     | 2d6 a 2d8 |',
+    '| 5    | 12-15     | 6-10    | 12d8+        | 350+        | 2d8+      |',
+    '',
+    'Faixa recomendada por zona: 1-2→tier 1; 3-4→tier 1-2; 5-6→tier 2-3; 7-8→tier 3-4; 9-10→tier 4-5.',
+    'Experiência deve escalar dentro da faixa — monstros mais fortes dentro do mesmo tier ganham mais XP.',
+    '',
+    '## DROPS',
+    '- Máximo 2 drops por monstro. O padrão é 0 ou 1.',
+    '- Só dropa se houver justificativa narrativa forte (carregava, engoliu, guardava).',
+    '- Na dúvida, NÃO dropa. Monstros comuns não deixam nada.',
+    '- Todo "id" de drop precisa estar na lista de DROPS_PERMITIDOS.',
+    '',
+    '## BURST (pré-batalha na sala)',
+    'Cada monstro tem um "burst" com:',
+    '- "texto": frase curta (8-15 palavras) descrevendo o monstro na sala, para se fundir ao texto lógico.',
+    '- "palavraAlvo": UMA palavra do "texto" que o jogador clica para mirar. Deve existir literalmente no texto.',
+    '- "tempoReacao": ms antes do monstro reagir, na mira. 3000 (tier 1) a 15000 (tier 5).',
+    '',
+    '## REGRAS DURAS',
+    '- "id" do monstro em snake_case, único dentro da zona.',
+    '- "id" de ataque único dentro do monstro.',
+    '- Máximo 1 ataque com "telegrafado": true por monstro. Se telegrafado, "mensagemTelegraf" obrigatório.',
+    '- "peso" e "pesoHPBaixo" são inteiros 0-100, soma >0 em cada campo.',
+    '- "dano" (campo topo) = dano do ataque mais fraco.',
+    '- Nomes de ataque não podem repetir: "Truque Sujo", "Riso Escarnecedor", "Punhalada Venenosa", "Anastia", "Ocultar-se".',
+    '- "descricao" (topo) é o texto da ficha de combate, separado do "burst.texto".',
+    '',
+    '## SCHEMA',
+    '{',
+    '  "monstros": [',
+    '    {',
+    '      "id": "slug_unico",',
+    '      "sala_id": 12,',
+    '      "nome": "Nome Curto",',
+    '      "tier": 1,',
+    '      "descricao": "frase curta para ficha de combate",',
+    '      "habilidade": 5,',
+    '      "couraca": 1,',
+    '      "energiaDados": "3d8",',
+    '      "experiencia": 50,',
+    '      "dano": "1d8",',
+    '      "ataques": [',
+    '        {"id": "mordida", "nome": "Mordida Rápida", "dano": "1d8", "peso": 70, "pesoHPBaixo": 40, "telegrafado": false},',
+    '        {"id": "investida", "nome": "Investida", "dano": "1d12", "peso": 30, "pesoHPBaixo": 60, "telegrafado": true, "mensagemTelegraf": "O lobo recua e seus olhos brilham..."}',
+    '      ],',
+    '      "drops": [',
+    '        {"id": "pocao-cura-menor", "quantity": 1}',
+    '      ],',
+    '      "burst": {',
+    '        "texto": "Um cão grande demais para ser cão te observa do fundo do corredor.",',
+    '        "palavraAlvo": "cão",',
+    '        "tempoReacao": 5000',
+    '      }',
+    '    }',
+    '  ]',
+    '}',
+    '',
+    '## EXEMPLO 1 — tier 1',
+    '{',
+    '  "monstros": [',
+    '    {',
+    '      "id": "rato_cinzento",',
+    '      "sala_id": 3,',
+    '      "nome": "Rato Cinzento",',
+    '      "tier": 1,',
+    '      "descricao": "Um roedor de olhos vermelhos, maior que o normal.",',
+    '      "habilidade": 3,',
+    '      "couraca": 0,',
+    '      "energiaDados": "2d6",',
+    '      "experiencia": 20,',
+    '      "dano": "1d4",',
+    '      "ataques": [',
+    '        {"id": "mordida", "nome": "Mordida Rápida", "dano": "1d4", "peso": 80, "pesoHPBaixo": 60, "telegrafado": false},',
+    '        {"id": "arranhao", "nome": "Arranhão Desesperado", "dano": "1d6", "peso": 20, "pesoHPBaixo": 40, "telegrafado": false}',
+    '      ],',
+    '      "drops": [],',
+    '      "burst": {"texto": "Um rato cinzento atravessa o chão perto da sua bota.", "palavraAlvo": "rato", "tempoReacao": 3000}',
+    '    }',
+    '  ]',
+    '}',
+    '',
+    '## EXEMPLO 2 — tier 3',
+    '{',
+    '  "monstros": [',
+    '    {',
+    '      "id": "zelador_caido",',
+    '      "sala_id": 7,',
+    '      "nome": "Zelador Caído",',
+    '      "tier": 3,',
+    '      "descricao": "Um homem de uniforme sujo, ainda segurando um molho de chaves.",',
+    '      "habilidade": 8,',
+    '      "couraca": 3,',
+    '      "energiaDados": "6d8",',
+    '      "experiencia": 140,',
+    '      "dano": "1d10",',
+    '      "ataques": [',
+    '        {"id": "chave_improvisada", "nome": "Golpe com Chaves", "dano": "1d10", "peso": 60, "pesoHPBaixo": 30, "telegrafado": false},',
+    '        {"id": "estrangular", "nome": "Estrangulamento", "dano": "2d6+2", "peso": 40, "pesoHPBaixo": 70, "telegrafado": true, "mensagemTelegraf": "O zelador larga as chaves e avança com as mãos abertas, os olhos fixos no seu pescoço."}',
+    '      ],',
+    '      "drops": [',
+    '        {"id": "chavedeferro", "quantity": 1}',
+    '      ],',
+    '      "burst": {"texto": "Um homem de uniforme cinzento encara você parado entre as caixas, um molho de chaves pendurado no cinto.", "palavraAlvo": "homem", "tempoReacao": 8000}',
+    '    }',
+    '  ]',
+    '}'
   ].join('\n')
 };
 /* ============================================================
@@ -1526,6 +1731,10 @@ function construirCabecalho(key, n, ctx) {
     }
     const estadosOrd = [...(ctx.estados_pendentes || [])].sort((a, b) => (b.idade ?? 0) - (a.idade ?? 0));
     linhas.push(`estados_pendentes: ${JSON.stringify(estadosOrd)}`);
+  } else if (key === 'monstros') {
+    const elegiveis = coletarSalasElegiveisMonstros(mapaMundoGlobal(), n);
+    linhas.push(`SALAS_ELEGIVEIS = [${elegiveis.join(', ')}]`);
+    linhas.push(`DROPS_PERMITIDOS = [${DROPS_PERMITIDOS_LISTA.join(', ')}]`);
   }
   return linhas.join('\n');
 }
@@ -1598,6 +1807,14 @@ function construirResumo(key, n, ctx) {
     if (cota) {
       linhas.push(`<span class="mini-label">COTA_OBRIGATÓRIA:</span> <span class="mini-dim">${escapeHTML(cota)}</span>`);
     }
+  } else if (key === 'monstros') {
+    const elegiveis = coletarSalasElegiveisMonstros(mapaMundoGlobal(), n);
+    if (elegiveis.length === 0) {
+      linhas.push(`<span class="mini-label">SALAS_ELEGIVEIS:</span> <span class="mini-dim">nenhuma</span>`);
+    } else {
+      linhas.push(`<span class="mini-label">SALAS_ELEGIVEIS:</span> [${elegiveis.join(', ')}]`);
+    }
+    linhas.push(`<span class="mini-label">DROPS_PERMITIDOS:</span> ${DROPS_PERMITIDOS_LISTA.length} itens`);
   }
 
   return linhas.join('<br>');
@@ -1640,6 +1857,28 @@ function coletarSalasOcupadas(mapaMundo, n) {
     }
   }
   return salas;
+}
+
+function coletarSalasElegiveisMonstros(mapaMundo, n) {
+  const start = (n - 1) * SALAS_POR_ZONA + 1;
+  const end = n * SALAS_POR_ZONA;
+  const elegiveis = [];
+  for (let i = start; i <= end; i++) {
+    const sala = mapaMundo[String(i)];
+    if (!sala) continue;
+    if (sala.cena_aplicada === true) continue;
+    const interacoes = Array.isArray(sala.interacoes_ambiente) ? sala.interacoes_ambiente : [];
+    const interacoesReais = interacoes.filter(x => !interacaoEhDePerigo(x));
+    const estadosDePerigo = new Set(interacoes.filter(interacaoEhDePerigo).map(x => x.define_estado));
+    const estadosReais = sala.estados ? Object.keys(sala.estados).filter(k => !estadosDePerigo.has(k)) : [];
+    const temPuzzle = sala.puzzle_status !== undefined
+      || estadosReais.length > 0
+      || (Array.isArray(sala.usos_possiveis) && sala.usos_possiveis.length > 0)
+      || interacoesReais.length > 0;
+    if (temPuzzle) continue;
+    elegiveis.push(i);
+  }
+  return elegiveis;
 }
 
 // FIX 6 — agora devolve idade calculada
@@ -1788,6 +2027,7 @@ function atualizarStatusPromptsZona(n) {
   const elTop = $('statusTopologia');
   const elPer = $('statusPerigos');
   const elPuz = $('statusPuzzles');
+  const elMons = $('statusMonstros');
 
   if (elTop) {
     elTop.innerHTML = `<span class="ok">✅ pronta · zona ${n} (salas ${start}–${end})</span>`;
@@ -1808,11 +2048,26 @@ function atualizarStatusPromptsZona(n) {
       elPuz.innerHTML = `<span class="warn">⏳ aguardando zona ${n} · ${salasOk}/10 salas importadas</span>`;
     }
   }
+  if (elMons) {
+    const elegiveis = coletarSalasElegiveisMonstros(mapaMundo, n);
+    if (salasOk !== SALAS_POR_ZONA) {
+      elMons.innerHTML = `<span class="warn">⏳ aguardando zona ${n} · ${salasOk}/10 salas importadas</span>`;
+    } else if (elegiveis.length === 0) {
+      elMons.innerHTML = `<span class="warn">⏳ sem salas elegíveis (todas têm cena ou puzzle)</span>`;
+    } else {
+      const temMonstro = elegiveis.some(i => mapaMundo[String(i)]?.burst);
+      if (temMonstro) {
+        elMons.innerHTML = `<span class="ok">✅ pronta · zona ${n} · monstros aplicados</span>`;
+      } else {
+        elMons.innerHTML = `<span class="warn">⏳ aguardando monstros · ${elegiveis.length} sala(s) elegível(is)</span>`;
+      }
+    }
+  }
 }
 
 function setStatusPromptsNoLogin() {
   const msg = `<span class="warn">⏳ aguardando login</span>`;
-  for (const elId of ['statusTopologia', 'statusPerigos', 'statusPuzzles']) {
+  for (const elId of ['statusTopologia', 'statusPerigos', 'statusPuzzles', 'statusMonstros']) {
     const el = $(elId);
     if (el) el.innerHTML = msg;
   }
@@ -2894,10 +3149,93 @@ async function importarPuzzles(dadosPuzzle, uid, logFn, zonaAtual) {
 }
 
 /* ============================================================
+   IMPORTAÇÃO — monstros
+   ============================================================ */
+async function importarMonstros(dadosMonstros, uid, logFn, zonaAtual) {
+  const docRef = db.collection('players').doc(uid);
+  const docSnap = await docRef.get();
+  if (!docSnap.exists) throw new Error('Nenhum documento do jogador encontrado.');
+  const dadosAtuais = docSnap.data() || {};
+  const mapaMundoAtual = dadosAtuais.mapaMundo || {};
+  const start = (zonaAtual - 1) * SALAS_POR_ZONA + 1;
+  const end = zonaAtual * SALAS_POR_ZONA;
+
+  const lista = Array.isArray(dadosMonstros.monstros) ? dadosMonstros.monstros : [];
+  if (lista.length === 0) throw new Error('Array "monstros" vazio.');
+
+  const elegiveis = new Set(coletarSalasElegiveisMonstros(mapaMundoAtual, zonaAtual));
+
+  // Validação — rejeita o lote inteiro se algo estiver fora
+  const erros = [];
+  const salasUsadas = new Set();
+  for (const m of lista) {
+    if (!m || typeof m !== 'object') { erros.push('monstro inválido (não é objeto)'); continue; }
+    if (typeof m.sala_id !== 'number') { erros.push(`"${m.id || '?'}": sala_id ausente ou inválido`); continue; }
+    if (m.sala_id < start || m.sala_id > end) { erros.push(`"${m.id}": sala_id ${m.sala_id} fora da zona ${zonaAtual}`); continue; }
+    if (!mapaMundoAtual[String(m.sala_id)]) { erros.push(`"${m.id}": sala ${m.sala_id} não existe no Firestore`); continue; }
+    if (!elegiveis.has(m.sala_id)) { erros.push(`"${m.id}": sala ${m.sala_id} não é elegível (tem cena ou puzzle)`); continue; }
+    if (salasUsadas.has(m.sala_id)) { erros.push(`"${m.id}": sala ${m.sala_id} já usada por outro monstro no lote`); continue; }
+    if (!m.burst || typeof m.burst.texto !== 'string' || typeof m.burst.palavraAlvo !== 'string') {
+      erros.push(`"${m.id}": burst incompleto`);
+      continue;
+    }
+    if (m.burst.texto.toLowerCase().indexOf(m.burst.palavraAlvo.toLowerCase()) === -1) {
+      erros.push(`"${m.id}": palavraAlvo "${m.burst.palavraAlvo}" não existe no burst.texto`);
+      continue;
+    }
+    if (Array.isArray(m.drops)) {
+      for (const d of m.drops) {
+        if (!d || !DROPS_PERMITIDOS_LISTA.includes(d.id)) {
+          erros.push(`"${m.id}": drop "${d?.id}" fora de DROPS_PERMITIDOS`);
+        }
+      }
+    }
+    salasUsadas.add(m.sala_id);
+  }
+  if (erros.length > 0) {
+    for (const e of erros) logFn(`❌ ${e}`, 'err');
+    throw new Error(`Lote rejeitado — ${erros.length} inconsistência(s). Nada foi salvo.`);
+  }
+
+  // Aplicação
+  const updatePayload = {};
+  for (const m of lista) {
+    const salaId = String(m.sala_id);
+    const energiaRolada = m.energiaDados ? rollDice(m.energiaDados) : 20;
+    const burst = {
+      monstroId: m.id,
+      nome: m.nome,
+      nomeReal: (m.nome || m.id || '').toUpperCase(),
+      texto: m.burst.texto,
+      palavraAlvo: m.burst.palavraAlvo,
+      tempoReacao: m.burst.tempoReacao || 5000,
+      energiaMax: energiaRolada,
+      energiaDados: m.energiaDados || '2d6',
+      energiaAtual: energiaRolada,
+      resolvido: false,
+      xp: m.experiencia || 20,
+      drops: Array.isArray(m.drops) ? m.drops : [],
+      habilidade: m.habilidade || 3,
+      couraca: m.couraca || 0,
+      dano: m.dano || '1d4',
+      descricao: m.descricao || '',
+      tier: m.tier || 1,
+      ataques: Array.isArray(m.ataques) ? m.ataques : []
+    };
+    updatePayload[`mapaMundo.${salaId}.burst`] = burst;
+    logFn(`🐺 ${m.nome} → sala ${m.sala_id} · tier ${m.tier} · ${energiaRolada} energia`, 'ok');
+  }
+
+  await docRef.update(updatePayload);
+  return { salas: [...salasUsadas] };
+}
+
+/* ============================================================
    DETECÇÃO DE TIPO
    ============================================================ */
 function detectarTipo(dados) {
   if (!dados || typeof dados !== 'object') return null;
+  if (Array.isArray(dados.monstros)) return 'monstros';
   const temZona = !!(dados.plano || dados.salas || dados.cenas);
   const temPerigos = Array.isArray(dados.perigos);
   const temPuzzles = !!(dados.saidas_sequestradas || dados.itens_novos ||
@@ -2922,6 +3260,7 @@ function contarDados(dados) {
   if (dados.puzzles) c.puzzles = Object.keys(dados.puzzles).length;
   if (dados.itens_novos) c.itens_novos = Object.keys(dados.itens_novos).length;
   if (Array.isArray(dados.itens_legado)) c.itens_legado = dados.itens_legado.length;
+  if (Array.isArray(dados.monstros)) c.monstros = dados.monstros.length;
   return c;
 }
 
@@ -2948,7 +3287,7 @@ function atualizarBadge(inputEl, badgeEl) {
     badgeEl.textContent = 'não reconhecido';
     return null;
   }
-  const labels = { zona: 'zona completa', perigos: 'perigos', puzzles: 'puzzles' };
+  const labels = { zona: 'zona completa', perigos: 'perigos', puzzles: 'puzzles', monstros: 'monstros' };
   badgeEl.className = `badge badge-${tipo}`;
   const c = contarDados(dados);
   const chips = [];
@@ -2959,6 +3298,7 @@ function atualizarBadge(inputEl, badgeEl) {
   if (c.puzzles) chips.push(`${c.puzzles} puzzles`);
   if (c.itens_novos) chips.push(`${c.itens_novos} itens novos`);
   if (c.itens_legado) chips.push(`${c.itens_legado} itens de legado`);
+  if (c.monstros) chips.push(`${c.monstros} monstros`);
   badgeEl.textContent = labels[tipo] + (chips.length ? ' · ' + chips.join(' · ') : '');
   return { dados, tipo, chips };
 }
@@ -2967,11 +3307,12 @@ function atualizarBadgeEPreview() {
   const info = atualizarBadge($('jsonInput'), $('mainBadge'));
   const preview = $('preview');
   if (!info) { preview.hidden = true; return; }
-  const labels = { zona: 'zona completa', perigos: 'perigos', puzzles: 'puzzles' };
+  const labels = { zona: 'zona completa', perigos: 'perigos', puzzles: 'puzzles', monstros: 'monstros' };
   let acao = '';
   if (info.tipo === 'zona') acao = 'Substitui o mapaMundo com as salas do JSON (preservando campos de runtime como puzzles, estados e itens).';
   else if (info.tipo === 'perigos') acao = 'Apenas atualiza perigos no mapaMundo existente do Firestore.';
   else if (info.tipo === 'puzzles') acao = 'Aplica puzzles, itens e modificações em salas já existentes.';
+  else if (info.tipo === 'monstros') acao = 'Aplica monstros nas salas elegíveis (sem cena e sem puzzle). Salas inelegíveis rejeitam o lote inteiro.';
   preview.hidden = false;
   preview.innerHTML = `
     <div class="line"><span class="icon">🎯</span><span><strong>Tipo:</strong> ${labels[info.tipo]}${info.chips.length ? ' · ' + info.chips.join(' · ') : ''}</span></div>
@@ -3024,7 +3365,8 @@ async function importarJSON() {
   const temPerigos = Array.isArray(dados.perigos) && dados.perigos.length > 0;
   const temPuzzles = !!(dados.saidas_sequestradas || dados.itens_novos || dados.textos_modificados ||
     dados.itens_adicionados || dados.descricoes_itens_ativos || dados.puzzles);
-  if (!temZona && !temPerigos && !temPuzzles) { toast('O JSON não contém zona, perigos nem puzzles.', 'warn'); return; }
+  const temMonstros = Array.isArray(dados.monstros) && dados.monstros.length > 0;
+  if (!temZona && !temPerigos && !temPuzzles && !temMonstros) { toast('O JSON não contém zona, perigos, puzzles nem monstros.', 'warn'); return; }
 
   const user = firebase.auth().currentUser;
   if (!user) { toast('Nenhum usuário logado. Faça login no jogo primeiro.', 'err'); return; }
@@ -3052,6 +3394,11 @@ async function importarJSON() {
       if (c.dilemas) chips.push(`${c.dilemas} dilemas`);
       if (c.perigos) chips.push(`${c.perigos} perigos`);
       logFn('✅ Zona importada com sucesso!', 'ok');
+    } else if (temMonstros) {
+      logFn('🐺 Importando monstros...', 'info');
+      const r = await importarMonstros(dados, user.uid, logFn, _promptZona);
+      chips = [`${r.salas.length} sala(s) com monstro`];
+      logFn('✅ Monstros importados com sucesso!', 'ok');
     } else if (temPuzzles && !temPerigos) {
       logFn('🧩 Importando puzzles...', 'info');
       const r = await importarPuzzles(dados, user.uid, logFn, _promptZona);
@@ -3469,6 +3816,7 @@ function analisarMapaMundo(mapaMundo, itens_novos) {
     zonasCompletas: 0,
     salasPresentes: new Set(),
     cenas: 0, puzzles: 0, perigos: 0, itens: 0, rotas: 0,
+    monstros: 0, monstrosSalas: [],
     itens_novos_count: 0,
     cenasSalas: [], puzzlesSalas: [], perigosSalas: [], itensSalas: [], rotasSalas: [],
     salasVazias: []
@@ -3522,6 +3870,11 @@ function analisarMapaMundo(mapaMundo, itens_novos) {
         result.rotas++;
         result.rotasSalas.push(id);
       }
+    }
+
+    if (sala.burst && !sala.burst.resolvido) {
+      result.monstros++;
+      result.monstrosSalas.push(id);
     }
   }
 
@@ -3663,24 +4016,27 @@ function renderMiniBars(analise) {
       perigos: analise.perigos,
       itens: analise.itens,
       rotas: analise.rotas,
+      monstros: analise.monstros,
       cenasSalas: analise.cenasSalas,
       puzzlesSalas: analise.puzzlesSalas,
       perigosSalas: analise.perigosSalas,
       itensSalas: analise.itensSalas,
       rotasSalas: analise.rotasSalas,
+      monstrosSalas: analise.monstrosSalas,
       itens_novos_count: analise.itens_novos_count
     };
     denom = analise.totalSalas;
   } else {
     const z = _zonaSelecionada;
-    const fil = arr => arr.filter(id => isSalaNaZona(id, z));
+    const fil = arr => (arr || []).filter(id => isSalaNaZona(id, z));
     scoped = {
-      cenas: 0, puzzles: 0, perigos: 0, itens: 0, rotas: 0,
+      cenas: 0, puzzles: 0, perigos: 0, itens: 0, rotas: 0, monstros: 0,
       cenasSalas: fil(analise.cenasSalas),
       puzzlesSalas: fil(analise.puzzlesSalas),
       perigosSalas: fil(analise.perigosSalas),
       itensSalas: fil(analise.itensSalas),
       rotasSalas: fil(analise.rotasSalas),
+      monstrosSalas: fil(analise.monstrosSalas),
       itens_novos_count: 0
     };
     scoped.cenas = scoped.cenasSalas.length;
@@ -3688,6 +4044,7 @@ function renderMiniBars(analise) {
     scoped.perigos = scoped.perigosSalas.length;
     scoped.itens = scoped.itensSalas.length;
     scoped.rotas = scoped.rotasSalas.length;
+    scoped.monstros = scoped.monstrosSalas.length;
     denom = SALAS_POR_ZONA;
   }
 
@@ -3695,6 +4052,7 @@ function renderMiniBars(analise) {
     { icon: '🎭', label: 'Cenas', value: scoped.cenas, salas: scoped.cenasSalas, extra: '' },
     { icon: '🧩', label: 'Puzzles', value: scoped.puzzles, salas: scoped.puzzlesSalas, extra: '' },
     { icon: '☠️', label: 'Perigos', value: scoped.perigos, salas: scoped.perigosSalas, extra: '' },
+    { icon: '🐺', label: 'Monstros', value: scoped.monstros, salas: scoped.monstrosSalas, extra: '' },
     { icon: '📦', label: 'Itens', value: scoped.itens, salas: scoped.itensSalas,
       extra: (_zonaSelecionada === null && scoped.itens_novos_count > 0)
         ? ` · +${scoped.itens_novos_count} novos em itens_novos` : '' },
@@ -3828,6 +4186,8 @@ async function sincronizarMirror() {
           perigos: analise.perigos,
           itens: analise.itens,
           rotas: analise.rotas,
+          monstros: analise.monstros,
+          monstrosSalas: analise.monstrosSalas,
           itens_novos_count: analise.itens_novos_count,
           cenasSalas: analise.cenasSalas,
           puzzlesSalas: analise.puzzlesSalas,
@@ -3891,7 +4251,9 @@ function carregarMirrorCache() {
     const analise = {
       ...a,
       salasPresentes: new Set(a.salasPresentes || []),
-      salasVazias: a.salasVazias || []
+      salasVazias: a.salasVazias || [],
+      monstros: a.monstros || 0,
+      monstrosSalas: a.monstrosSalas || []
     };
     renderMirror(analise);
     mirrorLastSync = cache.ts || 0;
@@ -4192,7 +4554,7 @@ firebase.auth().onAuthStateChanged(user => {
 console.log('%c⚡ Centelha · Console de Zonas', 'color:#d9a441;font-weight:bold;font-size:14px');
 console.log('📋 Validadores ativos: topologia, ancoragem, entry-point leak, densidade e dilemas.');
 console.log('📝 Prompts: zona controlada manualmente por [−]/[+] · 🔄 recarrega dados do Firestore.');
-console.log('📥 Importadores: zona completa, perigos (isolado), puzzles (Shadowgate).');
+console.log('📥 Importadores: zona completa, perigos (isolado), puzzles (Shadowgate), monstros (burst).');
 console.log('📊 Espelho: leitura read-only com drill-down por zona e preenchimento de vazias.');
 console.log('🗺️ Aventura: TOM + LORE + 30 temas por zona injetados no cabeçalho dos prompts.');
 console.log('🔒 Órfãos: bloquear a importação se houver estado/item sem consumidor (override: forcar_orfaos / orfao_intencional).');
