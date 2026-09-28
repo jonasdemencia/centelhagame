@@ -394,20 +394,14 @@
         filter: brightness(1.55);
     }
     #sala-desc .burst-trecho .alvo-burst {
-        cursor: crosshair;
-        color: #d9a441;
-        transition: color .15s, text-shadow .15s;
-        font-weight: inherit;
-    }
-    #sala-desc .burst-trecho .alvo-burst:hover {
-        color: #fff;
-        text-shadow: 0 0 6px rgba(217, 164, 65, 0.6);
-    }
-    #sala-desc .burst-trecho .alvo-burst.travado {
-        color: #fff;
-        font-weight: 700;
-        text-shadow: 0 0 10px rgba(217, 164, 65, 0.85);
-    }
+    cursor: crosshair;
+    color: inherit;
+}
+#sala-desc .burst-trecho .alvo-burst.travado {
+    color: #fff;
+    font-weight: 700;
+    text-shadow: 0 0 10px rgba(217, 164, 65, 0.85);
+}
 
     #burst-reveal {
         position: fixed; inset: 0;
@@ -2236,8 +2230,8 @@ ANSWER:`
         // [BURST] Injeta o trecho do monstro como span manipulável
         const b = sala?.burst;
         if (b && !b.resolvido && (b.energiaAtual ?? b.energiaMax) > 0 && b.texto) {
-            texto = texto.replace(/[.\s]+$/, "");
-            texto += ` <span class="burst-trecho">${b.texto}</span>`;
+            texto = texto.replace(/\s+$/, "");
+texto += ` <span class="burst-trecho">${b.texto}</span>`;
         }
 
         return texto;
