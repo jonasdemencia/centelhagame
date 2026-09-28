@@ -2430,6 +2430,13 @@ async function aplicarBurstOverride() {
         currentMonster = alvo;
 
         console.log(`[BURST] Energia transferida: ${alvo.pontosDeEnergia}/${alvo.pontosDeEnergiaMax}`);
+
+        if (typeof displayAllMonsterHealthBars === 'function') {
+            displayAllMonsterHealthBars();
+        }
+        if (typeof updateMonsterInfoUI === 'function') {
+            updateMonsterInfoUI();
+        }
     } catch (e) {
         console.error('[BURST] Falha ao aplicar override:', e);
     }
