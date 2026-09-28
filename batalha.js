@@ -3995,8 +3995,17 @@ const salaOrigemURL = getUrlParameter('salaOrigem');
 if (salaOrigemURL) {
   // modo Burst → carrega do Firestore (assíncrono)
   window._monstrosPromise = (async () => {
-    const uidAtualLocal = auth.currentUser?.uid;
-    if (!uidAtualLocal) return null;
+    const uidAtualLocal = await new Promise(resolve => {
+        if (auth.currentUser) return resolve(auth.currentUser.uid);
+        const unsub = onAuthStateChanged(auth, (u) => {
+            unsub();
+            resolve(u?.uid || null);
+        });
+    });
+    if (!uidAtualLocal) {
+        console.warn('[BURST] Sem usuário autenticado — monstro não carregado.');
+        return null;
+    }
     const m = await carregarMonstroDaSala(salaOrigemURL, uidAtualLocal);
     if (!m) {
       console.warn('[BURST] Monstro não encontrado no Firestore — caindo pro monstros.js');
