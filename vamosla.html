@@ -1859,17 +1859,7 @@ ANSWER:`
     // ============================================================
     // BURST — pré-batalha dentro da sala
     // ============================================================
-    const XP_POR_MONSTRO = {
-        "Lobo Faminto": 50, "Goblin Sorrateiro": 30, "Esqueleto Guerreiro": 60,
-        "Rato Gigante": 20, "Ogro Brutamontes": 150, "Aranha Venenosa": 55,
-        "Zumbi Cambaleante": 70, "Harpia Cruel": 80, "Verme Gigante da Terra": 90,
-        "Bandido de Estrada": 60, "Morcego Sanguessuga": 35, "Elemental de Fogo": 100,
-        "Espectro Sombrio": 90, "Mímico": 120, "Lobo Alfa": 80,
-        "Escaravelho Explosivo": 45, "Necromante Aprendiz": 110, "Golem de Pedra": 150,
-        "Serpente do Pântano": 70, "Árvore Viva": 130, "Rato Mutante": 60
-    };
-    const XP_BURST_DEFAULT = 20;
-
+    
     window.burstState = null;
 
     function rollDiceBurst(dado) {
@@ -2097,22 +2087,24 @@ ANSWER:`
     }
 
     async function premiarAbateBurst(burst) {
-        if (!uidAtual) return;
+    if (!uidAtual) return;
 
-        const xp = XP_POR_MONSTRO[burst.nomeReal] ?? XP_BURST_DEFAULT;
-        try {
-            const ref = doc(db, "players", uidAtual);
-            const snap = await getDoc(ref);
-            if (snap.exists()) {
-                const atual = snap.data().experience || 0;
-                await updateDoc(ref, { experience: atual + xp });
-                adicionarMensagem(`Você ganhou ${xp} pontos de experiência.`, 'system');
-            }
-        } catch (e) { console.error('[Burst] XP falhou:', e); }
+    const xp = burst.xp || 20;
+    try {
+        const ref = doc(db, "players", uidAtual);
+        const snap = await getDoc(ref);
+        if (snap.exists()) {
+            const atual = snap.data().experience || 0;
+            await updateDoc(ref, { experience: atual + xp });
+            adicionarMensagem(`Você ganhou ${xp} pontos de experiência.`, 'system');
+        }
+    } catch (e) { console.error('[Burst] XP falhou:', e); }
 
-        const drops = burst.drops || [];
-        for (const drop of drops) {
-            if (!drop?.id) continue;
+    const drops = burst.drops || [];
+    for (const drop of drops) {
+        if (!drop?.id) continue;
+        const qtd = drop.quantity || 1;
+        for (let i = 0; i < qtd; i++) {
             const ok = await adicionarItem(drop.id);
             if (ok) {
                 const nome = ITENS_DB[drop.id]?.content || drop.id;
@@ -2120,6 +2112,7 @@ ANSWER:`
             }
         }
     }
+}
 
     async function finalizarBurstSala(tipo) {
         const st = window.burstState;
@@ -2340,8 +2333,8 @@ texto += ` <span class="burst-trecho">${b.texto}</span>`;
                 document.body.appendChild(overlayBurst);
                 setTimeout(() => overlayBurst.classList.add('active'), 10);
                 setTimeout(() => {
-                    window.location.href = `batalha.html?monstro=${encodeURIComponent(salaBurstCheck.burst.monstroId)}`;
-                }, 900);
+    window.location.href = `batalha.html?monstro=${encodeURIComponent(salaBurstCheck.burst.monstroId)}&salaOrigem=${encodeURIComponent(secaoAtualId)}`;
+}, 900);
                 return;
             }
         }
