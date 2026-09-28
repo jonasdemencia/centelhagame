@@ -332,9 +332,15 @@ console.log("LOG: batalha.js carregado.");
 
 async function addLogMessage(message, delay = 0, typingSpeed = 30) {
     const logContainer = document.getElementById("battle-log-content");
+    if (!currentTurnBlock) {
+        console.warn("addLogMessage: currentTurnBlock nulo — criando bloco de emergência");
+        currentTurnBlock = document.createElement('div');
+        currentTurnBlock.classList.add('turn-block');
+        logContainer.prepend(currentTurnBlock);
+    }
     return new Promise((resolve) => {
         const p = document.createElement('p');
-        currentTurnBlock.appendChild(p); // Adiciona a mensagem ao bloco atual
+        currentTurnBlock.appendChild(p);
         let index = 0;
 
         function typeWriter() {
@@ -4367,7 +4373,6 @@ if (lutarButton) {
                                 await addLogMessage(`Turno de Iniciativa`, 1000); // Adicionado await aqui
                                 await addLogMessage(`Você rolou ${playerRoll} em um d20 + ${playerAbilityValue} (Habilidade) = ${playerRoll + playerAbilityValue} para Iniciativa.`, 1000);
                                 await addLogMessage(`${currentMonster.nome} rolou ${monsterRoll} em um d20 + ${monsterAbilityValue} (Habilidade) = ${monsterRoll + monsterAbilityValue} para Iniciativa.`, 1000);
-                                currentTurnBlock = null; // Reset current turn block
 
                                 let initiativeWinner = '';
                                 if (playerRoll + playerAbilityValue > monsterRoll + monsterAbilityValue) {
