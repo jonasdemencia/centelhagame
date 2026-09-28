@@ -2155,7 +2155,7 @@ ANSWER:`
             document.body.appendChild(overlay);
             setTimeout(() => overlay.classList.add('active'), 10);
             setTimeout(() => {
-                window.location.href = `batalha.html?monstro=${encodeURIComponent(b.monstroId)}`;
+                window.location.href = `batalha.html?monstro=${encodeURIComponent(b.monstroId)}&salaOrigem=${encodeURIComponent(st ? st.salaId : secaoAtualId)}`;
             }, 900);
         }
     }
