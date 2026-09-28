@@ -2275,7 +2275,7 @@ texto += ` <span class="burst-trecho">${b.texto}</span>`;
         return `De volta a ${nomeSala}. ${textoAjustado}`;
     }
 
-    // ============================================================
+        // ============================================================
     // NAVEGAÇÃO E DILEMAS
     // ============================================================
     async function navegarPara(destino, textoAcao, opcao, silent = false) {
@@ -2302,9 +2302,35 @@ texto += ` <span class="burst-trecho">${b.texto}</span>`;
 
         window._transicaoEmAndamento = true;
 
-        // [BURST] Testa habilidade antes de sair da sala com monstro vivo
+        // [PORTA] Verificação de porta trancada — ANTES de qualquer teste
+        const salaAtualObj = mapaMundo?.[secaoAtualId];
+        if (salaAtualObj && opcao && opcao.destino !== undefined) {
+            const keyState = `${secaoAtualId}_${opcao.destino}`;
+            const portaInfo = window.sistemaChaves?.portasTrancadas?.[keyState];
+            if (portaInfo && portaInfo.trancada) {
+                const temChave = await verificarItemNoInventarioFirestore("chavedeferro");
+                if (!temChave) {
+                    const indice = Math.floor(Math.random() * MENSAGENS_CHAVE_FALTANDO.length);
+                    const mensagem = MENSAGENS_CHAVE_FALTANDO[indice];
+                    adicionarMensagem(mensagem, 'system');
+                    window._transicaoEmAndamento = false;
+                    return;
+                } else {
+                    await removerItemDoInventarioFirestore("chavedeferro");
+                    portaInfo.trancada = false;
+                    adicionarMensagem(`Você usou Chave de ferro`, 'system');
+                    await salvarEstadoJogador();
+                }
+            }
+        }
+
+        // [BURST] Testa habilidade antes de sair — exceto se a saída tiver interceptor ativo
+        const temInterceptorAtivo = opcao?.interceptor_arquiteto
+            && !opcao.interceptor_arquiteto.disparado;
+
         const salaBurstCheck = mapaMundo?.[secaoAtualId];
-        if (salaBurstCheck?.burst && !salaBurstCheck.burst.resolvido
+        if (!temInterceptorAtivo
+            && salaBurstCheck?.burst && !salaBurstCheck.burst.resolvido
             && (salaBurstCheck.burst.energiaAtual ?? salaBurstCheck.burst.energiaMax) > 0) {
             const passou = await testeHabilidadeParaSairBurst(salaBurstCheck.burst);
             if (!passou) {
@@ -2319,27 +2345,6 @@ texto += ` <span class="burst-trecho">${b.texto}</span>`;
                 return;
             }
         }
-
-        const salaAtualObj = mapaMundo?.[secaoAtualId];
-if (salaAtualObj && opcao && opcao.destino !== undefined) {
-    const keyState = `${secaoAtualId}_${opcao.destino}`;
-    const portaInfo = window.sistemaChaves?.portasTrancadas?.[keyState];
-    if (portaInfo && portaInfo.trancada) {
-        const temChave = await verificarItemNoInventarioFirestore("chavedeferro");
-        if (!temChave) {
-            const indice = Math.floor(Math.random() * MENSAGENS_CHAVE_FALTANDO.length);
-            const mensagem = MENSAGENS_CHAVE_FALTANDO[indice];
-            adicionarMensagem(mensagem, 'system');
-            window._transicaoEmAndamento = false;
-            return;
-        } else {
-            await removerItemDoInventarioFirestore("chavedeferro");
-            portaInfo.trancada = false;
-            adicionarMensagem(`Você usou Chave de ferro`, 'system');
-            await salvarEstadoJogador();
-        }
-    }
-}
 
         const container = document.getElementById('map-controls');
         const salaDesc = document.getElementById('sala-desc');
@@ -2458,6 +2463,7 @@ if (salaAtualObj && opcao && opcao.destino !== undefined) {
         }, 1200);
     }
 
+    
     async function executarDilema(opcao, silent = false) {
         if (window._transicaoEmAndamento) return;
         window._transicaoEmAndamento = true;
