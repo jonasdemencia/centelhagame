@@ -2442,6 +2442,33 @@ async function aplicarBurstOverride() {
     }
 }
 
+
+async function carregarMonstroDaSala(salaOrigem, uid) {
+    try {
+        const snap = await getDoc(doc(db, "players", uid));
+        if (!snap.exists()) return null;
+        const mm = snap.data().mapaMundo || {};
+        const burst = mm[String(salaOrigem)]?.burst;
+        if (!burst || !burst.monstroId) return null;
+        return {
+            id: burst.monstroId,
+            nome: burst.nome || burst.nomeReal || burst.monstroId,
+            imagem: '',
+            descricao: burst.descricao || '',
+            habilidade: burst.habilidade || 3,
+            couraça: burst.couraca || 0,
+            energiaDados: burst.energiaDados || '2d6',
+            experiencia: burst.xp || 20,
+            dano: burst.dano || '1d4',
+            ataques: Array.isArray(burst.ataques) ? burst.ataques : [],
+            drops: Array.isArray(burst.drops) ? burst.drops : []
+        };
+    } catch (e) {
+        console.error('[BURST] Falha ao carregar monstro da sala:', e);
+        return null;
+    }
+}
+
 // Função para barra de HP
 function atualizarBarraHP(idElemento, valorAtual, valorMaximo) {
     const barra = document.getElementById(idElemento);
@@ -3341,30 +3368,7 @@ if (playerHealth > playerMaxHealth) {
 
     // Concede experiência ao jogador se o monstro foi derrotado
     if (monster && monster.pontosDeEnergia <= 0) {
-        // Define a experiência com base no nome do monstro
-        const xpToGain = 
-            monster.nome === "Lobo Faminto" ? 50 :
-            monster.nome === "Goblin Sorrateiro" ? 30 :
-            monster.nome === "Esqueleto Guerreiro" ? 60 :
-            monster.nome === "Rato Gigante" ? 20 :
-            monster.nome === "Ogro Brutamontes" ? 150 :
-            monster.nome === "Aranha Venenosa" ? 55 :
-            monster.nome === "Zumbi Cambaleante" ? 70 :
-            monster.nome === "Harpia Cruel" ? 80 :
-            monster.nome === "Verme Gigante da Terra" ? 90 :
-            monster.nome === "Bandido de Estrada" ? 60 :
-            monster.nome === "Morcego Sanguessuga" ? 35 :
-            monster.nome === "Elemental de Fogo" ? 100 :
-            monster.nome === "Espectro Sombrio" ? 90 :
-            monster.nome === "Mímico" ? 120 :
-            monster.nome === "Lobo Alfa" ? 80 :
-            monster.nome === "Escaravelho Explosivo" ? 45 :
-            monster.nome === "Necromante Aprendiz" ? 110 :
-            monster.nome === "Golem de Pedra" ? 150 :
-            monster.nome === "Serpente do Pântano" ? 70 :
-            monster.nome === "Árvore Viva" ? 130 :
-            monster.nome === "Rato Mutante" ? 60 :
-            20; // Valor padrão para monstros não listados
+    const xpToGain = monster.experiencia || 20;
 
         const user = auth.currentUser;
         if (user) {
@@ -3397,16 +3401,16 @@ if (playerHealth > playerMaxHealth) {
             // Marca o monstro como derrotado
            // NOVO CÓDIGO (PARA SUBSTITUIR O BLOCO ACIMA)
 
-// Marca todos os monstros do encontro como derrotados
-// A variável 'monsterNames' foi definida no início do script (em DOMContentLoaded)
-monsterNames.forEach(name => {
-    markMonsterAsDefeated(user.uid, name.trim())
+// Marca os monstros do encontro como derrotados (usa id do monstro carregado)
+const idsParaMarcar = window.currentMonsters
+    .map(m => m?.id ? String(m.id).replace(/_\d+$/, '') : null)
+    .filter(Boolean);
+const idsUnicos = [...new Set(idsParaMarcar)];
+idsUnicos.forEach(idM => {
+    markMonsterAsDefeated(user.uid, idM)
         .then(success => {
-            if (success) {
-                console.log(`LOG: Monstro ${name.trim()} marcado como derrotado.`);
-            } else {
-                console.error(`LOG: Falha ao marcar ${name.trim()} como derrotado.`);
-            }
+            if (success) console.log(`LOG: Monstro ${idM} marcado como derrotado.`);
+            else console.error(`LOG: Falha ao marcar ${idM} como derrotado.`);
         });
 });
         }
@@ -3986,25 +3990,46 @@ if (fecharPainelAtos) {
 // Tenta carregar o monstro do sessionStorage primeiro
 // Limpa monstros antigos e carrega os novos
 window.currentMonsters = [];
-monsterNames.forEach((name, index) => {
-  const monsterData = getMonsterById(name.trim());
-  console.log("Carregando monstro:", name.trim(), monsterData);
-  if (monsterData) {
-    const monsterInstance = JSON.parse(JSON.stringify(monsterData));
-    monsterInstance.id = `${monsterData.id || name.trim()}_${index}`; // Garante ID único
+const salaOrigemURL = getUrlParameter('salaOrigem');
 
-    // --- ENERGIA ALEATÓRIA ---
-    if (monsterInstance.energiaDados) {
-      const energiaSorteada = rollDice(monsterInstance.energiaDados);
-      monsterInstance.pontosDeEnergia = energiaSorteada;
-      monsterInstance.pontosDeEnergiaMax = energiaSorteada;
-    } else if (typeof monsterInstance.pontosDeEnergia !== 'undefined') {
-      monsterInstance.pontosDeEnergiaMax = monsterInstance.pontosDeEnergia;
+if (salaOrigemURL) {
+  // modo Burst → carrega do Firestore (assíncrono)
+  window._monstrosPromise = (async () => {
+    const uidAtualLocal = firebase.auth().currentUser?.uid;
+    if (!uidAtualLocal) return null;
+    const m = await carregarMonstroDaSala(salaOrigemURL, uidAtualLocal);
+    if (!m) {
+      console.warn('[BURST] Monstro não encontrado no Firestore — caindo pro monstros.js');
+      return null;
     }
-
-    window.currentMonsters.push(monsterInstance);
-  }
-});
+    const inst = JSON.parse(JSON.stringify(m));
+    inst.id = `${m.id}_0`;
+    if (inst.energiaDados) {
+      const e = rollDice(inst.energiaDados);
+      inst.pontosDeEnergia = e;
+      inst.pontosDeEnergiaMax = e;
+    }
+    window.currentMonsters.push(inst);
+    return inst;
+  })();
+} else {
+  monsterNames.forEach((name, index) => {
+    const monsterData = getMonsterById(name.trim());
+    console.log("Carregando monstro:", name.trim(), monsterData);
+    if (monsterData) {
+      const monsterInstance = JSON.parse(JSON.stringify(monsterData));
+      monsterInstance.id = `${monsterData.id || name.trim()}_${index}`;
+      if (monsterInstance.energiaDados) {
+        const energiaSorteada = rollDice(monsterInstance.energiaDados);
+        monsterInstance.pontosDeEnergia = energiaSorteada;
+        monsterInstance.pontosDeEnergiaMax = energiaSorteada;
+      } else if (typeof monsterInstance.pontosDeEnergia !== 'undefined') {
+        monsterInstance.pontosDeEnergiaMax = monsterInstance.pontosDeEnergia;
+      }
+      window.currentMonsters.push(monsterInstance);
+    }
+  });
+}
 
 // Define o alvo inicial do jogador
 window.currentMonster = window.currentMonsters[0] || null;
@@ -4166,9 +4191,10 @@ async function updatePlayerExperience(userId, xpToAdd) {
             // Carregar dados do Arcanum Iudicium
         await window.arcanumIudicium.carregarFirestore();
             relampagoRiskCounter = 1; // Reset do risco do Relâmpago
-            await aplicarBurstOverride();
-            console.log("LOG: Usuário logado. ID:", userId);
-            const monsterName = getUrlParameter('monstro');
+console.log("LOG: Usuário logado. ID:", userId);
+if (window._monstrosPromise) await window._monstrosPromise;
+await aplicarBurstOverride();
+const monsterName = getUrlParameter('monstro');
 
             // Carregar o estado da batalha ao carregar a página
 if (window.currentMonsters.length > 0) { // Verifica se há monstros para a batalha
