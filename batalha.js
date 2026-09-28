@@ -3444,6 +3444,22 @@ idsUnicos.forEach(idM => {
         }
     }
 
+    // === BLOCO NOVO — COMEÇA AQUI ===
+    // Enriquecer cada drop com os dados completos do item (fallback local)
+    const ITENS_DB_BATALHA = [...initialItems, ...extraItems];
+    lootItems = lootItems.map(d => {
+        const base = ITENS_DB_BATALHA.find(i => i.id === d.id);
+        if (base) {
+            return {
+                ...base,
+                quantity: d.quantity || base.quantity || 1
+            };
+        }
+        // item desconhecido — mantém o que veio
+        return { ...d };
+    });
+    // === BLOCO NOVO — TERMINA AQUI ===
+
     // Salva loot para a tela de loot
     sessionStorage.setItem('lootItems', JSON.stringify(lootItems));
 
