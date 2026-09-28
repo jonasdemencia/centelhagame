@@ -2412,6 +2412,29 @@ function getUrlParameter(name) {
     return value;
 }
 
+async function aplicarBurstOverride() {
+    const salaOrigem = getUrlParameter('salaOrigem');
+    if (!salaOrigem || !auth.currentUser) return;
+    if (window.currentMonsters.length === 0) return;
+    try {
+        const snap = await getDoc(doc(db, "players", auth.currentUser.uid));
+        if (!snap.exists()) return;
+        const mm = snap.data().mapaMundo || {};
+        const burst = mm[salaOrigem]?.burst;
+        if (!burst || typeof burst.energiaAtual !== 'number' || burst.energiaAtual <= 0) return;
+
+        const alvo = window.currentMonsters[0];
+        alvo.pontosDeEnergia = burst.energiaAtual;
+        if (typeof burst.energiaMax === 'number') alvo.pontosDeEnergiaMax = burst.energiaMax;
+        window.currentMonster = alvo;
+        currentMonster = alvo;
+
+        console.log(`[BURST] Energia transferida: ${alvo.pontosDeEnergia}/${alvo.pontosDeEnergiaMax}`);
+    } catch (e) {
+        console.error('[BURST] Falha ao aplicar override:', e);
+    }
+}
+
 // Função para barra de HP
 function atualizarBarraHP(idElemento, valorAtual, valorMaximo) {
     const barra = document.getElementById(idElemento);
@@ -3289,7 +3312,7 @@ async function createContinueAdventureButton(db, userId) {
 }
 
 
-function handlePostBattle(monster) {
+async function handlePostBattle(monster) {
     console.log("handlePostBattle chamado com monstro:", monster?.nome);
 
     registerDeadBody(monster);
@@ -3481,6 +3504,20 @@ if (narrativaVitoria || narrativaDerrota) {
     window.battleStarted = false; // Reset do estado da batalha usando window para garantir escopo global
     window.animatedUndead = [];
     window.deadBodies = [];
+        // [BURST] Marca o burst da sala de origem como resolvido
+    const salaOrigemBurst = getUrlParameter('salaOrigem');
+    if (salaOrigemBurst && auth.currentUser) {
+        try {
+            const playerRef = doc(db, "players", auth.currentUser.uid);
+            await updateDoc(playerRef, {
+                [`mapaMundo.${salaOrigemBurst}.burst.resolvido`]: true,
+                [`mapaMundo.${salaOrigemBurst}.burst.energiaAtual`]: 0
+            });
+            console.log(`[BURST] Sala ${salaOrigemBurst} marcada como resolvida.`);
+        } catch (e) {
+            console.error('[BURST] Falha ao marcar resolvido:', e);
+        }
+    }
 }
 
 
@@ -4122,6 +4159,7 @@ async function updatePlayerExperience(userId, xpToAdd) {
             // Carregar dados do Arcanum Iudicium
         await window.arcanumIudicium.carregarFirestore();
             relampagoRiskCounter = 1; // Reset do risco do Relâmpago
+            await aplicarBurstOverride();
             console.log("LOG: Usuário logado. ID:", userId);
             const monsterName = getUrlParameter('monstro');
 
