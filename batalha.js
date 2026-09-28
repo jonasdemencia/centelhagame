@@ -3995,7 +3995,7 @@ const salaOrigemURL = getUrlParameter('salaOrigem');
 if (salaOrigemURL) {
   // modo Burst → carrega do Firestore (assíncrono)
   window._monstrosPromise = (async () => {
-    const uidAtualLocal = firebase.auth().currentUser?.uid;
+    const uidAtualLocal = auth.currentUser?.uid;
     if (!uidAtualLocal) return null;
     const m = await carregarMonstroDaSala(salaOrigemURL, uidAtualLocal);
     if (!m) {
@@ -4031,21 +4031,21 @@ if (salaOrigemURL) {
   });
 }
 
-// Define o alvo inicial do jogador
-window.currentMonster = window.currentMonsters[0] || null;
-currentMonster = window.currentMonster;
+// Define o alvo inicial do jogador — aguarda a promise do Firestore antes de renderizar
+(async () => {
+    if (window._monstrosPromise) await window._monstrosPromise;
 
-if (window.currentMonsters.length === 0) {
-    console.error("LOG: Nenhum monstro foi carregado para a batalha.");
-    document.getElementById("monster-name").innerText = "Monstros não encontrados";
-} else {
-    // A UI principal (por enquanto) mostrará o primeiro monstro como alvo
+    window.currentMonster = window.currentMonsters[0] || null;
+    currentMonster = window.currentMonster;
+
+    if (window.currentMonsters.length === 0) {
+        console.error("LOG: Nenhum monstro foi carregado para a batalha.");
+        document.getElementById("monster-name").innerText = "Monstros não encontrados";
+        return;
+    }
+
     updateMonsterInfoUI();
-    // Você precisará criar uma função para exibir as barras de vida de todos os monstros
-    displayAllMonsterHealthBars(); 
-}
-
-
+    displayAllMonsterHealthBars();
 
     if (currentMonster) {
         console.log("LOG: Dados do monstro (carregamento inicial):", currentMonster);
@@ -4055,14 +4055,14 @@ if (window.currentMonsters.length === 0) {
         if (monsterImageElement) {
             monsterImageElement.src = currentMonster.imagem;
             console.log("LOG: Imagem do monstro carregada.");
-        } else {
-            console.error("LOG: Elemento de imagem do monstro não encontrado (ID: monster-image)");
         }
     } else {
         console.error("LOG: Monstro não encontrado:", monsterName);
         document.getElementById("monster-name").innerText = "Monstro não encontrado";
         document.getElementById("monster-description").innerText = "O monstro especificado na URL não foi encontrado.";
     }
+})();
+    
 
     // Função para atualizar a experiência do jogador no Firestore
 async function updatePlayerExperience(userId, xpToAdd) {
