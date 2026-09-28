@@ -382,6 +382,62 @@
         color: #000;
         border-color: #fff;
     }
+
+    /* ============================================================
+       BURST — pré-batalha dentro da sala
+       ============================================================ */
+    #sala-desc .burst-trecho {
+        transition: filter .06s ease-out;
+        will-change: filter;
+    }
+    #sala-desc .burst-trecho.pulse {
+        filter: brightness(1.55);
+    }
+    #sala-desc .burst-trecho .alvo-burst {
+        cursor: crosshair;
+        color: #d9a441;
+        transition: color .15s, text-shadow .15s;
+        font-weight: inherit;
+    }
+    #sala-desc .burst-trecho .alvo-burst:hover {
+        color: #fff;
+        text-shadow: 0 0 6px rgba(217, 164, 65, 0.6);
+    }
+    #sala-desc .burst-trecho .alvo-burst.travado {
+        color: #fff;
+        font-weight: 700;
+        text-shadow: 0 0 10px rgba(217, 164, 65, 0.85);
+    }
+
+    #burst-reveal {
+        position: fixed; inset: 0;
+        display: none;
+        align-items: center; justify-content: center;
+        background: rgba(0,0,0,.88);
+        z-index: 9999;
+        pointer-events: none;
+    }
+    #burst-reveal.on { display: flex; }
+    #burst-reveal .nome {
+        font-family: 'Playfair Display', serif;
+        font-style: italic;
+        font-size: clamp(64px, 16vw, 260px);
+        font-weight: 700;
+        color: #b83227;
+        text-shadow: 0 0 40px rgba(184,50,39,.75), 0 0 90px rgba(184,50,39,.35);
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        animation: burstRevealFade .7s ease-out forwards;
+        text-align: center;
+        padding: 0 20px;
+        line-height: 1;
+    }
+    @keyframes burstRevealFade {
+        0%   { opacity: 0; transform: scale(.9); }
+        15%  { opacity: 1; transform: scale(1); }
+        75%  { opacity: 1; transform: scale(1); }
+        100% { opacity: 0; transform: scale(1.05); }
+    }
     </style>
     <base target="_blank">
 </head>
@@ -430,6 +486,8 @@
         <button id="send-btn" onclick="enviar(document.getElementById('user-input').value.trim())" disabled>[ EXECUTAR ]</button>
     </div>
 </div>
+
+<div id="burst-reveal"><div class="nome"></div></div>
 
 <div id="inventario-narrativa">
     <button id="fechar-inventario-btn" onclick="fecharInventario()">Fechar Inventário</button>
@@ -1654,6 +1712,7 @@ ANSWER:`
             const docSnap = await getDoc(docRef);
             if (docSnap.exists()) {
                 const data = docSnap.data();
+                window.playerData = data;
                 if (data.turnos !== undefined) turnosJogados = data.turnos;
                 if (data?.energy?.total !== undefined) {
                     energia = data.energy.total;
@@ -1803,6 +1862,342 @@ ANSWER:`
         chatBox.scrollTop = chatBox.scrollHeight;
     }
 
+    // ============================================================
+    // BURST — pré-batalha dentro da sala
+    // ============================================================
+    const XP_POR_MONSTRO = {
+        "Lobo Faminto": 50, "Goblin Sorrateiro": 30, "Esqueleto Guerreiro": 60,
+        "Rato Gigante": 20, "Ogro Brutamontes": 150, "Aranha Venenosa": 55,
+        "Zumbi Cambaleante": 70, "Harpia Cruel": 80, "Verme Gigante da Terra": 90,
+        "Bandido de Estrada": 60, "Morcego Sanguessuga": 35, "Elemental de Fogo": 100,
+        "Espectro Sombrio": 90, "Mímico": 120, "Lobo Alfa": 80,
+        "Escaravelho Explosivo": 45, "Necromante Aprendiz": 110, "Golem de Pedra": 150,
+        "Serpente do Pântano": 70, "Árvore Viva": 130, "Rato Mutante": 60
+    };
+    const XP_BURST_DEFAULT = 20;
+
+    window.burstState = null;
+
+    function rollDiceBurst(dado) {
+        const s = String(dado).toLowerCase().replace(/\s+/g, '');
+        let mod = 0, base = s;
+        const idx = s.search(/[+\-]\d+$/);
+        if (idx > 0) { mod = parseInt(s.slice(idx)); base = s.slice(0, idx); }
+        const parts = base.split('d');
+        if (parts.length === 1) return (parseInt(parts[0]) || 0) + mod;
+        const n = parseInt(parts[0]) || 1;
+        const sides = parseInt(parts[1]) || 1;
+        let total = mod;
+        for (let i = 0; i < n; i++) total += Math.floor(Math.random() * sides) + 1;
+        return total;
+    }
+
+    function obterArmaEquipadaBurst() {
+        const inv = window.playerData?.inventory;
+        const nomeEquipado = inv?.equippedItems?.weapon;
+        if (!nomeEquipado) return null;
+        const nomeLimpo = String(nomeEquipado).replace(/\s*\(\d+\/\d+\)$/, '');
+        return Object.values(ITENS_DB).find(i => i.content === nomeLimpo)
+            || ITENS_DB[nomeLimpo.toLowerCase()]
+            || null;
+    }
+
+    function iniciarBurstSala(salaId) {
+        const sala = mapaMundo?.[salaId];
+        if (!sala?.burst || sala.burst.resolvido) {
+            window.burstState = null;
+            return;
+        }
+        if ((sala.burst.energiaAtual ?? sala.burst.energiaMax) <= 0) {
+            window.burstState = null;
+            return;
+        }
+
+        // Já ativo pra essa sala? Não reinicia.
+        if (window.burstState && window.burstState.salaId === salaId && !window.burstState.finalizado) return;
+
+        const trechoEl = document.querySelector('#sala-desc .burst-trecho');
+        if (!trechoEl) return;
+
+        const b = sala.burst;
+        const energiaAtual = b.energiaAtual ?? b.energiaMax;
+
+        window.burstState = {
+            salaId,
+            sala,
+            trechoEl,
+            energiaMax: b.energiaMax,
+            energiaAtual,
+            totalPalavras: (b.texto || '').split(/\s+/).filter(Boolean).length,
+            travado: false,
+            timerId: null,
+            finalizado: false
+        };
+
+        renderBurstTrecho();
+
+        document.addEventListener('click', burstClickHandler);
+    }
+
+    function renderBurstTrecho() {
+        const st = window.burstState;
+        if (!st) return;
+        const b = st.sala.burst;
+
+        if (st.energiaAtual <= 0) {
+            st.trechoEl.style.display = 'none';
+            st.trechoEl.innerHTML = '';
+            return;
+        }
+
+        const proporcao = st.energiaMax > 0 ? st.energiaAtual / st.energiaMax : 0;
+        let visiveis = Math.ceil(st.totalPalavras * proporcao);
+        if (st.energiaAtual > 0 && visiveis === 0) visiveis = 1;
+
+        const palavras = (b.texto || '').split(/\s+/).filter(Boolean);
+        const mostradas = palavras.slice(0, visiveis);
+        const alvoLimpo = String(b.palavraAlvo || '').toLowerCase();
+
+        st.trechoEl.innerHTML = mostradas.map(p => {
+            const limpa = p.toLowerCase().replace(/[.,!?;:—–\-"']/g, '');
+            if (limpa === alvoLimpo) {
+                return st.travado
+                    ? `<span class="alvo-burst travado">${p}</span>`
+                    : `<span class="alvo-burst">${p}</span>`;
+            }
+            return `<span>${p}</span>`;
+        }).join(' ');
+    }
+
+    function pulsarTrechoBurst() {
+        const st = window.burstState;
+        if (!st?.trechoEl) return;
+        st.trechoEl.classList.add('pulse');
+        setTimeout(() => st.trechoEl?.classList.remove('pulse'), 80);
+    }
+
+    function iniciarTimerBurst() {
+        const st = window.burstState;
+        if (!st || st.timerId || st.finalizado) return;
+        const tempo = st.sala.burst.tempoReacao || 5000;
+        st.timerId = setTimeout(() => {
+            if (st.finalizado) return;
+            finalizarBurstSala('batalha');
+        }, tempo);
+    }
+
+    function burstClickHandler(e) {
+        const st = window.burstState;
+        if (!st || st.finalizado) return;
+        if (window._transicaoEmAndamento) return;
+
+        // Ignora cliques em botões, controles e overlays
+        if (e.target.closest('button, .nav-btn, #controls, #map-controls, #loot-area, .fade-overlay, #burst-reveal, #narrador-status-badge, #narrador-status-painel')) return;
+
+        if (!st.travado) {
+            const alvo = e.target.closest('.alvo-burst');
+            if (!alvo) return;
+            st.travado = true;
+            renderBurstTrecho();
+            adicionarMensagem('Você mira o alvo.', 'system');
+            iniciarTimerBurst();
+            return;
+        }
+
+        // Travado: qualquer clique = tentativa de tiro
+        e.preventDefault();
+        tentarAtirarBurst();
+    }
+
+    async function tentarAtirarBurst() {
+        const st = window.burstState;
+        if (!st || st.finalizado) return;
+
+        const arma = obterArmaEquipadaBurst();
+        const usaMunicao = !!(arma && arma.ammoType);
+        const loadedAmmo = window.playerData?.inventory?.equippedItems?.weapon_loadedAmmo || 0;
+
+        if (usaMunicao && loadedAmmo <= 0) {
+            adicionarMensagem('Você está carregando...', 'system');
+            st.travado = false;
+            renderBurstTrecho();
+            await new Promise(r => setTimeout(r, 1000));
+
+            const ok = await recarregarArmaBurst(arma);
+            if (ok) {
+                adicionarMensagem(`Você carregou o ${arma.content}.`, 'system');
+            } else {
+                adicionarMensagem('Sem munição no inventário.', 'system');
+            }
+            return;
+        }
+
+        const dano = rollDiceBurst(arma?.damage || '1d2');
+
+        if (usaMunicao) await decrementarMunicaoBurst();
+
+        st.energiaAtual = Math.max(0, st.energiaAtual - dano);
+        st.sala.burst.energiaAtual = st.energiaAtual;
+
+        renderBurstTrecho();
+        pulsarTrechoBurst();
+        adicionarMensagem(`Dano: ${dano}.`, 'system');
+
+        await salvarEstadoJogador();
+
+        if (st.energiaAtual <= 0) {
+            finalizarBurstSala('morte');
+        }
+    }
+
+    async function decrementarMunicaoBurst() {
+        if (!uidAtual) return;
+        const ref = doc(db, "players", uidAtual);
+        const snap = await getDoc(ref);
+        if (!snap.exists()) return;
+        const data = snap.data();
+        const inv = data.inventory;
+        if (!inv?.equippedItems) return;
+        inv.equippedItems.weapon_loadedAmmo = Math.max(0, (inv.equippedItems.weapon_loadedAmmo || 0) - 1);
+        await updateDoc(ref, { inventory: inv });
+        if (window.playerData) window.playerData.inventory = inv;
+    }
+
+    async function recarregarArmaBurst(arma) {
+        if (!uidAtual || !arma?.ammoType) return false;
+        const ref = doc(db, "players", uidAtual);
+        const snap = await getDoc(ref);
+        if (!snap.exists()) return false;
+        const data = snap.data();
+        const inv = data.inventory;
+        if (!inv?.itemsInChest) return false;
+
+        const idx = inv.itemsInChest.findIndex(i => i.id === arma.ammoType && (i.quantity || 0) > 0);
+        if (idx === -1) return false;
+
+        const ammoItem = inv.itemsInChest[idx];
+        const capacidade = arma.ammoCapacity || 6;
+        const carregar = Math.min(capacidade, ammoItem.quantity);
+
+        inv.equippedItems = inv.equippedItems || {};
+        inv.equippedItems.weapon_loadedAmmo = carregar;
+        ammoItem.quantity -= carregar;
+        if (ammoItem.quantity <= 0) inv.itemsInChest.splice(idx, 1);
+
+        await updateDoc(ref, { inventory: inv });
+        if (window.playerData) window.playerData.inventory = inv;
+        return true;
+    }
+
+    function revelarNomeBurst(nome) {
+        return new Promise(resolve => {
+            const reveal = document.getElementById('burst-reveal');
+            if (!reveal) return resolve();
+            reveal.querySelector('.nome').textContent = nome;
+            reveal.classList.add('on');
+            setTimeout(() => {
+                reveal.classList.remove('on');
+                resolve();
+            }, 700);
+        });
+    }
+
+    async function premiarAbateBurst(burst) {
+        if (!uidAtual) return;
+
+        const xp = XP_POR_MONSTRO[burst.nomeReal] ?? XP_BURST_DEFAULT;
+        try {
+            const ref = doc(db, "players", uidAtual);
+            const snap = await getDoc(ref);
+            if (snap.exists()) {
+                const atual = snap.data().experience || 0;
+                await updateDoc(ref, { experience: atual + xp });
+                adicionarMensagem(`Você ganhou ${xp} pontos de experiência.`, 'system');
+            }
+        } catch (e) { console.error('[Burst] XP falhou:', e); }
+
+        const drops = burst.drops || [];
+        for (const drop of drops) {
+            if (!drop?.id) continue;
+            const ok = await adicionarItem(drop.id);
+            if (ok) {
+                const nome = ITENS_DB[drop.id]?.content || drop.id;
+                adicionarMensagem(`[VOCÊ OBTEVE: ${nome}]`, 'system');
+            }
+        }
+    }
+
+    async function finalizarBurstSala(tipo) {
+        const st = window.burstState;
+        if (!st || st.finalizado) return;
+        st.finalizado = true;
+        if (st.timerId) { clearTimeout(st.timerId); st.timerId = null; }
+        document.removeEventListener('click', burstClickHandler);
+
+        const b = st.sala.burst;
+
+        if (tipo === 'morte') {
+            b.resolvido = true;
+            b.energiaAtual = 0;
+            adicionarMensagem('Alvo abatido.', 'system');
+            if (st.trechoEl) {
+                st.trechoEl.style.display = 'none';
+                st.trechoEl.innerHTML = '';
+            }
+            await premiarAbateBurst(b);
+            await salvarEstadoJogador();
+            atualizarBotoesNavegacao();
+            window.burstState = null;
+            return;
+        }
+
+        if (tipo === 'batalha') {
+            adicionarMensagem('O monstro reage.', 'system');
+            await revelarNomeBurst(b.nomeReal || String(b.monstroId || '').toUpperCase());
+
+            window._transicaoEmAndamento = true;
+            const overlay = document.createElement('div');
+            overlay.className = 'fade-overlay';
+            document.body.appendChild(overlay);
+            setTimeout(() => overlay.classList.add('active'), 10);
+            setTimeout(() => {
+                window.location.href = `batalha.html?monstro=${encodeURIComponent(b.monstroId)}`;
+            }, 900);
+        }
+    }
+
+    function aposRenderizarSala() {
+        const sala = mapaMundo?.[secaoAtualId];
+        if (!sala?.burst || sala.burst.resolvido || (sala.burst.energiaAtual ?? sala.burst.energiaMax) <= 0) {
+            if (window.burstState) {
+                document.removeEventListener('click', burstClickHandler);
+                if (window.burstState.timerId) clearTimeout(window.burstState.timerId);
+                window.burstState = null;
+            }
+            return;
+        }
+        // Pequeno delay pra garantir que o innerHTML já foi aplicado
+        setTimeout(() => iniciarBurstSala(secaoAtualId), 0);
+    }
+
+    async function testeHabilidadeParaSairBurst(burst) {
+        await animarTextoTeste('TESTE DE HABILIDADE');
+        await criarBotaoRolar();
+        const semente = Math.floor(Math.random() * 20) + 1;
+        const valorAtributo = jogadorStats.HABILIDADE ?? 0;
+        const resultado = semente <= valorAtributo ? 'SUCESSO' : 'FALHA';
+        mostrarResultadoDado(semente, 'HABILIDADE', valorAtributo, resultado);
+        await new Promise(r => setTimeout(r, 300));
+        if (resultado === 'SUCESSO') {
+            const div = document.createElement('div');
+            div.className = 'result-message';
+            div.innerText = 'Você se move em silêncio e escapa sem ser notado.';
+            chatBox.appendChild(div);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+        return resultado === 'SUCESSO';
+    }
+
                 async function realizarTestePerigo(atributoForcado = null, textoSucesso = null) {
         const atributo = atributoForcado ?? 'SORTE';
         await animarTextoTeste(`TESTE DE ${atributo}`);
@@ -1826,17 +2221,25 @@ ANSWER:`
 
     function montarTextoDaSala(sala) {
         let texto = (sala?.texto_logico || "").trim();
-        if (!sala?.descricoes_itens_ativos || !sala?.itens || sala.itens.length === 0) {
-            return texto;
-        }
-        const descricoes = sala.descricoes_itens_ativos;
-        for (const itemId of sala.itens) {
-            const frase = descricoes[itemId];
-            if (frase && frase.trim()) {
-                texto = texto.replace(/[.\s]+$/, "");
-                texto += ". " + frase.trim();
+
+        if (sala?.descricoes_itens_ativos && sala?.itens && sala.itens.length > 0) {
+            const descricoes = sala.descricoes_itens_ativos;
+            for (const itemId of sala.itens) {
+                const frase = descricoes[itemId];
+                if (frase && frase.trim()) {
+                    texto = texto.replace(/[.\s]+$/, "");
+                    texto += ". " + frase.trim();
+                }
             }
         }
+
+        // [BURST] Injeta o trecho do monstro como span manipulável
+        const b = sala?.burst;
+        if (b && !b.resolvido && (b.energiaAtual ?? b.energiaMax) > 0 && b.texto) {
+            texto = texto.replace(/[.\s]+$/, "");
+            texto += ` <span class="burst-trecho">${b.texto}</span>`;
+        }
+
         return texto;
     }
 
@@ -1904,6 +2307,24 @@ ANSWER:`
         }
 
         window._transicaoEmAndamento = true;
+
+        // [BURST] Testa habilidade antes de sair da sala com monstro vivo
+        const salaBurstCheck = mapaMundo?.[secaoAtualId];
+        if (salaBurstCheck?.burst && !salaBurstCheck.burst.resolvido
+            && (salaBurstCheck.burst.energiaAtual ?? salaBurstCheck.burst.energiaMax) > 0) {
+            const passou = await testeHabilidadeParaSairBurst(salaBurstCheck.burst);
+            if (!passou) {
+                await revelarNomeBurst(salaBurstCheck.burst.nomeReal || String(salaBurstCheck.burst.monstroId || '').toUpperCase());
+                const overlayBurst = document.createElement('div');
+                overlayBurst.className = 'fade-overlay';
+                document.body.appendChild(overlayBurst);
+                setTimeout(() => overlayBurst.classList.add('active'), 10);
+                setTimeout(() => {
+                    window.location.href = `batalha.html?monstro=${encodeURIComponent(salaBurstCheck.burst.monstroId)}`;
+                }, 900);
+                return;
+            }
+        }
 
         const salaAtualObj = mapaMundo?.[secaoAtualId];
 if (salaAtualObj && opcao && opcao.destino !== undefined) {
@@ -2031,6 +2452,7 @@ if (salaAtualObj && opcao && opcao.destino !== undefined) {
 
         atualizarBotoesNavegacao();
         atualizarLootRoom();
+        aposRenderizarSala();
 
         overlay.classList.remove('active');
         setTimeout(() => {
@@ -2275,6 +2697,7 @@ if (ram.adiciona_item) {
         if (salaDesc.innerHTML === '') {
             salaDesc.innerHTML = montarTextoDaSala(sala) || "A escuridão domina este lugar...";
         }
+        aposRenderizarSala();
 
         if (!sala.opcoes) return;
 
