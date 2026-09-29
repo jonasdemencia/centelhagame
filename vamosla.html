@@ -2579,13 +2579,15 @@ ANSWER:`
         tentarAtirarBurst();
     }
 
-    async function tentarAtirarBurst() {
+   async function tentarAtirarBurst() {
     const st = window.burstState;
     if (!st || st.finalizado) return;
 
     const arma = obterArmaEquipadaBurst();
     const usaMunicao = !!(arma && arma.ammoType);
     const loadedAmmo = window.playerData?.inventory?.equippedItems?.weapon_loadedAmmo || 0;
+
+    console.log('[BURST ACERTO] tentarAtirarBurst chamada', { arma: arma?.content, usaMunicao, loadedAmmo });
 
     if (usaMunicao && loadedAmmo <= 0) {
         adicionarMensagem('Você está carregando...', 'system');
@@ -2607,14 +2609,20 @@ ANSWER:`
     // Teste de acerto: d20 + HABILIDADE vs Couraça do monstro
     const d20 = Math.floor(Math.random() * 20) + 1;
     const couraca = st.sala.burst.couraça ?? 0;
-    const acertou = (d20 + (jogadorStats.HABILIDADE ?? 0)) >= couraca;
+    const habilidade = jogadorStats.HABILIDADE ?? 0;
+    const acertou = (d20 + habilidade) >= couraca;
+
+    console.log(`[BURST ACERTO] d20=${d20} + HAB=${habilidade} = ${d20 + habilidade} vs Couraça=${couraca} → ${acertou ? 'ACERTOU' : 'ERROU'}`);
 
     if (!acertou) {
+        console.log('[BURST ACERTO] ramo de ERRO executado');
         renderBurstTrecho();
         pulsarTrechoBurst();
         adicionarMensagem('Errou o alvo.', 'system');
         return;
     }
+
+    console.log('[BURST ACERTO] ramo de ACERTO executado');
 
     const dano = rollDiceBurst(arma?.damage || '1d2');
 
