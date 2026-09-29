@@ -1329,19 +1329,20 @@ if (salaDescEl && sala) {
     salaDescEl.innerHTML = montarTextoDaSala(sala);
 }
                 
-                // 2) entrega os drops via adicionarItem (XP já foi somado pelo módulo)
-                const drops = Array.isArray(extras.drops) ? extras.drops : [];
-                for (const d of drops) {
-                    if (!d?.id) continue;
-                    const qtd = d.quantity || 1;
-                    for (let i = 0; i < qtd; i++) {
-                        const ok = await adicionarItem(d.id);
-                        if (ok) {
-                            const nome = ITENS_DB[d.id]?.content || d.id;
-                            adicionarMensagem(`[VOCÊ OBTEVE: ${nome}]`, 'system');
-                        }
-                    }
-                }
+                // 2) drops caem na sala como itens de chão (o jogador coleta clicando)
+const drops = Array.isArray(extras.drops) ? extras.drops : [];
+if (drops.length > 0 && sala) {
+    if (!Array.isArray(sala.itens)) sala.itens = [];
+    for (const d of drops) {
+        if (!d?.id) continue;
+        const qtd = d.quantity || 1;
+        for (let i = 0; i < qtd; i++) {
+            sala.itens.push(d.id);
+        }
+    }
+    await salvarEstadoJogador();
+    adicionarMensagem('Algo ficou no chão após o combate.', 'system');
+}
                 if (extras.xp) {
                     adicionarMensagem(`Você ganhou ${extras.xp} pontos de experiência.`, 'system');
                 }
