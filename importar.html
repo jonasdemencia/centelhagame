@@ -859,6 +859,9 @@ const DROPS_PERMITIDOS_LISTA = [
   'granada-mao','granada-de-concussao','granada-incendiaria'
 ];
 
+const ITEM_DINAMICO_IMAGE = 'https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/dinamico.png';           // exame
+const ITEM_DINAMICO_THUMB = 'https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thudinamico.png';      // chest
+
 function rollDice(dadoStr) {
   const s = String(dadoStr).toLowerCase().replace(/\s+/g, '');
   let mod = 0, base = s;
@@ -2826,11 +2829,19 @@ async function importarParaFirestore(dados, uid, logFn) {
     updatePayload["secaoAtualId"] = "1";
   }
 
-  if (dados.itens_novos && Object.keys(dados.itens_novos).length > 0) {
+ if (dados.itens_novos && Object.keys(dados.itens_novos).length > 0) {
     const atuais = dadosAtuais.itens_novos || {};
-    updatePayload['itens_novos'] = { ...atuais, ...dados.itens_novos };
+    const normalizados = {};
+    for (const [id, def] of Object.entries(dados.itens_novos)) {
+        normalizados[id] = {
+            ...def,
+            image: def.image || ITEM_DINAMICO_IMAGE,
+            thumbnailImage: def.thumbnailImage || ITEM_DINAMICO_THUMB
+        };
+    }
+    updatePayload['itens_novos'] = { ...atuais, ...normalizados };
     logFn(`🧩 ${Object.keys(dados.itens_novos).length} item(ns) novos registrados.`, 'ok');
-  }
+}
 
   // NOTA: o gate de órfãos foi movido para importarPuzzles (fim do pipeline).
   // Aqui só registramos os metadados (idade). Nenhum bloqueio.
@@ -2994,11 +3005,17 @@ async function importarPuzzles(dadosPuzzle, uid, logFn, zonaAtual) {
   if (dadosPuzzle.itens_novos && Object.keys(dadosPuzzle.itens_novos).length > 0) {
     const itensNovosAtuais = dadosAtuais.itens_novos || {};
     for (const [id, def] of Object.entries(dadosPuzzle.itens_novos)) {
-      if (!itensNovosAtuais[id]) itensNovosAtuais[id] = def;
+      if (!itensNovosAtuais[id]) {
+        itensNovosAtuais[id] = {
+          ...def,
+          image: def.image || ITEM_DINAMICO_IMAGE,
+          thumbnailImage: def.thumbnailImage || ITEM_DINAMICO_THUMB
+        };
+      }
     }
     updatePayload['itens_novos'] = itensNovosAtuais;
     logFn(`🧩 ${Object.keys(dadosPuzzle.itens_novos).length} novo(s) item(ns) adicionado(s).`, 'ok');
-  }
+}
 
   if (dadosPuzzle.textos_modificados) {
     for (const [salaId, novoTexto] of Object.entries(dadosPuzzle.textos_modificados)) {
