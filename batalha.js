@@ -1,24 +1,24 @@
-// Importa os SDKs necessários do Firebase
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
+// ============================================================
+// batalha.js — integrado ao vamosla.html
+// - Roda standalone (batalha.html com window._modoBatalhaStandalone = true)
+// - Ou embarcado (vamosla.html chama montarBatalha({ monstroId, salaOrigem }))
+// ============================================================
+
+import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, deleteDoc } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
 import { loadEquippedDice, initializeModule } from './dice-ui.js';
 import './arcanum-spells.js';
 
 // ============================================================
-// CALLBACKS DE INTEGRAÇÃO
-// ============================================================
-// Quando a batalha roda embarcada no vamosla, o pai seta:
-//   window.batalhaCallbacks = { onEncerrar(motivo, extras), onAtualizarHUD(parcial) }
-// Standalone (batalha.html aberta direto): sem callback, a batalha
-// apenas registra o encerramento no log e para.
+// [INTEGRAÇÃO] CALLBACKS
 // ============================================================
 window.batalhaCallbacks = window.batalhaCallbacks || null;
 
-function chamarCallback(motivo, extras = {}) {
+async function chamarCallback(motivo, extras = {}) {
     if (window.batalhaCallbacks && typeof window.batalhaCallbacks.onEncerrar === 'function') {
         try {
-            window.batalhaCallbacks.onEncerrar(motivo, extras);
+            await window.batalhaCallbacks.onEncerrar(motivo, extras);
             return true;
         } catch (e) {
             console.error('[batalha] onEncerrar falhou:', e);
@@ -26,6 +26,14 @@ function chamarCallback(motivo, extras = {}) {
         }
     }
     return false;
+}
+
+// ============================================================
+// [INTEGRAÇÃO] ALVO DO LOG (configurável pelo vamosla)
+// ============================================================
+function getLogContainer() {
+    const sel = window._batalhaLogTarget || '#battle-log-content';
+    return document.querySelector(sel);
 }
 
 const initialItems = [
@@ -121,14 +129,18 @@ function updateMonsterInfoUI() {
     if (!target) {
         document.getElementById("monster-name").innerText = "Nenhum alvo";
         document.getElementById("monster-description").innerText = "";
-        document.getElementById("monster-image").src = "";
+        // [INTEGRAÇÃO] guard: #monster-image pode não existir no vamosla
+        const imgEl = document.getElementById("monster-image");
+        if (imgEl) imgEl.src = "";
         const debuffsContainer = document.getElementById('monster-debuffs-container');
         if (debuffsContainer) debuffsContainer.innerHTML = '';
         return;
     }
     document.getElementById("monster-name").innerText = target.nome;
     document.getElementById("monster-description").innerText = target.descricao;
-    document.getElementById("monster-image").src = target.imagem;
+    // [INTEGRAÇÃO] guard: #monster-image pode não existir no vamosla
+    const imgEl = document.getElementById("monster-image");
+    if (imgEl) imgEl.src = target.imagem || '';
 }
 
 function displayAllMonsterHealthBars() {
@@ -297,10 +309,18 @@ let isPlayerTurn = false;
 let playerAbilityValue = 0;
 let battleStarted = false;
 
+// [INTEGRAÇÃO] unsubscribe do onAuthStateChanged
+let _authUnsubscribe = null;
+
 console.log("LOG: batalha.js carregado.");
 
 async function addLogMessage(message, delay = 0, typingSpeed = 30) {
-    const logContainer = document.getElementById("battle-log-content");
+    // [INTEGRAÇÃO] usa getLogContainer() em vez de getElementById fixo
+    const logContainer = getLogContainer();
+    if (!logContainer) {
+        console.warn("addLogMessage: container de log não encontrado.");
+        return;
+    }
     if (!currentTurnBlock) {
         console.warn("addLogMessage: currentTurnBlock nulo — criando bloco de emergência");
         currentTurnBlock = document.createElement('div');
@@ -852,8 +872,9 @@ const firebaseConfig = {
     appId: "1:700809803145:web:bff4c6a751ec9389919d58"
 };
 
+// [INTEGRAÇÃO] Evita "initializeApp duplicado" quando embarcado no vamosla.
 console.log("LOG: Inicializando Firebase.");
-const app = initializeApp(firebaseConfig);
+const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 initializeModule(db);
@@ -865,7 +886,9 @@ window.setDoc = setDoc;
 console.log("LOG: Funções Firebase disponibilizadas globalmente.");
 
 function startNewTurnBlock(turnName) {
-    const battleLogContent = document.getElementById("battle-log-content");
+    // [INTEGRAÇÃO] usa getLogContainer()
+    const battleLogContent = getLogContainer();
+    if (!battleLogContent) return;
     if (currentTurnBlock) {
         battleLogContent.prepend(currentTurnBlock);
     }
@@ -1027,9 +1050,9 @@ async function attemptEscape() {
     if (totalRoll >= difficulty) {
         await addLogMessage(`<strong style="color: green;">Você consegue escapar do combate!</strong>`, 1000);
         window.escapingInProgress = false;
-        // Encerra a batalha por fuga. O pai (vamosla) decide o que fazer.
-        // Standalone: apenas loga.
-        if (!chamarCallback('fuga', { salaOrigem: getUrlParameter('salaOrigem') })) {
+        // [INTEGRAÇÃO] await no callback
+        const handled = await chamarCallback('fuga', { salaOrigem: getUrlParameter('salaOrigem') });
+        if (!handled) {
             await addLogMessage(`<span style="color:#888;">(Fuga registrada — implementação de retorno pendente.)</span>`, 1000);
         }
     } else {
@@ -1629,14 +1652,15 @@ async function usarMagia(magiaId, efeito, valor, custo) {
     }
 }
 
+// [INTEGRAÇÃO] consulta window._batalhaParams antes de olhar a URL.
 function getUrlParameter(name) {
-    console.log("LOG: getUrlParameter chamado com:", name);
+    if (window._batalhaParams && window._batalhaParams[name] !== undefined && window._batalhaParams[name] !== null) {
+        return String(window._batalhaParams[name]);
+    }
     name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
     const regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
     const results = regex.exec(location.search);
-    const value = results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
-    console.log("LOG: getUrlParameter retornando:", value);
-    return value;
+    return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
 }
 
 async function aplicarBurstOverride() {
@@ -1920,7 +1944,7 @@ function getPlayerDefense() {
     const baseDefense = currentPlayerData?.couraca ? parseInt(currentPlayerData.couraca) : 0;
     let buffBonus = 0;
     activeBuffs.forEach(buff => {
-        if (buff.tipo === "couraca" || buff.couracaBonus) buffBonus += buff.valor || buff.couracaBonus;
+        if (buff.tipo === "couraca" || buff.couracaBonus) buffBonus += buff.valor || buff.couraçaBonus;
         if (buff.tipo === "anastia") buffBonus += buff.valor;
         if (buff.tipo === "velocidade") buffBonus += buff.valor;
         if (buff.tipo === "fire_shield") buffBonus += buff.valor;
@@ -2332,7 +2356,7 @@ async function handlePostBattle(monster) {
         if (user) {
             updatePlayerExperience(user.uid, xpToGain)
                 .then(newXP => {
-                    const logContainer = document.getElementById("battle-log-content");
+                    const logContainer = getLogContainer();
                     if (logContainer) {
                         const xpDiv = document.createElement('div');
                         xpDiv.classList.add('turn-block');
@@ -2386,10 +2410,6 @@ async function handlePostBattle(monster) {
         return { ...d };
     });
 
-    // Reativa os botões de ação (o usuário ainda pode estar na tela)
-    // Nenhum botão de inventário externo é reabilitado aqui.
-
-    // Limpa o estado da batalha
     const user = auth.currentUser;
     if (user && monster) {
         clearBattleState(user.uid, battleId)
@@ -2417,14 +2437,14 @@ async function handlePostBattle(monster) {
         }
     }
 
-    // Notifica o pai (vamosla) para retornar e exibir drops.
-    if (!chamarCallback('vitoria', {
+    // [INTEGRAÇÃO] await no callback (vamosla processa drops/XP antes de retornar)
+    const handled = await chamarCallback('vitoria', {
         drops: lootItems,
         xp: xpToGain,
         salaOrigem: salaOrigemBurst || null
-    })) {
-        // Standalone: registra no log da batalha
-        const logContainer = document.getElementById("battle-log-content");
+    });
+    if (!handled) {
+        const logContainer = getLogContainer();
         if (logContainer) {
             const infoDiv = document.createElement('div');
             infoDiv.classList.add('turn-block');
@@ -2441,7 +2461,63 @@ async function handlePostBattle(monster) {
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+// ============================================================
+// [INTEGRAÇÃO] LIMPEZA — chamado antes de nova batalha
+// ============================================================
+export function limparBatalha() {
+    if (_authUnsubscribe) {
+        try { _authUnsubscribe(); } catch (_) {}
+        _authUnsubscribe = null;
+    }
+    window.currentMonsters = [];
+    window.currentMonster = null;
+    currentMonster = null;
+    activeBuffs = [];
+    activeMonsterDebuffs = [];
+    preparingSpells = [];
+    window.animatedUndead = [];
+    window.deadBodies = [];
+    window.bigbyHandShields = {};
+    window.siferContext = null;
+    window.touchSpellContext = null;
+    window.touchDebuffContext = null;
+    window.touchVampiricContext = null;
+    window.magicContext = null;
+    window.backstabContext = null;
+    window.isBackstabAttack = false;
+    window.isPunhaladaVenenosaAttack = false;
+    window.punhaladaVenenosaContext = false;
+    window.skipNextPlayerTurnUI = false;
+    window.velocidadeUsada = false;
+    window.escapingInProgress = false;
+    currentTurnBlock = null;
+    nextTelegraphedAttack = null;
+    relampagoRiskCounter = 1;
+    escapeAttempts = 0;
+    playerHealth = 0;
+    playerMaxHealth = 0;
+    playerMagic = 0;
+    playerMaxMagic = 0;
+    isPlayerTurn = false;
+    window.isPlayerTurn = false;
+    window.battleStarted = false;
+    playerAbilityValue = 0;
+    battleStarted = false;
+}
+
+// ============================================================
+// [INTEGRAÇÃO] MONTAGEM — substitui o antigo DOMContentLoaded
+// ============================================================
+export async function montarBatalha({ monstroId = null, salaOrigem = null } = {}) {
+    // 0. limpa qualquer resíduo de batalha anterior
+    limparBatalha();
+
+    // 1. alimenta _batalhaParams (getUrlParameter vai consultar isso antes)
+    window._batalhaParams = {
+        monstro: monstroId || '',
+        monstros: monstroId || '',
+        salaOrigem: salaOrigem || ''
+    };
 
     sessionStorage.removeItem('initiativeResult');
     sessionStorage.removeItem('playerInitiativeRoll');
@@ -2450,13 +2526,14 @@ document.addEventListener('DOMContentLoaded', () => {
     sessionStorage.removeItem('monsterAbility');
     sessionStorage.removeItem('luteButtonClicked');
 
-    console.log("LOG: DOMContentLoaded evento disparado.");
+    console.log("LOG: montarBatalha iniciado. Params:", window._batalhaParams);
     const lutarButton = document.getElementById("iniciar-luta");
     const rolarIniciativaButton = document.getElementById("rolar-iniciativa");
-    const battleLogContent = document.getElementById("battle-log-content");
+    const battleLogContent = getLogContainer();
     attackOptionsDiv = document.getElementById("attack-options");
     const atacarCorpoACorpoButton = document.getElementById("atacar-corpo-a-corpo");
     const rolarDanoButton = document.getElementById("rolar-dano");
+
     const monsterNamesParam = getUrlParameter('monstros');
     monsterNames = monsterNamesParam ? monsterNamesParam.split(',') : [getUrlParameter('monstro') || 'lobo'];
     battleId = [...monsterNames].sort().join('_');
@@ -2464,8 +2541,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const correrButton = document.getElementById("correr-batalha");
     if (correrButton) {
-        correrButton.removeEventListener('click', attemptEscape);
-        correrButton.addEventListener('click', attemptEscape);
+        correrButton.onclick = attemptEscape;
         console.log("LOG: Evento de clique adicionado ao botão 'Correr'");
     } else {
         console.error("LOG: Botão 'Correr' não encontrado (ID: correr-batalha)");
@@ -2473,71 +2549,67 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const itensBtn = document.getElementById("itens-ferramentas");
     if (itensBtn) {
-        itensBtn.addEventListener("click", () => {
+        itensBtn.onclick = () => {
             if (isPlayerTurn) {
                 carregarItensConsumiveis(auth.currentUser.uid);
                 document.getElementById("itens-modal").style.display = "block";
             }
-        });
+        };
     }
 
     const itensModal = document.getElementById("itens-modal");
     if (itensModal) {
         const closeModal = itensModal.querySelector(".close-modal");
         if (closeModal) {
-            closeModal.addEventListener("click", () => {
-                itensModal.style.display = "none";
-            });
+            closeModal.onclick = () => { itensModal.style.display = "none"; };
         }
 
         const usarBtn = itensModal.querySelector(".usar-item-btn");
         if (usarBtn) {
-            usarBtn.addEventListener("click", () => {
+            usarBtn.onclick = () => {
                 const itemId = usarBtn.dataset.itemId;
                 const effect = usarBtn.dataset.effect;
                 const value = usarBtn.dataset.value;
                 usarItem(itemId, effect, value);
-            });
+            };
         }
 
-        window.addEventListener("click", (event) => {
+        itensModal.onclick = (event) => {
             if (event.target === itensModal) itensModal.style.display = "none";
-        });
+        };
     }
 
     const magiaBtn = document.getElementById("atacar-a-distancia");
     if (magiaBtn) {
-        magiaBtn.addEventListener("click", async () => {
+        magiaBtn.onclick = async () => {
             if (isPlayerTurn) {
                 await carregarMagiasDisponiveis();
                 document.getElementById("magias-modal").style.display = "block";
             }
-        });
+        };
     }
 
     const magiasModal = document.getElementById("magias-modal");
     if (magiasModal) {
         const closeModal = magiasModal.querySelector(".close-modal-magia");
         if (closeModal) {
-            closeModal.addEventListener("click", () => {
-                magiasModal.style.display = "none";
-            });
+            closeModal.onclick = () => { magiasModal.style.display = "none"; };
         }
 
         const usarBtn = magiasModal.querySelector(".usar-magia-btn");
         if (usarBtn) {
-            usarBtn.addEventListener("click", () => {
+            usarBtn.onclick = () => {
                 const magiaId = usarBtn.dataset.magiaId;
                 const efeito = usarBtn.dataset.efeito;
                 const valor = usarBtn.dataset.valor;
                 const custo = usarBtn.dataset.custo;
                 usarMagia(magiaId, efeito, valor, custo);
-            });
+            };
         }
 
-        window.addEventListener("click", (event) => {
+        magiasModal.onclick = (event) => {
             if (event.target === magiasModal) magiasModal.style.display = "none";
-        });
+        };
     }
 
     const atoClasseButton  = document.getElementById("ato-classe");
@@ -2557,7 +2629,7 @@ document.addEventListener('DOMContentLoaded', () => {
     ];
 
     if (atoClasseButton) {
-      atoClasseButton.addEventListener("click", () => {
+      atoClasseButton.onclick = () => {
         listaAtos.innerHTML = "";
 
         atosDoJogador.forEach(ato => {
@@ -2696,13 +2768,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         painelAtos.style.display = "block";
-      });
+      };
     }
 
     if (fecharPainelAtos) {
-      fecharPainelAtos.addEventListener("click", () => {
+      fecharPainelAtos.onclick = () => {
         painelAtos.style.display = "none";
-      });
+      };
     }
 
     window.currentMonsters = [];
@@ -2737,7 +2809,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return inst;
       })();
     } else {
-      console.warn('[BATALHA] Sem salaOrigem na URL — modo burst é o único caminho suportado. Nenhum monstro carregado.');
+      console.warn('[BATALHA] Sem salaOrigem — modo burst é o único caminho suportado. Nenhum monstro carregado.');
     }
 
     (async () => {
@@ -2748,7 +2820,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (window.currentMonsters.length === 0) {
             console.error("LOG: Nenhum monstro foi carregado para a batalha.");
-            document.getElementById("monster-name").innerText = "Monstros não encontrados";
+            const mn = document.getElementById("monster-name");
+            if (mn) mn.innerText = "Monstros não encontrados";
             return;
         }
 
@@ -2757,21 +2830,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (currentMonster) {
             console.log("LOG: Dados do monstro (carregamento inicial):", currentMonster);
-            document.getElementById("monster-name").innerText = currentMonster.nome;
-            document.getElementById("monster-description").innerText = currentMonster.descricao;
+            const mn = document.getElementById("monster-name");
+            const md = document.getElementById("monster-description");
+            if (mn) mn.innerText = currentMonster.nome;
+            if (md) md.innerText = currentMonster.descricao;
+            // [INTEGRAÇÃO] imagem opcional — só seta se o elemento existir
             const monsterImageElement = document.getElementById("monster-image");
             if (monsterImageElement) {
-                monsterImageElement.src = currentMonster.imagem;
+                monsterImageElement.src = currentMonster.imagem || '';
                 console.log("LOG: Imagem do monstro carregada.");
             }
         } else {
-            document.getElementById("monster-name").innerText = "Monstro não encontrado";
-            document.getElementById("monster-description").innerText = "O monstro especificado na URL não foi encontrado.";
+            const mn = document.getElementById("monster-name");
+            const md = document.getElementById("monster-description");
+            if (mn) mn.innerText = "Monstro não encontrado";
+            if (md) md.innerText = "O monstro especificado não foi encontrado.";
         }
     })();
 
     const botaoIniciativa = document.getElementById("rolar-iniciativa");
-    const logBatalha = document.getElementById("battle-log-content");
+    const logBatalha = getLogContainer();
 
     const initiativeResult = sessionStorage.getItem('initiativeResult');
     const playerInitiativeRoll = sessionStorage.getItem('playerInitiativeRoll');
@@ -2780,26 +2858,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const monsterAbilityStored = sessionStorage.getItem('monsterAbility');
     const luteButtonClicked = sessionStorage.getItem('luteButtonClicked') === 'true';
 
-    console.log("LOG: DOMContentLoaded - initiativeResult =", initiativeResult);
+    console.log("LOG: montarBatalha - initiativeResult =", initiativeResult);
 
     if (initiativeResult && currentMonster) {
-        console.log("LOG: DOMContentLoaded - initiativeResult encontrado:", initiativeResult);
+        console.log("LOG: montarBatalha - initiativeResult encontrado:", initiativeResult);
         if (lutarButton) {
             lutarButton.style.display = 'none';
-            console.log("LOG: DOMContentLoaded - Botão 'Lutar' escondido.");
         }
         if (rolarIniciativaButton) {
             rolarIniciativaButton.style.display = 'none';
-            console.log("LOG: DOMContentLoaded - Botão 'Rolar Iniciativa' escondido.");
         }
-        battleLogContent.innerHTML = "";
-        console.log("LOG: DOMContentLoaded - Log de batalha limpo.");
+        if (battleLogContent) battleLogContent.innerHTML = "";
         if (playerInitiativeRoll && monsterInitiativeRoll && playerAbilityStored !== null && monsterAbilityStored !== null) {
             startNewTurnBlock("Iniciativa");
             addLogMessage(`Você rolou ${playerInitiativeRoll} em um d20 + ${playerAbilityStored} (Habilidade) = ${parseInt(playerInitiativeRoll) + parseInt(playerAbilityStored)} para Iniciativa.`, 1000);
             addLogMessage(`${currentMonster.nome} rolou ${monsterInitiativeRoll} em um d20 + ${monsterAbilityStored} (Habilidade) = ${parseInt(monsterInitiativeRoll) + parseInt(monsterAbilityStored)} para Iniciativa.`, 1000);
             currentTurnBlock = null;
-            console.log("LOG: DOMContentLoaded - Informações de iniciativa adicionadas ao log.");
         }
         if (initiativeResult === 'player') {
             setTimeout(() => {
@@ -2807,7 +2881,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 addLogMessage(`<p>Você venceu a Iniciativa e atacará primeiro.</p>`, 1000);
                 if (attackOptionsDiv) {
                     attackOptionsDiv.style.display = 'block';
-                    if (atacarCorpoACorpoButton) { ; }
                     addLogMessage(`Turno do Jogador`, 1000);
                 }
                 isPlayerTurn = true;
@@ -2827,24 +2900,21 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     } else {
-        console.log("LOG: DOMContentLoaded - Estado inicial.");
+        console.log("LOG: montarBatalha - Estado inicial.");
         if (lutarButton) {
             lutarButton.style.display = 'block';
-            console.log("LOG: DOMContentLoaded - Botão 'Lutar' exibido (estado inicial).");
         }
         if (rolarIniciativaButton) {
             rolarIniciativaButton.style.display = 'none';
-            console.log("LOG: DOMContentLoaded - Botão 'Rolar Iniciativa' escondido (estado inicial).");
         }
         if (attackOptionsDiv) {
             attackOptionsDiv.style.display = 'none';
-            console.log("LOG: DOMContentLoaded - Opções de ataque escondidas (estado inicial).");
         }
-        battleLogContent.innerHTML = "";
-        console.log("LOG: DOMContentLoaded - Log de batalha limpo (estado inicial).");
+        if (battleLogContent) battleLogContent.innerHTML = "";
     }
 
-    onAuthStateChanged(auth, async (user) => {
+    // [INTEGRAÇÃO] guarda unsubscribe pra limpar depois
+    _authUnsubscribe = onAuthStateChanged(auth, async (user) => {
         console.log("LOG: onAuthStateChanged chamado.");
         if (user) {
             userId = user.uid;
@@ -2854,7 +2924,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log("LOG: Usuário logado. ID:", userId);
             if (window._monstrosPromise) await window._monstrosPromise;
             await aplicarBurstOverride();
-            const monsterName = getUrlParameter('monstro');
+            const monsterNameParam = getUrlParameter('monstro');
 
             if (window.currentMonsters.length > 0) {
                 loadBattleState(userId, battleId)
@@ -2886,10 +2956,10 @@ document.addEventListener('DOMContentLoaded', () => {
                             currentMonster = window.currentMonster;
                             if(currentMonster) updateMonsterInfoUI();
 
-                            const lutarButton = document.getElementById("iniciar-luta");
-                            const rolarIniciativaButton = document.getElementById("rolar-iniciativa");
-                            if (lutarButton) lutarButton.style.display = 'none';
-                            if (rolarIniciativaButton) rolarIniciativaButton.style.display = 'none';
+                            const lutarButtonL = document.getElementById("iniciar-luta");
+                            const rolarIniciativaButtonL = document.getElementById("rolar-iniciativa");
+                            if (lutarButtonL) lutarButtonL.style.display = 'none';
+                            if (rolarIniciativaButtonL) rolarIniciativaButtonL.style.display = 'none';
 
                             if (isPlayerTurn) {
                                 startNewTurnBlock("Jogador");
@@ -2913,7 +2983,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         window.playerData = playerData;
                         playerAbilityValue = playerData.habilidade ? playerData.habilidade : 0;
 
-                        const playerDamage = playerData.dano ? playerData.dano : "1";
                         console.log("LOG: onAuthStateChanged - Dados do jogador carregados:", playerData);
                         console.log("LOG: onAuthStateChanged - Habilidade do jogador:", playerAbilityValue);
 
@@ -2933,12 +3002,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         const playerHealthDisplay = document.getElementById("player-health");
                         if (playerHealthDisplay) {
                             playerHealthDisplay.innerText = playerHealth;
-                            console.log("LOG: onAuthStateChanged - Energia inicial do jogador exibida.");
                         }
 
                         if (lutarButton) {
                             lutarButton.disabled = false;
-                            lutarButton.addEventListener('click', () => {
+                            lutarButton.onclick = () => {
                                 console.log("LOG: Botão 'Lutar' clicado.");
                                 lutarButton.style.display = 'none';
                                 battleStarted = true;
@@ -2946,26 +3014,21 @@ document.addEventListener('DOMContentLoaded', () => {
                                 if (rolarIniciativaButton) {
                                     rolarIniciativaButton.style.display = 'block';
                                     sessionStorage.setItem('luteButtonClicked', 'true');
-                                    console.log("LOG: Botão 'Lutar' escondido, botão 'Rolar Iniciativa' exibido.");
                                 } else {
                                     console.error("LOG: Botão 'Rolar Iniciativa' não encontrado (ID: rolar-iniciativa)");
                                 }
-                            });
-                            console.log("LOG: onAuthStateChanged - Event listener adicionado ao botão 'Lutar'.");
+                            };
                         }
 
                         if (rolarIniciativaButton) {
-                            rolarIniciativaButton.addEventListener('click', async () => {
+                            rolarIniciativaButton.onclick = async () => {
                                 console.log("LOG: Botão 'Rolar Iniciativa' clicado.");
                                 const playerRoll = Math.floor(Math.random() * 20) + 1;
                                 const monsterRoll = Math.floor(Math.random() * 20) + 1;
                                 const playerAbilityValue = playerData?.skill.total || 0;
                                 const monsterAbilityValue = currentMonster.habilidade;
-                                console.log("LOG: onAuthStateChanged - Rolagem de iniciativa do jogador:", playerRoll);
-                                console.log("LOG: onAuthStateChanged - Rolagem de iniciativa do monstro:", monsterRoll);
-                                console.log("LOG: onAuthStateChanged - Habilidade do monstro:", monsterAbilityValue);
 
-                                battleLogContent.innerHTML = "";
+                                if (battleLogContent) battleLogContent.innerHTML = "";
                                 startNewTurnBlock("Iniciativa");
                                 await addLogMessage(`Turno de Iniciativa`, 1000);
                                 await addLogMessage(`Você rolou ${playerRoll} em um d20 + ${playerAbilityValue} (Habilidade) = ${playerRoll + playerAbilityValue} para Iniciativa.`, 1000);
@@ -2978,7 +3041,6 @@ document.addEventListener('DOMContentLoaded', () => {
                                         await addLogMessage(`<p>Você venceu a Iniciativa! Você ataca primeiro.</p>`, 1000);
                                         if (attackOptionsDiv) {
                                             attackOptionsDiv.style.display = 'block';
-                                            if (atacarCorpoACorpoButton) { ; }
                                             await addLogMessage(`Turno do Jogador`, 1000);
                                         }
                                         initiativeWinner = 'player';
@@ -3010,17 +3072,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
                                 rolarIniciativaButton.style.display = 'none';
                                 sessionStorage.removeItem('luteButtonClicked');
-                            });
-                            console.log("LOG: onAuthStateChanged - Event listener adicionado ao botão 'Rolar Iniciativa'.");
-                        } else {
-                            console.error("LOG: Botão 'Rolar Iniciativa' não encontrado (ID: rolar-iniciativa)");
+                            };
                         }
 
                         const rollLocationBtn = document.getElementById("rolar-localizacao");
                         const rollDamageBtn = document.getElementById("rolar-dano");
 
                         if (rollLocationBtn) {
-                            rollLocationBtn.addEventListener('click', async () => {
+                            rollLocationBtn.onclick = async () => {
                                 console.log("LOG: Botão 'Rolar Localização' clicado.");
                                 rollLocationBtn.disabled = true;
                                 rollLocationBtn.style.display = 'none';
@@ -3067,19 +3126,16 @@ document.addEventListener('DOMContentLoaded', () => {
                                 window.siferContext.locationRoll = locationRoll;
                                 window.siferContext.locationName = locationName;
                                 window.siferContext.bonusType = bonusCalculationType;
-                                console.log("LOG: Contexto SIFER atualizado para rolagem de dano:", window.siferContext);
 
                                 if (rollDamageBtn) {
                                     rollDamageBtn.style.display = "inline-block";
                                     rollDamageBtn.disabled = false;
-                                    console.log("LOG: Botão 'Rolar Dano' habilitado.");
-                                } else {
-                                    console.error("Botão 'Rolar Dano' não encontrado!");
                                 }
-                            });
+                            };
                         }
 
-                        rolarDanoButton.addEventListener('click', async () => {
+                        if (rolarDanoButton) {
+                            rolarDanoButton.onclick = async () => {
                             console.log("LOG: Botão 'DANO' clicado.");
                             if (!isPlayerTurn) {
                                 await addLogMessage(`<p>Não é seu turno!</p>`, 1000);
@@ -3093,8 +3149,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 displayAllMonsterHealthBars();
                                 await addLogMessage(`${currentMonster.nome} sofreu ${danoRolado} de dano mágico (${window.magicContext.dano}).`, 800);
 
-                                const userId = window.magicContext.userId;
-                                const monsterName = window.magicContext.monsterName;
+                                const userIdL = window.magicContext.userId;
                                 window.magicContext = null;
                                 rolarDanoButton.style.display = 'none';
 
@@ -3115,8 +3170,8 @@ document.addEventListener('DOMContentLoaded', () => {
                                     return;
                                 }
 
-                                await updatePlayerMagicInFirestore(userId, playerMagic);
-                                await saveBattleState(userId, battleId, playerHealth);
+                                await updatePlayerMagicInFirestore(userIdL, playerMagic);
+                                await saveBattleState(userIdL, battleId, playerHealth);
                                 endPlayerTurn();
                                 return;
                             }
@@ -3153,7 +3208,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 }
 
                                 const user = auth.currentUser;
-                                if (user) await saveBattleState(userId, battleId, playerHealth);
+                                if (user) await saveBattleState(user.uid, battleId, playerHealth);
                                 endPlayerTurn();
                                 return;
                             }
@@ -3200,7 +3255,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 }
 
                                 const user = auth.currentUser;
-                                if (user) await saveBattleState(userId, battleId, playerHealth);
+                                if (user) await saveBattleState(user.uid, battleId, playerHealth);
                                 endPlayerTurn();
                                 return;
                             }
@@ -3428,7 +3483,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 await addLogMessage(`Energia restante do ${currentMonster.nome}: ${currentMonster.pontosDeEnergia}.`, 1000);
 
                                 const user = auth.currentUser;
-                                if (userId && monsterName && currentMonster) {
+                                if (userId && monsterNameParam && currentMonster) {
                                      await saveBattleState(userId, battleId, playerHealth);
                                 } else {
                                      console.error("Erro ao salvar estado: userId, monsterName ou currentMonster não definidos.");
@@ -3466,10 +3521,11 @@ document.addEventListener('DOMContentLoaded', () => {
                                      setTimeout(() => monsterAttack(), 1500);
                                 }
                             }
-                        });
+                            };
+                        }
 
                         if (atacarCorpoACorpoButton) {
-                            atacarCorpoACorpoButton.addEventListener('click', async () => {
+                            atacarCorpoACorpoButton.onclick = async () => {
                                 if (!isPlayerTurn || playerHealth <= -10 || !currentMonster || currentMonster.pontosDeEnergia <= 0) {
                                     console.log("LOG: Ataque inválido (jogador morto ou batalha acabou). Retornando.");
                                     return;
@@ -3632,15 +3688,6 @@ document.addEventListener('DOMContentLoaded', () => {
                                   criticalThreshold = anastiaBuff.criticalThreshold;
                                 }
 
-                                const currentWeaponName = window.playerData?.inventory?.equippedItems?.weapon;
-                                console.log("DEBUG SIFER", {
-                                  playerAttackRollRaw,
-                                  criticalThreshold,
-                                  levezAfiadaBuff,
-                                  currentWeaponName,
-                                  armasLeves
-                                });
-
                                 if (playerAttackRollRaw >= criticalThreshold && !isTouchSpell) {
                                     console.log("LOG: SIFER - Acerto Crítico! Aguardando rolagem de localização.");
                                     await addLogMessage(`<strong style="color: orange;">ACERTO CRÍTICO (SIFER)!</strong> Role a localização!`, 500);
@@ -3684,12 +3731,10 @@ document.addEventListener('DOMContentLoaded', () => {
                                     }
                                     endPlayerTurn();
                                 }
-                            });
-                            console.log("LOG: onAuthStateChanged - Event listener MODIFICADO adicionado ao botão 'Atacar Corpo a Corpo'.");
+                            };
                         } else {
                             console.error("LOG: Botão 'Atacar Corpo a Corpo' não encontrado (ID: atacar-corpo-a-corpo)");
                         }
-
                     } else {
                         console.log("LOG: onAuthStateChanged - Nenhum documento encontrado para o jogador:", user.uid);
                         alert("Dados do jogador não encontrados. Por favor, crie seu personagem.");
@@ -3710,8 +3755,20 @@ document.addEventListener('DOMContentLoaded', () => {
         window.ArcanumUI.initPanel();
     }
 
-    console.log("LOG: Event listener para DOMContentLoaded finalizado.");
-});
+    console.log("LOG: montarBatalha finalizado.");
+}
+
+// ============================================================
+// [INTEGRAÇÃO] STANDALONE — batalha.html antigo continua funcionando
+// ============================================================
+if (typeof window !== 'undefined' && window._modoBatalhaStandalone === true) {
+    document.addEventListener('DOMContentLoaded', () => {
+        montarBatalha({
+            monstroId: getUrlParameter('monstro') || null,
+            salaOrigem: getUrlParameter('salaOrigem') || null
+        }).catch(e => console.error('[batalha] Falha ao montar (standalone):', e));
+    });
+}
 
 async function setupArcanumConjurationModal(magiaId) {
     const magia = magiasDisponiveis.find(m => m.id === magiaId);
