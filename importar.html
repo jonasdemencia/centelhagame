@@ -1520,6 +1520,7 @@ const DEFAULT_BODIES = {
     '- Opcional. No máximo 2 entradas na zona inteira.',
     '- Cada "item" DEVE estar em DROPS_PERMITIDOS. Cada "sala" DEVE estar em SALAS_ELEGIVEIS.',
     '- Pode ser qualquer sala listada em SALAS_ELEGIVEIS, tenha monstro ou não. Não é drop de combate — é item de chão, o jogador coleta clicando.',
+    '- NUNCA use uma sala que apareça em SALAS_COM_ITEM. Se SALAS_COM_ITEM listar todas as elegíveis, omita itens_sala.',
     '- Sem repetir item: cada id aparece uma única vez em itens_sala.',
     '- Na dúvida, omita o array.',
     '',
@@ -1743,10 +1744,16 @@ function construirCabecalho(key, n, ctx) {
     }
     const estadosOrd = [...(ctx.estados_pendentes || [])].sort((a, b) => (b.idade ?? 0) - (a.idade ?? 0));
     linhas.push(`estados_pendentes: ${JSON.stringify(estadosOrd)}`);
-  } else if (key === 'monstros') {
+    } else if (key === 'monstros') {
     const elegiveis = coletarSalasElegiveisMonstros(mapaMundoGlobal(), n);
     linhas.push(`SALAS_ELEGIVEIS = [${elegiveis.join(', ')}]`);
     linhas.push(`DROPS_PERMITIDOS = [${DROPS_PERMITIDOS_LISTA.join(', ')}]`);
+    const salasComItem = [];
+    for (let i = start; i <= end; i++) {
+      const s = mapaMundoGlobal()[String(i)];
+      if (Array.isArray(s?.itens) && s.itens.length > 0) salasComItem.push(i);
+    }
+    linhas.push(`SALAS_COM_ITEM = [${salasComItem.join(', ')}]`);
   }
   return linhas.join('\n');
 }
@@ -3225,10 +3232,15 @@ if (itensSala.length > 2) {
 for (const entrada of itensSala) {
   if (!entrada || typeof entrada !== 'object') { erros.push('itens_sala: entrada inválida'); continue; }
   if (typeof entrada.sala !== 'number' || !elegiveis.has(entrada.sala)) {
-  erros.push(`itens_sala: sala ${entrada.sala} não está em SALAS_ELEGIVEIS`); continue;
-}
+    erros.push(`itens_sala: sala ${entrada.sala} não está em SALAS_ELEGIVEIS`); continue;
+  }
   if (!mapaMundoAtual[String(entrada.sala)]) {
     erros.push(`itens_sala: sala ${entrada.sala} não existe no Firestore`); continue;
+  }
+  const itensExistentes = Array.isArray(mapaMundoAtual[String(entrada.sala)]?.itens) ? mapaMundoAtual[String(entrada.sala)].itens.length : 0;
+  if (itensExistentes > 0) {
+    erros.push(`itens_sala: sala ${entrada.sala} já possui ${itensExistentes} item(ns) de outro arquiteto`);
+    continue;
   }
   if (!entrada.item || !DROPS_PERMITIDOS_LISTA.includes(entrada.item)) {
     erros.push(`itens_sala: item "${entrada.item}" fora de DROPS_PERMITIDOS`);
