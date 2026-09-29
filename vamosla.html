@@ -2608,7 +2608,7 @@ ANSWER:`
 
     // Teste de acerto: d20 + HABILIDADE vs Couraça do monstro
     const d20 = Math.floor(Math.random() * 20) + 1;
-    const couraca = st.sala.burst.couraça ?? 0;
+    const couraca = st.sala.burst.couraca ?? st.sala.burst.couraça ?? 0;
         const habilidade = Math.max(0, (jogadorStats.HABILIDADE ?? 0) - 16);
     const acertou = (d20 + habilidade) >= couraca;
 
