@@ -325,7 +325,7 @@ async function addLogMessage(message, delay = 0, typingSpeed = 30) {
         console.warn("addLogMessage: currentTurnBlock nulo — criando bloco de emergência");
         currentTurnBlock = document.createElement('div');
         currentTurnBlock.classList.add('turn-block');
-        logContainer.prepend(currentTurnBlock);
+        logContainer.append(currentTurnBlock);
     }
     return new Promise((resolve) => {
         const p = document.createElement('p');
@@ -890,14 +890,14 @@ function startNewTurnBlock(turnName) {
     const battleLogContent = getLogContainer();
     if (!battleLogContent) return;
     if (currentTurnBlock) {
-        battleLogContent.prepend(currentTurnBlock);
+        battleLogContent.append(currentTurnBlock);
     }
     currentTurnBlock = document.createElement('div');
     currentTurnBlock.classList.add('turn-block');
     const turnTitle = document.createElement('h4');
     turnTitle.textContent = `Turno do ${turnName}`;
     currentTurnBlock.appendChild(turnTitle);
-    battleLogContent.prepend(currentTurnBlock);
+    battleLogContent.append(currentTurnBlock);
 }
 
 function chooseMonsterAttack(monster) {
@@ -2369,7 +2369,7 @@ async function handlePostBattle(monster) {
                         const totalMsg = document.createElement('p');
                         totalMsg.textContent = `Experiência total: ${newXP}`;
                         xpDiv.appendChild(totalMsg);
-                        logContainer.prepend(xpDiv);
+                        logContainer.append(xpDiv);
                     }
                 })
                 .catch(error => { console.error("Erro ao conceder experiência:", error); });
@@ -2456,7 +2456,7 @@ async function handlePostBattle(monster) {
                 ? `${lootItems.length} item(ns) obtido(s): ${lootItems.map(i => i.content || i.id).join(', ')}`
                 : 'Nenhum item obtido.';
             infoDiv.appendChild(infoMsg);
-            logContainer.prepend(infoDiv);
+            logContainer.append(infoDiv);
         }
     }
 }
