@@ -1482,7 +1482,8 @@ const DEFAULT_BODIES = {
     'Você receberá: tema da zona, número da zona (1-10), texto lógico das salas elegíveis.',
     '',
     '## SAÍDA',
-    '{"monstros": [ {...}, {...} ]}',
+    '{"monstros": [ {...}, {...} ], "itens_sala": [ {"sala": 3, "item": "chavedeferro"} ]}',
+    '(itens_sala é opcional — omita ou use [] se não houver motivo narrativo.)',
     'Retorne APENAS JSON válido. Sem markdown, sem comentários, sem prosa.',
     '',
     '## SALAS',
@@ -1511,6 +1512,13 @@ const DEFAULT_BODIES = {
     '- Na dúvida, NÃO dropa. Monstros comuns não deixam nada.',
     '- Todo "id" de drop precisa estar na lista de DROPS_PERMITIDOS.',
     '- Cada drop no JSON precisa ter TODOS estes campos: id (da lista), quantity (int 1-3), content (nome legível), description (1 frase curta) e image (deixe "" vazio se não souber).',
+    '',
+    '## ITENS_NA_SALA (itens_sala)',
+    '- Opcional. No máximo 2 entradas na zona inteira.',
+    '- Cada "item" DEVE estar em DROPS_PERMITIDOS. Cada "sala" DEVE estar em SALAS_ELEGIVEIS.',
+    '- Pode ser qualquer sala listada em SALAS_ELEGIVEIS, tenha monstro ou não. Não é drop de combate — é item de chão, o jogador coleta clicando.',
+    '- Sem repetir item: cada id aparece uma única vez em itens_sala.',
+    '- Na dúvida, omita o array.',
     '',
     '## BURST (pré-batalha na sala)',
     'Cada monstro tem um "burst" com:',
@@ -3193,6 +3201,23 @@ async function importarMonstros(dadosMonstros, uid, logFn, zonaAtual) {
     }
     salasUsadas.add(m.sala_id);
   }
+const itensSala = Array.isArray(dadosMonstros.itens_sala) ? dadosMonstros.itens_sala : [];
+if (itensSala.length > 2) {
+  erros.push(`itens_sala: máximo 2 entradas (recebido ${itensSala.length})`);
+}
+for (const entrada of itensSala) {
+  if (!entrada || typeof entrada !== 'object') { erros.push('itens_sala: entrada inválida'); continue; }
+  if (typeof entrada.sala !== 'number' || !elegiveis.has(entrada.sala)) {
+  erros.push(`itens_sala: sala ${entrada.sala} não está em SALAS_ELEGIVEIS`); continue;
+}
+  if (!mapaMundoAtual[String(entrada.sala)]) {
+    erros.push(`itens_sala: sala ${entrada.sala} não existe no Firestore`); continue;
+  }
+  if (!entrada.item || !DROPS_PERMITIDOS_LISTA.includes(entrada.item)) {
+    erros.push(`itens_sala: item "${entrada.item}" fora de DROPS_PERMITIDOS`);
+  }
+}
+  
   if (erros.length > 0) {
     for (const e of erros) logFn(`❌ ${e}`, 'err');
     throw new Error(`Lote rejeitado — ${erros.length} inconsistência(s). Nada foi salvo.`);
@@ -3226,6 +3251,20 @@ async function importarMonstros(dadosMonstros, uid, logFn, zonaAtual) {
     updatePayload[`mapaMundo.${salaId}.burst`] = burst;
     logFn(`🐺 ${m.nome} → sala ${m.sala_id} · tier ${m.tier} · ${energiaRolada} energia`, 'ok');
   }
+
+  if (itensSala.length > 0) {
+  const porSala = {};
+  for (const entrada of itensSala) {
+    const sid = String(entrada.sala);
+    (porSala[sid] = porSala[sid] || []).push(entrada.item);
+  }
+  for (const [salaId, itens] of Object.entries(porSala)) {
+    const existentes = Array.isArray(mapaMundoAtual[salaId]?.itens) ? mapaMundoAtual[salaId].itens : [];
+    const merged = [...new Set([...existentes, ...itens])];
+    updatePayload[`mapaMundo.${salaId}.itens`] = merged;
+    logFn(`📦 ${itens.length} item(ns) → sala ${salaId}: ${itens.join(', ')}`, 'ok');
+  }
+}
 
   await docRef.update(updatePayload);
   return { salas: [...salasUsadas] };
