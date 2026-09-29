@@ -3639,7 +3639,7 @@ export async function montarBatalha({ monstroId = null, salaOrigem = null } = {}
                                     playerAttackRollRaw = Math.floor(Math.random() * 20) + 1;
                                 }
 
-                                const vooBuff = activeBuffs.find(buff => buff.tipo === "voo");
+                                                                const vooBuff = activeBuffs.find(buff => buff.tipo === "voo");
                                 const vooBonus = vooBuff ? vooBuff.valor : 0;
                                 const playerAttackRollTotal = playerAttackRollRaw + playerAbilityValue + vooBonus;
 
