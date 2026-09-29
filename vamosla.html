@@ -2687,16 +2687,18 @@ ANSWER:`
     } catch (e) { console.error('[Burst] XP falhou:', e); }
 
     const drops = burst.drops || [];
-    for (const drop of drops) {
-        if (!drop?.id) continue;
-        const qtd = drop.quantity || 1;
-        for (let i = 0; i < qtd; i++) {
-            const ok = await adicionarItem(drop.id);
-            if (ok) {
-                const nome = ITENS_DB[drop.id]?.content || drop.id;
-                adicionarMensagem(`[VOCÊ OBTEVE: ${nome}]`, 'system');
+    const salaAbate = mapaMundo?.[secaoAtualId];
+    if (drops.length > 0 && salaAbate) {
+        if (!Array.isArray(salaAbate.itens)) salaAbate.itens = [];
+        for (const d of drops) {
+            if (!d?.id) continue;
+            const qtd = d.quantity || 1;
+            for (let i = 0; i < qtd; i++) {
+                salaAbate.itens.push(d.id);
             }
         }
+        atualizarLootRoom();
+        adicionarMensagem('Algo ficou no chão após o abate.', 'system');
     }
 }
 
