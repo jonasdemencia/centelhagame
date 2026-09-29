@@ -2580,45 +2580,57 @@ ANSWER:`
     }
 
     async function tentarAtirarBurst() {
-        const st = window.burstState;
-        if (!st || st.finalizado) return;
+    const st = window.burstState;
+    if (!st || st.finalizado) return;
 
-        const arma = obterArmaEquipadaBurst();
-        const usaMunicao = !!(arma && arma.ammoType);
-        const loadedAmmo = window.playerData?.inventory?.equippedItems?.weapon_loadedAmmo || 0;
+    const arma = obterArmaEquipadaBurst();
+    const usaMunicao = !!(arma && arma.ammoType);
+    const loadedAmmo = window.playerData?.inventory?.equippedItems?.weapon_loadedAmmo || 0;
 
-        if (usaMunicao && loadedAmmo <= 0) {
-            adicionarMensagem('Você está carregando...', 'system');
-            st.travado = false;
-            renderBurstTrecho();
-            await new Promise(r => setTimeout(r, 1000));
+    if (usaMunicao && loadedAmmo <= 0) {
+        adicionarMensagem('Você está carregando...', 'system');
+        st.travado = false;
+        renderBurstTrecho();
+        await new Promise(r => setTimeout(r, 1000));
 
-            const ok = await recarregarArmaBurst(arma);
-            if (ok) {
-                adicionarMensagem(`Você carregou o ${arma.content}.`, 'system');
-            } else {
-                adicionarMensagem('Sem munição no inventário.', 'system');
-            }
-            return;
+        const ok = await recarregarArmaBurst(arma);
+        if (ok) {
+            adicionarMensagem(`Você carregou o ${arma.content}.`, 'system');
+        } else {
+            adicionarMensagem('Sem munição no inventário.', 'system');
         }
+        return;
+    }
 
-        const dano = rollDiceBurst(arma?.damage || '1d2');
+    if (usaMunicao) await decrementarMunicaoBurst();
 
-        if (usaMunicao) await decrementarMunicaoBurst();
+    // Teste de acerto: d20 + HABILIDADE vs Couraça do monstro
+    const d20 = Math.floor(Math.random() * 20) + 1;
+    const couraca = st.sala.burst.couraça ?? 0;
+    const acertou = (d20 + (jogadorStats.HABILIDADE ?? 0)) >= couraca;
 
-        st.energiaAtual = Math.max(0, st.energiaAtual - dano);
-        st.sala.burst.energiaAtual = st.energiaAtual;
-
+    if (!acertou) {
         renderBurstTrecho();
         pulsarTrechoBurst();
-        adicionarMensagem(`Dano: ${dano}.`, 'system');
-
-        await salvarEstadoJogador();
-
-        if (st.energiaAtual <= 0) {
-            finalizarBurstSala('morte');
-        }
+        adicionarMensagem('Errou o alvo.', 'system');
+        return;
     }
+
+    const dano = rollDiceBurst(arma?.damage || '1d2');
+
+    st.energiaAtual = Math.max(0, st.energiaAtual - dano);
+    st.sala.burst.energiaAtual = st.energiaAtual;
+
+    renderBurstTrecho();
+    pulsarTrechoBurst();
+    adicionarMensagem(`Dano: ${dano}.`, 'system');
+
+    await salvarEstadoJogador();
+
+    if (st.energiaAtual <= 0) {
+        finalizarBurstSala('morte');
+    }
+}
 
     async function decrementarMunicaoBurst() {
         if (!uidAtual) return;
