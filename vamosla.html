@@ -1324,6 +1324,11 @@
                     sala.burst.energiaAtual = 0;
                 }
 
+const salaDescEl = document.getElementById('sala-desc');
+if (salaDescEl && sala) {
+    salaDescEl.innerHTML = montarTextoDaSala(sala);
+}
+                
                 // 2) entrega os drops via adicionarItem (XP já foi somado pelo módulo)
                 const drops = Array.isArray(extras.drops) ? extras.drops : [];
                 for (const d of drops) {
