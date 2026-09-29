@@ -432,6 +432,326 @@
         75%  { opacity: 1; transform: scale(1); }
         100% { opacity: 0; transform: scale(1.05); }
     }
+
+    /* ============================================================
+       [BATALHA] ÁREA DE COMBATE — tudo escopado em #batalha-area
+       ============================================================ */
+    #batalha-area {
+        display: none;
+        flex-direction: column;
+        gap: 10px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    #batalha-area .batalha-cabecalho {
+        border-bottom: 1px solid #444;
+        padding-bottom: 8px;
+    }
+    #batalha-area #monster-name {
+        font-family: 'Playfair Display', serif;
+        color: #c8a456;
+        font-size: 1.35em;
+        letter-spacing: 1px;
+    }
+    #batalha-area #monster-description {
+        color: #aaa;
+        font-size: 0.9em;
+        font-style: italic;
+        margin-top: 4px;
+        line-height: 1.4;
+    }
+    #batalha-area #monster-bars-container {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+    #batalha-area .monster-bar-item {
+        padding: 6px 8px;
+        background: #0a0a0a;
+        border: 1px solid #222;
+        border-radius: 2px;
+        font-family: 'VT323', monospace;
+    }
+    #batalha-area .monster-bar-item.target {
+        border-color: #a13d3d;
+        box-shadow: 0 0 8px rgba(161,61,61,0.35);
+    }
+    #batalha-area .barra-hp-container {
+        width: 100%;
+        height: 14px;
+        background: #1a1a1a;
+        border: 1px solid #333;
+        position: relative;
+        overflow: hidden;
+        margin-top: 3px;
+    }
+    #batalha-area .barra-hp {
+        height: 100%;
+        width: 0%;
+        background: #008000;
+        transition: width 0.3s ease;
+    }
+    #batalha-area .hp-valor {
+        position: absolute;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 11px;
+        font-family: 'VT323', monospace;
+        color: #ddd;
+        text-shadow: 0 0 3px #000, 0 0 3px #000;
+        pointer-events: none;
+    }
+    #batalha-area .debuffs-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        margin-top: 4px;
+    }
+    #batalha-area .debuff-item,
+    #batalha-area .buff-item {
+        display: inline-flex;
+        gap: 5px;
+        background: #1a1a1a;
+        border: 1px solid #333;
+        padding: 2px 6px;
+        font-size: 11px;
+        font-family: 'VT323', monospace;
+        color: #bbb;
+        border-radius: 2px;
+    }
+    #batalha-area .debuff-turns, #batalha-area .buff-turns {
+        color: #c8a456;
+    }
+    #batalha-area .batalha-hud-jogador {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        padding: 8px 10px;
+        background: #0a0a0a;
+        border: 1px solid #222;
+        font-family: 'VT323', monospace;
+        font-size: 15px;
+        align-items: center;
+    }
+    #batalha-area .batalha-hud-jogador > div {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    #batalha-area .batalha-hud-jogador .barra-hp-container {
+        min-width: 120px;
+        width: 140px;
+        height: 12px;
+        margin-top: 0;
+    }
+    #batalha-area #buffs-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+    #batalha-area #player-projectiles {
+        display: flex;
+        align-items: center;
+        color: #d9a441;
+    }
+    #batalha-area #battle-log-content {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        max-height: 42vh;
+        min-height: 180px;
+        overflow-y: auto;
+        padding: 10px 12px;
+        background: #0c0c0c;
+        border: 1px solid #222;
+        box-shadow: inset 0 0 15px #000;
+        font-family: 'Courier Prime', monospace;
+    }
+    #batalha-area .turn-block {
+        border-left: 2px solid #333;
+        padding-left: 10px;
+        margin-bottom: 10px;
+    }
+    #batalha-area .turn-block h4 {
+        color: #c8a456;
+        font-family: 'VT323', monospace;
+        margin: 2px 0 6px 0;
+        font-size: 1.05em;
+        letter-spacing: 1px;
+    }
+    #batalha-area .turn-block p {
+        margin: 3px 0;
+        font-size: 0.95em;
+        line-height: 1.4;
+        color: #cfcfcf;
+    }
+    #batalha-area #attack-options {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        padding-top: 8px;
+        border-top: 1px dashed #222;
+    }
+    #batalha-area #attack-options button {
+        background: #111;
+        color: #aaa;
+        border: 1px solid #444;
+        padding: 8px 12px;
+        font-size: 14px;
+        font-family: 'Courier Prime', monospace;
+        cursor: pointer;
+        transition: 0.2s;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+    }
+    #batalha-area #attack-options button:hover:not(:disabled) {
+        background: #ccc;
+        color: #000;
+        border-color: #fff;
+    }
+    #batalha-area #attack-options button:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
+    #batalha-area #iniciar-luta,
+    #batalha-area #rolar-iniciativa {
+        display: block;
+        margin: 10px auto;
+        padding: 10px 28px;
+        background: #112211;
+        color: #4caf50;
+        border: 1px solid #4caf50;
+        font-family: inherit;
+        font-size: 15px;
+        cursor: pointer;
+        transition: 0.2s;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    #batalha-area #iniciar-luta:hover,
+    #batalha-area #rolar-iniciativa:hover {
+        background: #224422;
+        color: #fff;
+    }
+    #batalha-area .action-btn {
+        background: #111;
+        color: #aaa;
+        border: 1px solid #444;
+        padding: 6px 12px;
+        font-family: 'Courier Prime', monospace;
+        font-size: 13px;
+        cursor: pointer;
+        margin: 4px 0;
+        transition: 0.2s;
+    }
+    #batalha-area .action-btn:hover:not(:disabled) {
+        background: #ccc;
+        color: #000;
+    }
+    #batalha-area #itens-modal,
+    #batalha-area #magias-modal,
+    #batalha-area #painel-atos {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.85);
+        z-index: 6000;
+    }
+    #batalha-area .modal-content {
+        position: absolute;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        background: #0a0a0a;
+        border: 1px solid #333;
+        box-shadow: 0 0 25px rgba(0,0,0,0.8);
+        padding: 20px;
+        max-width: 90%;
+        max-height: 80vh;
+        overflow-y: auto;
+        min-width: 320px;
+        color: #ddd;
+    }
+    #batalha-area .modal-content h3 {
+        color: #c8a456;
+        font-family: 'VT323', monospace;
+        margin: 0 0 12px 0;
+        letter-spacing: 1px;
+    }
+    #batalha-area .close-modal,
+    #batalha-area .close-modal-magia {
+        position: absolute;
+        top: 6px; right: 12px;
+        cursor: pointer;
+        color: #888;
+        font-size: 1.6em;
+        line-height: 1;
+    }
+    #batalha-area .close-modal:hover,
+    #batalha-area .close-modal-magia:hover { color: #fff; }
+    #batalha-area .item-consumivel {
+        padding: 8px 10px;
+        background: #111;
+        border: 1px solid #333;
+        margin-bottom: 6px;
+        cursor: pointer;
+        font-family: 'Courier Prime', monospace;
+        font-size: 0.9em;
+        transition: 0.15s;
+    }
+    #batalha-area .item-consumivel:hover:not(.disabled) { border-color: #666; }
+    #batalha-area .item-consumivel.selected {
+        border-color: #c8a456;
+        background: #1a1408;
+    }
+    #batalha-area .item-consumivel .item-nome { color: #ddd; font-weight: bold; }
+    #batalha-area .item-consumivel .item-quantidade { color: #888; font-size: 0.85em; }
+    #batalha-area .item-consumivel .item-descricao { color: #999; font-size: 0.85em; margin-top: 4px; line-height: 1.35; }
+    #batalha-area .usar-item-btn,
+    #batalha-area .usar-magia-btn {
+        margin-top: 10px;
+        padding: 8px 18px;
+        background: #112211;
+        color: #4caf50;
+        border: 1px solid #4caf50;
+        font-family: 'Courier Prime', monospace;
+        font-size: 14px;
+        cursor: pointer;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    #batalha-area .usar-item-btn:hover,
+    #batalha-area .usar-magia-btn:hover { background: #224422; color: #fff; }
+    #batalha-area .ato-item {
+        padding: 10px;
+        background: #111;
+        border: 1px solid #333;
+        font-family: 'Courier Prime', monospace;
+        font-size: 0.9em;
+    }
+    #batalha-area .ato-item strong { color: #c8a456; }
+    #batalha-area .ato-item button {
+        padding: 6px 14px;
+        background: #1a1a1a;
+        color: #aaa;
+        border: 1px solid #444;
+        font-family: inherit;
+        cursor: pointer;
+        margin-top: 8px;
+        transition: 0.2s;
+        text-transform: uppercase;
+        font-size: 12px;
+    }
+    #batalha-area .ato-item button:hover { background: #ccc; color: #000; }
+    #batalha-area #fechar-painel-atos {
+        margin-top: 12px;
+        padding: 8px 18px;
+        background: #1a1a1a;
+        color: #aaa;
+        border: 1px solid #444;
+        font-family: 'Courier Prime', monospace;
+        cursor: pointer;
+    }
+    #batalha-area #fechar-painel-atos:hover { background: #ccc; color: #000; }
+    #batalha-area #lista-atos { max-height: 55vh; overflow-y: auto; padding-right: 4px; }
     </style>
     <base target="_blank">
 </head>
@@ -478,6 +798,82 @@
         <span class="input-prompt">&gt;</span>
         <input type="text" id="user-input" placeholder="Sua ação..." disabled autocomplete="off">
         <button id="send-btn" onclick="enviar(document.getElementById('user-input').value.trim())" disabled>[ EXECUTAR ]</button>
+    </div>
+
+    <!-- ============================================================
+         [BATALHA] ÁREA DE COMBATE (oculta por padrão)
+         Todos os IDs abaixo são consumidos por batalha.js via
+         getElementById — não renomeie sem ajustar o módulo.
+         #monster-image foi intencionalmente omitido.
+         ============================================================ -->
+    <div id="batalha-area">
+        <div class="batalha-cabecalho">
+            <div id="monster-name">—</div>
+            <div id="monster-description">—</div>
+        </div>
+
+        <div id="monster-bars-container"></div>
+
+        <div class="batalha-hud-jogador">
+            <div>
+                <span style="color:#aa5555;">🩸 Energia</span>
+                <div class="barra-hp-container">
+                    <div id="barra-hp-jogador" class="barra-hp"></div>
+                    <span id="hp-jogador-valor" class="hp-valor">0/0</span>
+                </div>
+            </div>
+            <div>
+                <span style="color:#5b8dd9;">✨ Magia</span>
+                <div class="barra-hp-container">
+                    <div id="barra-magia-jogador" class="barra-hp" style="background:#0000FF;"></div>
+                    <span id="magia-jogador-valor" class="hp-valor">0/0</span>
+                </div>
+            </div>
+            <div>🛡️ Couraça: <span id="player-couraca-valor">0</span></div>
+            <div id="player-projectiles"></div>
+            <div id="buffs-container"></div>
+        </div>
+
+        <div id="battle-log-content"></div>
+
+        <div id="attack-options" style="display:none;">
+            <button id="atacar-corpo-a-corpo">Atacar Corpo a Corpo</button>
+            <button id="ato-classe">Ato de Classe</button>
+            <button id="itens-ferramentas">Itens / Ferramentas</button>
+            <button id="atacar-a-distancia">Magia à Distância</button>
+            <button id="correr-batalha">Correr</button>
+            <button id="rolar-dano" style="display:none;">Rolar Dano</button>
+            <button id="rolar-localizacao" style="display:none;">Rolar Localização</button>
+        </div>
+
+        <button id="iniciar-luta">LUTAR</button>
+        <button id="rolar-iniciativa" style="display:none;">Rolar Iniciativa</button>
+
+        <div id="itens-modal" style="display:none;">
+            <div class="modal-content">
+                <span class="close-modal">✕</span>
+                <h3>Itens Consumíveis</h3>
+                <div id="itens-container"></div>
+                <button class="usar-item-btn" style="display:none;">Usar</button>
+            </div>
+        </div>
+
+        <div id="magias-modal" style="display:none;">
+            <div class="modal-content">
+                <span class="close-modal-magia">✕</span>
+                <h3>Magias Memorizadas</h3>
+                <div id="magias-container"></div>
+                <button class="usar-magia-btn" style="display:none;">Lançar</button>
+            </div>
+        </div>
+
+        <div id="painel-atos" style="display:none;">
+            <div class="modal-content">
+                <h3>Atos de Classe</h3>
+                <div id="lista-atos"></div>
+                <button id="fechar-painel-atos">Fechar</button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -695,6 +1091,12 @@
     //
     // NÃO reintroduza chamadas de geração aqui. Se precisar ajustar
     // conteúdo, edite o prompt correspondente e reimporte.
+    //
+    // [BATALHA] Este arquivo agora também EMBUTE a batalha. O módulo
+    // `batalha.js` é carregado sob demanda (dynamic import) na primeira
+    // luta, e a integração acontece via `window.batalhaCallbacks` +
+    // `iniciarBatalhaEmbutida`/`desmontarBatalha`. NÃO use
+    // `location.href = 'batalha.html'` — quebra o estado em memória.
     // ============================================================
 
     import { pipeline, cos_sim } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.16.0';
@@ -861,6 +1263,185 @@
         "É necessário possuir o item correto para liberar o acesso.",
         "O mecanismo não responde. Falta o meio adequado para acioná-lo."
     ];
+
+    // ============================================================
+    // [BATALHA] MÓDULO SOB DEMANDA
+    // ============================================================
+    let _batalhaModule = null;
+    let _batalhaEmAndamento = false;
+
+    async function carregarModuloBatalha() {
+        if (!_batalhaModule) {
+            _batalhaModule = await import('./batalha.js');
+        }
+        return _batalhaModule;
+    }
+
+    // Re-sincroniza os valores locais (energia, magia, mapaMundo) depois
+    // que a batalha mexe no Firestore por fora.
+    async function ressincronizarAposBatalha() {
+        if (!uidAtual) return;
+        try {
+            const snap = await getDoc(doc(db, "players", uidAtual));
+            if (!snap.exists()) return;
+            const data = snap.data();
+            if (data?.energy?.total !== undefined) {
+                energia = data.energy.total;
+                const el = document.getElementById('energia-span');
+                if (el) el.innerText = `🩸 ${energia}/10`;
+            }
+            if (data?.magic?.total !== undefined) {
+                magiaAtual = data.magic.total;
+                const el = document.getElementById('magia-span');
+                if (el) el.innerText = `✨ ${magiaAtual}`;
+            }
+            if (data.mapaMundo) {
+                mapaMundo = data.mapaMundo;
+                window.mapaMundo = mapaMundo;
+            }
+            if (data.itens_novos) {
+                for (const [id, definicao] of Object.entries(data.itens_novos)) {
+                    if (!ITENS_DB[id]) ITENS_DB[id] = definicao;
+                }
+            }
+        } catch (e) {
+            console.error('[vamosla] Falha ao ressincronizar pós-batalha:', e);
+        }
+    }
+
+    // ============================================================
+    // [BATALHA] CALLBACKS QUE O MÓDULO USA PARA DEVOLVER O CONTROLE
+    // ============================================================
+    window.batalhaCallbacks = {
+        async onEncerrar(motivo, extras = {}) {
+            console.log(`[vamosla][batalha] onEncerrar: ${motivo}`, extras);
+
+            if (motivo === 'vitoria') {
+                // 1) marca o burst resolvido em memória (o módulo já marcou no Firestore)
+                const salaId = extras.salaOrigem || secaoAtualId;
+                const sala = mapaMundo?.[salaId];
+                if (sala?.burst) {
+                    sala.burst.resolvido = true;
+                    sala.burst.energiaAtual = 0;
+                }
+
+                // 2) entrega os drops via adicionarItem (XP já foi somado pelo módulo)
+                const drops = Array.isArray(extras.drops) ? extras.drops : [];
+                for (const d of drops) {
+                    if (!d?.id) continue;
+                    const qtd = d.quantity || 1;
+                    for (let i = 0; i < qtd; i++) {
+                        const ok = await adicionarItem(d.id);
+                        if (ok) {
+                            const nome = ITENS_DB[d.id]?.content || d.id;
+                            adicionarMensagem(`[VOCÊ OBTEVE: ${nome}]`, 'system');
+                        }
+                    }
+                }
+                if (extras.xp) {
+                    adicionarMensagem(`Você ganhou ${extras.xp} pontos de experiência.`, 'system');
+                }
+
+                await salvarEstadoJogador();
+                await ressincronizarAposBatalha();
+                desmontarBatalha();
+                atualizarBotoesNavegacao();
+                atualizarLootRoom();
+                aposRenderizarSala();
+            } else if (motivo === 'fuga') {
+                // Fuga não marca o burst como resolvido. O jogador pode
+                // tentar de novo (nova tentativa de sair da sala).
+                await ressincronizarAposBatalha();
+                adicionarMensagem('Você conseguiu escapar do combate.', 'system');
+                desmontarBatalha();
+                aposRenderizarSala();
+            } else if (motivo === 'morte') {
+                await ressincronizarAposBatalha();
+                adicionarMensagem('A escuridão reclama seu corpo.', 'system');
+                desmontarBatalha();
+            }
+        }
+    };
+
+    // ============================================================
+    // [BATALHA] MONTAR / DESMONTAR IN-PAGE (substitui redirect)
+    // ============================================================
+    async function iniciarBatalhaEmbutida(monstroId, salaOrigem) {
+        if (_batalhaEmAndamento) return;
+        _batalhaEmAndamento = true;
+        window._transicaoEmAndamento = true;
+
+        // 1) congela o burst da sala atual (se houver)
+        if (window.burstState) {
+            try {
+                window.burstState.finalizado = true;
+                document.removeEventListener('click', burstClickHandler);
+                if (window.burstState.timerId) clearTimeout(window.burstState.timerId);
+            } catch (_) {}
+            window.burstState = null;
+        }
+
+        // 2) fade
+        const overlay = document.createElement('div');
+        overlay.className = 'fade-overlay';
+        document.body.appendChild(overlay);
+        setTimeout(() => overlay.classList.add('active'), 10);
+        await new Promise(r => setTimeout(r, 500));
+
+        // 3) troca de modo (narrativo -> batalha)
+        const mainScroll = document.getElementById('main-scroll-area');
+        const controls   = document.getElementById('controls');
+        const batalhaArea = document.getElementById('batalha-area');
+        if (mainScroll) mainScroll.style.display = 'none';
+        if (controls)   controls.style.display   = 'none';
+        if (batalhaArea) batalhaArea.style.display = 'flex';
+
+        // 4) aponta o log da batalha pro container próprio
+        window._batalhaLogTarget = '#battle-log-content';
+
+        // 5) monta o módulo
+        try {
+            const mod = await carregarModuloBatalha();
+            await mod.montarBatalha({ monstroId, salaOrigem });
+        } catch (e) {
+            console.error('[vamosla] Falha ao montar batalha:', e);
+            adicionarMensagem('[ERRO] Não foi possível carregar a batalha.', 'system');
+            // volta pro modo narrativo
+            if (batalhaArea) batalhaArea.style.display = 'none';
+            if (mainScroll) mainScroll.style.display = 'flex';
+            if (controls)   controls.style.display   = 'flex';
+            _batalhaEmAndamento = false;
+        }
+
+        overlay.classList.remove('active');
+        setTimeout(() => overlay.remove(), 300);
+        window._transicaoEmAndamento = false;
+    }
+    window.iniciarBatalhaEmbutida = iniciarBatalhaEmbutida;
+
+    function desmontarBatalha() {
+        if (_batalhaModule && typeof _batalhaModule.limparBatalha === 'function') {
+            try { _batalhaModule.limparBatalha(); } catch (e) { console.error('[vamosla] limparBatalha:', e); }
+        }
+
+        const batalhaArea = document.getElementById('batalha-area');
+        const mainScroll  = document.getElementById('main-scroll-area');
+        const controls    = document.getElementById('controls');
+
+        if (batalhaArea) batalhaArea.style.display = 'none';
+        if (mainScroll)  mainScroll.style.display  = 'flex';
+        if (controls)    controls.style.display    = 'flex';
+
+        // Limpa restos visuais dos modais internos, se algum ficou aberto
+        ['itens-modal', 'magias-modal', 'painel-atos'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+        });
+
+        _batalhaEmAndamento = false;
+        window._transicaoEmAndamento = false;
+    }
+    window.desmontarBatalha = desmontarBatalha;
 
     // ============================================================
     // MOTOR SEMÂNTICO (Tier 2)
@@ -2141,15 +2722,10 @@ ANSWER:`
         if (tipo === 'batalha') {
             adicionarMensagem('O monstro reage.', 'system');
             await revelarNomeBurst(b.nomeReal || String(b.monstroId || '').toUpperCase());
-
-            window._transicaoEmAndamento = true;
-            const overlay = document.createElement('div');
-            overlay.className = 'fade-overlay';
-            document.body.appendChild(overlay);
-            setTimeout(() => overlay.classList.add('active'), 10);
-            setTimeout(() => {
-                window.location.href = `batalha.html?monstro=${encodeURIComponent(b.monstroId)}&salaOrigem=${encodeURIComponent(st ? st.salaId : secaoAtualId)}`;
-            }, 900);
+            // [BATALHA] substitui o antigo location.href = 'batalha.html?...'
+            const salaIdParaBatalha = st ? st.salaId : secaoAtualId;
+            window.burstState = null;
+            await iniciarBatalhaEmbutida(b.monstroId, salaIdParaBatalha);
         }
     }
 
@@ -2328,13 +2904,8 @@ texto += ` <span class="burst-trecho">${b.texto}</span>`;
             const passou = await testeHabilidadeParaSairBurst(salaBurstCheck.burst);
             if (!passou) {
                 await revelarNomeBurst(salaBurstCheck.burst.nomeReal || String(salaBurstCheck.burst.monstroId || '').toUpperCase());
-                const overlayBurst = document.createElement('div');
-                overlayBurst.className = 'fade-overlay';
-                document.body.appendChild(overlayBurst);
-                setTimeout(() => overlayBurst.classList.add('active'), 10);
-                setTimeout(() => {
-    window.location.href = `batalha.html?monstro=${encodeURIComponent(salaBurstCheck.burst.monstroId)}&salaOrigem=${encodeURIComponent(secaoAtualId)}`;
-}, 900);
+                // [BATALHA] substitui o antigo location.href = 'batalha.html?...'
+                await iniciarBatalhaEmbutida(salaBurstCheck.burst.monstroId, secaoAtualId);
                 return;
             }
         }
@@ -3462,7 +4033,7 @@ if (ram.adiciona_item) {
                     window.sistemaChaves.portasTrancadas[portaCandidate.keyState] = {
                         salaId: portaCandidate.salaId,
                         texto: portaCandidate.texto,
-                        destino: portaCandidate.navOpt.destino,
+                        destino: portaCandidate.navOpcao?.destino ?? portaCandidate.navOpt.destino,
                         trancada: true
                     };
 
