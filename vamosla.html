@@ -3643,6 +3643,11 @@ if (ram.adiciona_item) {
         adicionarMensagem(interacao.resposta || "Algo muda sutilmente ao seu redor.", 'system');
         if (!salaAtual.estados) salaAtual.estados = {};
         if (interacao.define_estado) salaAtual.estados[interacao.define_estado] = true;
+        if (interacao.adiciona_item) {
+    if (!salaAtual.itens) salaAtual.itens = [];
+    salaAtual.itens.push(interacao.adiciona_item);
+    atualizarLootRoom();
+}
         if (interacao.destino !== undefined && salaAtual.opcoes) {
             const jaExiste = salaAtual.opcoes.some(o => o.destino === interacao.destino);
             if (!jaExiste) {
