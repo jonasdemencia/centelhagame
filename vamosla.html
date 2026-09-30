@@ -3401,16 +3401,25 @@ if (ram.adiciona_item) {
         chatBox.scrollTop = chatBox.scrollHeight;
     }
 
-    // [PATCH] Reveal fora do if — acontece em SUCESSO ou FALHA.
+        // [PATCH] Reveal fora do if — acontece em SUCESSO ou FALHA.
     if (opcao.temChaveAnexada) {
         await processarResultadoExame(opcao);
+    }
+
+    // [RECOMPENSA] nova_opcao pode revelar 1 item (arquiteto de perigos).
+    if (opcao.adiciona_item) {
+        const salaAtual = mapaMundo[secaoAtualId];
+        if (salaAtual) {
+            if (!Array.isArray(salaAtual.itens)) salaAtual.itens = [];
+            salaAtual.itens.push(opcao.adiciona_item);
+            await salvarEstadoJogador();
+        }
     }
 
     atualizarBotoesNavegacao();
     atualizarLootRoom();
     window._transicaoEmAndamento = false;
 }
-
         // ============================================================
     // COMANDO "CAMINHOS" — consulta de locomoção
     // ============================================================
