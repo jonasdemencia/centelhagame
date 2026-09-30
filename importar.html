@@ -1756,6 +1756,12 @@ function construirCabecalho(key, n, ctx) {
     }
     linhas.push(`SALAS_COM_ITEM = [${salasComItem.join(', ')}]`);
   }
+
+  // NOVO — lista negra de itens já existentes
+  const todosItens = Object.keys(_lastDados?.itens_novos || {});
+  if (todosItens.length > 0) {
+    linhas.push(`itens_já_existentes (NÃO recriar): ${JSON.stringify(todosItens)}`);
+  }
   return linhas.join('\n');
 }
   
