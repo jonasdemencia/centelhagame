@@ -1315,6 +1315,16 @@ const DEFAULT_BODIES = {
     '',
     '---',
     '',
+    'RECOMPENSA EM "nova_opcao" (opcional)',
+    '- Campo extra "adiciona_item": "<id>" — revela 1 item ao examinar a opção. O item aparece em sala.itens (chão, clicável) e só existe se o jogador examinar a opção.',
+    '- "id" DEVE estar em DROPS_PERMITIDOS (fora disso = lote rejeitado).',
+    '- Só em "nova_opcao". Interceptor nunca.',
+    '- Não usar item que já exista em ITENS_JA_NA_ZONA.',
+    '- Item não aparece no texto_logico — só no resultado_texto do exame.',
+    '- No máximo 1 item por "nova_opcao". Sem quantidade — é sempre 1.',
+    '',
+    '---',
+    '',
     'ESTRUTURA DE SAÍDA',
     '',
     '{',
@@ -1334,6 +1344,7 @@ const DEFAULT_BODIES = {
     '      "sala_id": [OUTRO ID DE SALA INTERMEDIÁRIA ELEGÍVEL],',
     '      "tipo": "nova_opcao",',
     '      "opcao_texto": "Examinar a mancha escura na parede perto do interruptor",',
+    '      "adiciona_item": "pocao-cura-menor",',
     '      "resultado_texto": "De perto, a mancha tem a textura de tecido queimado. Sob a crosta seca, seus dedos encontram algo duro e recurvado — não é reboco, é osso.",',
     '      "dano": 0,',
     '      "tipo_resultado": "revelacao"',
@@ -1720,9 +1731,19 @@ function construirCabecalho(key, n, ctx) {
   if (tema) linhas.push(`TEMA         = ${tema}`);
   if (_aventura.tom) linhas.push(`TOM          = ${_aventura.tom}`);
   if (_aventura.lore) linhas.push(`LORE CENTRAL = ${_aventura.lore}`);
-    if (key === 'perigos') {
-    linhas.push(`QUANTIDADE_PERIGOS = 3`);
-    } else if (key === 'puzzles') {
+   if (key === 'perigos') {
+  linhas.push(`QUANTIDADE_PERIGOS = 3`);
+  linhas.push(`DROPS_PERMITIDOS = [${DROPS_PERMITIDOS_LISTA.join(', ')}]`);
+  const mapa = mapaMundoGlobal();
+  const itensNaZona = [];
+  for (let i = start; i <= end; i++) {
+    const s = mapa[String(i)];
+    if (Array.isArray(s?.itens)) itensNaZona.push(...s.itens);
+  }
+  if (itensNaZona.length > 0) {
+    linhas.push(`ITENS_JA_NA_ZONA = ${JSON.stringify([...new Set(itensNaZona)])}`);
+  }
+} else if (key === 'puzzles') {
     const itens = [...(ctx.itens_legado_pendentes || [])].sort((a, b) => (b.idade ?? 0) - (a.idade ?? 0));
     if (itens.length > 0) {
       linhas.push(`itens_legado_pendentes: ${JSON.stringify(itens)}`);
@@ -2745,12 +2766,19 @@ async function importarParaFirestore(dados, uid, logFn) {
     const tipoResultado = perigo.tipo_resultado || 'neutro';
     if (!sala.opcoes) sala.opcoes = [];
     if (perigo.tipo === 'nova_opcao') {
-      sala.opcoes.push({
-        texto: perigo.opcao_texto || 'Examinar anomalia',
-        arquiteto: true, resultado_texto: resultadoTexto, dano, tipo_resultado: tipoResultado, disparado: false
-      });
-      logFn(`☠️ Nova opção "${perigo.opcao_texto}" (dano ${dano}) → Sala ${salaId}`, 'ok');
-        } else if (perigo.tipo === 'interceptor') {
+  const itemRecompensa = perigo.adiciona_item || null;
+  if (itemRecompensa && !DROPS_PERMITIDOS_LISTA.includes(itemRecompensa)) {
+    throw new Error(`Perigo na sala ${salaId}: "adiciona_item" fora de DROPS_PERMITIDOS ("${itemRecompensa}"). Nada foi salvo.`);
+  }
+  const novaOpcao = {
+    texto: perigo.opcao_texto || 'Examinar anomalia',
+    arquiteto: true, resultado_texto: resultadoTexto, dano,
+    tipo_resultado: tipoResultado, disparado: false
+  };
+  if (itemRecompensa) novaOpcao.adiciona_item = itemRecompensa;
+  sala.opcoes.push(novaOpcao);
+  logFn(`☠️ Nova opção "${perigo.opcao_texto}" (dano ${dano})${itemRecompensa ? ' · recompensa: ' + itemRecompensa : ''} → Sala ${salaId}`, 'ok');
+} else if (perigo.tipo === 'interceptor') {
       let estadoObservado = null;
       if (perigo.revelacao && perigo.elemento_fisico_curto) {
         const salaIdNum = parseInt(salaId);
@@ -2883,10 +2911,25 @@ async function importarPerigosNoMapaAtual(perigos, uid, logFn) {
   const docRef = db.collection('players').doc(uid);
   const docSnap = await docRef.get();
   if (!docSnap.exists) throw new Error('Nenhum documento do jogador encontrado. Importe a zona primeiro.');
-  const dadosAtuais = docSnap.data() || {};
+   const dadosAtuais = docSnap.data() || {};
   const mapaMundoAtual = dadosAtuais.mapaMundo || {};
   const mapaTrabalho = JSON.parse(JSON.stringify(mapaMundoAtual));
   const salasTocadas = new Set();
+
+  // Validação de lote (rejeita tudo se qualquer adiciona_item for inválido)
+  const errosLote = [];
+  for (const p of perigos) {
+    if (p && p.tipo === 'nova_opcao' && p.adiciona_item) {
+      if (!DROPS_PERMITIDOS_LISTA.includes(p.adiciona_item)) {
+        errosLote.push(`sala ${p.sala_id}: "adiciona_item" "${p.adiciona_item}" fora de DROPS_PERMITIDOS`);
+      }
+    }
+  }
+  if (errosLote.length > 0) {
+    for (const e of errosLote) logFn(`❌ ${e}`, 'err');
+    throw new Error(`Lote rejeitado — ${errosLote.length} inconsistência(s). Nada foi salvo.`);
+  }
+
   for (const perigo of perigos) {
     const salaId = String(perigo.sala_id);
     const salaModificada = mapaTrabalho[salaId];
@@ -2906,12 +2949,18 @@ async function importarPerigosNoMapaAtual(perigos, uid, logFn) {
       : narrativaBruta;
     const tipoResultado = perigo.tipo_resultado || 'neutro';
     if (!salaModificada.opcoes) salaModificada.opcoes = [];
-    if (perigo.tipo === 'nova_opcao') {
-      salaModificada.opcoes.push({
+        if (perigo.tipo === 'nova_opcao') {
+      const novaOpcao = {
         texto: perigo.opcao_texto || 'Examinar anomalia',
-        arquiteto: true, resultado_texto: resultadoTexto, dano, tipo_resultado: tipoResultado, disparado: false
-      });
-        } else if (perigo.tipo === 'interceptor') {
+        arquiteto: true, resultado_texto: resultadoTexto, dano,
+        tipo_resultado: tipoResultado, disparado: false
+      };
+      if (perigo.adiciona_item) novaOpcao.adiciona_item = perigo.adiciona_item;
+      salaModificada.opcoes.push(novaOpcao);
+      if (perigo.adiciona_item) {
+        logFn(`📦 Sala ${salaId}: recompensa "${perigo.adiciona_item}" vinculada à opção "${perigo.opcao_texto}".`, 'info');
+      }
+    } else if (perigo.tipo === 'interceptor') {
       let estadoObservado = null;
       if (perigo.revelacao && perigo.elemento_fisico_curto) {
         const salaIdNum = parseInt(salaId);
