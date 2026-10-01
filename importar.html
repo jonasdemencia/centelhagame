@@ -808,43 +808,55 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
       <span class="imagens-subtitle" id="imagensSubtitle">aguardando login</span>
       <span class="chevron">▸</span>
     </button>
-    <div class="imagens-panel">
-      <div class="imagens-body">
-        <div class="img-step">
-          <div class="img-step-header">
-            <span class="img-step-badge">1</span>
-            <span class="img-step-title">Prompt para o LLM</span>
-            <button class="btn btn-ghost btn-sm" onclick="copiarPromptImagens()">
-              <span class="btn-icon">📋</span> Copiar
-            </button>
-            <button class="btn btn-ghost btn-sm" onclick="reconstruirPromptImagens()" title="Recalcula a lista de itens sem imagem">
-              <span class="btn-icon">🔄</span> Reconstruir
-            </button>
-          </div>
-          <textarea id="imagensPromptTA" spellcheck="false"
-            placeholder="Clique em Reconstruir para gerar o prompt com os itens dinâmicos sem imagem."></textarea>
-        </div>
+   <div class="imagens-panel">
+  <div class="imagens-body">
+    <div class="img-step">
+      <div class="img-step-header">
+        <span class="img-step-badge">1</span>
+        <span class="img-step-title">Prompt para o LLM</span>
+        <button class="btn btn-ghost btn-sm" onclick="copiarPromptImagens()">
+          <span class="btn-icon">📋</span> Copiar
+        </button>
+        <button class="btn btn-ghost btn-sm" onclick="reconstruirPromptImagens()" title="Recalcula a lista de itens sem imagem">
+          <span class="btn-icon">🔄</span> Reconstruir
+        </button>
+      </div>
+      <textarea id="imagensPromptTA" spellcheck="false"
+        placeholder="Clique em Reconstruir para gerar o prompt com os itens dinâmicos sem imagem."></textarea>
+    </div>
 
-        <div class="img-step">
-          <div class="img-step-header">
-            <span class="img-step-badge">2</span>
-            <span class="img-step-title">Cole o JSON retornado pelo HTML gerado</span>
-            <button class="btn btn-primary btn-sm" onclick="gerarPreviewImagens()">
-              <span class="btn-icon">👁️</span> Preview
-            </button>
-          </div>
-          <textarea id="imagensJsonTA" spellcheck="false"
-            placeholder='{"imagens":[{"id":"...","image":"data:image/png;base64,...","thumbnailImage":"data:image/png;base64,..."}]}'></textarea>
-        </div>
+    <div class="img-step">
+      <div class="img-step-header">
+        <span class="img-step-badge">2</span>
+        <span class="img-step-title">Cole o HTML retornado pelo LLM</span>
+        <button class="btn btn-primary btn-sm" onclick="extrairImagensDoHTML()">
+          <span class="btn-icon">⚡</span> Extrair imagens
+        </button>
+      </div>
+      <textarea id="imagensHtmlTA" spellcheck="false"
+        placeholder="Cole aqui o código HTML completo que o Gemini/Claude devolveu. Clique em Extrair imagens."></textarea>
+    </div>
 
-        <div class="img-step">
-          <div class="img-step-header">
-            <span class="img-step-badge">3</span>
-            <span class="img-step-title">Preview</span>
-            <span class="img-prev-status" id="imagensProgresso"></span>
-          </div>
-          <div class="imagens-preview" id="imagensPreview"></div>
-        </div>
+    <div class="img-step">
+      <div class="img-step-header">
+        <span class="img-step-badge">3</span>
+        <span class="img-step-title">Cole o JSON retornado pelo HTML gerado</span>
+        <button class="btn btn-primary btn-sm" onclick="gerarPreviewImagens()">
+          <span class="btn-icon">👁️</span> Preview
+        </button>
+      </div>
+      <textarea id="imagensJsonTA" spellcheck="false"
+        placeholder='{"imagens":[{"id":"...","image":"data:image/png;base64,...","thumbnailImage":"data:image/png;base64,..."}]}'></textarea>
+    </div>
+
+    <div class="img-step">
+      <div class="img-step-header">
+        <span class="img-step-badge">4</span>
+        <span class="img-step-title">Preview</span>
+        <span class="img-prev-status" id="imagensProgresso"></span>
+      </div>
+      <div class="imagens-preview" id="imagensPreview"></div>
+    </div>
 
         <div class="imagens-actions">
           <button class="btn btn-primary" onclick="enviarImagensGitHub()">
@@ -4879,6 +4891,82 @@ function downscaleTo64(dataURL128) {
     img.onerror = () => resolve(dataURL128); // fallback
     img.src = dataURL128;
   });
+}
+  async function extrairImagensDoHTML() {
+  const html = $('imagensHtmlTA').value.trim();
+  if (!html || html.length < 200) { toast('Cole o HTML completo.', 'warn'); return; }
+
+  setProgressoImagens('rodando HTML...');
+  const iframe = document.createElement('iframe');
+  iframe.style.cssText = 'position:fixed;left:-9999px;top:-9999px;width:800px;height:800px;border:0';
+  iframe.sandbox = 'allow-scripts allow-same-origin';
+  document.body.appendChild(iframe);
+
+  try {
+    await new Promise((resolve, reject) => {
+      const t = setTimeout(() => reject(new Error('timeout 30s')), 30000);
+      iframe.onload = () => { clearTimeout(t); resolve(); };
+      iframe.srcdoc = html;
+    });
+
+    // espera o render interno terminar
+    await new Promise(r => setTimeout(r, 1800));
+
+    const win = iframe.contentWindow;
+    const doc = iframe.contentDocument;
+    let lista = [];
+
+    // 1) tenta variável generatedImages (padrão dos HTMLs do Gemini)
+    if (win.generatedImages && typeof win.generatedImages === 'object') {
+      for (const [id, url] of Object.entries(win.generatedImages)) {
+        if (typeof url === 'string' && url.startsWith('data:image/png')) {
+          lista.push({ id, image: url });
+        }
+      }
+    }
+
+    // 2) fallback: lê os canvases direto
+    if (lista.length === 0) {
+      for (const c of doc.querySelectorAll('canvas')) {
+        const id = (c.id || '').replace(/^c_/, '');
+        if (!id) continue;
+        try {
+          const url = c.toDataURL('image/png');
+          if (url && url.length > 200) lista.push({ id, image: url });
+        } catch (_) {}
+      }
+    }
+
+    if (lista.length === 0) { toast('Nenhuma imagem encontrada no HTML.', 'err'); return; }
+
+    _imagensGeradas = [];
+    for (const it of lista) {
+      const thumb = await downscaleTo64(it.image);
+      _imagensGeradas.push({ id: it.id, image: it.image, thumbnailImage: thumb });
+    }
+
+    const preview = $('imagensPreview');
+    preview.innerHTML = '';
+    for (const it of _imagensGeradas) {
+      const card = document.createElement('div');
+      card.className = 'img-prev-card';
+      card.innerHTML = `
+        <div class="imgs">
+          <img src="${it.image}" style="width:88px;height:88px">
+          <img src="${it.thumbnailImage}" style="width:44px;height:44px">
+        </div>
+        <div class="img-prev-id">${escapeHTML(it.id)}</div>
+      `;
+      preview.appendChild(card);
+    }
+    setProgressoImagens(`${_imagensGeradas.length} item(ns) prontos`);
+    toast(`${_imagensGeradas.length} imagem(ns) extraídas.`, 'ok');
+  } catch (e) {
+    toast('Falha: ' + e.message, 'err');
+    setProgressoImagens('');
+  } finally {
+    try { iframe.remove(); } catch (_) {}
+  }
 }
   
 function limparImagens() {
