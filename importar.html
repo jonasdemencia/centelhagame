@@ -4709,41 +4709,19 @@ function restaurarEstadoImagens() {
 function itensDinamicosSemImagem() {
   const dados = _lastDados || {};
   const itensNovos = dados.itens_novos || {};
-  const itensLegado = dados.itens_legado || {};
-  const mapa = dados.mapaMundo || {};
   const out = [];
-  const vistos = new Set();
 
-  function push(id, def, origem) {
-    if (!id || vistos.has(id)) return;
-    vistos.add(id);
-    out.push({
-      id,
-      content: (def && def.content) || id,
-      description: (def && def.description) || '',
-      origem
-    });
-  }
-
+  // Um item só é dinâmico se TEM entrada em itens_novos E usa o placeholder.
+  // Sem fallback para sala.itens — itens regulares nunca entram.
   for (const [id, def] of Object.entries(itensNovos)) {
     if (!def) continue;
     if (def.image && def.image !== ITEM_DINAMICO_IMAGE) continue;
-    push(id, def, 'novo');
-  }
-  for (const [id] of Object.entries(itensLegado)) {
-    if (vistos.has(id)) continue;
-    const def = itensNovos[id];
-    if (def && def.image && def.image !== ITEM_DINAMICO_IMAGE) continue;
-    push(id, def, 'legado');
-  }
-  for (const sala of Object.values(mapa)) {
-    if (!sala || !Array.isArray(sala.itens)) continue;
-    for (const id of sala.itens) {
-      if (vistos.has(id)) continue;
-      const def = itensNovos[id];
-      if (def && def.image && def.image !== ITEM_DINAMICO_IMAGE) continue;
-      push(id, def, 'sala');
-    }
+    out.push({
+      id,
+      content: def.content || id,
+      description: def.description || '',
+      origem: 'novo'
+    });
   }
   return out;
 }
@@ -4772,36 +4750,63 @@ function construirPromptImagens() {
 
   ta.value = `Você é o gerador procedural de ícones do jogo "Centelha".
 
-TAREFA: gerar UM ÚNICO ARQUIVO HTML autocontido que desenhe cada item abaixo como ícone de inventário no estilo Resident Evil clássico (PS1), e que exporte um JSON com as imagens.
+TAREFA: gerar UM ÚNICO ARQUIVO HTML autocontido que desenhe cada item abaixo como ícone de inventário do Resident Evil clássico (PS1) — a MESMA técnica que produziu o "Gold Key" (que funcionou perfeitamente).
 
-ITENS PARA GERAR (${itens.length}):
+ITENS (${itens.length}):
 ${linhas}
 
-REGRAS DE ESTILO (aplicar a todos):
-- Fundo preto/marrom escuro granulado, com vinheta radial (NÃO transparente)
-- Objeto único centralizado, iluminação lateral dura (uma fonte forte)
-- Pintura digital crua estilo PS1, dessaturada, com grão e dithering
-- SEM texto, SEM molduras, SEM logos, SEM mãos, SEM personagens
-- Desenho 100% procedural via canvas 2D (formas geométricas, gradientes, ruído)
-- SEM imagens externas, SEM bibliotecas, SEM CDN
+## TÉCNICA OBRIGATÓRIA (não simplifique, não substitua)
 
-DUAS VERSÕES POR ITEM:
-- 128x128 px → imagem de EXAME (visão 3/4 ou lateral, mais detalhada)
-- 64x64 px → miniatura de BAÚ/CHEST (visão frontal, mais simples e direta)
+Cada item é desenhado em DUAS ETAPAS:
 
-LAYOUT DA PÁGINA:
-- Grade com um card por item, mostrando as duas versões lado a lado
-- Legenda embaixo com o id do item
-- Botão "📋 Copiar JSON" no topo e no rodapé
-- Ao clicar, coloca no clipboard EXATAMENTE este JSON (sem markdown, sem cercas):
-  {"imagens":[{"id":"<id>","image":"<dataURL PNG 128x128>","thumbnailImage":"<dataURL PNG 64x64>"}, ...]}
+### ETAPA 1 — HEIGHTMAP (canvas separado em tons de cinza)
+- Crie um canvas offscreen 128x128, fundo preto (0,0,0).
+- Desenhe o objeto em tons de cinza: branco (255) = superfície alta, cinza = média, preto = baixa/vazia.
+- Use gradientes lineares/radiais para dar volume (ex: haste cilíndrica = gradiente horizontal do escuro ao claro ao escuro).
+- Use transparência (alpha=0) para o que NÃO é objeto — isso vira máscara.
 
-SAÍDA:
-- Devolva APENAS o código HTML completo, nada mais.
-- Sem markdown, sem explicação, sem cercas de código.
-- Capriche: gradientes reais, sombras de contato, reflexos especulares, micro-texturas.`;
+### ETAPA 2 — SHADING POR PIXEL (canvas final)
+Para cada pixel não-transparente do heightmap:
+1. Amostre os 4 vizinhos (esq/dir/cima/baixo) no heightmap.
+2. Calcule a normal: nx = (hL - hR)/255; ny = (hU - hD)/255; nz = 0.45. Normalize.
+3. Vetor de luz lateral dura: L = (cos(315°), sin(315°), 0.75), normalizado.
+4. Difusa: diff = max(0, N·L).
+5. Especular Blinn-Phong: H = normalize(L + V(0,0,1)); spec = pow(max(0, N·H), 18).
+6. Oclusão ambiente: ao = 0.4 + 0.6 * (height/255).
+7. intensity = (diff * 0.75 + spec * 0.6 + scratch * 0.4) * ao.
+8. Mapeie "intensity" para uma PALETA DE 3 FAIXAS (sombra / meio-tom / highlight) com cores críveis do material.
+9. Aplique Bayer 4x4 dithering + quantização 15-bit (passo 8 por canal).
+10. Pinte o pixel no canvas final.
+
+### PÓS-PROCESSAMENTO FINAL (no canvas 128x128)
+- Vinheta radial escura nas bordas (rgba(0,0,0,0.45) na ponta).
+- Grão estocástico leve (±8 por canal).
+- Blur de 1 passada muito sutil (não use ctx.filter, simule).
+
+## ESTRUTURA DO HTML
+
+- Página com um card por item.
+- Cada card: um canvas 128x128 (id="c_<item_id>") + legenda com o id.
+- Botão "📋 Copiar JSON" no topo e no rodapé.
+- Ao clicar, copia EXATAMENTE este JSON (sem markdown, sem cercas):
+  {"imagens":[{"id":"<id>","image":"<dataURL PNG 128x128>"}, ...]}
+- NÃO gere thumbnailImage. O console faz o downscale 64x64 sozinho.
+
+## REGRAS DURAS
+
+- UMA imagem por item (128x128). NÃO gere 64x64.
+- NÃO use desenho vetorial chapado (fillRect/arc/ellipse + gradiente simples). Isso produz clipart ruim.
+- NÃO omita o heightmap. Sem heightmap o resultado não tem iluminação.
+- NÃO economize código. Cada item merece 60-120 linhas de desenho + shading.
+- NÃO use imagens externas, CDN ou bibliotecas.
+- Capriche: sombras de contato, reflexos especulares reais, micro-texturas, ranhuras.
+
+## SAÍDA
+
+- Devolva APENAS o código HTML completo.
+- Sem markdown, sem explicação, sem cercas de código.`;
 }
-
+  
 function reconstruirPromptImagens() {
   if (!_lastDados) return;
   construirPromptImagens();
@@ -4822,7 +4827,7 @@ function setProgressoImagens(txt) {
   if (el) el.textContent = txt || '';
 }
 
-function gerarPreviewImagens() {
+async function gerarPreviewImagens() {
   const raw = $('imagensJsonTA').value.trim();
   if (!raw) { toast('Cole o JSON retornado pelo HTML.', 'warn'); return; }
 
@@ -4833,18 +4838,23 @@ function gerarPreviewImagens() {
   const lista = Array.isArray(dados.imagens) ? dados.imagens : [];
   if (lista.length === 0) { toast('Nenhuma imagem em "imagens".', 'warn'); return; }
 
-  _imagensGeradas = lista.filter(x => x && x.id && x.image);
+  // Aceita tanto {image} só (uma versão) quanto {image, thumbnailImage}
+  _imagensGeradas = [];
+  for (const it of lista) {
+    if (!it || !it.id || !it.image) continue;
+    const thumb = it.thumbnailImage || await downscaleTo64(it.image);
+    _imagensGeradas.push({ id: it.id, image: it.image, thumbnailImage: thumb });
+  }
 
   const preview = $('imagensPreview');
   preview.innerHTML = '';
   for (const it of _imagensGeradas) {
     const card = document.createElement('div');
     card.className = 'img-prev-card';
-    const small = it.thumbnailImage || it.image;
     card.innerHTML = `
       <div class="imgs">
         <img src="${it.image}" title="128x128 · exame" style="width:88px;height:88px">
-        <img src="${small}" title="64x64 · chest" style="width:44px;height:44px">
+        <img src="${it.thumbnailImage}" title="64x64 · chest (auto)" style="width:44px;height:44px">
       </div>
       <div class="img-prev-id" title="${escapeHTML(it.id)}">${escapeHTML(it.id)}</div>
     `;
@@ -4854,6 +4864,23 @@ function gerarPreviewImagens() {
   toast(`${_imagensGeradas.length} imagem(ns) carregadas.`, 'ok');
 }
 
+function downscaleTo64(dataURL128) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement('canvas');
+      c.width = 64; c.height = 64;
+      const ctx = c.getContext('2d');
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(img, 0, 0, 64, 64);
+      resolve(c.toDataURL('image/png'));
+    };
+    img.onerror = () => resolve(dataURL128); // fallback
+    img.src = dataURL128;
+  });
+}
+  
 function limparImagens() {
   if (!confirm('Limpar preview e JSON colado?')) return;
   $('imagensJsonTA').value = '';
