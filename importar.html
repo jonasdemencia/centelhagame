@@ -1400,7 +1400,7 @@ const DEFAULT_BODIES = {
 
     'COMO FUNCIONA A DISTRIBUIÇÃO DE ITENS',
     'Se o puzzle exigir um item novo, coloque-o em uma sala anterior vazia (ID menor, sem cena/perigo/puzzle) — máximo 2 itens por sala. PREFIRA 1 puzzle com 3-5 etapas espalhadas por salas diferentes (pistas e itens em salas anteriores) a 2 puzzles de 1-2 etapas. Etapas podem encadear na mesma sala (uso A define s1, uso B exige s1) ou atravessar salas (estado global via playerFlags).',
-    'Um "item_id" com "remove_item": true só pode aparecer em UM "usos_possiveis" por zona. Para reutilizar, crie duas entradas distintas em itens_novos.',
+    'Um "item_id" com "remove_item": true só pode ser consumido por UM puzzle por zona. Se precisar de dois puzzles com item, use dois itens DIFERENTES.',
 
     '---',
 
