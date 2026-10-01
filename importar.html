@@ -1673,13 +1673,11 @@ function atualizarDisplayZona() {
 }
 
 function carregarCorpoPersistido(key) {
-  let corpo = localStorage.getItem(`centelha.prompt.${key}.corpo`);
-  if (corpo === null) corpo = DEFAULT_BODIES[key] || '';
-  return corpo;
+  return DEFAULT_BODIES[key] || '';
 }
 
 function salvarCorpoPersistido(key, corpo) {
-  localStorage.setItem(`centelha.prompt.${key}.corpo`, corpo);
+  // persistência removida — corpo sempre vem de DEFAULT_BODIES
 }
 
 function extrairCorpo(texto) {
@@ -1880,10 +1878,6 @@ function initPromptTextareas() {
     if (!ta) continue;
     const header = `CONFIGURAÇÕES DA ZONA\nSALA_INICIAL = ?\nSALA_FINAL   = ?`;
     ta.value = header + '\n\n' + carregarCorpoPersistido(key);
-    ta.addEventListener('input', () => {
-      const corpo = extrairCorpo(ta.value);
-      salvarCorpoPersistido(key, corpo);
-    });
   }
 }
 
@@ -2055,13 +2049,7 @@ function aplicarPrompts() {
 
   for (const key of PROMPT_KEYS) {
     const ta = $(`prompt_${key}`);
-    if (ta) {
-      if (ta.value) {
-        const corpoAtual = extrairCorpo(ta.value);
-        if (corpoAtual) salvarCorpoPersistido(key, corpoAtual);
-      }
-      ta.value = montarTextoCompleto(key, n, ctx);
-    }
+    if (ta) ta.value = montarTextoCompleto(key, n, ctx);
     const miniEl = $(MINI_IDS[key]);
     if (miniEl) miniEl.innerHTML = construirResumo(key, n, ctx);
   }
@@ -2179,14 +2167,9 @@ function copiarPrompt(key) {
 }
 
   function restaurarPromptPadrao(key) {
-  if (!confirm(`Restaurar o prompt de "${key}" ao padrão? Suas edições serão perdidas.`)) return;
-  localStorage.removeItem(`centelha.prompt.${key}.corpo`);
-  const ta = $(`prompt_${key}`);
-  if (ta) ta.value = '';  // impede o re-salvamento automático dentro de aplicarPrompts
   aplicarPrompts();
   toast(`Prompt "${key}" restaurado ao padrão.`, 'ok');
 }
-window.restaurarPromptPadrao = restaurarPromptPadrao;
 
 function togglePrompts() {
   const card = $('promptsCard');
