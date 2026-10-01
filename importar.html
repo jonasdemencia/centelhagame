@@ -422,6 +422,44 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
 .popover-textarea:focus{background:var(--surface-3)}
 .popover-textarea::selection{background:rgba(217,164,65,.25)}
 
+/* ============ IMAGENS DOS ITENS ============ */
+.imagens-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
+  margin-bottom:20px;overflow:hidden;transition:border-color .2s}
+.imagens-toggle{display:flex;align-items:center;gap:14px;width:100%;
+  padding:18px 24px;background:transparent;border:0;color:var(--text);font-family:inherit;
+  font-size:15px;font-weight:700;cursor:pointer;letter-spacing:.5px;transition:background .15s;text-align:left}
+.imagens-toggle:hover{background:var(--surface-2)}
+.imagens-title{display:flex;align-items:center;gap:12px;color:var(--gold);flex-shrink:0}
+.imagens-title .icon{color:var(--gold);font-size:16px}
+.imagens-subtitle{font-size:11px;color:var(--text-dim);font-weight:400;flex:1;
+  min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.imagens-panel{max-height:0;overflow:hidden;transition:max-height .4s ease}
+.imagens-card.open .imagens-panel{max-height:8000px}
+.imagens-card.open .chevron{transform:rotate(90deg)}
+.imagens-body{padding:18px 24px 24px;border-top:1px solid var(--border);
+  display:flex;flex-direction:column;gap:16px}
+.img-step{display:flex;flex-direction:column;gap:8px}
+.img-step-header{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.img-step-badge{width:22px;height:22px;border-radius:50%;background:var(--gold-dim);
+  border:1px solid rgba(217,164,65,.4);color:var(--gold);font-size:11px;font-weight:700;
+  display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+.img-step-title{font-size:12.5px;font-weight:700;color:var(--text);letter-spacing:.4px;flex:1}
+.img-step textarea{width:100%;min-height:140px;max-height:340px;padding:12px 14px;
+  background:var(--surface-2);border:1px solid var(--border-2);border-radius:var(--radius);
+  color:var(--text);font-family:inherit;font-size:12px;line-height:1.55;outline:none;resize:vertical;tab-size:2}
+.img-step textarea:focus{border-color:rgba(217,164,65,.35);background:var(--surface-3)}
+.img-step textarea::selection{background:rgba(217,164,65,.25)}
+.imagens-actions{display:flex;gap:10px;flex-wrap:wrap}
+.imagens-preview{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+.img-prev-card{background:var(--surface-2);border:1px solid var(--border-2);border-radius:var(--radius);
+  padding:10px;display:flex;flex-direction:column;gap:8px;align-items:center;transition:border-color .2s}
+.img-prev-card:hover{border-color:rgba(217,164,65,.3)}
+.img-prev-card .imgs{display:flex;gap:6px;align-items:flex-end;justify-content:center;width:100%}
+.img-prev-card img{background:#0a0805;border-radius:4px;image-rendering:pixelated;display:block}
+.img-prev-id{font-size:10px;color:var(--text-dim);text-align:center;word-break:break-all;
+  width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;letter-spacing:.3px}
+.img-prev-status{font-size:10.5px;color:var(--text-dimmer);text-transform:uppercase;letter-spacing:.5px}
+
 .toasts{position:fixed;bottom:24px;right:24px;display:flex;flex-direction:column;gap:10px;z-index:2000;pointer-events:none}
 .toast{pointer-events:auto;padding:12px 18px;background:var(--surface-2);border:1px solid var(--border-2);
   border-radius:var(--radius);font-size:12px;color:var(--text);max-width:340px;
@@ -760,6 +798,72 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
       </div> 
   </section>
 
+  <!-- ===================== IMAGENS DOS ITENS ===================== -->
+  <section class="card imagens-card" id="imagensCard">
+    <button class="imagens-toggle" id="imagensToggle" onclick="toggleImagens()" aria-expanded="false">
+      <span class="imagens-title">
+        <span class="icon">🎨</span>
+        <span>Imagens dos Itens</span>
+      </span>
+      <span class="imagens-subtitle" id="imagensSubtitle">aguardando login</span>
+      <span class="chevron">▸</span>
+    </button>
+    <div class="imagens-panel">
+      <div class="imagens-body">
+        <div class="img-step">
+          <div class="img-step-header">
+            <span class="img-step-badge">1</span>
+            <span class="img-step-title">Prompt para o LLM</span>
+            <button class="btn btn-ghost btn-sm" onclick="copiarPromptImagens()">
+              <span class="btn-icon">📋</span> Copiar
+            </button>
+            <button class="btn btn-ghost btn-sm" onclick="reconstruirPromptImagens()" title="Recalcula a lista de itens sem imagem">
+              <span class="btn-icon">🔄</span> Reconstruir
+            </button>
+          </div>
+          <textarea id="imagensPromptTA" spellcheck="false"
+            placeholder="Clique em Reconstruir para gerar o prompt com os itens dinâmicos sem imagem."></textarea>
+        </div>
+
+        <div class="img-step">
+          <div class="img-step-header">
+            <span class="img-step-badge">2</span>
+            <span class="img-step-title">Cole o JSON retornado pelo HTML gerado</span>
+            <button class="btn btn-primary btn-sm" onclick="gerarPreviewImagens()">
+              <span class="btn-icon">👁️</span> Preview
+            </button>
+          </div>
+          <textarea id="imagensJsonTA" spellcheck="false"
+            placeholder='{"imagens":[{"id":"...","image":"data:image/png;base64,...","thumbnailImage":"data:image/png;base64,..."}]}'></textarea>
+        </div>
+
+        <div class="img-step">
+          <div class="img-step-header">
+            <span class="img-step-badge">3</span>
+            <span class="img-step-title">Preview</span>
+            <span class="img-prev-status" id="imagensProgresso"></span>
+          </div>
+          <div class="imagens-preview" id="imagensPreview"></div>
+        </div>
+
+        <div class="imagens-actions">
+          <button class="btn btn-primary" onclick="enviarImagensGitHub()">
+            <span class="btn-icon">☁️</span> Enviar ao GitHub + Firestore
+          </button>
+          <button class="btn btn-secondary" onclick="baixarZipImagens()">
+            <span class="btn-icon">📦</span> Baixar ZIP
+          </button>
+          <button class="btn btn-secondary" onclick="configurarGitHub()">
+            <span class="btn-icon">⚙️</span> Configurar GitHub
+          </button>
+          <button class="btn btn-ghost btn-sm" onclick="limparImagens()">
+            <span class="btn-icon">🗑️</span> Limpar
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- ===================== VALIDATOR ===================== -->
   <section class="card validator-card" id="validatorCard">
     <button class="validator-toggle" id="validatorToggle" onclick="toggleValidator()">
@@ -815,6 +919,7 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
 <script src="https://www.gstatic.com/firebasejs/11.4.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/11.4.0/firebase-auth-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
 <script>
 /* ============================================================
@@ -859,8 +964,8 @@ const DROPS_PERMITIDOS_LISTA = [
   'granada-mao','granada-de-concussao','granada-incendiaria'
 ];
 
-const ITEM_DINAMICO_IMAGE = 'https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/dinamico.png';           // exame
-const ITEM_DINAMICO_THUMB = 'https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thudinamico.png';      // chest
+const ITEM_DINAMICO_IMAGE = 'https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/dinamico.png';
+const ITEM_DINAMICO_THUMB = 'https://raw.githubusercontent.com/jonasdemencia/CentelhaGame/main/images/items/thudinamico.png';
 
 function rollDice(dadoStr) {
   const s = String(dadoStr).toLowerCase().replace(/\s+/g, '');
@@ -2149,6 +2254,7 @@ async function sincronizarPromptsManual() {
     }
     atualizarDisplayZona();
     aplicarPrompts();
+    atualizarSubtitleImagens();
     toast(`Prompts atualizados (zona ${_promptZona}).`, 'ok');
   } catch (e) {
     console.error(e);
@@ -4334,6 +4440,7 @@ async function sincronizarMirror() {
     } catch (_) { }
 
     _lastDados = dados;
+    atualizarSubtitleImagens();
     if (!_promptsReady) {
       if (!_promptZonaManual) {
         _promptZona = calcularZonaAuto(mapaMundo);
@@ -4577,6 +4684,320 @@ function fecharBannerAlvo() {
 }
 
 /* ============================================================
+   ETAPA 5 — IMAGENS DOS ITENS DINÂMICOS
+   ============================================================ */
+const IMAGENS_CARD_KEY = 'centelha.console.imagensAberto';
+const GITHUB_CFG_KEY = 'centelha.imagens.github';
+const IMAGENS_ZIP_ENABLED = (typeof JSZip !== 'undefined');
+
+let _imagensGeradas = [];
+let _imagensDebounceTimer = null;
+
+function toggleImagens() {
+  const card = $('imagensCard');
+  card.classList.toggle('open');
+  $('imagensToggle').setAttribute('aria-expanded', card.classList.contains('open'));
+  localStorage.setItem(IMAGENS_CARD_KEY, card.classList.contains('open') ? '1' : '0');
+  if (card.classList.contains('open')) reconstruirPromptImagens();
+}
+
+function restaurarEstadoImagens() {
+  if (localStorage.getItem(IMAGENS_CARD_KEY) === '1') $('imagensCard').classList.add('open');
+}
+
+/* ---------- coleta de itens sem imagem ---------- */
+function itensDinamicosSemImagem() {
+  const dados = _lastDados || {};
+  const itensNovos = dados.itens_novos || {};
+  const itensLegado = dados.itens_legado || {};
+  const mapa = dados.mapaMundo || {};
+  const out = [];
+  const vistos = new Set();
+
+  function push(id, def, origem) {
+    if (!id || vistos.has(id)) return;
+    vistos.add(id);
+    out.push({
+      id,
+      content: (def && def.content) || id,
+      description: (def && def.description) || '',
+      origem
+    });
+  }
+
+  for (const [id, def] of Object.entries(itensNovos)) {
+    if (!def) continue;
+    if (def.image && def.image !== ITEM_DINAMICO_IMAGE) continue;
+    push(id, def, 'novo');
+  }
+  for (const [id] of Object.entries(itensLegado)) {
+    if (vistos.has(id)) continue;
+    const def = itensNovos[id];
+    if (def && def.image && def.image !== ITEM_DINAMICO_IMAGE) continue;
+    push(id, def, 'legado');
+  }
+  for (const sala of Object.values(mapa)) {
+    if (!sala || !Array.isArray(sala.itens)) continue;
+    for (const id of sala.itens) {
+      if (vistos.has(id)) continue;
+      const def = itensNovos[id];
+      if (def && def.image && def.image !== ITEM_DINAMICO_IMAGE) continue;
+      push(id, def, 'sala');
+    }
+  }
+  return out;
+}
+
+function atualizarSubtitleImagens() {
+  const el = $('imagensSubtitle');
+  if (!el) return;
+  if (!_lastDados) { el.textContent = 'aguardando login'; return; }
+  const itens = itensDinamicosSemImagem();
+  el.textContent = itens.length === 0
+    ? 'todos os itens dinâmicos já têm imagem'
+    : `${itens.length} item(ns) dinâmico(s) sem imagem`;
+}
+
+/* ---------- prompt ---------- */
+function construirPromptImagens() {
+  const ta = $('imagensPromptTA');
+  if (!ta) return;
+  const itens = itensDinamicosSemImagem();
+  if (itens.length === 0) { ta.value = ''; return; }
+
+  const linhas = itens.map(i => {
+    const desc = i.description ? ` — ${i.description}` : '';
+    return `- ${i.id}: ${i.content}${desc}`;
+  }).join('\n');
+
+  ta.value = `Você é o gerador procedural de ícones do jogo "Centelha".
+
+TAREFA: gerar UM ÚNICO ARQUIVO HTML autocontido que desenhe cada item abaixo como ícone de inventário no estilo Resident Evil clássico (PS1), e que exporte um JSON com as imagens.
+
+ITENS PARA GERAR (${itens.length}):
+${linhas}
+
+REGRAS DE ESTILO (aplicar a todos):
+- Fundo preto/marrom escuro granulado, com vinheta radial (NÃO transparente)
+- Objeto único centralizado, iluminação lateral dura (uma fonte forte)
+- Pintura digital crua estilo PS1, dessaturada, com grão e dithering
+- SEM texto, SEM molduras, SEM logos, SEM mãos, SEM personagens
+- Desenho 100% procedural via canvas 2D (formas geométricas, gradientes, ruído)
+- SEM imagens externas, SEM bibliotecas, SEM CDN
+
+DUAS VERSÕES POR ITEM:
+- 128x128 px → imagem de EXAME (visão 3/4 ou lateral, mais detalhada)
+- 64x64 px → miniatura de BAÚ/CHEST (visão frontal, mais simples e direta)
+
+LAYOUT DA PÁGINA:
+- Grade com um card por item, mostrando as duas versões lado a lado
+- Legenda embaixo com o id do item
+- Botão "📋 Copiar JSON" no topo e no rodapé
+- Ao clicar, coloca no clipboard EXATAMENTE este JSON (sem markdown, sem cercas):
+  {"imagens":[{"id":"<id>","image":"<dataURL PNG 128x128>","thumbnailImage":"<dataURL PNG 64x64>"}, ...]}
+
+SAÍDA:
+- Devolva APENAS o código HTML completo, nada mais.
+- Sem markdown, sem explicação, sem cercas de código.
+- Capriche: gradientes reais, sombras de contato, reflexos especulares, micro-texturas.`;
+}
+
+function reconstruirPromptImagens() {
+  if (!_lastDados) return;
+  construirPromptImagens();
+  atualizarSubtitleImagens();
+}
+
+function copiarPromptImagens() {
+  const ta = $('imagensPromptTA');
+  if (!ta || !ta.value.trim()) { toast('Clique em Reconstruir primeiro.', 'warn'); return; }
+  navigator.clipboard.writeText(ta.value)
+    .then(() => toast('Prompt copiado.', 'ok'))
+    .catch(e => toast('Erro: ' + e.message, 'err'));
+}
+
+/* ---------- preview ---------- */
+function setProgressoImagens(txt) {
+  const el = $('imagensProgresso');
+  if (el) el.textContent = txt || '';
+}
+
+function gerarPreviewImagens() {
+  const raw = $('imagensJsonTA').value.trim();
+  if (!raw) { toast('Cole o JSON retornado pelo HTML.', 'warn'); return; }
+
+  let dados;
+  try { dados = JSON.parse(raw); }
+  catch (e) { toast('JSON inválido: ' + e.message, 'err'); return; }
+
+  const lista = Array.isArray(dados.imagens) ? dados.imagens : [];
+  if (lista.length === 0) { toast('Nenhuma imagem em "imagens".', 'warn'); return; }
+
+  _imagensGeradas = lista.filter(x => x && x.id && x.image);
+
+  const preview = $('imagensPreview');
+  preview.innerHTML = '';
+  for (const it of _imagensGeradas) {
+    const card = document.createElement('div');
+    card.className = 'img-prev-card';
+    const small = it.thumbnailImage || it.image;
+    card.innerHTML = `
+      <div class="imgs">
+        <img src="${it.image}" title="128x128 · exame" style="width:88px;height:88px">
+        <img src="${small}" title="64x64 · chest" style="width:44px;height:44px">
+      </div>
+      <div class="img-prev-id" title="${escapeHTML(it.id)}">${escapeHTML(it.id)}</div>
+    `;
+    preview.appendChild(card);
+  }
+  setProgressoImagens(`${_imagensGeradas.length} item(ns) prontos`);
+  toast(`${_imagensGeradas.length} imagem(ns) carregadas.`, 'ok');
+}
+
+function limparImagens() {
+  if (!confirm('Limpar preview e JSON colado?')) return;
+  $('imagensJsonTA').value = '';
+  $('imagensPreview').innerHTML = '';
+  _imagensGeradas = [];
+  setProgressoImagens('');
+  toast('Preview limpo.', 'info');
+}
+
+/* ---------- ZIP ---------- */
+async function baixarZipImagens() {
+  if (_imagensGeradas.length === 0) { toast('Nada para baixar.', 'warn'); return; }
+  if (!IMAGENS_ZIP_ENABLED) { toast('JSZip não carregou. Recarregue a página.', 'err'); return; }
+
+  const zip = new JSZip();
+  for (const it of _imagensGeradas) {
+    zip.file(`${it.id}.png`, it.image.split(',')[1], { base64: true });
+    if (it.thumbnailImage) zip.file(`thu${it.id}.png`, it.thumbnailImage.split(',')[1], { base64: true });
+  }
+  const blob = await zip.generateAsync({ type: 'blob' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `centelha_imagens_zona_${_promptZona}.zip`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(link.href);
+  toast('ZIP baixado.', 'ok');
+}
+
+/* ---------- GitHub ---------- */
+function configurarGitHub() {
+  const atual = JSON.parse(localStorage.getItem(GITHUB_CFG_KEY) || '{}');
+  const token = prompt('GitHub Personal Access Token (escopo "repo" ou "public_repo"):', atual.token || '');
+  if (token === null) return;
+  const owner = prompt('Owner (usuário/org):', atual.owner || 'jonasdemencia');
+  if (owner === null) return;
+  const repo = prompt('Repositório:', atual.repo || 'CentelhaGame');
+  if (repo === null) return;
+  const branch = prompt('Branch:', atual.branch || 'main');
+  if (branch === null) return;
+  const basePath = prompt('Pasta base (imagens 128 e thumbs 64):', atual.basePath || 'images/items');
+  if (basePath === null) return;
+  localStorage.setItem(GITHUB_CFG_KEY, JSON.stringify({ token, owner, repo, branch, basePath }));
+  toast('Configuração do GitHub salva.', 'ok');
+}
+
+async function uploadGitHub(cfg, path, base64, message) {
+  const apiURL = `https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${path}`;
+  const headers = {
+    Authorization: `token ${cfg.token}`,
+    Accept: 'application/vnd.github+json'
+  };
+  let sha = null;
+  try {
+    const r = await fetch(`${apiURL}?ref=${encodeURIComponent(cfg.branch)}`, { headers });
+    if (r.ok) sha = (await r.json()).sha;
+  } catch (_) {}
+  const body = { message, content: base64, branch: cfg.branch };
+  if (sha) body.sha = sha;
+  const put = await fetch(apiURL, {
+    method: 'PUT',
+    headers: { ...headers, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  if (!put.ok) {
+    const txt = await put.text();
+    throw new Error(`GitHub ${put.status}: ${txt.slice(0, 140)}`);
+  }
+}
+
+async function enviarImagensGitHub() {
+  const cfg = JSON.parse(localStorage.getItem(GITHUB_CFG_KEY) || '{}');
+  if (!cfg.token || !cfg.owner || !cfg.repo) {
+    toast('Configure o GitHub primeiro.', 'warn');
+    return configurarGitHub();
+  }
+  if (_imagensGeradas.length === 0) { toast('Gere o preview primeiro.', 'warn'); return; }
+  if (!confirm(`Enviar ${_imagensGeradas.length} par(es) de imagens para ${cfg.owner}/${cfg.repo}?`)) return;
+
+  const user = firebase.auth().currentUser;
+  if (!user) { toast('Faça login.', 'err'); return; }
+
+  setProgressoImagens(`enviando 0/${_imagensGeradas.length}...`);
+
+  const base = cfg.basePath.replace(/\/$/, '');
+  const rawBase = `https://raw.githubusercontent.com/${cfg.owner}/${cfg.repo}/${cfg.branch}`;
+  const docRef = db.collection('players').doc(user.uid);
+  const snap = await docRef.get();
+  const dadosAtuais = snap.data() || {};
+  const itensNovos = { ...(dadosAtuais.itens_novos || {}) };
+
+  let ok = 0, fail = 0;
+  for (const it of _imagensGeradas) {
+    try {
+      await uploadGitHub(cfg, `${base}/${it.id}.png`, it.image.split(',')[1], `Add item image: ${it.id}`);
+      let thumbURL = `${rawBase}/${base}/${it.id}.png`;
+      if (it.thumbnailImage) {
+        await uploadGitHub(cfg, `${base}/thu${it.id}.png`, it.thumbnailImage.split(',')[1], `Add item thumb: ${it.id}`);
+        thumbURL = `${rawBase}/${base}/thu${it.id}.png`;
+      }
+      const prev = itensNovos[it.id] || { id: it.id, content: it.id, description: '' };
+      itensNovos[it.id] = { ...prev, image: `${rawBase}/${base}/${it.id}.png`, thumbnailImage: thumbURL };
+      ok++;
+    } catch (e) {
+      console.error(it.id, e);
+      fail++;
+    }
+    setProgressoImagens(`enviando ${ok + fail}/${_imagensGeradas.length}...`);
+  }
+
+  if (ok > 0) {
+    await docRef.update({ itens_novos: itensNovos });
+    toast(`Firestore atualizado (${ok} item(ns)).`, 'ok');
+  }
+  setProgressoImagens(`${ok} ok · ${fail} falha(s)`);
+  toast(`Concluído: ${ok} ok, ${fail} falha(s).`, fail === 0 ? 'ok' : 'warn');
+  await sincronizarMirror();
+  atualizarSubtitleImagens();
+}
+
+/* ---------- bootstrap do card ---------- */
+function initImagens() {
+  restaurarEstadoImagens();
+  atualizarSubtitleImagens();
+  if ($('imagensCard').classList.contains('open')) reconstruirPromptImagens();
+
+  const taJson = $('imagensJsonTA');
+  if (taJson) {
+    taJson.addEventListener('input', () => {
+      clearTimeout(_imagensDebounceTimer);
+      _imagensDebounceTimer = setTimeout(() => {
+        const raw = taJson.value.trim();
+        if (!raw) return;
+        try {
+          const d = JSON.parse(raw);
+          if (Array.isArray(d.imagens) && d.imagens.length > 0) gerarPreviewImagens();
+        } catch (_) {}
+      }, 700);
+    });
+  }
+}
+
+/* ============================================================
    BOOTSTRAP
    ============================================================ */
 let refreshMainHighlight = () => {};
@@ -4654,6 +5075,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
   restaurarVisibilidadeMirror();
   carregarMirrorCache();
+  initImagens();
   setInterval(atualizarMirrorTimestamp, 10000);
 });
 
@@ -4670,6 +5092,7 @@ firebase.auth().onAuthStateChanged(user => {
     toast('Autenticado.', 'ok');
     atualizarMirrorAuthInfo();
     sincronizarMirror();
+    atualizarSubtitleImagens();
   } else {
     el.classList.add('warn');
     lbl.textContent = 'sem login';
@@ -4677,6 +5100,7 @@ firebase.auth().onAuthStateChanged(user => {
     atualizarMirrorAuthInfo();
     setStatusPromptsNoLogin();
     setResumosNoLogin();
+    atualizarSubtitleImagens();
   }
 });
 
@@ -4687,6 +5111,7 @@ console.log('%c⚡ Centelha · Console de Zonas', 'color:#d9a441;font-weight:bol
 console.log('📋 Validadores ativos: topologia, ancoragem, entry-point leak, densidade e dilemas.');
 console.log('📝 Prompts: zona controlada manualmente por [−]/[+] · 🔄 recarrega dados do Firestore.');
 console.log('📥 Importadores: zona completa, perigos (isolado), puzzles (Shadowgate), monstros (burst).');
+console.log('🎨 Etapa 5: imagens procedurais (128x128 exame + 64x64 chest) para itens dinâmicos.');
 console.log('📊 Espelho: leitura read-only com drill-down por zona e preenchimento de vazias.');
 console.log('🗺️ Aventura: TOM + LORE + 30 temas por zona injetados no cabeçalho dos prompts.');
 console.log('🔒 Órfãos: bloquear a importação se houver estado/item sem consumidor (override: forcar_orfaos / orfao_intencional).');
