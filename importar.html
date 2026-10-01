@@ -1400,6 +1400,7 @@ const DEFAULT_BODIES = {
 
     'COMO FUNCIONA A DISTRIBUIÇÃO DE ITENS',
     'Se o puzzle exigir um item novo, coloque-o em uma sala anterior vazia (ID menor, sem cena/perigo/puzzle) — máximo 2 itens por sala. PREFIRA 1 puzzle com 3-5 etapas espalhadas por salas diferentes (pistas e itens em salas anteriores) a 2 puzzles de 1-2 etapas. Etapas podem encadear na mesma sala (uso A define s1, uso B exige s1) ou atravessar salas (estado global via playerFlags).',
+    'Um "item_id" com "remove_item": true só pode aparecer em UM "usos_possiveis" por zona. Para reutilizar, crie duas entradas distintas em itens_novos.',
 
     '---',
 
@@ -3139,7 +3140,7 @@ async function importarPuzzles(dadosPuzzle, uid, logFn, zonaAtual) {
         if (!sala.interacoes_ambiente) sala.interacoes_ambiente = [];
         sala.interacoes_ambiente = sala.interacoes_ambiente.concat(puzzleData.interacoes_ambiente);
       }
-      if (puzzleData.usos_possiveis?.length) {
+            if (puzzleData.usos_possiveis?.length) {
         if (!sala.usos_possiveis) sala.usos_possiveis = [];
         sala.usos_possiveis = sala.usos_possiveis.concat(puzzleData.usos_possiveis);
       }
@@ -3147,6 +3148,28 @@ async function importarPuzzles(dadosPuzzle, uid, logFn, zonaAtual) {
     }
   }
 
+  // [VALIDAÇÃO] Item consumido (remove_item: true) só pode aparecer UMA vez na zona inteira.
+  {
+    const start = (zonaAtual - 1) * SALAS_POR_ZONA + 1;
+    const end = zonaAtual * SALAS_POR_ZONA;
+    const consumoPorItem = {};
+    for (const [salaId, sala] of Object.entries(mapaTrabalho)) {
+      const salaNum = parseInt(salaId, 10);
+      if (salaNum < start || salaNum > end) continue;
+      for (const uso of (sala.usos_possiveis || [])) {
+        if (uso && uso.item_id && uso.remove_item === true) {
+          (consumoPorItem[uso.item_id] = consumoPorItem[uso.item_id] || []).push(salaId);
+        }
+      }
+    }
+    const duplicados = Object.entries(consumoPorItem).filter(([, salas]) => salas.length > 1);
+    if (duplicados.length > 0) {
+      const detalhes = duplicados.map(([id, salas]) => `${id} (salas ${salas.join(', ')})`).join('; ');
+      throw new Error(`Lote rejeitado — item(ns) consumido(s) por mais de um puzzle na zona ${zonaAtual}: ${detalhes}. Nada foi salvo.`);
+    }
+  }
+
+     // Auto-registrar como legado qualquer item plantado por puzzle que sobreviveu à zona.
      // Auto-registrar como legado qualquer item plantado por puzzle que sobreviveu à zona.
   // Não depende do LLM declarar em itens_legado.
   {
