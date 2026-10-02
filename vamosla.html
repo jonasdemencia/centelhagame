@@ -3605,7 +3605,8 @@ if (ram.adiciona_item) {
 
                 if (salaAtual.interacoes_ambiente) {
                     for (const interacao of salaAtual.interacoes_ambiente) {
-                        if (interacao.usado && interacao.reutilizavel !== true) continue;
+                        // [PATCH] Interações já usadas continuam "matcháveis": ao serem digitadas
+                        // de novo, reexibem a última mensagem de progresso da sala (ver abaixo).
                         opcoesBusca.push({
                             tipo: 'interacao_ambiente',
                             opcaoOriginal: interacao,
@@ -3643,13 +3644,29 @@ if (ram.adiciona_item) {
 
                 if (melhorMatch.tipo === 'interacao_ambiente') {
     const interacao = melhorMatch.opcaoOriginal;
+
+    // [PATCH] Interação já usada (e não reutilizável): reexibe a última etapa
+    // executada na sala, que contém a dica atualizada do próximo passo.
+    if (interacao.usado && interacao.reutilizavel !== true) {
+        adicionarMensagem(
+            salaAtual._ultimaMensagemProgresso || interacao.resposta || "Nada mais a descobrir aqui por enquanto.",
+            'system'
+        );
+        sendBtn.disabled = false;
+        userInput.disabled = false;
+        userInput.focus();
+        return;
+    }
+
     const condicaoOk = !interacao.condicao_estado
         || salaAtual.estados?.[interacao.condicao_estado] === true
         || window.playerFlags?.[interacao.condicao_estado] === true;
     if (!condicaoOk) {
         adicionarMensagem(interacao.mensagem_falha || "Nada acontece.", 'system');
     } else {
-        adicionarMensagem(interacao.resposta || "Algo muda sutilmente ao seu redor.", 'system');
+        const textoResposta = interacao.resposta || "Algo muda sutilmente ao seu redor.";
+        adicionarMensagem(textoResposta, 'system');
+        salaAtual._ultimaMensagemProgresso = textoResposta; // [PATCH] persiste com o mapaMundo
         if (!salaAtual.estados) salaAtual.estados = {};
         if (interacao.define_estado) salaAtual.estados[interacao.define_estado] = true;
         if (interacao.adiciona_item) {
@@ -3856,7 +3873,9 @@ if (ram.adiciona_item) {
             return { sucesso: false };
         }
 
-        adicionarMensagem(uso.resultado_texto || "O item encaixa perfeitamente.", 'system');
+        const textoUso = uso.resultado_texto || "O item encaixa perfeitamente.";
+        adicionarMensagem(textoUso, 'system');
+        sala._ultimaMensagemProgresso = textoUso; // [PATCH] persiste com o mapaMundo
 
         if (uso.remove_item === true) {
             await removerItemDoInventarioFirestore(itemId);
