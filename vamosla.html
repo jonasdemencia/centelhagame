@@ -2890,10 +2890,13 @@ texto += ` <span class="burst-trecho">${b.texto}</span>`;
                 }
                 return false;
             });
-                        if (bloqueadoPorDilema) {
+          
+        if (bloqueadoPorDilema && !salaOrigemBloqueio.cena_resolvida) {
                 adicionarMensagem("Algo o impede de seguir por ali. Você precisa encontrar outra forma.", 'system');
                 return;
             }
+            
+                        
         }
 
         window._transicaoEmAndamento = true;
@@ -3171,8 +3174,10 @@ texto += ` <span class="burst-trecho">${b.texto}</span>`;
 
     window._transicaoEmAndamento = true;
 
-    pai.disparado = true;
+    
+            pai.disparado = true;
         const salaAtual = mapaMundo[secaoAtualId];
+        if (salaAtual) salaAtual.cena_resolvida = true;
         if (salaAtual && salaAtual.opcoes) {
             salaAtual.opcoes
                 .filter(o => o.dilema === true && !o.disparado)
