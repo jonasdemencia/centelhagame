@@ -2561,9 +2561,11 @@ ANSWER:`
     }
 
     function burstClickHandler(e) {
+        console.log('[BURST] atirar | arma=', obterArmaEquipadaBurst()?.content, '| burstMax=', obterArmaEquipadaBurst()?.burstMax, '| restantes=', window.burstState?.burstRestantes, '| tipo=', typeof window.burstState?.burstRestantes, '| travado=', window.burstState?.travado, '| energia=', window.burstState?.energiaAtual);
         const st = window.burstState;
         if (!st || st.finalizado) return;
         if (window._transicaoEmAndamento) return;
+        console.log('[BURST] click | travado=', window.burstState?.travado, '| restantes=', window.burstState?.burstRestantes, '| alvo=', !!e.target.closest('.alvo-burst'));
 
         // Ignora cliques em botões, controles e overlays
         if (e.target.closest('button, .nav-btn, #controls, #map-controls, #loot-area, .fade-overlay, #burst-reveal, #narrador-status-badge, #narrador-status-painel')) return;
@@ -2723,6 +2725,7 @@ ANSWER:`
 }
 
     async function finalizarBurstSala(tipo) {
+        console.log('[BURST] FINALIZAR chamado | tipo=', tipo, '| restantes=', window.burstState?.burstRestantes);
         const st = window.burstState;
         if (!st || st.finalizado) return;
         st.finalizado = true;
