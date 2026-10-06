@@ -1258,7 +1258,7 @@ const DEFAULT_BODIES = {
     'Selecione aleatoriamente 2-3 salas para receber uma cena. As demais não têm cena.',
     '',
     'ÂNCORA LÉXICA E ESTRUTURA DE DILEMAS:',
-    '- texto_evento (3–4 frases) descreve a cena — o elemento central deve parecer que sempre esteve ali — e, no máximo, indica UMA ação que leva ao dilema-pai (ex: "Se desejar, você pode examinar a pena"). PROIBIDO usar "ou" no texto_evento para listar alternativas — as demais escolhas entram só nas ramificações do pai.',
+    '- texto_evento (3–4 frases) descreve a cena e no máximo, indica UMA ação que leva ao dilema-pai (ex: "Se desejar, você pode examinar a pena"). PROIBIDO usar "ou" no texto_evento para listar alternativas — as demais escolhas entram só nas ramificações do pai.',
     '- dilemas contém 1 ou 2 objetos. Cada objeto é pai com ramificacoes de 2 a 3, ou resolução direta sem ramificacoes. O pai com ramificações termina enunciando em prosa as opções, para o jogador saber o que digitar.',
     '',
     'TOM DO ENCONTRO — escolha um:',
@@ -1284,7 +1284,7 @@ const DEFAULT_BODIES = {
     '- mensagem_condicao_falha: texto mostrado quando condicao_estado não está ativo (string) ou null. Se omitido, o motor usa uma mensagem genérica.',
     '- O efeito persiste independente do custo: uma ramificação pode ter dano 0 e conceder item, ou dano alto e não conceder nada.',
     '- Pelo menos uma ramificação por zona deve definir um estado OU adicionar um item consumido por puzzle da mesma zona. Todo define_estado precisa ter usos_possiveis ou interacoes_ambiente correspondente na zona (condicao_estado = nome do estado); todo adiciona_item precisa ter usos_possiveis correspondente (item_id = id do item).',
-    '- Se a zona criar item novo, adicione um campo "itens_novos" no topo do JSON, no formato {id: {id, content, description}}.',
+    '- OBRIGATÓRIO: adicione 1 a 3 itens novos a "itens_novos" no topo do JSON, no formato {id: {id, content, description}}, com descrição neutra (apenas aparência física, sem sugerir uso ou função).',
     '',
     'PENDÊNCIAS HERDADAS (do input):',
     '- O cabeçalho pode incluir itens_legado_pendentes e estados_pendentes com idade em zonas.',
@@ -2987,24 +2987,30 @@ async function importarParaFirestore(dados, uid, logFn) {
         };
     }
     updatePayload['itens_novos'] = { ...atuais, ...normalizados };
-    logFn(`🧩 ${Object.keys(dados.itens_novos).length} item(ns) novos registrados.`, 'ok');
+        logFn(`🧩 ${Object.keys(dados.itens_novos).length} item(ns) novos registrados.`, 'ok');
 }
 
-  // NOTA: o gate de órfãos foi movido para importarPuzzles (fim do pipeline).
-  // Aqui só registramos os metadados (idade). Nenhum bloqueio.
+// NOVO — todo item novo entra automaticamente na fila de legado
+const legadoBase = { ...(dadosAtuais.itens_legado || {}) };
+if (dados.itens_novos) {
+  for (const id of Object.keys(dados.itens_novos)) {
+    if (!legadoBase[id]) {
+      legadoBase[id] = { id, sala_plantio: null, zona_criacao: _promptZona };
+      logFn(`🎁 Item novo → registrado como legado em espera: ${id}`, 'info');
+    }
+  }
+}
 
     const mapaMerge = { ...mapaMundoAtual, ...mapaMundo };
   const recalc = recalcularConsumidas(
     mapaMerge,
     dadosAtuais.playerFlagsMeta || {},
     dadosAtuais.itensDeCenaMeta || {},
-    dadosAtuais.itens_legado || {}
+    legadoBase
   );
   updatePayload['playerFlagsMeta'] = recalc.playerFlagsMeta;
   updatePayload['itensDeCenaMeta'] = recalc.itensDeCenaMeta;
-  if (Object.keys(recalc.itens_legado).length !== Object.keys(dadosAtuais.itens_legado || {}).length) {
-    updatePayload['itens_legado'] = recalc.itens_legado;
-  }
+  updatePayload['itens_legado'] = recalc.itens_legado;
 
   await docRef.update(updatePayload);
   return { mapaMundo };
