@@ -2505,7 +2505,10 @@ ANSWER:`
             totalPalavras: (b.texto || '').split(/\s+/).filter(Boolean).length,
             travado: false,
             timerId: null,
-            finalizado: false
+            finalizado: false,
+            danoAcumulado: 0,
+    tiros: [],
+    linhaDano: null
         };
 
         renderBurstTrecho();
@@ -2618,18 +2621,26 @@ ANSWER:`
     const habilidade = Math.max(0, (jogadorStats.HABILIDADE ?? 0) - 16);
     const acertou = (d20 + habilidade) >= couraca;
 
+    renderBurstTrecho();
+    pulsarTrechoBurst();
+
     if (!acertou) {
-        renderBurstTrecho();
-        pulsarTrechoBurst();
-        adicionarMensagem('Errou o alvo.', 'system');
+        st.tiros.push('errou o alvo');
     } else {
         const dano = rollDiceBurst(arma?.damage || '1d2');
         st.energiaAtual = Math.max(0, st.energiaAtual - dano);
         st.sala.burst.energiaAtual = st.energiaAtual;
-        renderBurstTrecho();
-        pulsarTrechoBurst();
-        adicionarMensagem(`Dano: ${dano}.`, 'system');
+        st.danoAcumulado += dano;
+        st.tiros.push(String(dano));
         await salvarEstadoJogador();
+    }
+
+    const textoLinha = `Dano: ${st.danoAcumulado} (${st.tiros.join(' · ')})`;
+    if (!st.linhaDano) {
+        st.linhaDano = adicionarMensagem(textoLinha, 'system', true);
+    } else {
+        const el = document.getElementById(st.linhaDano);
+        if (el) el.innerText = textoLinha;
     }
 
     if (st.energiaAtual <= 0) {
