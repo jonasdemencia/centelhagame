@@ -1518,7 +1518,7 @@ const DEFAULT_BODIES = {
     '---',
 
     'COMO FUNCIONA A DISTRIBUIÇÃO DE ITENS',
-    'Se o puzzle exigir um item novo, coloque-o em uma sala anterior vazia (ID menor, sem cena/perigo/puzzle) — máximo 2 itens por sala. PREFIRA 1 puzzle com 3-5 etapas espalhadas por salas diferentes (pistas e itens em salas anteriores) a 2 puzzles de 1-2 etapas. Etapas podem encadear na mesma sala (uso A define s1, uso B exige s1) ou atravessar salas (estado global via playerFlags).',
+    'REGRA PADRÃO: construa o puzzle consumindo itens de itens_legado_pendentes — eles já existem, têm tema e história. Só crie item novo se nenhum dos pendentes couber narrativamente; nesse caso, coloque-o em sala anterior vazia (ID menor, sem cena/perigo/puzzle), máximo 1 item por sala. PREFIRA 1 puzzle com 3-5 etapas espalhadas por salas diferentes (pistas e itens em salas anteriores) a 2 puzzles de 1-2 etapas. Etapas podem encadear na mesma sala (uso A define s1, uso B exige s1) ou atravessar salas (estado global via playerFlags) - prefira esse último formato.',
     'Um "item_id" com "remove_item": true só pode aparecer em UM "usos_possiveis" por zona. Para dois efeitos com item, use dois itens DIFERENTES.',
 
     '---',
@@ -1596,7 +1596,7 @@ const DEFAULT_BODIES = {
     '          "mensagem_falha": "Você tenta usar o item, mas [motivo lógico da falha antes da preparação]."',
     '        },',
     '        {',
-    '          "item_id": "id_do_item_B",',
+    '              '          "item_id": "id_do_item_B",',
     '          "condicao_estado": "proximo_estado",',
     '          "resultado_texto": "Descreva o efeito final e nomeie a lógica.",',
     '          "destino": "[INCLUIR APENAS SE A RECOMPENSA FOR ABRIR PASSAGEM]",',
@@ -1608,9 +1608,11 @@ const DEFAULT_BODIES = {
     '      ]',
     '    }',
     '  }',
-    '}'
+    '}',
+    '',
+    'O exemplo acima concentra as etapas numa sala. O MESMO padrão pode ser dividido: item A na sala X (define estado), item B em outra sala lê o estado via condicao_estado e resolve o obstáculo da sala X via destino.'
   ].join('\n'),
-
+  
   monstros: [
     'Você gera monstros para o jogo de horror realista "Centelha". O jogo é difícil e avarento com recompensas.',
     '',
