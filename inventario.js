@@ -1005,8 +1005,13 @@ if (newItemData && slotType === newItemData.slot) {
         const equippedShieldName = shieldSlot?.dataset.itemName;
         if (equippedShieldName) {
             const shieldData = allItemsArr.find(item => item.content === equippedShieldName);
-            inventoryData.itemsInChest.push({ ...shieldData, uuid: crypto.randomUUID() });
+            // CORREÇÃO DE DUPLICATA: preserva o UUID original do escudo
+            const uuidEscudo = inventoryData.equippedItems['shield_uuid']
+                || shieldData.uuid
+                || crypto.randomUUID();
+            inventoryData.itemsInChest.push({ ...shieldData, uuid: uuidEscudo });
             inventoryData.equippedItems.shield = null;
+            delete inventoryData.equippedItems['shield_uuid'];
             alert("Escudo foi desequipado para usar arma de duas mãos!");
         }
     }
@@ -1022,8 +1027,12 @@ if (newItemData && slotType === newItemData.slot) {
                         inventoryData.weaponAmmoCounts[currentlyEquippedName] = currentLoadedAmmo;
                         console.log(`Salvando munição de ${currentlyEquippedName}: ${currentLoadedAmmo}`);
                     }
-                    // CORREÇÃO: Garante UUID único ao devolver item
-                    inventoryData.itemsInChest.push({ ...currentlyEquippedData, uuid: crypto.randomUUID() });
+                    // CORREÇÃO DE DUPLICATA: preserva o UUID original do item que está saindo
+                    const uuidRestaurado = inventoryData.equippedItems[slotId + '_uuid']
+                        || currentlyEquippedData.uuid
+                        || crypto.randomUUID();
+                    inventoryData.itemsInChest.push({ ...currentlyEquippedData, uuid: uuidRestaurado });
+                    delete inventoryData.equippedItems[slotId + '_uuid'];
                 }
 
                 // B) CORREÇÃO: Remove item específico usando UUID
@@ -1034,6 +1043,8 @@ if (newItemData && slotType === newItemData.slot) {
 
                 // C) Colocar o novo item no slot e limpar dados antigos
                 inventoryData.equippedItems[slotId] = newItemData.content;
+                // CORREÇÃO DE DUPLICATA: guarda o UUID do item equipado no slot
+                inventoryData.equippedItems[slotId + '_uuid'] = selectedUUID;
 
 if (newItemData.bonuses && newItemData.bonuses.energy) {
 const currentEnergy = currentPlayerData.energy || { total: 0, initial: 0 };
@@ -1101,8 +1112,12 @@ const currentEnergy = currentPlayerData.energy || { total: 0, initial: 0 };
             delete inventoryData.equippedItems[slotType + '_effect'];
             delete inventoryData.equippedItems[slotType + '_value'];
 
-            // C) CORREÇÃO: Garante UUID único ao devolver item
-            inventoryData.itemsInChest.push({ ...currentlyEquippedData, uuid: crypto.randomUUID() });
+            // C) CORREÇÃO DE DUPLICATA: preserva o UUID original do item que está sendo desequipado
+            const uuidRestaurado = inventoryData.equippedItems[slotId + '_uuid']
+                || currentlyEquippedData.uuid
+                || crypto.randomUUID();
+            inventoryData.itemsInChest.push({ ...currentlyEquippedData, uuid: uuidRestaurado });
+            delete inventoryData.equippedItems[slotId + '_uuid'];
 
             // D) Salvar no Firestore
             await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
