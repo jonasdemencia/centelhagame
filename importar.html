@@ -1445,14 +1445,15 @@ const DEFAULT_BODIES = {
 '- Não usar item que já exista em ITENS_JA_NA_ZONA.',
 '- Item não aparece no texto_logico — só no resultado_texto do exame.',
 '- No máximo 1 item por "nova_opcao". Sem quantidade — é sempre 1.',
-'- Se a opção tiver "adiciona_item", o dano só pode ser 0 ou REVELACAO_CARNAL (0–2). Nunca FISICO_* — o item não pode ser pago com sangue.',
+'- "adiciona_item" pode referenciar item novo, desde que declarado no topo do JSON em "itens_novos" (mesmo formato da topologia).',
 '',
     '---',
     '',
     'ESTRUTURA DE SAÍDA',
-    '',
-    '{',
-    '  "perigos": [',
+'',
+'{',
+'  "itens_novos": { "id_do_item": { "id": "id_do_item", "content": "Nome", "description": "Descrição" } },',
+'  "perigos": [',
     '    {',
     '      "sala_id": [UM ID DE SALA INTERMEDIÁRIA ELEGÍVEL],',
     '      "tipo": "interceptor",',
@@ -3055,7 +3056,7 @@ if (dados.itens_novos) {
 /* ============================================================
    IMPORTAÇÃO — apenas perigos
    ============================================================ */
-async function importarPerigosNoMapaAtual(perigos, uid, logFn) {
+async function importarPerigosNoMapaAtual(perigos, uid, logFn, dados) {
   const docRef = db.collection('players').doc(uid);
   const docSnap = await docRef.get();
   if (!docSnap.exists) throw new Error('Nenhum documento do jogador encontrado. Importe a zona primeiro.');
@@ -3065,15 +3066,21 @@ async function importarPerigosNoMapaAtual(perigos, uid, logFn) {
   const salasTocadas = new Set();
 
   // Validação de lote (rejeita tudo se qualquer adiciona_item for inválido)
-  const errosLote = [];
-  for (const p of perigos) {
-    if (p && p.tipo === 'nova_opcao' && p.adiciona_item) {
-      if (!DROPS_PERMITIDOS_LISTA.includes(p.adiciona_item)) {
-        errosLote.push(`sala ${p.sala_id}: "adiciona_item" "${p.adiciona_item}" fora de DROPS_PERMITIDOS`);
-      }
-    }
+ const itensNovosPerigo = dados.itens_novos || {};
+const errosLote = [];
+for (const p of perigos) {
+  if (p && p.tipo === 'nova_opcao' && p.adiciona_item) {
+    const ok = DROPS_PERMITIDOS_LISTA.includes(p.adiciona_item) || itensNovosPerigo[p.adiciona_item];
+    if (!ok) errosLote.push(`sala ${p.sala_id}: "adiciona_item" "${p.adiciona_item}" fora de DROPS_PERMITIDOS e não está em itens_novos`);
   }
+}
   if (errosLote.length > 0) {
+    const plantados = new Set();
+for (const p of perigos) if (p.tipo === 'nova_opcao' && p.adiciona_item) plantados.add(p.adiciona_item);
+const orfaos = Object.keys(itensNovosPerigo).filter(id => !plantados.has(id));
+if (orfaos.length > 0) {
+  throw new Error(`itens_novos órfãos no lote de perigos: ${orfaos.join(', ')}. Todo item declarado deve estar em adiciona_item de alguma nova_opcao.`);
+}
     for (const e of errosLote) logFn(`❌ ${e}`, 'err');
     throw new Error(`Lote rejeitado — ${errosLote.length} inconsistência(s). Nada foi salvo.`);
   }
@@ -3154,6 +3161,24 @@ async function importarPerigosNoMapaAtual(perigos, uid, logFn) {
     logFn(`🔄 Sala ${salaId}: perigos substituídos/inseridos.`, 'info');
   }
   if (Object.keys(updatePayload).length === 0) throw new Error('Nenhuma sala válida para atualizar perigos.');
+  if (Object.keys(itensNovosPerigo).length > 0) {
+  const atuais = dadosAtuais.itens_novos || {};
+  const normalizados = {};
+  for (const [id, def] of Object.entries(itensNovosPerigo)) {
+    normalizados[id] = {
+      ...def,
+      image: def.image || ITEM_DINAMICO_IMAGE,
+      thumbnailImage: def.thumbnailImage || ITEM_DINAMICO_THUMB
+    };
+  }
+  updatePayload['itens_novos'] = { ...atuais, ...normalizados };
+
+  const legado = { ...(dadosAtuais.itens_legado || {}) };
+  for (const id of Object.keys(itensNovosPerigo)) {
+    if (!legado[id]) legado[id] = { id, sala_plantio: null, zona_criacao: _promptZona };
+  }
+  updatePayload['itens_legado'] = legado;
+}
   await docRef.update(updatePayload);
   return { atualizadas: [...salasTocadas] };
 }
@@ -3533,9 +3558,9 @@ function detectarTipo(dados) {
   if (Array.isArray(dados.monstros)) return 'monstros';
   const temZona = !!(dados.plano || dados.salas || dados.cenas);
   const temPerigos = Array.isArray(dados.perigos);
-  const temPuzzles = !!(dados.saidas_sequestradas || dados.itens_novos ||
+  const temPuzzles = !temPerigos && !!(dados.saidas_sequestradas || dados.itens_novos ||
     dados.textos_modificados || dados.itens_adicionados ||
-    dados.descricoes_itens_ativos || dados.puzzles || dados.itens_legado);
+    dados.descricoes_itens_ativos || dados.puzzles);
   if (temZona) return 'zona';
   if (temPuzzles) return 'puzzles';
   if (temPerigos) return 'perigos';
@@ -3701,7 +3726,7 @@ async function importarJSON() {
       logFn('✅ Puzzles importados com sucesso!', 'ok');
     } else if (temPerigos) {
       logFn('⏳ Atualizando apenas perigos...', 'info');
-      const r = await importarPerigosNoMapaAtual(dados.perigos, user.uid, logFn);
+      const r = await importarPerigosNoMapaAtual(dados.perigos, user.uid, logFn, dados);
       chips = [`${r.atualizadas.length} salas atualizadas`];
       logFn('✅ Perigos importados/atualizados com sucesso!', 'ok');
     }
