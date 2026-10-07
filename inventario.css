@@ -1658,3 +1658,23 @@ max-height: 80px !important;
   opacity: 1;
 }
 
+/* ============================================================
+   MODO COMBINAÇÃO (RE2-style) — carregar arma com munição
+   ============================================================ */
+.combine-mode .item:not(.combinable-target):not(.empty-slot),
+.combine-mode .slot:not(.combinable-target) {
+    opacity: 0.3;
+    filter: grayscale(0.8);
+    pointer-events: none;
+}
+.combinable-target {
+    outline: 2px solid #d9a441;
+    cursor: pointer;
+    position: relative;
+    z-index: 10;
+    animation: combinablePulse 1s infinite;
+}
+@keyframes combinablePulse {
+    0%,100% { box-shadow: 0 0 8px rgba(217,164,65,0.5); }
+    50%     { box-shadow: 0 0 18px rgba(217,164,65,0.95); }
+}
