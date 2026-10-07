@@ -2656,18 +2656,19 @@ function recalcularConsumidas(mapaMundo, playerFlagsMeta, itensDeCenaMeta, itens
 
   for (const sala of Object.values(mapaMundo || {})) {
     for (const uso of (sala.usos_possiveis || [])) {
-      if (uso && uso.condicao_estado) estadosConsumidos.add(uso.condicao_estado);
-      if (uso && uso.item_id && uso.remove_item === true) itensConsumidos.add(uso.item_id);
-    }
+  if (uso && uso.condicao_estado) estadosConsumidos.add(uso.condicao_estado);
+  if (uso && uso.item_id) itensConsumidos.add(uso.item_id);
+}
     for (const inter of (sala.interacoes_ambiente || [])) {
       if (inter && inter.condicao_estado) estadosConsumidos.add(inter.condicao_estado);
     }
         for (const op of (sala.opcoes || [])) {
       if (!op.ramificacoes) continue;
       for (const ram of op.ramificacoes) {
-        if (ram && ram.remove_item) itensConsumidos.add(ram.remove_item);
-        if (ram && ram.condicao_estado) estadosConsumidos.add(ram.condicao_estado);
-      }
+  if (ram && ram.remove_item) itensConsumidos.add(ram.remove_item);
+  if (ram && ram.requer_item) itensConsumidos.add(ram.requer_item);   // ← NOVO
+  if (ram && ram.condicao_estado) estadosConsumidos.add(ram.condicao_estado);
+}
     }
   }
 
@@ -2996,8 +2997,26 @@ async function importarParaFirestore(dados, uid, logFn) {
 
 // NOVO — todo item novo entra automaticamente na fila de legado
 const legadoBase = { ...(dadosAtuais.itens_legado || {}) };
+
+// Coletar ids efetivamente plantados nesta zona
+const itensPlantados = new Set();
+for (const arr of Object.values(dados.itens_adicionados || {})) {
+  for (const id of arr) itensPlantados.add(id);
+}
+for (const cena of (dados.cenas || [])) {
+  for (const d of (cena.dilemas || [])) {
+    for (const r of (d.ramificacoes || [])) {
+      if (r.adiciona_item) itensPlantados.add(r.adiciona_item);
+    }
+  }
+}
+
 if (dados.itens_novos) {
   for (const id of Object.keys(dados.itens_novos)) {
+    if (!itensPlantados.has(id)) {
+      logFn(`⚠️ Item "${id}" declarado em itens_novos mas não plantado em nenhuma sala — ignorado.`, 'warn');
+      continue;
+    }
     if (!legadoBase[id]) {
       legadoBase[id] = { id, sala_plantio: null, zona_criacao: _promptZona };
       logFn(`🎁 Item novo → registrado como legado em espera: ${id}`, 'info');
