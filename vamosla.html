@@ -3258,13 +3258,13 @@ if (ram.adiciona_item) {
     await salvarEstadoJogador();
     atualizarLootRoom();
 }
-        if (ram.remove_item) {
-    await removerItemDoInventarioFirestore(ram.remove_item);
+        const itemParaConsumir = ram.remove_item || ram.requer_item;
+if (itemParaConsumir) {
+    await removerItemDoInventarioFirestore(itemParaConsumir);
     if (typeof window.atualizarInterfaceInventario === 'function') {
         window.atualizarInterfaceInventario();
     }
 }
-
         if (ram.destino) {
             const container = document.getElementById('map-controls');
             container.innerHTML = '';
