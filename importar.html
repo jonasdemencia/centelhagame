@@ -2790,6 +2790,17 @@ async function importarParaFirestore(dados, uid, logFn) {
     };
   }
 
+  if (dados.itens_adicionados) {
+    for (const [salaId, ids] of Object.entries(dados.itens_adicionados)) {
+      if (!mapaMundo[salaId]) { logFn(`⚠️ itens_adicionados: sala ${salaId} não existe.`, 'warn'); continue; }
+      if (!Array.isArray(mapaMundo[salaId].itens)) mapaMundo[salaId].itens = [];
+      for (const id of ids) {
+        if (!mapaMundo[salaId].itens.includes(id)) mapaMundo[salaId].itens.push(id);
+      }
+      logFn(`📦 Sala ${salaId}: itens plantados → ${ids.join(', ')}`, 'info');
+    }
+  }
+
   const flagsParaRegistrar = [];
   const itensCenaParaRegistrar = [];
 
@@ -3040,6 +3051,7 @@ if (dados.itens_novos) {
   await docRef.update(updatePayload);
   return { mapaMundo };
 }
+  
 /* ============================================================
    IMPORTAÇÃO — apenas perigos
    ============================================================ */
