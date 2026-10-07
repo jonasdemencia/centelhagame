@@ -15,6 +15,8 @@ const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const db = getFirestore(app);
 const auth = getAuth(app);
 let selectedItem = null; // Armazena o item selecionado
+let combineMode = false;       // Modo combinação (RE2-style)
+let combineAmmoData = null;    // Munição sendo combinada
 let currentPlayerData = null; // Armazena os dados do jogador
 // Variável global para o listener
 let inventoryListener = null;
@@ -354,120 +356,142 @@ async function removeDuplicateItems() {
 window.removeDuplicateItems = removeDuplicateItems;
 
 
-async function carregarMunicaoNaArma() {
+// ============================================================
+// CARREGAR MUNIÇÃO (RE2-STYLE) — aceita arma alvo
+// ============================================================
+async function carregarMunicaoNaArma(weaponData) {
+    const uid = auth.currentUser?.uid;
+    if (!uid) return;
 
-const uid = auth.currentUser?.uid;
+    const playerRef = doc(db, "players", uid);
+    const snap = await getDoc(playerRef);
+    if (!snap.exists()) return;
 
-if (!uid) return;
+    const inv = snap.data().inventory;
+    const allItemsArr = getAllItems();
 
-const playerRef = doc(db, "players", uid);
+    // Sem arma alvo: usa a equipada
+    if (!weaponData) {
+        const name = inv.equippedItems?.weapon;
+        if (!name) return;
+        const cleanName = name.replace(/\s*\(\d+\/\d+\)$/, "");
+        weaponData = allItemsArr.find(i => i.content === cleanName && i.ammoType);
+    }
+    if (!weaponData?.ammoType) return;
 
-const playerSnap = await getDoc(playerRef);
+    // Encontra munição compatível no baú
+    const ammoIdx = inv.itemsInChest.findIndex(i => i.id === weaponData.ammoType && i.quantity > 0);
+    if (ammoIdx === -1) return;
+    const ammo = inv.itemsInChest[ammoIdx];
 
-if (!playerSnap.exists()) return;
+    const isEquipped = inv.equippedItems?.weapon === weaponData.content;
+    const capacity = weaponData.ammoCapacity || 6;
 
-const inventoryData = playerSnap.data().inventory;
+    const loaded = isEquipped
+        ? (inv.equippedItems.weapon_loadedAmmo || 0)
+        : (inv.weaponAmmoCounts?.[weaponData.content] || 0);
 
-const equippedWeaponName = inventoryData.equippedItems.weapon;
+    const toLoad = Math.min(capacity - loaded, ammo.quantity);
+    if (toLoad <= 0) return;
 
-if (!equippedWeaponName) return;
+    if (isEquipped) {
+        inv.equippedItems.weapon_loadedAmmo = loaded + toLoad;
+    } else {
+        inv.weaponAmmoCounts = inv.weaponAmmoCounts || {};
+        inv.weaponAmmoCounts[weaponData.content] = loaded + toLoad;
+    }
 
-const allItemsArr = getAllItems();
+    ammo.quantity -= toLoad;
+    if (ammo.quantity <= 0) {
+        inv.itemsInChest.splice(ammoIdx, 1);
+        inv.discardedItems = inv.discardedItems || [];
+        inv.discardedItems.push(ammo.uuid);
+    }
 
-const weaponData = allItemsArr.find(item =>
-
-item.content === equippedWeaponName && item.ammoType
-
-);
-
-if (!weaponData) {
-
-alert("A arma equipada não suporta munição!");
-
-return;
-
+    await setDoc(playerRef, { inventory: inv }, { merge: true });
+    console.log(`Carregado ${toLoad} em ${weaponData.content}.`);
 }
 
-const ammoItemIndex = inventoryData.itemsInChest.findIndex(item =>
+// ============================================================
+// MODO COMBINAÇÃO (RE2-STYLE)
+// ============================================================
+function enterCombineMode(ammoData) {
+    combineMode = true;
+    combineAmmoData = ammoData;
 
-item.id === weaponData.ammoType
+    hideItemActions();
 
-);
+    const allItemsArr = getAllItems();
+    const compatId = ammoData.id;
 
-if (ammoItemIndex === -1) {
+    // Alvos no baú
+    document.querySelectorAll('.items .item').forEach(el => {
+        const data = allItemsArr.find(i => i.id === el.dataset.item);
+        if (data && data.ammoType === compatId) el.classList.add('combinable-target');
+    });
 
-alert("Você não possui munição compatível!");
+    // Alvos equipados
+    document.querySelectorAll('.slot').forEach(slot => {
+        const name = slot.dataset.itemName;
+        if (!name) return;
+        const data = allItemsArr.find(i => i.content === name);
+        if (data && data.ammoType === compatId) slot.classList.add('combinable-target');
+    });
 
-return;
+    const temAlvo = document.querySelector('.combinable-target');
+    if (!temAlvo) {
+        alert("Nada compatível.");
+        exitCombineMode();
+        return;
+    }
 
+    document.querySelector('.chest-area')?.classList.add('combine-mode');
+    if (selectedItem) selectedItem.classList.add('selected');
 }
 
-const ammoItem = inventoryData.itemsInChest[ammoItemIndex];
-
-const loadedAmmo = inventoryData.equippedItems.weapon_loadedAmmo || 0;
-
-const ammoToLoad = Math.min(
-
-weaponData.ammoCapacity - loadedAmmo,
-
-ammoItem.quantity
-
-);
-
-if (ammoToLoad <= 0) {
-
-alert("A arma já está carregada ou não há munição suficiente!");
-
-return;
-
+function exitCombineMode() {
+    combineMode = false;
+    combineAmmoData = null;
+    document.querySelectorAll('.combinable-target').forEach(el => el.classList.remove('combinable-target'));
+    document.querySelector('.chest-area')?.classList.remove('combine-mode');
+    clearHighlights();
+    selectedItem = null;
+    toggleUseButton(false);
+    const pc = document.querySelector('.preview-image-container');
+    if (pc) pc.style.display = 'none';
+    const pn = document.getElementById('preview-name');
+    const pd = document.getElementById('preview-description');
+    const pi = document.getElementById('preview-image');
+    if (pn) pn.textContent = '';
+    if (pd) pd.textContent = '';
+    if (pi) pi.style.display = 'none';
 }
 
-// Atualiza munição carregada
-inventoryData.equippedItems.weapon_loadedAmmo = loadedAmmo + ammoToLoad;
+// Intercepta clique nos alvos durante o modo combinação (capture-phase)
+document.addEventListener('click', async (e) => {
+    if (!combineMode) return;
+    const target = e.target.closest('.combinable-target');
+    if (!target) return;
 
-// Atualiza munição no inventário
+    e.stopPropagation();
+    e.preventDefault();
 
-ammoItem.quantity -= ammoToLoad;
+    const allItemsArr = getAllItems();
+    let weaponData;
+    if (target.classList.contains('item')) {
+        weaponData = allItemsArr.find(i => i.id === target.dataset.item);
+    } else if (target.classList.contains('slot')) {
+        weaponData = allItemsArr.find(i => i.content === target.dataset.itemName);
+    }
+    if (weaponData) await carregarMunicaoNaArma(weaponData);
+    exitCombineMode();
+}, true);
 
-// Remove o item do baú se a quantidade ficar zero
-
-if (ammoItem.quantity <= 0) {
-
-inventoryData.itemsInChest.splice(ammoItemIndex, 1);
-
-// Marca esse UUID como descartado
-
-if (!inventoryData.discardedItems) inventoryData.discardedItems = [];
-
-inventoryData.discardedItems.push(ammoItem.uuid);
-
-}
-
-// (Opcional) Remove eventuais duplicatas de munição com qty <= 0
-
-inventoryData.itemsInChest = inventoryData.itemsInChest.filter(item => {
-
-if (item.id === weaponData.ammoType && item.quantity <= 0) {
-
-return false;
-
-}
-
-return true;
-
+// Cancela com ESC
+document.addEventListener('keydown', (e) => {
+    if (combineMode && e.key === 'Escape') exitCombineMode();
 });
 
-// Garante que o nome da arma equipada permaneça correto
-
-inventoryData.equippedItems.weapon = weaponData.content;
-
-// Salva no Firestore
-
-await setDoc(playerRef, { inventory: inventoryData }, { merge: true });
-
-alert(`Você carregou ${ammoToLoad} munição no seu ${weaponData.content}.`);
-
-}
 
 // Variável global para armazenar o dado selecionado
 
@@ -779,6 +803,11 @@ document.addEventListener('click', function(event) {
         return;
     }
 
+    // Modo combinação: não desseleciona automaticamente
+    if (combineMode) {
+        return;
+    }
+
     // Elementos que NÃO devem desselecionar o item
     const keepSelection = event.target.closest('.item, .slot, #useBtn, #carregar-municao-btn, #discard-slot, .dice-item, .dice-slot, .item-actions-window, .item-coletavel, .preview-image-window, .preview-image-container');
 
@@ -962,6 +991,8 @@ slots.forEach(slot => {
     slot.addEventListener('click', async () => {
 const slotType = slot.dataset.slot;
 const slotId = slot.id;
+        // Não interfere durante modo combinação — o capture-phase já tratou
+        if (combineMode) return;
         const uid = auth.currentUser?.uid;
         if (!uid) return;
 
@@ -1323,6 +1354,22 @@ else if (selectedItem.dataset.item === 'pequenabolsaouro') {
         clearHighlights();
         toggleUseButton(false);
         hideItemActions();
+    });
+}
+
+
+// Adiciona funcionalidade ao botão COMBINAR das opções (RE2-style)
+const actionCombinarBtn = document.getElementById('action-combinar');
+if (actionCombinarBtn) {
+    actionCombinarBtn.addEventListener('click', () => {
+        if (combineMode) { exitCombineMode(); return; }
+        if (!selectedItem) return;
+
+        const allItemsArr = getAllItems();
+        const itemData = allItemsArr.find(i => i.id === selectedItem.dataset.item);
+        if (!itemData || !itemData.projectile) return; // por ora, só munição
+
+        enterCombineMode(itemData);
     });
 }
 
@@ -2172,74 +2219,7 @@ await setupPlayerDataListener(user.uid);
 await loadInventoryData(user.uid);
 
 // ── AQUI: configurar exibição do botão "carregar munição" ──
-
-const carregarBtn = document.getElementById("carregar-municao-btn");
-
-const playerRef = doc(db, "players", user.uid);
-
-getDoc(playerRef).then(playerSnap => {
-
-if (!playerSnap.exists()) {
-
-carregarBtn.style.display = "none";
-
-return;
-
-}
-
-const inventoryData = playerSnap.data().inventory;
-
-let equippedWeaponName = inventoryData.equippedItems.weapon; // Alterado para let
-
-if (!equippedWeaponName) {
-
-carregarBtn.style.display = "none";
-
-return;
-
-}
-
-// Remove o sufixo de munição para encontrar o item base
-
-equippedWeaponName = equippedWeaponName.replace(/\s*\(\d+\/\d+\)$/, "");
-
-// encontra no catálogo o tipo de munição dessa arma
-
-const allItemsArr = getAllItems();
-
-const weaponData = allItemsArr.find(item =>
-
-item.content === equippedWeaponName && item.ammoType
-
-);
-
-if (!weaponData) {
-
-carregarBtn.style.display = "none";
-
-return;
-
-}
-
-// verifica se há munição compatível no baú
-
-const temMunicao = inventoryData.itemsInChest
-
-.some(item => item.id === weaponData.ammoType && item.quantity > 0);
-
-if (temMunicao) {
-
-carregarBtn.style.display = "block";
-
-carregarBtn.onclick = carregarMunicaoNaArma;
-
-} else {
-
-carregarBtn.style.display = "none";
-
-}
-
-});
+// (removido — fluxo RE2 substitui pelo botão Combinar)
 
 // ──────────────────────────────────────────────────────────────
 
