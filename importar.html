@@ -1445,7 +1445,7 @@ const DEFAULT_BODIES = {
 '- Não usar item que já exista em ITENS_JA_NA_ZONA.',
 '- Item não aparece no texto_logico — só no resultado_texto do exame.',
 '- No máximo 1 item por "nova_opcao". Sem quantidade — é sempre 1.',
-'- "adiciona_item" pode referenciar item novo, desde que declarado no topo do JSON em "itens_novos" (mesmo formato da topologia).',
+'- "adiciona_item": exatamente 1 nova_opcao por zona DEVE declarar item novo em "itens_novos" (mesmo formato da topologia). Os demais usam DROPS_PERMITIDOS.',
 '',
     '---',
     '',
@@ -1625,7 +1625,7 @@ const DEFAULT_BODIES = {
     'Você receberá: tema da zona, número da zona (1-10), texto lógico das salas elegíveis.',
     '',
     '## SAÍDA',
-    '{"monstros": [ {...}, {...} ], "itens_sala": [ {"sala": 3, "item": "chavedeferro"} ]}',
+    '{"monstros": [...], "itens_sala": [...], "itens_novos": { "id": {"id":"id","content":"Nome","description":"Descrição"} }}',
     '(itens_sala é opcional — omita ou use [] se não houver motivo narrativo.)',
     'Retorne APENAS JSON válido. Sem markdown, sem comentários, sem prosa.',
     '',
@@ -1658,7 +1658,8 @@ const DEFAULT_BODIES = {
     '',
     '## ITENS_NA_SALA (itens_sala)',
     '- Opcional. No máximo 2 entradas na zona inteira.',
-    '- Cada "item" DEVE estar em DROPS_PERMITIDOS. Cada "sala" DEVE estar em SALAS_ELEGIVEIS.',
+    '- Cada "item" DEVE estar em DROPS_PERMITIDOS OU em "itens_novos". Cada "sala" DEVE estar em SALAS_ELEGIVEIS.',
+    '- Inclua 1 item temático novo por zona em "itens_novos" e plante-o via itens_sala.',
     '- Pode ser qualquer sala listada em SALAS_ELEGIVEIS, tenha monstro ou não. Não é drop de combate — é item de chão, o jogador coleta clicando.',
     '- NUNCA use uma sala que apareça em SALAS_COM_ITEM. Se SALAS_COM_ITEM listar todas as elegíveis, omita itens_sala.',
     '- Sem repetir item: cada id aparece uma única vez em itens_sala.',
@@ -3443,7 +3444,7 @@ async function importarMonstros(dadosMonstros, uid, logFn, zonaAtual) {
   const mapaMundoAtual = dadosAtuais.mapaMundo || {};
   const start = (zonaAtual - 1) * SALAS_POR_ZONA + 1;
   const end = zonaAtual * SALAS_POR_ZONA;
-
+  const itensNovosMonstro = dadosMonstros.itens_novos || {};
   const lista = Array.isArray(dadosMonstros.monstros) ? dadosMonstros.monstros : [];
   if (lista.length === 0) throw new Error('Array "monstros" vazio.');
 
@@ -3493,9 +3494,9 @@ for (const entrada of itensSala) {
     erros.push(`itens_sala: sala ${entrada.sala} já possui ${itensExistentes} item(ns) de outro arquiteto`);
     continue;
   }
-  if (!entrada.item || !DROPS_PERMITIDOS_LISTA.includes(entrada.item)) {
-    erros.push(`itens_sala: item "${entrada.item}" fora de DROPS_PERMITIDOS`);
-  }
+  if (!entrada.item || (!DROPS_PERMITIDOS_LISTA.includes(entrada.item) && !itensNovosMonstro[entrada.item])) {
+  erros.push(`itens_sala: item "${entrada.item}" fora de DROPS_PERMITIDOS e ausente de itens_novos`);
+}
 }
   
   if (erros.length > 0) {
@@ -3503,6 +3504,13 @@ for (const entrada of itensSala) {
     throw new Error(`Lote rejeitado — ${erros.length} inconsistência(s). Nada foi salvo.`);
   }
 
+const plantados = new Set();
+  for (const e of itensSala) if (e?.item) plantados.add(e.item);
+  const orfaos = Object.keys(itensNovosMonstro).filter(id => !plantados.has(id));
+  if (orfaos.length > 0) {
+    throw new Error(`itens_novos órfãos: ${orfaos.join(', ')}. Todo item declarado deve estar em itens_sala.`);
+  }
+  
   // Aplicação
   const updatePayload = {};
   for (const m of lista) {
@@ -3532,7 +3540,7 @@ for (const entrada of itensSala) {
     logFn(`🐺 ${m.nome} → sala ${m.sala_id} · tier ${m.tier} · ${energiaRolada} energia`, 'ok');
   }
 
-  if (itensSala.length > 0) {
+    if (itensSala.length > 0) {
   const porSala = {};
   for (const entrada of itensSala) {
     const sid = String(entrada.sala);
@@ -3545,6 +3553,25 @@ for (const entrada of itensSala) {
     logFn(`📦 ${itens.length} item(ns) → sala ${salaId}: ${itens.join(', ')}`, 'ok');
   }
 }
+
+  if (Object.keys(itensNovosMonstro).length > 0) {
+    const atuais = dadosAtuais.itens_novos || {};
+    const normalizados = {};
+    for (const [id, def] of Object.entries(itensNovosMonstro)) {
+      normalizados[id] = {
+        ...def,
+        image: def.image || ITEM_DINAMICO_IMAGE,
+        thumbnailImage: def.thumbnailImage || ITEM_DINAMICO_THUMB
+      };
+    }
+    updatePayload['itens_novos'] = { ...atuais, ...normalizados };
+
+    const legado = { ...(dadosAtuais.itens_legado || {}) };
+    for (const id of Object.keys(itensNovosMonstro)) {
+      if (!legado[id]) legado[id] = { id, sala_plantio: null, zona_criacao: _promptZona };
+    }
+    updatePayload['itens_legado'] = legado;
+  }
 
   await docRef.update(updatePayload);
   return { salas: [...salasUsadas] };
