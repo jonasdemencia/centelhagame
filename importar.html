@@ -966,7 +966,7 @@ const DROPS_PERMITIDOS_LISTA = [
   'canivete','adaga','punhal-ceremonial','espadalonga',
   'revolver-38','colt1848','beretta-92','lugerp08','colt-python',
   'desert-eagle','escopeta-12','ak-47','amt-502d','motoserra',
-  'chavedeferro','esqueiro','tocha','velas','corda',
+  'esqueiro','tocha','velas','corda',
   'grilo','la','pedaco-couro',
   'aneldafe','amuletodaarmaduranatual','amuletodaserpentedourada',
   'armaduradecouro','habito-monastico','peitoral-de-aço',
@@ -1753,7 +1753,7 @@ const DEFAULT_BODIES = {
     '        {"id": "estrangular", "nome": "Estrangulamento", "dano": "2d6+2", "peso": 40, "pesoHPBaixo": 70, "telegrafado": true, "mensagemTelegraf": "O zelador larga as chaves e avança com as mãos abertas, os olhos fixos no seu pescoço."}',
     '      ],',
     '      "drops": [',
-'        {"id": "chavedeferro", "quantity": 1, "content": "Chave de ferro", "description": "Uma chave enferrujada comum.", "image": ""}',
+'        {"id": "esqueiro", "quantity": 1, "content": "Esqueiro", "description": "Produz chama contínua.", "image": ""}',
 '      ],',
     '      "burst": {"texto": "Um homem de uniforme cinzento encara você parado entre as caixas, um molho de chaves pendurado no cinto.", "palavraAlvo": "homem", "tempoReacao": 8000}',
     '    }',
@@ -1903,6 +1903,13 @@ function construirCabecalho(key, n, ctx) {
       if (Array.isArray(s?.itens) && s.itens.length > 0) salasComItem.push(i);
     }
     linhas.push(`SALAS_COM_ITEM = [${salasComItem.join(', ')}]`);
+    const tr = planoTranca(mapaMundoGlobal(), n);
+    if (tr && tr.modo !== 'adiada') {
+      const porta = mapaMundoGlobal()[String(tr.sala)];
+      linhas.push(`CHAVE_OBRIGATORIA = ${JSON.stringify({ id: tr.id, abre: tr.op.texto, onde: porta?.nome, zona_da_porta: zonaDaSala(tr.sala) })}`
+        + ` — declare em itens_novos com esse id exato (nome e descrição temáticos com a porta e esta zona) e plante em itens_sala; não é drop`
+        + (tr.modo === 'dentro' ? `; NUNCA nas salas [${[...tr.ramo].join(', ')}]` : ''));
+    }
   }
 
   // NOVO — lista negra de itens já existentes
@@ -2029,6 +2036,116 @@ function coletarSalasOcupadas(mapaMundo, n) {
   return salas;
 }
 
+/* ============================================================
+   TRANCAS — portas trancadas cuja chave vem de uma zona posterior.
+   A tranca vive na própria saída: op.tranca = { item, pendente? }.
+   Sem prompt novo: o plano sai do mapa; o arquiteto de monstros só
+   recebe uma linha no cabeçalho (CHAVE_OBRIGATORIA).
+   Ciclo por zona n: n%3==1 → porta ADIADA (chave só em zona futura),
+   n%3==2 → porta DENTRO da zona, n%3==0 → ENTREGA da chave de uma
+   porta adiada (≥2 zonas atrás): a porta passa a abrir para a zona n+1
+   e a saída da zona n é selada (beco sem saída).
+   ============================================================ */
+const RE_PORTA = /\b(porta|portão|portao|grade|alçapão|alcapao|cancela|comporta|escotilha)\b/i;
+const MSG_SELADA = 'A passagem não cede. O caminho deve ser outro.';
+const zonaDaSala = s => Math.ceil(Number(s) / SALAS_POR_ZONA);
+const ehPassagem = o => !!(o && o.destino && !o.arquiteto && !o.dilema && !o.interceptor_arquiteto);
+
+// salas alcançáveis de t só "para frente" dentro da zona (segue saídas sequestradas por puzzle)
+function ramo(mapa, t, fim) {
+  const v = new Set([t]), f = [t];
+  while (f.length) {
+    const s = f.shift(), sala = mapa[String(s)];
+    const dests = [...(sala?.opcoes || []).map(o => o.destino), ...Object.keys(sala?.saidas_sequestradas || {}).map(Number)];
+    for (const d of dests) if (d > s && d <= fim && !v.has(d)) { v.add(d); f.push(d); }
+  }
+  return v;
+}
+
+// sala sem nada que a tranca possa prender ou que dependa de outra coisa
+function seguro(sala) {
+  return !!sala && !sala.cena_aplicada && !sala.burst && !sala.bloqueio && !sala.puzzle_status
+    && !(sala.itens || []).length && !(sala.usos_possiveis || []).length
+    && !(sala.interacoes_ambiente || []).length && !Object.keys(sala.estados || {}).length
+    && !Object.keys(sala.saidas_sequestradas || {}).length
+    && !(sala.opcoes || []).some(o => o.arquiteto || o.dilema || o.interceptor_arquiteto);
+}
+
+// a saída da zona só pode reabrir por ela mesma (nada de puzzle/dilema levando adiante)
+function fronteiraLimpa(sala, fim) {
+  if (!sala || Object.keys(sala.saidas_sequestradas || {}).length) return false;
+  const adiante = x => x && x.destino > fim;
+  return ![...(sala.usos_possiveis || []), ...(sala.interacoes_ambiente || []),
+           ...(sala.opcoes || []).filter(o => o.arquiteto || o.dilema), ...(sala.opcoes || []).flatMap(o => o.ramificacoes || [])].some(adiante);
+}
+
+function trancasPendentes(mapa) {
+  const out = [];
+  for (const id of Object.keys(mapa).sort((a, b) => a - b))
+    for (const op of (mapa[id].opcoes || []))
+      if (op.tranca?.pendente) out.push({ sala: Number(id), op, id: op.tranca.item });
+  return out;
+}
+
+function candidatasTranca(mapa, n) {
+  const ini = (n - 1) * SALAS_POR_ZONA + 1, fim = n * SALAS_POR_ZONA, out = [];
+  for (let s = ini; s < fim; s++) for (const op of (mapa[String(s)]?.opcoes || [])) {
+    const t = op.destino;
+    if (!ehPassagem(op) || t <= s || t > fim || t === ini) continue;
+    const r = ramo(mapa, t, fim);
+    if (r.has(fim) || [...r].some(x => !seguro(mapa[String(x)]))) continue;
+    // acesso único: nenhuma sala fora do ramo (além desta saída) leva a ele
+    let unico = true;
+    for (let x = ini; x <= fim && unico; x++) {
+      if (r.has(x)) continue;
+      const sx = mapa[String(x)];
+      const dests = [...(sx?.opcoes || []).filter(o => !(x === s && o === op)).map(o => o.destino), ...Object.keys(sx?.saidas_sequestradas || {}).map(Number)];
+      if (dests.some(d => r.has(d))) unico = false;
+    }
+    if (unico) out.push({ sala: s, op, ramo: r, porta: RE_PORTA.test(op.texto || '') });
+  }
+  return out;
+}
+
+// plano determinístico da zona n (cabeçalho e importação recalculam o mesmo)
+function planoTranca(mapa, n) {
+  const ini = (n - 1) * SALAS_POR_ZONA + 1, fim = n * SALAS_POR_ZONA;
+  for (let i = ini; i <= fim; i++) if (!mapa[String(i)]) return null;
+  for (let i = ini; i <= fim; i++) if ((mapa[String(i)].opcoes || []).some(o => o.tranca)) return null; // já aplicado
+  const pend = trancasPendentes(mapa).find(p => zonaDaSala(p.sala) <= n - 2);
+  if (pend && n < TOTAL_ZONAS && fronteiraLimpa(mapa[String(fim)], fim)) return { modo: 'entrega', ...pend };
+  const modo = [null, 'adiada', 'dentro'][n % 3];
+  if (!modo || (modo === 'adiada' && n + 2 > TOTAL_ZONAS)) return null;
+  const c = candidatasTranca(mapa, n)
+    .sort((a, b) => (b.porta - a.porta) || (modo === 'dentro' ? b.ramo.size - a.ramo.size : a.ramo.size - b.ramo.size) || a.sala - b.sala)[0];
+  if (!c) return null;
+  return { modo, sala: c.sala, op: c.op, id: `chave_s${c.sala}`, ramo: c.ramo };
+}
+
+// aplica o plano no mapa em memória e registra os caminhos alterados no updatePayload
+function aplicarTranca(mapa, plano, n, pay) {
+  const fim = n * SALAS_POR_ZONA, toca = id => { pay[`mapaMundo.${id}.opcoes`] = mapa[String(id)].opcoes; };
+  if (plano.modo !== 'entrega') {
+    plano.op.tranca = plano.modo === 'adiada' ? { item: plano.id, pendente: true } : { item: plano.id };
+    toca(plano.sala);
+    return;
+  }
+  plano.op.destino = fim + 1;
+  delete plano.op.tranca.pendente;
+  toca(plano.sala);
+  for (const o of mapa[String(fim)].opcoes) if (ehPassagem(o) && o.destino === fim + 1) { o.destino = null; o.tranca = { item: '', msg: MSG_SELADA }; }
+  toca(fim);
+  const ent = mapa[String(fim + 1)]; // zona seguinte já importada? ganha o caminho de volta
+  if (ent && ligarVolta(ent, plano.sala)) toca(fim + 1);
+}
+
+function ligarVolta(sala, origem) {
+  if (!Array.isArray(sala.opcoes)) sala.opcoes = [];
+  if (sala.opcoes.some(o => o.destino === origem)) return false;
+  sala.opcoes.push({ texto: 'Voltar pelo caminho por onde veio', destino: origem });
+  return true;
+}
+
 function coletarSalasElegiveisMonstros(mapaMundo, n) {
   const start = (n - 1) * SALAS_POR_ZONA + 1;
   const end = n * SALAS_POR_ZONA;
@@ -2048,7 +2165,8 @@ function coletarSalasElegiveisMonstros(mapaMundo, n) {
     if (temPuzzle) continue;
     elegiveis.push(i);
   }
-  return elegiveis;
+  const plano = planoTranca(mapaMundo, n);
+  return plano?.modo === 'adiada' ? elegiveis.filter(i => !plano.ramo.has(i)) : elegiveis; // ramo da porta adiada será órfão
 }
 
 // FIX 6 — agora devolve idade calculada
@@ -2991,6 +3109,13 @@ async function importarParaFirestore(dados, uid, logFn) {
     }
   }
 
+  // Entrada de zona (11, 21, ...): sem caminho de volta a zona seria um beco; liga à sala que leva até ela
+  for (const [id, sala] of Object.entries(mapaMundo)) {
+    if (id === '1' || (Number(id) - 1) % SALAS_POR_ZONA !== 0) continue;
+    const origem = Object.entries(mapaMundoAtual).find(([, o]) => (o.opcoes || []).some(x => x.destino === Number(id)));
+    if (origem && ligarVolta(sala, Number(origem[0]))) logFn(`↩️ Sala ${id}: caminho de volta → sala ${origem[0]}`, 'info');
+  }
+
   if (mapaMundo["1"] && !dadosAtuais.zonaAtual) {
     updatePayload["zonaAtual"] = 1;
     updatePayload["secaoAtualId"] = "1";
@@ -3449,6 +3574,7 @@ async function importarMonstros(dadosMonstros, uid, logFn, zonaAtual) {
   if (lista.length === 0) throw new Error('Array "monstros" vazio.');
 
   const elegiveis = new Set(coletarSalasElegiveisMonstros(mapaMundoAtual, zonaAtual));
+  const plano = planoTranca(mapaMundoAtual, zonaAtual); // porta trancada desta zona (ou null)
 
   // Validação — rejeita o lote inteiro se algo estiver fora
   const erros = [];
@@ -3498,7 +3624,12 @@ for (const entrada of itensSala) {
   erros.push(`itens_sala: item "${entrada.item}" fora de DROPS_PERMITIDOS e ausente de itens_novos`);
 }
 }
-  
+  if (plano && plano.modo !== 'adiada') {
+    const e = itensSala.find(x => x?.item === plano.id);
+    if (!e || !itensNovosMonstro[plano.id]) erros.push(`CHAVE_OBRIGATORIA "${plano.id}": deve estar em itens_novos E plantada em itens_sala`);
+    else if (plano.ramo?.has(e.sala)) erros.push(`CHAVE_OBRIGATORIA "${plano.id}": sala ${e.sala} fica atrás da própria porta`);
+  }
+
   if (erros.length > 0) {
     for (const e of erros) logFn(`❌ ${e}`, 'err');
     throw new Error(`Lote rejeitado — ${erros.length} inconsistência(s). Nada foi salvo.`);
@@ -3554,6 +3685,12 @@ const plantados = new Set();
   }
 }
 
+  if (plano) {
+    aplicarTranca(mapaMundoAtual, plano, zonaAtual, updatePayload);
+    const dest = plano.modo === 'entrega' ? `zona ${zonaAtual + 1} (sala ${zonaAtual * SALAS_POR_ZONA + 1}); saída da zona ${zonaAtual} selada` : plano.modo === 'adiada' ? 'zona futura (chave ainda pendente)' : 'ramo da própria zona';
+    logFn(`🔒 Porta "${plano.op.texto}" (sala ${plano.sala}, tranca ${plano.id}, ${plano.modo}) → ${dest}`, 'ok');
+  }
+
   if (Object.keys(itensNovosMonstro).length > 0) {
     const atuais = dadosAtuais.itens_novos || {};
     const normalizados = {};
@@ -3568,7 +3705,7 @@ const plantados = new Set();
 
     const legado = { ...(dadosAtuais.itens_legado || {}) };
     for (const id of Object.keys(itensNovosMonstro)) {
-      if (!legado[id]) legado[id] = { id, sala_plantio: null, zona_criacao: _promptZona };
+      if (id !== plano?.id && !legado[id]) legado[id] = { id, sala_plantio: null, zona_criacao: _promptZona };
     }
     updatePayload['itens_legado'] = legado;
   }
