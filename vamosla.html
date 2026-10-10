@@ -2235,47 +2235,6 @@ ANSWER:`
             });
         }
 
-        if (salaAtual.opcoes) {
-            for (let op of salaAtual.opcoes) {
-                if (op.temChaveAnexada && op.chaveRevelada) {
-                    const chaveData = ITENS_DB["chavedeferro"];
-                    if (!chaveData) continue;
-                    const btnChave = document.createElement('span');
-                    btnChave.className = 'item-coletavel item-chave-dourada';
-                    btnChave.style.cssText = "color: #d9a441 !important; border-color: #d9a441; background: #1a1408; font-weight: bold; display: inline-block !important;";
-                    btnChave.innerText = `🔑 ${chaveData.content}`;
-                    btnChave.onclick = async function() {
-                        const sucesso = await adicionarItem("chavedeferro");
-                        if (sucesso) {
-                            adicionarMensagem(`[VOCÊ GUARDOU: ${chaveData.content}]`, 'system');
-                            btnChave.remove();
-                            if (salaAtual && salaAtual.opcoes) {
-                                for (let op2 of salaAtual.opcoes) {
-                                    if (op2.temChaveAnexada && op2._chaveAnexadaKey) {
-                                        op2.temChaveAnexada = false;
-                                        op2.chaveRevelada = false;           // [PATCH] limpa flag de exibição
-                                        if (window.sistemaChaves.chavesAnexadas[op2._chaveAnexadaKey]) {
-                                            delete window.sistemaChaves.chavesAnexadas[op2._chaveAnexadaKey];
-                                        }
-                                        op2._chaveAnexadaKey = null;         // [PATCH] libera referência antiga
-                                        break;
-                                    }
-                                }
-                            }
-                            await salvarEstadoJogador();
-                            if (typeof window.atualizarInterfaceInventario === 'function') {
-                                window.atualizarInterfaceInventario();
-                            }
-                        } else {
-                            adicionarMensagem(`Seus bolsos estão pesados. Não foi possível guardar ${chaveData.content}.`, 'system');
-                        }
-                    };
-                    lootContainer.appendChild(btnChave);
-                    break;
-                }
-            }
-        }
-
         if (lootContainer.children.length === 0) {
             lootContainer.style.display = 'none';
         } else {
@@ -2319,11 +2278,6 @@ ANSWER:`
                 if (data.salasVisitadas) salasVisitadas = new Set(data.salasVisitadas);
                 if (data.dnaGlobal) dnaGlobal = data.dnaGlobal;
                 if (data.zonaAtual) zonaAtual = data.zonaAtual;
-                if (data.sistemaChaves) {
-                    window.sistemaChaves = data.sistemaChaves;
-                } else {
-                    window.sistemaChaves = { portasTrancadas: {}, chavesAnexadas: {} };
-                }
                 window.playerFlags = data.playerFlags || {};
                 window.playerFlagsMeta = data.playerFlagsMeta || {};
             } else {
@@ -2373,7 +2327,6 @@ ANSWER:`
             const dadosAtualizados = {
                 turnos: turnosJogados,
                 "energy.total": energia,
-                sistemaChaves: window.sistemaChaves,
                 "skill.total": jogadorStats.HABILIDADE,
                 "charisma.total": jogadorStats.CARISMA,
                 "luck.total": jogadorStats.SORTE,
@@ -2915,25 +2868,15 @@ texto += ` <span class="burst-trecho">${b.texto}</span>`;
 
         window._transicaoEmAndamento = true;
 
-        // [PORTA] Verificação de porta trancada — ANTES de qualquer teste
-        const salaAtualObj = mapaMundo?.[secaoAtualId];
-        if (salaAtualObj && opcao && opcao.destino !== undefined) {
-            const keyState = `${secaoAtualId}_${opcao.destino}`;
-            const portaInfo = window.sistemaChaves?.portasTrancadas?.[keyState];
-            if (portaInfo && portaInfo.trancada) {
-                const temChave = await verificarItemNoInventarioFirestore("chavedeferro");
-                if (!temChave) {
-                    const indice = Math.floor(Math.random() * MENSAGENS_CHAVE_FALTANDO.length);
-                    const mensagem = MENSAGENS_CHAVE_FALTANDO[indice];
-                    adicionarMensagem(mensagem, 'system');
-                    window._transicaoEmAndamento = false;
-                    return;
-                } else {
-                    await removerItemDoInventarioFirestore("chavedeferro");
-                    portaInfo.trancada = false;
-                    adicionarMensagem(`Você usou Chave de ferro`, 'system');
-                    await salvarEstadoJogador();
-                }
+        // [PORTA] Saída trancada: abre sozinha se o jogador tiver a chave; senão, barra.
+        const tr = opcao?.tranca;
+        if (tr) {
+            if (tr.item && !tr.pendente && await verificarItemNoInventarioFirestore(tr.item)) {
+                await destrancar(opcao);
+            } else {
+                adicionarMensagem(tr.msg || MENSAGENS_CHAVE_FALTANDO[Math.floor(Math.random() * MENSAGENS_CHAVE_FALTANDO.length)], 'system');
+                window._transicaoEmAndamento = false;
+                return;
             }
         }
 
@@ -3420,11 +3363,6 @@ if (itemParaConsumir) {
         chatBox.scrollTop = chatBox.scrollHeight;
     }
 
-        // [PATCH] Reveal fora do if — acontece em SUCESSO ou FALHA.
-    if (opcao.temChaveAnexada) {
-        await processarResultadoExame(opcao);
-    }
-
     // [RECOMPENSA] nova_opcao pode revelar 1 item (arquiteto de perigos).
     if (opcao.adiciona_item) {
         const salaAtual = mapaMundo[secaoAtualId];
@@ -3464,7 +3402,7 @@ if (itemParaConsumir) {
             if (op.dilema === true) continue;
             if (op.destino == null) continue;
             if (op.arquiteto === true && !op.texto) continue;
-            textos.push(op.texto);
+            textos.push(op.tranca ? `${op.texto} (trancada)` : op.texto);
         }
         const seq = sala.saidas_sequestradas || {};
         for (const destino in seq) {
@@ -3804,22 +3742,17 @@ if (itemParaConsumir) {
     };
 
     // ============================================================
-    // SISTEMA DE PORTAS TRANCADAS E CHAVES
+    // PORTAS TRANCADAS — a tranca vive na própria opção de saída:
+    //   op.tranca = { item, msg?, pendente? }
+    // pendente = a chave ainda não foi plantada (zona futura).
+    // item === '' = passagem selada de vez (sem chave possível).
     // ============================================================
-    window.sistemaChaves = {
-        portasTrancadas: {},
-        chavesAnexadas: {}
-    };
-
-    function ehNomePorta(texto) {
-        if (!texto) return false;
-        const txt = texto.toLowerCase();
-        return txt.includes("porta") || txt.includes("grade") || txt.includes("portão") || txt.includes("portao");
-    }
-
-    function getNumeroSala(salaId) {
-        const num = parseInt(salaId, 10);
-        return isNaN(num) ? 0 : num;
+    async function destrancar(op) {
+        const nome = ITENS_DB[op.tranca.item]?.content || 'a chave';
+        await removerItemDoInventarioFirestore(op.tranca.item);
+        delete op.tranca;
+        adicionarMensagem(`Você usou ${nome}. O acesso cede.`, 'system');
+        await salvarEstadoJogador();
     }
 
     async function verificarItemNoInventarioFirestore(itemId) {
@@ -3873,6 +3806,14 @@ if (itemParaConsumir) {
         const salaId = secaoAtualId;
         const sala = mapaMundo?.[salaId];
         if (!sala) return { sucesso: false };
+
+        // [PORTA] Usar a chave certa numa saída trancada desta sala
+        const porta = (sala.opcoes || []).find(o => o.tranca?.item === itemId && !o.tranca.pendente);
+        if (porta) {
+            await destrancar(porta);
+            if (typeof window.fecharInventario === 'function') window.fecharInventario();
+            return { sucesso: true };
+        }
 
         if (!sala.usos_possiveis) sala.usos_possiveis = [];
         if (!sala.estados) sala.estados = {};
@@ -3932,215 +3873,6 @@ if (itemParaConsumir) {
         return { sucesso: true };
     };
 
-    // ============================================================
-    // [PATCH] Marca a opção como revelada (persistência) antes de
-    // colocar a chave na loot-area. Sem isso, atualizarLootRoom()
-    // (chamado logo em seguida em executarAcaoOpcao) apagava o
-    // botão porque op.chaveRevelada continuava false.
-    // ============================================================
-    async function processarResultadoExame(opcao) {
-        if (!opcao || !opcao.temChaveAnexada) return;
-
-        // 1. Marca a opção como revelada (persiste junto com o mapaMundo).
-        opcao.chaveRevelada = true;
-
-        // 2. Sincroniza o registro paralelo em sistemaChaves (também persistido).
-        if (opcao._chaveAnexadaKey && window.sistemaChaves?.chavesAnexadas) {
-            const reg = window.sistemaChaves.chavesAnexadas[opcao._chaveAnexadaKey];
-            if (reg) reg.revelada = true;
-        }
-
-        // 3. Agora sim: renderiza o botão. Na sequência, quando
-        //    atualizarLootRoom() rodar, a condição (temChaveAnexada &&
-        //    chaveRevelada) será verdadeira e o botão será re-adicionado.
-        await revelarChaveNoLootArea();
-    }
-
-    async function revelarChaveNoLootArea() {
-        const lootArea = document.getElementById('loot-area');
-        if (!lootArea) return;
-        const chaveData = ITENS_DB["chavedeferro"];
-        if (!chaveData) return;
-        if (lootArea.querySelector('.item-chave-dourada')) return;
-
-        const btnChave = document.createElement('span');
-        btnChave.className = 'item-coletavel item-chave-dourada';
-        btnChave.style.cssText = "color: #d9a441 !important; border-color: #d9a441; background: #1a1408; font-weight: bold; display: inline-block !important;";
-        btnChave.innerText = `🔑 ${chaveData.content}`;
-
-        btnChave.onclick = async function() {
-            const sucesso = await adicionarItem("chavedeferro");
-            if (sucesso) {
-                adicionarMensagem(`[VOCÊ GUARDOU: ${chaveData.content}]`, 'system');
-                btnChave.remove();
-
-                const salaAtual = mapaMundo?.[secaoAtualId];
-                if (salaAtual && salaAtual.opcoes) {
-                    for (let op of salaAtual.opcoes) {
-                        if (op.temChaveAnexada && op._chaveAnexadaKey) {
-                            op.temChaveAnexada = false;
-                            op.chaveRevelada = false;           // [PATCH] limpa flag de exibição
-                            if (window.sistemaChaves.chavesAnexadas[op._chaveAnexadaKey]) {
-                                delete window.sistemaChaves.chavesAnexadas[op._chaveAnexadaKey];
-                            }
-                            op._chaveAnexadaKey = null;         // [PATCH] libera referência antiga
-                            break;
-                        }
-                    }
-                }
-                await salvarEstadoJogador();
-                if (typeof window.atualizarInterfaceInventario === 'function') {
-                    window.atualizarInterfaceInventario();
-                }
-            } else {
-                adicionarMensagem(`Seus bolsos estão pesados. Não foi possível guardar ${chaveData.content}.`, 'system');
-            }
-        };
-
-        lootArea.appendChild(btnChave);
-        lootArea.style.display = 'flex';
-    }
-
-    function inicializarPortasEChaves() {
-        if (!mapaMundo) return;
-
-        if (window.sistemaChaves && Object.keys(window.sistemaChaves.portasTrancadas).length > 0) {
-            console.log("[Chaves] Usando estado existente (persistido no Firestore).");
-            return;
-        }
-
-        console.log("[Chaves] Inicializando sistema de portas trancadas e chaves (primeira vez)...");
-
-        window.sistemaChaves = {
-            portasTrancadas: {},
-            chavesAnexadas: {}
-        };
-
-        const salaIds = Object.keys(mapaMundo).sort((a, b) => getNumeroSala(a) - getNumeroSala(b));
-        if (salaIds.length === 0) return;
-
-        const maxSalaNum = getNumeroSala(salaIds[salaIds.length - 1]);
-        const numBlocos = Math.ceil(maxSalaNum / SALAS_POR_ZONA);
-
-        for (let b = 0; b < numBlocos; b++) {
-            const minSala = b * SALAS_POR_ZONA + 1;
-            const maxSala = (b + 1) * SALAS_POR_ZONA;
-
-            const salasBloco = salaIds.filter(id => {
-                const num = getNumeroSala(id);
-                return num >= minSala && num <= maxSala;
-            });
-
-            let portasElegiveis = [];
-
-            salasBloco.forEach(salaId => {
-                const numSala = getNumeroSala(salaId);
-                if (numSala === 1) return;
-
-                const sala = mapaMundo[salaId];
-                if (!sala) return;
-
-                const opcoes = sala.opcoes || [];
-                opcoes.forEach((navOpt, idx) => {
-                    const textoNav = navOpt.texto || navOpt.opcao_texto || "";
-                    if (ehNomePorta(textoNav) && navOpt.destino && navOpt.destino > parseInt(salaId)) {
-                        portasElegiveis.push({
-                            salaId: salaId,
-                            numSala: numSala,
-                            navOpt: navOpt,
-                            texto: textoNav,
-                            keyState: `${salaId}_${navOpt.destino}`
-                        });
-                    }
-                });
-            });
-
-            if (portasElegiveis.length === 0) continue;
-
-            const quantidadeDesejada = Math.min(
-                portasElegiveis.length,
-                Math.floor(Math.random() * 2) + 1
-            );
-
-            portasElegiveis.sort(() => Math.random() - 0.5);
-            let portasTrancadasComSucesso = 0;
-
-            for (let portaCandidate of portasElegiveis) {
-                if (portasTrancadasComSucesso >= quantidadeDesejada) break;
-
-                const numSalaPorta = portaCandidate.numSala;
-                const minSalaChave = Math.max(1, numSalaPorta - 15);
-
-                let examesElegiveis = [];
-
-                salaIds.forEach(sId => {
-                    const numS = getNumeroSala(sId);
-                    if (numS < numSalaPorta && numS >= minSalaChave) {
-                        const sData = mapaMundo[sId];
-                        if (!sData) return;
-
-                        const opcoes = sData.opcoes || [];
-                        opcoes.forEach((exOpt, exIdx) => {
-                            if (exOpt.arquiteto && (exOpt.tipo_resultado === "revelacao" || exOpt.tipo_resultado === "perigo")) {
-                                if (!exOpt.temChaveAnexada) {
-                                    const chaveOpcao = `${sId}_${exIdx}`;
-                                    examesElegiveis.push({
-                                        salaId: sId,
-                                        exIdx: exIdx,
-                                        exOpt: exOpt,
-                                        chaveOpcao: chaveOpcao
-                                    });
-                                }
-                            }
-                        });
-                    }
-                });
-
-                if (examesElegiveis.length > 0) {
-                    const exameEscolhido = examesElegiveis[Math.floor(Math.random() * examesElegiveis.length)];
-
-                    exameEscolhido.exOpt.temChaveAnexada = true;
-                    exameEscolhido.exOpt._chaveAnexadaKey = exameEscolhido.chaveOpcao;
-                    exameEscolhido.exOpt.chaveRevelada = false;
-
-                    window.sistemaChaves.chavesAnexadas[exameEscolhido.chaveOpcao] = {
-                        salaId: exameEscolhido.salaId,
-                        opcaoRef: exameEscolhido.exOpt,
-                        revelada: false
-                    };
-
-                    window.sistemaChaves.portasTrancadas[portaCandidate.keyState] = {
-                        salaId: portaCandidate.salaId,
-                        texto: portaCandidate.texto,
-                        destino: portaCandidate.navOpcao?.destino ?? portaCandidate.navOpt.destino,
-                        trancada: true
-                    };
-
-                    portasTrancadasComSucesso++;
-                }
-            }
-        }
-
-        for (let salaId in mapaMundo) {
-            const sala = mapaMundo[salaId];
-            if (sala && sala.opcoes) {
-                sala.opcoes.forEach((op, idx) => {
-                    if (op.temChaveAnexada) {
-                        const key = `${salaId}_${idx}`;
-                        if (!window.sistemaChaves.chavesAnexadas[key]) {
-                            window.sistemaChaves.chavesAnexadas[key] = {
-                                salaId: salaId,
-                                opcaoRef: op,
-                                revelada: false
-                            };
-                        }
-                    }
-                });
-            }
-        }
-
-        salvarEstadoJogador();
-    }
 
     // ============================================================
     // MAPA VISUAL
@@ -4553,8 +4285,6 @@ if (itemParaConsumir) {
                     document.getElementById('send-btn').disabled = true;
                     return;
                 }
-
-                inicializarPortasEChaves();
 
                 atualizarBotoesNavegacao();
                 atualizarLootRoom();
