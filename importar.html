@@ -933,6 +933,523 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
 <script src="https://www.gstatic.com/firebasejs/11.4.0/firebase-auth-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
+<!-- Motor de ícones 3D (fonte única). Para atualizar: substitua o conteúdo deste bloco pelo novo motor_icones.js -->
+<script type="text/plain" id="motorIconesSrc">
+/* motor_icones.js v1.0 — Centelha
+ * Renderiza ícones 128x128 no estilo dos itens do baú/inventário de Resident Evil (PS1) a partir de uma lista de itens em ICONES.
+ * Uso: carregue este arquivo com uma tag script (src="motor_icones.js") e, em outro script, chame ICONES.push({ id, yaw, pitch, roll, shapes:[...] }).
+ * Saída: um <canvas id="<id>"> por item e window.renderedImages[id] = dataURL PNG. window.iconErrors / window.iconWarnings listam problemas.
+ * Fundo preto opaco, render determinístico (sem Math.random). */
+(function () {
+'use strict';
+/* ====== MOTOR DE ÍCONES (render 3D por distância assinada + acabamento PS1). NÃO ALTERAR. ====== */
+const N = 128, FIT = 0.86, RB = 2.6;
+const PI = Math.PI, sin = Math.sin, cos = Math.cos, sqrt = Math.sqrt, abs = Math.abs, min = Math.min, max = Math.max,
+      floor = Math.floor, pow = Math.pow, atan2 = Math.atan2, exp = Math.exp;
+const clamp = (x, a, b) => (x < a ? a : x > b ? b : x);
+const mix = (a, b, t) => a + (b - a) * t;
+const sstep = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+const norm3 = v => { const l = sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]) || 1; return [v[0] / l, v[1] / l, v[2] / l]; };
+
+/* ---------- ruído determinístico ---------- */
+function hash3(x, y, z) {
+  let h = Math.imul(x, 374761393) ^ Math.imul(y, 668265263) ^ Math.imul(z, 1274126177);
+  h = Math.imul(h ^ (h >>> 13), 1274126177);
+  return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+}
+const LN = 64, LAT = new Float32Array(LN * LN * LN);
+for (let k = 0; k < LN; k++) for (let j = 0; j < LN; j++) for (let i = 0; i < LN; i++) LAT[i + LN * (j + LN * k)] = hash3(i, j, k);
+function vnoise(x, y, z) {
+  const ix = floor(x), iy = floor(y), iz = floor(z), fx = x - ix, fy = y - iy, fz = z - iz;
+  const ux = fx * fx * (3 - 2 * fx), uy = fy * fy * (3 - 2 * fy), uz = fz * fz * (3 - 2 * fz);
+  const i0 = ix & 63, i1 = (ix + 1) & 63, j0 = (iy & 63) << 6, j1 = ((iy + 1) & 63) << 6, k0 = (iz & 63) << 12, k1 = ((iz + 1) & 63) << 12;
+  const a = LAT[i0 + j0 + k0], b = LAT[i1 + j0 + k0], c = LAT[i0 + j1 + k0], d = LAT[i1 + j1 + k0];
+  const e = LAT[i0 + j0 + k1], f = LAT[i1 + j0 + k1], g = LAT[i0 + j1 + k1], h = LAT[i1 + j1 + k1];
+  return mix(mix(mix(a, b, ux), mix(c, d, ux), uy), mix(mix(e, f, ux), mix(g, h, ux), uy), uz);
+}
+const bnoise = (x, y, z) => 0.65 * vnoise(x, y, z) + 0.35 * vnoise(x * 2.1, y * 2.1, z * 2.1);
+const fbm = (x, y, z) => (0.5 * vnoise(x, y, z) + 0.25 * vnoise(x * 2.07, y * 2.07, z * 2.07) + 0.125 * vnoise(x * 4.13, y * 4.13, z * 4.13)) / 0.875;
+
+/* ---------- formas (espaço local, y para cima); cada uma devolve f(x,y,z) com esfera envolvente f.bc/f.br ---------- */
+const BND = (f, c, r) => { f.bc = c; f.br = r; return f; };
+function polyFn(P, skipAxis) {
+  const n = P.length;
+  return (px, py) => {
+    let d = 1e9, s = 1;
+    for (let i = 0, j = n - 1; i < n; j = i, i++) {
+      const ex = P[j][0] - P[i][0], ey = P[j][1] - P[i][1], ee = ex * ex + ey * ey;
+      if (ee < 1e-12) continue;
+      const wx = px - P[i][0], wy = py - P[i][1];
+      const t = clamp((wx * ex + wy * ey) / ee, 0, 1), bx = wx - ex * t, by = wy - ey * t;
+      if (!(skipAxis && P[i][0] === 0 && P[j][0] === 0)) d = min(d, bx * bx + by * by);
+      const c1 = py >= P[i][1], c2 = py < P[j][1], c3 = ex * wy > ey * wx;
+      if ((c1 && c2 && c3) || (!c1 && !c2 && !c3)) s = -s;
+    }
+    return s * sqrt(d);
+  };
+}
+function roundCone(a, b, r1, r2) {
+  const bax = b[0] - a[0], bay = b[1] - a[1], baz = b[2] - a[2], l2 = bax * bax + bay * bay + baz * baz;
+  const rr = r1 - r2, a2 = l2 - rr * rr, il2 = 1 / (l2 || 1);
+  if (l2 < 1e-9 || a2 <= 1e-9) { const c = r1 >= r2 ? a : b, r = max(r1, r2); return (x, y, z) => sqrt((x - c[0]) ** 2 + (y - c[1]) ** 2 + (z - c[2]) ** 2) - r; }
+  return (x, y, z) => {
+    const pax = x - a[0], pay = y - a[1], paz = z - a[2], yy = pax * bax + pay * bay + paz * baz, zz = yy - l2;
+    const vx = pax * l2 - bax * yy, vy = pay * l2 - bay * yy, vz = paz * l2 - baz * yy;
+    const x2 = vx * vx + vy * vy + vz * vz, y2 = yy * yy * l2, z2 = zz * zz * l2, k = Math.sign(rr) * rr * rr * x2;
+    if (Math.sign(zz) * a2 * z2 > k) return sqrt(x2 + z2) * il2 - r2;
+    if (Math.sign(yy) * a2 * y2 < k) return sqrt(x2 + y2) * il2 - r1;
+    return (sqrt(x2 * a2 * il2) + yy * rr) * il2 - r1;
+  };
+}
+const PRIM = {
+  sphere(s) {
+    if (s.s) {
+      const a = s.s[0], b = s.s[1], c = s.s[2];
+      return BND((x, y, z) => {
+        const k0 = sqrt((x / a) ** 2 + (y / b) ** 2 + (z / c) ** 2), k1 = sqrt((x / (a * a)) ** 2 + (y / (b * b)) ** 2 + (z / (c * c)) ** 2);
+        return k1 < 1e-9 ? -min(a, b, c) : (k0 * (k0 - 1)) / k1;
+      }, [0, 0, 0], max(a, b, c));
+    }
+    const r = s.r;
+    return BND((x, y, z) => sqrt(x * x + y * y + z * z) - r, [0, 0, 0], r);
+  },
+  box(s) {
+    const bx = s.s[0], by = s.s[1], bz = s.s[2], r = min(s.round || 0, bx, by, bz);
+    return BND((x, y, z) => {
+      const qx = abs(x) - bx + r, qy = abs(y) - by + r, qz = abs(z) - bz + r;
+      return sqrt(max(qx, 0) ** 2 + max(qy, 0) ** 2 + max(qz, 0) ** 2) + min(max(qx, max(qy, qz)), 0) - r;
+    }, [0, 0, 0], sqrt(bx * bx + by * by + bz * bz));
+  },
+  cyl(s) {
+    if (s.r2 !== undefined) return PRIM.cone({ r1: s.r, r2: s.r2, h: s.h });
+    const r = s.r, h = s.h, rb = min(s.round || 0, r, h);
+    return BND((x, y, z) => {
+      const dx = sqrt(x * x + z * z) - r + rb, dy = abs(y) - h + rb;
+      return min(max(dx, dy), 0) + sqrt(max(dx, 0) ** 2 + max(dy, 0) ** 2) - rb;
+    }, [0, 0, 0], sqrt(r * r + h * h));
+  },
+  cone(s) {
+    const h = s.h, r1 = s.r1, r2 = s.r2, k1x = r2, k1y = h, k2x = r2 - r1, k2y = 2 * h, kk = k2x * k2x + k2y * k2y;
+    return BND((x, y, z) => {
+      const qx = sqrt(x * x + z * z), qy = y, cax = qx - min(qx, qy < 0 ? r1 : r2), cay = abs(qy) - h;
+      const t = clamp(((k1x - qx) * k2x + (k1y - qy) * k2y) / kk, 0, 1), cbx = qx - k1x + k2x * t, cby = qy - k1y + k2y * t;
+      return (cbx < 0 && cay < 0 ? -1 : 1) * sqrt(min(cax * cax + cay * cay, cbx * cbx + cby * cby));
+    }, [0, 0, 0], sqrt(max(r1, r2) ** 2 + h * h));
+  },
+  torus(s) {
+    const R = s.R, r = s.r;
+    return BND((x, y, z) => { const q = sqrt(x * x + z * z) - R; return sqrt(q * q + y * y) - r; }, [0, 0, 0], R + r);
+  },
+  capsule(s) {
+    const A = s.a, B = s.b, len = sqrt((B[0] - A[0]) ** 2 + (B[1] - A[1]) ** 2 + (B[2] - A[2]) ** 2);
+    return BND(roundCone(A, B, s.r, s.r), [(A[0] + B[0]) / 2, (A[1] + B[1]) / 2, (A[2] + B[2]) / 2], len / 2 + s.r);
+  },
+  tube(s) {
+    const P = s.pts, segs = [];
+    for (let i = 0; i < P.length - 1; i++) segs.push(roundCone(P[i], P[i + 1], P[i][3], P[i + 1][3]));
+    let cx = 0, cy = 0, cz = 0;
+    P.forEach(p => { cx += p[0] / P.length; cy += p[1] / P.length; cz += p[2] / P.length; });
+    let br = 0; P.forEach(p => { br = max(br, sqrt((p[0] - cx) ** 2 + (p[1] - cy) ** 2 + (p[2] - cz) ** 2) + p[3]); });
+    if (!segs.length) return BND((x, y, z) => sqrt((x - cx) ** 2 + (y - cy) ** 2 + (z - cz) ** 2) - P[0][3], [cx, cy, cz], br);
+    return BND((x, y, z) => { let d = 1e9; for (let i = 0; i < segs.length; i++) { const v = segs[i](x, y, z); if (v < d) d = v; } return d; }, [cx, cy, cz], br);
+  },
+  lathe(s) {
+    const f = polyFn(s.prof, true);
+    let rm = 0, y0 = 1e9, y1 = -1e9;
+    s.prof.forEach(p => { rm = max(rm, abs(p[0])); y0 = min(y0, p[1]); y1 = max(y1, p[1]); });
+    return BND((x, y, z) => f(sqrt(x * x + z * z), y), [0, (y0 + y1) / 2, 0], sqrt(rm * rm + ((y1 - y0) / 2) ** 2));
+  },
+  extrude(s) {
+    const f = polyFn(s.poly, false), h = s.h, rb = min(s.round || 0, h * 0.99);
+    let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
+    s.poly.forEach(p => { x0 = min(x0, p[0]); x1 = max(x1, p[0]); y0 = min(y0, p[1]); y1 = max(y1, p[1]); });
+    return BND((x, y, z) => {
+      const d2 = f(x, y) + rb, dz = abs(z) - (h - rb);
+      return min(max(d2, dz), 0) + sqrt(max(d2, 0) ** 2 + max(dz, 0) ** 2) - rb;
+    }, [(x0 + x1) / 2, (y0 + y1) / 2, 0], sqrt(((x1 - x0) / 2) ** 2 + ((y1 - y0) / 2) ** 2 + h * h));
+  },
+};
+
+/* ---------- materiais ---------- */
+const MATS = {
+  ferro:     { c: [.30, .30, .33], spec: .9, sh: 38, met: .80, bump: .30, grime: .55, rust: .30 },
+  aco:       { c: [.60, .62, .66], spec: 1.0, sh: 70, met: .90, bump: .10, grime: .20 },
+  ferrugem:  { c: [.36, .30, .28], spec: .25, sh: 12, met: .25, bump: .55, grime: .50, rust: .90 },
+  bronze:    { c: [.58, .38, .19], spec: .9, sh: 34, met: .85, bump: .18, grime: .35 },
+  latao:     { c: [.76, .58, .22], spec: 1.0, sh: 46, met: .90, bump: .10, grime: .30 },
+  ouro:      { c: [.96, .74, .24], spec: 1.1, sh: 60, met: .95, bump: .05, grime: .10 },
+  prata:     { c: [.78, .80, .84], spec: 1.1, sh: 70, met: .95, bump: .05, grime: .20 },
+  cobre:     { c: [.74, .38, .24], spec: .9, sh: 44, met: .90, bump: .12, grime: .30 },
+  cera:      { c: [.82, .74, .54], spec: .25, sh: 14, wrap: .5, bump: .06, grime: .10 },
+  sebo:      { c: [.30, .28, .25], spec: .35, sh: 16, wrap: .4, bump: .10, grime: .35 },
+  osso:      { c: [.80, .74, .62], spec: .18, sh: 12, bump: .14, grime: .30 },
+  madeira:   { c: [.42, .27, .14], spec: .15, sh: 10, bump: .25, grime: .30, grain: .8 },
+  madeira_escura: { c: [.22, .14, .08], spec: .15, sh: 10, bump: .25, grime: .35, grain: .7 },
+  couro:     { c: [.32, .19, .10], spec: .30, sh: 14, bump: .35, grime: .40 },
+  tecido:    { c: [.64, .60, .52], spec: .04, sh: 6, wrap: .5, bump: .40, grime: .30 },
+  pano_sujo: { c: [.40, .34, .26], spec: .04, sh: 6, wrap: .5, bump: .45, grime: .75 },
+  papel:     { c: [.74, .66, .48], spec: .05, sh: 8, wrap: .4, bump: .05, grime: .50 },
+  corda:     { c: [.56, .46, .30], spec: .05, sh: 6, bump: .60, grime: .40 },
+  vidro:     { c: [.10, .22, .18], spec: 1.3, sh: 90, met: .45, bump: 0, grime: .05 },
+  borracha:  { c: [.08, .08, .09], spec: .25, sh: 10, bump: .20 },
+  plastico:  { c: [.13, .13, .15], spec: .60, sh: 30, bump: .05, grime: .10 },
+  pedra:     { c: [.40, .39, .37], spec: .08, sh: 8, bump: .60, grime: .50 },
+  sangue:    { c: [.32, .03, .03], spec: .80, sh: 40, bump: .05 },
+  erva:      { c: [.22, .48, .15], spec: .20, sh: 14, wrap: .4, bump: .20, grime: .25 },
+  ceramica:  { c: [.74, .72, .66], spec: .55, sh: 40, bump: .08, grime: .35 },
+  terracota: { c: [.52, .28, .17], spec: .08, sh: 8, bump: .35, grime: .45 },
+  pele:      { c: [.62, .42, .34], spec: .18, sh: 14, wrap: .5, bump: .12, grime: .20 },
+  carne:     { c: [.46, .12, .10], spec: .55, sh: 26, wrap: .4, bump: .15, grime: .15 },
+  cabelo:    { c: [.10, .06, .045], spec: .45, sh: 30, bump: .30, grime: .2 },
+  barro:     { c: [.25, .17, .11], spec: .05, sh: 6, bump: .50, grime: .50 },
+  cristal:   { c: [.52, .74, .80], spec: 1.2, sh: 90, met: .30, bump: 0, grime: .05 },
+  carvao:    { c: [.06, .055, .055], spec: .12, sh: 10, bump: .35, grime: .1 },
+  chama:     { c: [1, .66, .22], spec: 0, emis: [1.05, .62, .20] },
+  brasa:     { c: [.5, .12, .04], spec: .1, sh: 8, emis: [.55, .12, .03], bump: .4 },
+  liquido_vermelho: { c: [.50, .04, .05], spec: 1.2, sh: 80, emis: [.22, .02, .02] },
+  liquido_verde:    { c: [.10, .42, .14], spec: 1.2, sh: 80, emis: [.05, .20, .06] },
+};
+let MATLIST = [];
+function matId(name) {
+  let m = MATS[name];
+  if (!m) { console.warn('material desconhecido: ' + name + ' (usei "ferro")'); m = MATS.ferro; }
+  let i = MATLIST.indexOf(m);
+  if (i < 0) { i = MATLIST.length; MATLIST.push(m); }
+  return i;
+}
+
+/* ---------- cena ---------- */
+let TX = 0, TY = 0, TZ = 0, CM = 0, CW = 0;
+function compileShape(sh) {
+  const mk = PRIM[sh && sh.t];
+  if (!mk) throw new Error('tipo de forma desconhecido: ' + (sh && sh.t));
+  let f; try { f = mk(sh); } catch (e) { throw new Error('faltam parâmetros em ' + sh.t); }
+  const pos = sh.pos || [0, 0, 0], rot = sh.rot || [0, 0, 0], off = sh.off || [0, 0, 0];
+  const okv = v => Array.isArray(v) && v.length === 3 && v.every(Number.isFinite);
+  if (!okv(pos) || !okv(rot) || !okv(off) || !Number.isFinite(f(0.13, 0.21, 0.17))) throw new Error('parâmetros inválidos em ' + sh.t);
+  const rx = -rot[0] * PI / 180, ry = -rot[1] * PI / 180, rz = -rot[2] * PI / 180;
+  const cx = cos(rx), sx = sin(rx), cy = cos(ry), sy = sin(ry), cz = cos(rz), sz = sin(rz);
+  const hx = rx !== 0, hy = ry !== 0, hz = rz !== 0;
+  const tw = sh.twist || 0, amp = sh.noise || 0, fr = sh.freq || 7;
+  const ring = sh.ring | 0, sec = ring ? 2 * PI / ring : 0, sym = sh.sym || '';
+  function tf(x, y, z) {
+    if (sym === 'x') x = abs(x); else if (sym === 'z') z = abs(z);
+    x -= pos[0]; y -= pos[1]; z -= pos[2];
+    let t;
+    if (hy) { t = x * cy + z * sy; z = -x * sy + z * cy; x = t; }
+    if (hx) { t = y * cx - z * sx; z = y * sx + z * cx; y = t; }
+    if (hz) { t = x * cz - y * sz; y = x * sz + y * cz; x = t; }
+    if (tw) { const a = tw * y, c = cos(a), s = sin(a); t = x * c - z * s; z = x * s + z * c; x = t; }
+    if (ring) { const a = atan2(z, x), r = sqrt(x * x + z * z), aa = (((a % sec) + sec) % sec) - sec * 0.5; x = r * cos(aa); z = r * sin(aa); }
+    TX = x - off[0]; TY = y - off[1]; TZ = z - off[2];
+  }
+  let br = Infinity, ext = 1.5;
+  if (f.br !== undefined) {
+    const ox = off[0] + f.bc[0], oy = off[1] + f.bc[1], oz = off[2] + f.bc[2];
+    const loc = sqrt(ox * ox + oy * oy + oz * oz) + f.br + amp + 0.02;
+    ext = sqrt(pos[0] * pos[0] + pos[1] * pos[1] + pos[2] * pos[2]) + loc;
+    if (!sym) br = loc;
+  }
+  return {
+    sd(x, y, z) {
+      tf(x, y, z);
+      let d = f(TX, TY, TZ);
+      if (amp) { if (d > amp + 0.2) d -= amp; else d += amp * (vnoise(TX * fr + 7.3, TY * fr + 1.7, TZ * fr + 4.1) - 0.5) * 2; }
+      return d;
+    },
+    loc: tf, px: pos[0], py: pos[1], pz: pos[2], br, ext,
+  };
+}
+function makeScene(shapes0, warn) {
+  const shapes = [], S = [];
+  shapes0.forEach((sh, i) => { try { S.push(compileShape(sh)); shapes.push(sh); } catch (e) { warn('forma #' + (i + 1) + ' ignorada: ' + e.message); } });
+  const n = S.length;
+  if (!n) throw new Error('nenhuma forma válida em "shapes"');
+  if (n > 160) throw new Error('formas demais (' + n + '); o máximo é 160 — use laços só onde necessário e funda detalhes');
+  const sub = shapes.map(s => s.op === 'sub'), kk = shapes.map(s => s.k || 0), mi = shapes.map(s => (s.op === 'sub' ? 0 : matId(s.mat)));
+  const BX = S.map(s => s.px), BY = S.map(s => s.py), BZ = S.map(s => s.pz), BR = S.map(s => s.br);
+  const sdf = (x, y, z) => {
+    let d = 1e9, m = 0, w = 0;
+    for (let i = 0; i < n; i++) {
+      const k = kk[i];
+      if (BR[i] !== Infinity) {
+        const dx = x - BX[i], dy = y - BY[i], dz = z - BZ[i], dB = sqrt(dx * dx + dy * dy + dz * dz) - BR[i];
+        if (sub[i] ? dB >= k - d : dB > d + k) continue;
+      }
+      const sd = S[i].sd(x, y, z);
+      if (sub[i]) {
+        if (k > 0) { const h = clamp(0.5 - 0.5 * (sd + d) / k, 0, 1); d = mix(d, -sd, h) + k * h * (1 - h); }
+        else if (-sd > d) d = -sd;
+      } else if (k > 0) {
+        const h = clamp(0.5 + 0.5 * (sd - d) / k, 0, 1);
+        if (sd < d) { m = mi[i]; w = i; }
+        d = mix(sd, d, h) - k * h * (1 - h);
+      } else if (sd < d) { d = sd; m = mi[i]; w = i; }
+    }
+    CM = m; CW = w;
+    return d;
+  };
+  sdf.loc = (i, x, y, z) => S[i].loc(x, y, z);
+  sdf.extent = S.reduce((a, c) => max(a, c.ext), 0.01);
+  sdf.bounds = (f, sc) => {          // faixa de profundidade possível ao longo do raio (t = 6 + dot(P, f)), no mundo já escalado
+    let lo = 6 - RB, hi = 6 + RB, blo = 1e9, bhi = -1e9, ok = true;
+    for (let i = 0; i < n; i++) {
+      if (BR[i] === Infinity) { ok = false; break; }
+      const dp = BX[i] * f[0] + BY[i] * f[1] + BZ[i] * f[2];
+      blo = min(blo, 6 + sc * (dp - BR[i])); bhi = max(bhi, 6 + sc * (dp + BR[i]));
+    }
+    return ok ? [max(lo, blo), min(hi, bhi)] : [lo, hi];
+  };
+  return sdf;
+}
+
+/* ---------- luz (espaço da tela: x direita, y cima, z para o observador) ---------- */
+const KEY = norm3([-0.58, 0.64, 0.50]), KEYC = [1.0, 0.91, 0.76];
+const FILL = norm3([0.85, -0.05, 0.50]), FILLC = [0.26, 0.33, 0.46];
+const RIMC = [0.24, 0.30, 0.42];
+const RUSTC = [0.42, 0.20, 0.08];
+const BAYER = [-4, 0, -3, 1, 2, -2, 3, -1, -3, 1, -4, 0, 3, -1, 2, -2];
+
+function envMap(rx, ry, rz) {
+  let e = 0.07 + 0.50 * sstep(-0.35, 0.95, ry) + 0.30 * sstep(0.3, 1.0, rz) * (0.55 + 0.45 * sstep(-0.6, 0.6, rx * -1 + ry));
+  e += 1.10 * pow(max(0, rx * KEY[0] + ry * KEY[1] + rz * KEY[2]), 14);
+  e += 0.30 * pow(max(0, rx * FILL[0] + ry * FILL[1] + rz * FILL[2]), 8);
+  e += 0.45 * sstep(0.35, 0.75, -rx) * sstep(-0.2, 0.5, ry) * (1 - sstep(0.75, 0.95, -rx));
+  return e;
+}
+
+function renderItem(item, warn) {
+  let list = item && item.shapes;
+  if (typeof list === 'function') list = list();            // shapes pode ser uma função que devolve a lista (isola variáveis e erros de laço)
+  if (Array.isArray(list)) list = list.flat(4).filter(Boolean);
+  if (!Array.isArray(list) || !list.length) throw new Error('item sem a lista "shapes"');
+  MATLIST = [MATS.ferro];
+  const raw = makeScene(list, warn), E = raw.extent;
+  const SC = (E > 2.0 || E < 0.8) ? 1.6 / E : 1;        // normaliza itens modelados em escala muito grande ou muito pequena
+  let scene = raw;
+  if (SC !== 1) { scene = (x, y, z) => SC * raw(x / SC, y / SC, z / SC); scene.loc = (i, x, y, z) => raw.loc(i, x / SC, y / SC, z / SC); }
+  const num = (v, d) => (Number.isFinite(v) ? v : d);
+  const yaw = num(item.yaw, -30) * PI / 180, pitch = num(item.pitch, 32) * PI / 180;
+  const cp = cos(pitch), sp = sin(pitch), f = [-cp * sin(yaw), -sp, -cp * cos(yaw)];
+  const r0 = norm3([-f[2], 0, f[0]]), u0 = [r0[1] * f[2] - r0[2] * f[1], r0[2] * f[0] - r0[0] * f[2], r0[0] * f[1] - r0[1] * f[0]];
+  const rl = num(item.roll, 0) * PI / 180, crl = cos(rl), srl = sin(rl);          // roll > 0 gira a imagem no sentido anti-horário
+  const r = [crl * r0[0] - srl * u0[0], crl * r0[1] - srl * u0[1], crl * r0[2] - srl * u0[2]], u = [srl * r0[0] + crl * u0[0], srl * r0[1] + crl * u0[1], srl * r0[2] + crl * u0[2]];
+  const bz = [-f[0], -f[1], -f[2]];
+  const lw = v => [r[0] * v[0] + u[0] * v[1] + bz[0] * v[2], r[1] * v[0] + u[1] * v[1] + bz[1] * v[2], r[2] * v[0] + u[2] * v[1] + bz[2] * v[2]];
+  const KEYW = lw(KEY);
+  const HV = norm3([KEY[0], KEY[1], KEY[2] + 1]);
+  const TB = raw.bounds(f, SC), T0 = TB[0], T1 = TB[1];
+
+  function march(ox, oy, oz) {
+    let t = T0;
+    for (let i = 0; i < 110; i++) {
+      const d = scene(ox + f[0] * t, oy + f[1] * t, oz + f[2] * t);
+      if (d < 0.001) return t;
+      t += d * 0.9;
+      if (t > T1) break;
+    }
+    return -1;
+  }
+  const ray = (sx, sy) => [-f[0] * 6 + r[0] * sx + u[0] * sy, -f[1] * 6 + r[1] * sx + u[1] * sy, -f[2] * 6 + r[2] * sx + u[2] * sy];
+
+  /* enquadramento automático (dois passes) */
+  const G = 72;
+  function sweep(cx, cy, half) {
+    let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
+    for (let j = 0; j < G; j++) for (let i = 0; i < G; i++) {
+      const sx = cx + ((i + 0.5) / G * 2 - 1) * half, sy = cy + (1 - (j + 0.5) / G * 2) * half;
+      if (sx * sx + sy * sy > RB * RB) continue;
+      const o = ray(sx, sy);
+      if (march(o[0], o[1], o[2]) >= 0) { x0 = min(x0, sx); x1 = max(x1, sx); y0 = min(y0, sy); y1 = max(y1, sy); }
+    }
+    return [x0, x1, y0, y1, 2 * half / G];
+  }
+  let bb = sweep(0, 0, 2.5);
+  if (bb[0] > bb[1]) throw new Error('item vazio ou fora do campo (mantenha tudo a menos de ~2 unidades da origem)');
+  bb = sweep((bb[0] + bb[1]) / 2, (bb[2] + bb[3]) / 2, max(bb[1] - bb[0], bb[3] - bb[2]) / 2 * 1.15 + bb[4]);
+  const size = max(bb[1] - bb[0], bb[3] - bb[2]) + bb[4], scale = size / (N * FIT);
+  const offx = (bb[0] + bb[1]) / 2, offy = (bb[2] + bb[3]) / 2;
+
+  function normalAt(px, py, pz) {
+    const e = 0.0013;
+    const a = scene(px + e, py - e, pz - e), b = scene(px - e, py - e, pz + e), c = scene(px - e, py + e, pz - e), d = scene(px + e, py + e, pz + e);
+    return norm3([a - b - c + d, -a - b + c + d, -a + b - c + d]);
+  }
+  function softShadow(px, py, pz) {
+    let res = 1, t = 0.03;
+    for (let i = 0; i < 30; i++) {
+      const h = scene(px + KEYW[0] * t, py + KEYW[1] * t, pz + KEYW[2] * t);
+      res = min(res, 9 * h / t);
+      t += clamp(h, 0.02, 0.25);
+      if (res < 0.02 || t > 3.5) break;
+    }
+    res = clamp(res, 0, 1);
+    return res * res * (3 - 2 * res);
+  }
+  function ambOcc(px, py, pz, n) {
+    let occ = 0, sca = 1;
+    for (let i = 0; i < 5; i++) {
+      const h = 0.012 + 0.11 * i / 4, d = scene(px + n[0] * h, py + n[1] * h, pz + n[2] * h);
+      occ += (h - d) * sca; sca *= 0.9;
+    }
+    return clamp(1 - 2.6 * occ, 0, 1);
+  }
+
+  const out = [0, 0, 0];
+  function shade(px, py, pz) {
+    let n = normalAt(px, py, pz);
+    const ao = ambOcc(px, py, pz, n);
+    const sh = softShadow(px + n[0] * 0.012, py + n[1] * 0.012, pz + n[2] * 0.012);
+    scene(px, py, pz);                      // fixa material e forma vencedora neste ponto
+    const mt = MATLIST[CM], win = CW;
+    scene.loc(win, px, py, pz); const lx = TX, ly = TY, lz = TZ;
+    const col = mt.c, met0 = mt.met || 0;
+    let spec = mt.spec === undefined ? 0.2 : mt.spec, met = met0;
+    let cr = col[0], cg = col[1], cb = col[2];
+    /* textura procedural */
+    const nv0 = fbm(px * 2.3 + 3, py * 2.3, pz * 2.3 + 8) - 0.5, tone = 1 + 0.2 * nv0;
+    cr *= tone; cg *= tone; cb *= tone;
+    if (mt.grime) { const g = sstep(0.38, 0.8, fbm(px * 3.4 + 11, py * 3.4, pz * 3.4)); const k = 1 - mt.grime * g * 0.75; cr *= k; cg *= k; cb *= k; }
+    if (mt.rust) {
+      const m = sstep(0.62 - mt.rust * 0.30, 0.82 - mt.rust * 0.20, fbm(px * 5 + 9, py * 5, pz * 5 + 2));
+      cr = mix(cr, RUSTC[0], m); cg = mix(cg, RUSTC[1], m); cb = mix(cb, RUSTC[2], m);
+      met *= 1 - m * 0.7; spec *= 1 - m * 0.6;
+    }
+    if (mt.grain) {
+      const w = 0.5 + 0.5 * sin(lx * 38 + fbm(lx * 2.5, ly * 0.5, lz * 2.5) * 7);
+      const k = 1 - mt.grain * 0.45 * (1 - w) * (0.6 + 0.4 * fbm(lx * 9, ly * 1.2, lz * 9));
+      cr *= k; cg *= k; cb *= k;
+    }
+    /* microrrelevo */
+    if (mt.bump) {
+      const e = 0.011, fr = 17, b0 = bnoise(px * fr, py * fr, pz * fr);
+      const gx = bnoise((px + e) * fr, py * fr, pz * fr) - b0, gy = bnoise(px * fr, (py + e) * fr, pz * fr) - b0, gz = bnoise(px * fr, py * fr, (pz + e) * fr) - b0;
+      const dg = gx * n[0] + gy * n[1] + gz * n[2], k = mt.bump * 2.4;
+      n = norm3([n[0] - k * (gx - dg * n[0]), n[1] - k * (gy - dg * n[1]), n[2] - k * (gz - dg * n[2])]);
+    }
+    /* normal no espaço da tela */
+    const nx = n[0] * r[0] + n[1] * r[1] + n[2] * r[2], ny = n[0] * u[0] + n[1] * u[1] + n[2] * u[2], nz = -(n[0] * f[0] + n[1] * f[1] + n[2] * f[2]);
+    const wrap = mt.wrap || 0.15;
+    const dk = clamp((nx * KEY[0] + ny * KEY[1] + nz * KEY[2] + wrap) / (1 + wrap), 0, 1);
+    const df = max(0, nx * FILL[0] + ny * FILL[1] + nz * FILL[2]);
+    const hemi = 0.5 + 0.5 * ny, aoD = 0.25 + 0.75 * ao, kd = 1 - 0.88 * met;
+    const lr = KEYC[0] * dk * sh * 1.05 + FILLC[0] * df * 0.8 * aoD + (0.050 + 0.075 * hemi) * aoD;
+    const lg = KEYC[1] * dk * sh * 1.05 + FILLC[1] * df * 0.8 * aoD + (0.052 + 0.080 * hemi) * aoD;
+    const lb = KEYC[2] * dk * sh * 1.05 + FILLC[2] * df * 0.8 * aoD + (0.060 + 0.095 * hemi) * aoD;
+    let R = cr * lr * kd, Gc = cg * lg * kd, B = cb * lb * kd;
+    /* especular + reflexo de ambiente */
+    const nh = max(0, nx * HV[0] + ny * HV[1] + nz * HV[2]), shn = mt.sh || 16;
+    const sp = pow(nh, shn) * spec * (0.35 + shn / 40) * sh * (0.4 + 0.6 * ao);
+    const fres = 0.04 + 0.96 * pow(1 - nz, 5);
+    const refl = envMap(2 * nz * nx, 2 * nz * ny, 2 * nz * nz - 1) * (met * (0.55 + 0.45 * fres) + (1 - met) * spec * 0.35 * fres) * (0.35 + 0.65 * ao);
+    const tr = mix(1, cr, met), tg = mix(1, cg, met), tb = mix(1, cb, met);
+    R += (KEYC[0] * sp + refl) * tr; Gc += (KEYC[1] * sp + refl) * tg; B += (KEYC[2] * sp + refl) * tb;
+    /* contraluz frio para separar do fundo preto */
+    const rim = pow(1 - nz, 2.6) * clamp(0.45 + 0.55 * ny + 0.25 * nx, 0, 1) * (0.35 + 0.65 * ao);
+    R += RIMC[0] * rim * 0.9; Gc += RIMC[1] * rim * 0.9; B += RIMC[2] * rim * 0.9;
+    if (mt.emis) { R += mt.emis[0]; Gc += mt.emis[1]; B += mt.emis[2]; }
+    out[0] = R; out[1] = Gc; out[2] = B;
+    return out;
+  }
+
+  /* varredura: 1 amostra por pixel; 2x2 apenas nas bordas */
+  const T = new Float32Array(N * N).fill(-1), MM = new Int16Array(N * N), accR = new Float32Array(N * N), accG = new Float32Array(N * N), accB = new Float32Array(N * N);
+  const sxOf = x => (x - N / 2) * scale + offx, syOf = y => -(y - N / 2) * scale + offy;
+  function sample(px, py, wgt, p, t0) {
+    const sx = sxOf(px), sy = syOf(py);
+    if (sx * sx + sy * sy > RB * RB) return;
+    const o = ray(sx, sy), t = t0 === undefined ? march(o[0], o[1], o[2]) : t0;
+    if (t < 0) return;
+    const c = shade(o[0] + f[0] * t, o[1] + f[1] * t, o[2] + f[2] * t);
+    accR[p] += c[0] * wgt; accG[p] += c[1] * wgt; accB[p] += c[2] * wgt;
+  }
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+    const sx = sxOf(x + 0.5), sy = syOf(y + 0.5);
+    if (sx * sx + sy * sy > RB * RB) continue;
+    const o = ray(sx, sy), t = march(o[0], o[1], o[2]);
+    if (t >= 0) { T[y * N + x] = t; MM[y * N + x] = CM; }
+  }
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+    const p = y * N + x, t = T[p];
+    let edge = false;
+    for (let dy = -1; dy <= 1 && !edge; dy++) for (let dx = -1; dx <= 1; dx++) {
+      const xx = x + dx, yy = y + dy;
+      if (xx < 0 || yy < 0 || xx >= N || yy >= N) continue;
+      const q = yy * N + xx, tq = T[q];
+      if ((tq < 0) !== (t < 0) || (t >= 0 && (abs(tq - t) > 0.07 || MM[q] !== MM[p]))) { edge = true; break; }
+    }
+    if (t < 0 && !edge) continue;
+    if (!edge) { sample(x + 0.5, y + 0.5, 1, p, t); continue; }
+    for (let b = 0; b < 2; b++) for (let a = 0; a < 2; a++) sample(x + 0.25 + a * 0.5, y + 0.25 + b * 0.5, 0.25, p);
+  }
+
+  /* exposição automática parcial: puxa itens muito escuros (e muito claros) para uma faixa legível */
+  const lums = [];
+  for (let p = 0; p < N * N; p++) { const l = 0.299 * accR[p] + 0.587 * accG[p] + 0.114 * accB[p]; if (l > 0) lums.push(l); }
+  lums.sort((a, b) => a - b);
+  const L90 = lums.length ? lums[Math.floor(lums.length * 0.90)] : 0.5;
+  const GAIN = clamp(pow(0.60 / Math.max(L90, 0.05), 0.65), 0.85, 1.7);
+  /* acabamento PS1: grão, tom, dither 4x4 do hardware e 15 bits */
+  const px = new Uint8ClampedArray(N * N * 4);
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+    const p = y * N + x;
+    let R = accR[p], G2 = accG[p], B = accB[p];
+    if (R + G2 + B > 0) {
+      const gr = (hash3(x, y, 77) - 0.5) * 0.05;
+      R = R * GAIN + gr; G2 = G2 * GAIN + gr; B = B * GAIN + gr;
+      const l = 0.299 * R + 0.587 * G2 + 0.114 * B;
+      R = l + (R - l) * 0.92; G2 = l + (G2 - l) * 0.92; B = l + (B - l) * 0.92;
+      R = R < 0.8 ? R : 0.8 + 0.2 * (1 - exp(-(R - 0.8) / 0.2)); G2 = G2 < 0.8 ? G2 : 0.8 + 0.2 * (1 - exp(-(G2 - 0.8) / 0.2)); B = B < 0.8 ? B : 0.8 + 0.2 * (1 - exp(-(B - 0.8) / 0.2));
+    }
+    const dz = BAYER[(y & 3) * 4 + (x & 3)], q = p * 4;
+    px[q] = Math.round((clamp(Math.round(R * 255) + dz, 0, 255) >> 3) * 255 / 31);
+    px[q + 1] = Math.round((clamp(Math.round(G2 * 255) + dz, 0, 255) >> 3) * 255 / 31);
+    px[q + 2] = Math.round((clamp(Math.round(B * 255) + dz, 0, 255) >> 3) * 255 / 31);
+    px[q + 3] = 255;
+  }
+  return px;
+}
+
+/* ---------- saída: um <canvas id="<id do item>"> 128x128 por item ---------- */
+window.ICONES = window.ICONES || [];
+window.MATS = MATS;
+window.renderedImages = {};
+window.iconErrors = {};
+window.iconWarnings = {};
+window.MOTOR_ICONES_VERSAO = '1.0';
+window.renderIcones = async function () {
+  if (document.head && !document.getElementById('icones-css')) {
+    const st = document.createElement('style'); st.id = 'icones-css';
+    st.textContent = 'body{margin:0;padding:8px;background:#000;display:flex;flex-wrap:wrap;gap:8px}canvas{width:256px;height:256px;image-rendering:pixelated}';
+    document.head.appendChild(st);
+  }
+  let idx = 0;
+  for (const it of window.ICONES) {
+    const id = (it && it.id) || ('item_' + (++idx));
+    let cv = document.getElementById(id);
+    if (!cv) { cv = document.createElement('canvas'); cv.id = id; document.body.appendChild(cv); }
+    cv.width = N; cv.height = N; cv.setAttribute('data-item', id); cv.title = id;
+    const ctx = cv.getContext('2d');
+    const warns = []; window.iconWarnings[id] = warns;
+    const warn = m => { warns.push(m); console.warn('[icone ' + id + '] ' + m); };
+    try {
+      const data = renderItem(it, warn);
+      const img = ctx.createImageData(N, N); img.data.set(data); ctx.putImageData(img, 0, 0);
+    } catch (e) {
+      window.iconErrors[id] = String(e && e.message || e);
+      console.error('[icone ' + id + '] ' + window.iconErrors[id]);
+      ctx.fillStyle = '#400'; ctx.fillRect(0, 0, N, N);
+    }
+    window.renderedImages[id] = cv.toDataURL('image/png');
+    await new Promise(r => setTimeout(r, 0));
+  }
+  document.body.setAttribute('data-pronto', '1');
+};
+window.addEventListener('load', () => window.renderIcones());
+})();
+
+</script>
+
 <script>
 /* ============================================================
    FIREBASE
@@ -966,7 +1483,7 @@ const DROPS_PERMITIDOS_LISTA = [
   'canivete','adaga','punhal-ceremonial','espadalonga',
   'revolver-38','colt1848','beretta-92','lugerp08','colt-python',
   'desert-eagle','escopeta-12','ak-47','amt-502d','motoserra',
-  'chavedeferro','esqueiro','tocha','velas','corda',
+  'esqueiro','tocha','velas','corda',
   'grilo','la','pedaco-couro',
   'aneldafe','amuletodaarmaduranatual','amuletodaserpentedourada',
   'armaduradecouro','habito-monastico','peitoral-de-aço',
@@ -1753,7 +2270,7 @@ const DEFAULT_BODIES = {
     '        {"id": "estrangular", "nome": "Estrangulamento", "dano": "2d6+2", "peso": 40, "pesoHPBaixo": 70, "telegrafado": true, "mensagemTelegraf": "O zelador larga as chaves e avança com as mãos abertas, os olhos fixos no seu pescoço."}',
     '      ],',
     '      "drops": [',
-'        {"id": "chavedeferro", "quantity": 1, "content": "Chave de ferro", "description": "Uma chave enferrujada comum.", "image": ""}',
+'        {"id": "esqueiro", "quantity": 1, "content": "Esqueiro", "description": "Produz chama contínua.", "image": ""}',
 '      ],',
     '      "burst": {"texto": "Um homem de uniforme cinzento encara você parado entre as caixas, um molho de chaves pendurado no cinto.", "palavraAlvo": "homem", "tempoReacao": 8000}',
     '    }',
@@ -1903,6 +2420,13 @@ function construirCabecalho(key, n, ctx) {
       if (Array.isArray(s?.itens) && s.itens.length > 0) salasComItem.push(i);
     }
     linhas.push(`SALAS_COM_ITEM = [${salasComItem.join(', ')}]`);
+    const tr = planoTranca(mapaMundoGlobal(), n);
+    if (tr && tr.modo !== 'adiada') {
+      const porta = mapaMundoGlobal()[String(tr.sala)];
+      linhas.push(`CHAVE_OBRIGATORIA = ${JSON.stringify({ id: tr.id, abre: tr.op.texto, onde: porta?.nome, zona_da_porta: zonaDaSala(tr.sala) })}`
+        + ` — declare em itens_novos com esse id exato (nome e descrição temáticos com a porta e esta zona) e plante em itens_sala; não é drop`
+        + (tr.modo === 'dentro' ? `; NUNCA nas salas [${[...tr.ramo].join(', ')}]` : ''));
+    }
   }
 
   // NOVO — lista negra de itens já existentes
@@ -2029,6 +2553,132 @@ function coletarSalasOcupadas(mapaMundo, n) {
   return salas;
 }
 
+/* ============================================================
+   TRANCAS — portas trancadas cuja chave vem de uma zona posterior.
+   A tranca vive na própria saída: op.tranca = { item, pendente? }.
+   Sem prompt novo: o plano sai do mapa; o arquiteto de monstros só
+   recebe uma linha no cabeçalho (CHAVE_OBRIGATORIA).
+   Por zona (sorteio com semente do mapa): nada / porta ADIADA (chave só
+   em zona futura) / porta DENTRO da zona / ENTREGA da chave de uma porta
+   adiada (≥2 zonas atrás; cada zona de espera aumenta a chance): a porta
+   passa a abrir para a zona n+1 e a saída da zona n é selada.
+   ============================================================ */
+const RE_PORTA = /\b(porta|portão|portao|grade|alçapão|alcapao|cancela|comporta|escotilha)\b/i;
+const MSG_SELADA = 'A passagem não cede. O caminho deve ser outro.';
+const zonaDaSala = s => Math.ceil(Number(s) / SALAS_POR_ZONA);
+const ehPassagem = o => !!(o && o.destino && !o.arquiteto && !o.dilema && !o.interceptor_arquiteto);
+
+// salas alcançáveis de t só "para frente" dentro da zona (segue saídas sequestradas por puzzle)
+function ramo(mapa, t, fim) {
+  const v = new Set([t]), f = [t];
+  while (f.length) {
+    const s = f.shift(), sala = mapa[String(s)];
+    const dests = [...(sala?.opcoes || []).map(o => o.destino), ...Object.keys(sala?.saidas_sequestradas || {}).map(Number)];
+    for (const d of dests) if (d > s && d <= fim && !v.has(d)) { v.add(d); f.push(d); }
+  }
+  return v;
+}
+
+// sala sem nada que a tranca possa prender ou que dependa de outra coisa
+function seguro(sala) {
+  return !!sala && !sala.cena_aplicada && !sala.burst && !sala.bloqueio && !sala.puzzle_status
+    && !(sala.itens || []).length && !(sala.usos_possiveis || []).length
+    && !(sala.interacoes_ambiente || []).length && !Object.keys(sala.estados || {}).length
+    && !Object.keys(sala.saidas_sequestradas || {}).length
+    && !(sala.opcoes || []).some(o => o.arquiteto || o.dilema || o.interceptor_arquiteto);
+}
+
+// a saída da zona só pode reabrir por ela mesma (nada de puzzle/dilema levando adiante)
+function fronteiraLimpa(sala, fim) {
+  if (!sala || Object.keys(sala.saidas_sequestradas || {}).length) return false;
+  const adiante = x => x && x.destino > fim;
+  return ![...(sala.usos_possiveis || []), ...(sala.interacoes_ambiente || []),
+           ...(sala.opcoes || []).filter(o => o.arquiteto || o.dilema), ...(sala.opcoes || []).flatMap(o => o.ramificacoes || [])].some(adiante);
+}
+
+function trancasPendentes(mapa) {
+  const out = [];
+  for (const id of Object.keys(mapa).sort((a, b) => a - b))
+    for (const op of (mapa[id].opcoes || []))
+      if (op.tranca?.pendente) out.push({ sala: Number(id), op, id: op.tranca.item });
+  return out;
+}
+
+function candidatasTranca(mapa, n) {
+  const ini = (n - 1) * SALAS_POR_ZONA + 1, fim = n * SALAS_POR_ZONA, out = [];
+  for (let s = ini; s < fim; s++) for (const op of (mapa[String(s)]?.opcoes || [])) {
+    const t = op.destino;
+    if (!ehPassagem(op) || t <= s || t > fim || t === ini) continue;
+    const r = ramo(mapa, t, fim);
+    if (r.has(fim) || [...r].some(x => !seguro(mapa[String(x)]))) continue;
+    // acesso único: nenhuma sala fora do ramo (além desta saída) leva a ele
+    let unico = true;
+    for (let x = ini; x <= fim && unico; x++) {
+      if (r.has(x)) continue;
+      const sx = mapa[String(x)];
+      const dests = [...(sx?.opcoes || []).filter(o => !(x === s && o === op)).map(o => o.destino), ...Object.keys(sx?.saidas_sequestradas || {}).map(Number)];
+      if (dests.some(d => r.has(d))) unico = false;
+    }
+    if (unico) out.push({ sala: s, op, ramo: r, porta: RE_PORTA.test(op.texto || '') });
+  }
+  return out;
+}
+
+// sorteio com semente tirada do texto da própria zona: varia entre aventuras, mas cabeçalho e importação (mesmo mapa) sorteiam igual
+function rngZona(mapa, n) {
+  let h = 2166136261;
+  for (let i = (n - 1) * SALAS_POR_ZONA + 1; i <= n * SALAS_POR_ZONA; i++) {
+    const t = `${i}${mapa[String(i)]?.nome}${mapa[String(i)]?.texto_logico}`;
+    for (let k = 0; k < t.length; k++) h = Math.imul(h ^ t.charCodeAt(k), 16777619);
+  }
+  return () => { h = (h + 0x6D2B79F5) | 0; let t = Math.imul(h ^ (h >>> 15), 1 | h); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+}
+
+// plano da zona n — ciclo, frequência e sala sorteados (semente estável: recalcular dá o mesmo plano)
+function planoTranca(mapa, n) {
+  const ini = (n - 1) * SALAS_POR_ZONA + 1, fim = n * SALAS_POR_ZONA;
+  for (let i = ini; i <= fim; i++) if (!mapa[String(i)]) return null;
+  for (let i = ini; i <= fim; i++) if ((mapa[String(i)].opcoes || []).some(o => o.tranca)) return null; // já aplicado
+  const rnd = rngZona(mapa, n), pick = a => a[Math.floor(rnd() * a.length)];
+  const pends = trancasPendentes(mapa);
+  const maduras = pends.filter(p => zonaDaSala(p.sala) <= n - 2);
+  if (maduras.length && n < TOTAL_ZONAS && fronteiraLimpa(mapa[String(fim)], fim)) {
+    const idade = n - zonaDaSala(maduras[0].sala); // quanto mais velha a pendência, mais provável (≥4 zonas: certo)
+    if (rnd() < Math.min(1, 0.4 + 0.2 * (idade - 2))) return { modo: 'entrega', ...pick(maduras) };
+  }
+  const r = rnd();
+  const modo = r < 0.25 ? null : r < 0.65 && pends.length < 2 && n + 2 <= TOTAL_ZONAS ? 'adiada' : 'dentro';
+  if (!modo) return null;
+  const todas = candidatasTranca(mapa, n), portas = todas.filter(c => c.porta);
+  const c = pick(portas.length ? portas : todas);
+  if (!c) return null;
+  return { modo, sala: c.sala, op: c.op, id: `chave_s${c.sala}`, ramo: c.ramo };
+}
+
+// aplica o plano no mapa em memória e registra os caminhos alterados no updatePayload
+function aplicarTranca(mapa, plano, n, pay) {
+  const fim = n * SALAS_POR_ZONA, toca = id => { pay[`mapaMundo.${id}.opcoes`] = mapa[String(id)].opcoes; };
+  if (plano.modo !== 'entrega') {
+    plano.op.tranca = plano.modo === 'adiada' ? { item: plano.id, pendente: true } : { item: plano.id };
+    toca(plano.sala);
+    return;
+  }
+  plano.op.destino = fim + 1;
+  delete plano.op.tranca.pendente;
+  toca(plano.sala);
+  for (const o of mapa[String(fim)].opcoes) if (ehPassagem(o) && o.destino === fim + 1) { o.destino = null; o.tranca = { item: '', msg: MSG_SELADA }; }
+  toca(fim);
+  const ent = mapa[String(fim + 1)]; // zona seguinte já importada? ganha o caminho de volta
+  if (ent && ligarVolta(ent, plano.sala)) toca(fim + 1);
+}
+
+function ligarVolta(sala, origem) {
+  if (!Array.isArray(sala.opcoes)) sala.opcoes = [];
+  if (sala.opcoes.some(o => o.destino === origem)) return false;
+  sala.opcoes.push({ texto: 'Voltar pelo caminho por onde veio', destino: origem });
+  return true;
+}
+
 function coletarSalasElegiveisMonstros(mapaMundo, n) {
   const start = (n - 1) * SALAS_POR_ZONA + 1;
   const end = n * SALAS_POR_ZONA;
@@ -2048,7 +2698,8 @@ function coletarSalasElegiveisMonstros(mapaMundo, n) {
     if (temPuzzle) continue;
     elegiveis.push(i);
   }
-  return elegiveis;
+  const plano = planoTranca(mapaMundo, n);
+  return plano?.modo === 'adiada' ? elegiveis.filter(i => !plano.ramo.has(i)) : elegiveis; // ramo da porta adiada será órfão
 }
 
 // FIX 6 — agora devolve idade calculada
@@ -2991,6 +3642,13 @@ async function importarParaFirestore(dados, uid, logFn) {
     }
   }
 
+  // Entrada de zona (11, 21, ...): sem caminho de volta a zona seria um beco; liga à sala que leva até ela
+  for (const [id, sala] of Object.entries(mapaMundo)) {
+    if (id === '1' || (Number(id) - 1) % SALAS_POR_ZONA !== 0) continue;
+    const origem = Object.entries(mapaMundoAtual).find(([, o]) => (o.opcoes || []).some(x => x.destino === Number(id)));
+    if (origem && ligarVolta(sala, Number(origem[0]))) logFn(`↩️ Sala ${id}: caminho de volta → sala ${origem[0]}`, 'info');
+  }
+
   if (mapaMundo["1"] && !dadosAtuais.zonaAtual) {
     updatePayload["zonaAtual"] = 1;
     updatePayload["secaoAtualId"] = "1";
@@ -3449,6 +4107,7 @@ async function importarMonstros(dadosMonstros, uid, logFn, zonaAtual) {
   if (lista.length === 0) throw new Error('Array "monstros" vazio.');
 
   const elegiveis = new Set(coletarSalasElegiveisMonstros(mapaMundoAtual, zonaAtual));
+  const plano = planoTranca(mapaMundoAtual, zonaAtual); // porta trancada desta zona (ou null)
 
   // Validação — rejeita o lote inteiro se algo estiver fora
   const erros = [];
@@ -3498,7 +4157,12 @@ for (const entrada of itensSala) {
   erros.push(`itens_sala: item "${entrada.item}" fora de DROPS_PERMITIDOS e ausente de itens_novos`);
 }
 }
-  
+  if (plano && plano.modo !== 'adiada') {
+    const e = itensSala.find(x => x?.item === plano.id);
+    if (!e || !itensNovosMonstro[plano.id]) erros.push(`CHAVE_OBRIGATORIA "${plano.id}": deve estar em itens_novos E plantada em itens_sala`);
+    else if (plano.ramo?.has(e.sala)) erros.push(`CHAVE_OBRIGATORIA "${plano.id}": sala ${e.sala} fica atrás da própria porta`);
+  }
+
   if (erros.length > 0) {
     for (const e of erros) logFn(`❌ ${e}`, 'err');
     throw new Error(`Lote rejeitado — ${erros.length} inconsistência(s). Nada foi salvo.`);
@@ -3554,6 +4218,12 @@ const plantados = new Set();
   }
 }
 
+  if (plano) {
+    aplicarTranca(mapaMundoAtual, plano, zonaAtual, updatePayload);
+    const dest = plano.modo === 'entrega' ? `zona ${zonaAtual + 1} (sala ${zonaAtual * SALAS_POR_ZONA + 1}); saída da zona ${zonaAtual} selada` : plano.modo === 'adiada' ? 'zona futura (chave ainda pendente)' : 'ramo da própria zona';
+    logFn(`🔒 Porta "${plano.op.texto}" (sala ${plano.sala}, tranca ${plano.id}, ${plano.modo}) → ${dest}`, 'ok');
+  }
+
   if (Object.keys(itensNovosMonstro).length > 0) {
     const atuais = dadosAtuais.itens_novos || {};
     const normalizados = {};
@@ -3568,7 +4238,7 @@ const plantados = new Set();
 
     const legado = { ...(dadosAtuais.itens_legado || {}) };
     for (const id of Object.keys(itensNovosMonstro)) {
-      if (!legado[id]) legado[id] = { id, sala_plantio: null, zona_criacao: _promptZona };
+      if (id !== plano?.id && !legado[id]) legado[id] = { id, sala_plantio: null, zona_criacao: _promptZona };
     }
     updatePayload['itens_legado'] = legado;
   }
@@ -4846,76 +5516,268 @@ function atualizarSubtitleImagens() {
 }
 
 /* ---------- prompt ---------- */
+/* Prompt do gerador de ícones 3D (Resident Evil PS1). Fonte única — para atualizar, troque este texto.
+   {{ITENS}} é substituído pela lista de itens. */
+const PROMPT_ICONES_TPL = `Você é um artista 3D técnico especializado nos ícones de inventário pré-renderizados dos Resident Evil clássicos (PS1: item box e tela de inventário).
+
+# OBJETIVO
+
+Para cada item da lista no final, produza um ícone 128×128 que pareça saído do item box de Resident Evil 1/2/3: um único objeto 3D realista, centralizado sobre fundo preto, visto de 3/4 por cima, com luz quente vinda de cima à esquerda, sombras profundas, sujeira e desgaste, cores sóbrias e acabamento PS1 (15 bits, dither, grão).
+
+Você NÃO programa a renderização. Já existe um motor (\`motor_icones.js\`) que cuida de luz, sombra, materiais, enquadramento e acabamento PS1. Seu trabalho é MODELAR cada item como uma pequena cena 3D de formas primitivas (esferas, caixas, cilindros, tubos, sólidos de revolução…). A qualidade final depende só de: silhueta reconhecível, proporções reais, detalhes que contam a história do objeto, materiais certos e uma câmera que mostre o essencial.
+
+# FORMATO DA RESPOSTA
+
+Devolva SOMENTE um arquivo HTML, dentro de um único bloco \`\`\`html, sem nenhuma explicação antes ou depois. Use exatamente este esqueleto; só o conteúdo do segundo \`<script>\` muda:
+
+\`\`\`html
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head><meta charset="utf-8"><title>Ícones Centelha</title></head>
+<body>
+<script src="motor_icones.js"><\/script>
+<script>
+// um ICONES.push({...}) por item
+<\/script>
+</body>
+</html>
+\`\`\`
+
+Regras de formato:
+- Um \`ICONES.push({...})\` por item, na ordem da lista, com o \`id\` idêntico ao recebido.
+- \`ICONES\` e \`MATS\` já existem (criados pelo motor): nunca os redeclare. Não escreva botões, cards, títulos, CSS, JSON, canvas nem código de renderização: o motor cria os canvases sozinho.
+- Antes de cada \`ICONES.push\`, escreva um rascunho de 3 linhas em comentário e só depois as formas: \`// SILHUETA:\` (forma principal e proporções), \`// PEÇAS:\` (lista curta com medidas) e \`// CÂMERA:\` (por que esse ângulo).
+- Se precisar de laço ou variável, use \`shapes: () => { …; return lista; }\` (a função isola variáveis e erros de cada item). Nunca use \`Math.random()\`.
+
+# COMO MODELAR CADA ITEM
+
+1. **Reconheça o objeto real.** Pense em como ele é de verdade: proporções, material, desgaste. O ícone é realista, não é cartum.
+2. **Trate a descrição como ficha de observação.** Todo detalhe físico citado (pavio trançado, sem badalo, rachadura, remendo) tem de estar visível na geometria. Não acrescente o que a descrição não diz: nada de rostos, olhos, sangue, símbolos ou brilho sobrenatural. O terror está no objeto comum com um detalhe errado, não em enfeite.
+3. **Decomponha.** 1 forma principal (define a silhueta) + 2–4 secundárias (cabo, tampa, aro, base) + 4–10 detalhes (emendas, rebites, gotas, riscos, desgaste). Itens com 1–3 peças saem pobres; 12–40 peças bem escolhidas saem ricos.
+4. **Imperfeição.** Nada real é perfeito: \`noise\` em coisas orgânicas, derretidas ou de pedra; \`round\` (0.01–0.04) nas arestas de objetos rígidos; leve \`rot\` em peças soltas; gotas e escorridos com \`k\` em cera, líquido e solda.
+5. **Material por peça, misturando como o objeto real mistura** (lâmina de aço + cabo de madeira + guarda de latão). Itens velhos: ferro, ferrugem, pano_sujo. Itens conservados: aco, latao, prata.
+6. **Câmera** conforme a tabela abaixo, mostrando o lado onde está o detalhe mais importante da descrição. Se o objeto é abstrato ou ambíguo, escolha a representação física mais plausível a partir da descrição.
+
+# REFERÊNCIA DO MOTOR
+
+## Eixos e escala
+x = direita, y = cima, z = para fora da tela (a frente do objeto). Modele o item com a maior dimensão entre 1.5 e 2 unidades, centro perto da origem; o motor enquadra e ajusta o zoom sozinho. A câmera padrão olha de cima e da frente-esquerda: mostra o topo (+y), a frente (+z) e a face esquerda (−x).
+
+## Item
+\`\`\`js
+ICONES.push({ id: 'id_exato', yaw: -30, pitch: 32, roll: 0, shapes: [ /* peças */ ] });
+\`\`\`
+\`yaw\`, \`pitch\` e \`roll\` (graus) são opcionais. \`shapes\` é um array de peças ou uma função que devolve esse array.
+
+## Peças (campo \`t\`)
+| t | parâmetros | observações |
+|---|---|---|
+| \`sphere\` | \`r\` ou \`s:[sx,sy,sz]\` | \`s\` são os semi-eixos de um elipsoide |
+| \`box\` | \`s:[hx,hy,hz]\`, \`round\` | \`s\` é a METADE de cada dimensão: \`[0.5,0.5,0.5]\` é um cubo de lado 1 |
+| \`cyl\` | \`r\`, \`h\`, \`round\`, \`r2\` opcional | \`h\` é a METADE da altura; com \`r2\` vira tronco de cone (\`r\` embaixo, \`r2\` em cima) |
+| \`cone\` | \`r1\` (base, embaixo), \`r2\` (topo; 0 = ponta), \`h\` | \`h\` é a METADE da altura |
+| \`torus\` | \`R\` (raio do anel), \`r\` (espessura) | nasce deitado no plano XZ; \`rot:[90,0,0]\` o põe de frente para a câmera |
+| \`capsule\` | \`a:[x,y,z]\`, \`b:[x,y,z]\`, \`r\` | bastão de pontas redondas entre dois pontos (hastes, dedos, cartuchos) |
+| \`tube\` | \`pts:[[x,y,z,r],…]\` | caminho curvo com raio em cada ponto (afina e engrossa): corda, gancho, escorrido, cabo |
+| \`lathe\` | \`prof:[[r,y],…]\` | polígono do perfil (raio ≥ 0, altura) girado em torno de Y: garrafas, sinos, vasos, copos. Oco = subir pela parede externa e voltar pela interna (veja a sineta) |
+| \`extrude\` | \`poly:[[x,y],…]\`, \`h\`, \`round\` | polígono 2D no plano XY, extrudado em z (\`h\` = metade da espessura): lâminas, chaves, engrenagens, placas |
+
+## Campos que valem para qualquer peça
+- \`mat\`: nome do material (obrigatório, exceto em \`op:'sub'\`).
+- \`pos:[x,y,z]\`: posição do centro da peça. \`rot:[rx,ry,rz]\`: rotação em graus em torno do centro. Peça modelada em pé (eixo y) deita com \`rot:[0,0,90]\` (passa a apontar para x) ou \`rot:[90,0,0]\` (aponta para z).
+- \`op:'sub'\`: SUBTRAI a peça de tudo o que veio ANTES dela na lista (cavidades, furos, órbitas, bocas). Peças listadas depois não são cortadas.
+- \`k\` (0.03–0.15): funde a peça com as anteriores numa massa contínua (sebo derretido, gota, solda, pele). Sem \`k\`, a junção é dura.
+- \`noise\` e \`freq\`: irregularidade da superfície. \`noise\` é a amplitude (0.005–0.01 metal e madeira; 0.02–0.05 sebo, pedra, orgânico); \`freq\` é a frequência (3 = ondas largas; 10–20 = rugosidade fina).
+- \`sym:'x'\` (ou \`'z'\`): espelha a peça no plano x=0 (ou z=0); modele um lado, ganhe os dois (use \`pos\` com x positivo).
+- \`ring:n\`: repete a peça n vezes em volta do eixo Y dela, com \`off:[distância,0,0]\` afastando-a do eixo (parafusos, fios trançados, dentes, pétalas).
+- \`twist\`: torção em radianos por unidade de altura em volta do eixo Y da peça; só em peças finas (r < 0.1), valores até ~8. Com \`ring\` e \`off\` faz corda e pavio trançado.
+
+## Materiais disponíveis
+- Metais: \`ferro\` (escuro, com sujeira e ferrugem), \`aco\` (claro, polido), \`ferrugem\` (tudo corroído), \`bronze\`, \`latao\`, \`ouro\`, \`prata\`, \`cobre\`
+- Gordura e cera: \`cera\` (amarelada), \`sebo\` (cinza-escuro, rançoso)
+- Duros: \`osso\`, \`madeira\`, \`madeira_escura\`, \`ceramica\` (branca esmaltada), \`terracota\`, \`pedra\`, \`barro\`, \`carvao\`
+- Couro e tecidos: \`couro\`, \`tecido\` (claro), \`pano_sujo\`, \`papel\` (amarelado), \`corda\`
+- Sintéticos: \`borracha\` (preta fosca), \`plastico\` (preto brilhante)
+- Vidros e líquidos: \`vidro\` (verde-escuro), \`cristal\` (azul-claro), \`liquido_vermelho\`, \`liquido_verde\` (brilham de leve), \`sangue\` (escuro, úmido)
+- Corpo e vegetal: \`pele\`, \`carne\`, \`cabelo\`, \`erva\`
+- Fogo: \`chama\` e \`brasa\` (emissivos: brilham sem receber luz)
+
+Se nenhum serve (cor específica), crie um antes dos \`ICONES.push\`: \`MATS.tecido_vermelho = { ...MATS.tecido, c: [.45,.06,.06] };\`. Campos: \`c\` cor RGB 0–1; \`spec\` brilho especular 0–1.2; \`sh\` nitidez do brilho (6 fosco … 90 espelho); \`met\` metal 0–1; \`wrap\` luz macia 0–0.6 (tecido, cera, pele); \`bump\` rugosidade 0–0.6; \`grime\` sujeira 0–0.8; \`rust\` ferrugem 0–1; \`grain\` veios de madeira 0–1; \`emis:[r,g,b]\` brilho próprio.
+
+## Câmera por tipo de item
+| Tipo | Como modelar | yaw | pitch | roll |
+|---|---|---|---|---|
+| Em pé: garrafa, vela, sino, lampião, vaso | eixo y, base em y negativo | −25 a −35 | 20 a 30 | 0 |
+| Comprido e fino: chave, faca, ferramenta, seringa | deitado ao longo do eixo x | −20 | 25 a 35 | 30 a 45 |
+| Plano: bilhete, foto, fita, livro, moeda | deitado no plano XZ (espessura em y) | −22 | 50 a 60 | 8 a 15 |
+| Aberto para baixo ou com o detalhe embaixo (sino, copo virado) | em pé | −25 | −10 a −20 | 0 |
+| Caixa, baú, maleta | corpo, tampa, alça, fecho | −28 | 30 a 36 | 0 |
+| Grupo (pilha de moedas, maço de cartas, punhado de dentes) | peças pequenas encostadas | −25 | 35 a 45 | 0 a 10 |
+
+\`roll\` positivo gira a imagem no sentido anti-horário: um objeto longo modelado ao longo de +x passa a apontar para cima e para a direita (a pose clássica do inventário). \`pitch\` negativo olha de baixo, para mostrar o interior de algo aberto para baixo.
+
+# ERROS QUE ESTRAGAM O ÍCONE (evite)
+- Peça flutuando: toda peça tem de tocar ou penetrar 0.02–0.05 em outra (some \`pos\` + meia-medida para conferir). Peças soltas aparecem como pedaços sem apoio. Cuidado especial com argolas e alças (tesoura, chave, xícara, lampião): elas têm de encostar na lâmina, haste ou corpo.
+- Vidro é opaco (o motor não tem transparência): vidro por cima de algo esconde esse algo. Nunca cubra com vidro o que precisa aparecer (foto, mostrador, líquido, conteúdo): omita o vidro e, se a descrição pedir, sugira a rachadura com linhas finas escuras. Use \`vidro\` só onde o vidro é o próprio objeto (garrafa, chaminé, seringa).
+- Confundir metade com inteiro: \`box.s\`, \`cyl.h\` e \`cone.h\` são METADES.
+- Detalhe fino demais: abaixo de ~0.03 de espessura vira 1 pixel ou some. Texto e símbolos: faça linhas finas e escuras (caixas), nunca letras.
+- Objeto plano visto de lado: com pitch baixo ele vira um risco. Planos deitados pedem pitch ≥ 45.
+- Item pobre: um cilindro e uma esfera não são um item. Adicione os secundários e os detalhes.
+- Material inventado: use só os nomes da lista ou crie com \`MATS.nome = {…}\`. Peça sem \`mat\` sai de ferro.
+- Cavidade esquecida: o que é oco (boca de sino, órbita, copo, vela com topo côncavo) precisa de \`op:'sub'\` ou de \`lathe\` com parede.
+- Variáveis repetidas: nunca declare \`const\` de mesmo nome em dois itens no nível do script; use \`shapes: () => {…}\`.
+- Peças demais: o ideal é 12–60 por item (máximo 160). Use laços \`for\` para repetições.
+
+# EXEMPLOS (já testados; siga o nível de detalhe e a escrita)
+
+Orgânico e irregular: corpo com ruído, poça na base, cavidade no topo (\`sub\`), escorridos com gota (\`tube\` + \`sphere\` com \`k\`) e pavio trançado (\`ring\` + \`twist\`).
+\`\`\`js
+// SILHUETA: cilindro grosso e torto (~0.9 de diâmetro, 1.2 de altura) sobre poça de sebo; topo côncavo.
+// PEÇAS: corpo, poça, cavidade (sub), 2 escorridos com gota, pavio de 3 fios trançados, ponta queimada.
+// CÂMERA: 3/4 de cima padrão, para ver a cavidade e os escorridos.
+ICONES.push({ id: 'vela_de_sebo_negro', yaw: -30, pitch: 28, shapes: [
+  { t: 'cyl', r: 0.44, r2: 0.38, h: 0.62, noise: 0.045, freq: 3, mat: 'sebo' },
+  { t: 'sphere', s: [0.78, 0.10, 0.70], pos: [0.02, -0.60, 0], noise: 0.04, freq: 3.5, k: 0.16, mat: 'sebo' },
+  { t: 'sphere', s: [0.34, 0.14, 0.34], pos: [0, 0.70, 0], op: 'sub', k: 0.08 },
+  { t: 'tube', pts: [[0.38, 0.62, 0.20, 0.05], [0.43, 0.20, 0.22, 0.04], [0.42, -0.30, 0.24, 0.032]], k: 0.06, mat: 'sebo' },
+  { t: 'sphere', r: 0.058, pos: [0.42, -0.34, 0.24], k: 0.05, mat: 'sebo' },
+  { t: 'tube', pts: [[-0.12, 0.62, 0.40, 0.05], [-0.14, 0.20, 0.45, 0.04], [-0.14, -0.10, 0.455, 0.034]], k: 0.06, mat: 'sebo' },
+  { t: 'sphere', r: 0.056, pos: [-0.14, -0.14, 0.455], k: 0.05, mat: 'sebo' },
+  { t: 'capsule', a: [0, 0, 0], b: [0, 0.5, 0], r: 0.04, off: [0.045, 0, 0], ring: 3, twist: 6, pos: [0, 0.55, 0], mat: 'corda' },
+  { t: 'sphere', r: 0.06, pos: [0, 1.06, 0], mat: 'carvao' },
+]});
+\`\`\`
+
+Revolução e oco: o casco do sino é UM \`lathe\` (parede externa subindo, parede interna descendo); \`pitch\` negativo mostra o interior vazio (a descrição diz que não há badalo).
+\`\`\`js
+// SILHUETA: sino cônico bojudo (0.62 de raio na boca, 1.2 de altura) com pescoço e argola.
+// PEÇAS: casco oco (lathe), 3 frisos em relevo, pescoço, argola de pegar. Sem badalo: o interior fica vazio.
+// CÂMERA: pitch negativo, para olhar dentro da boca e provar que não há badalo.
+ICONES.push({ id: 'sineta_sem_badalo', yaw: -25, pitch: -16, shapes: [
+  { t: 'lathe', mat: 'bronze', noise: 0.006, freq: 16, prof: [
+    [0.62, -0.62], [0.57, -0.50], [0.47, -0.30], [0.38, -0.05], [0.29, 0.20], [0.22, 0.40], [0.15, 0.52], [0, 0.58],
+    [0, 0.50], [0.12, 0.44], [0.19, 0.34], [0.26, 0.16], [0.34, -0.07], [0.43, -0.30], [0.51, -0.48], [0.52, -0.62]] },
+  { t: 'torus', R: 0.475, r: 0.028, pos: [0, -0.30, 0], mat: 'bronze' },
+  { t: 'torus', R: 0.585, r: 0.03, pos: [0, -0.52, 0], mat: 'bronze' },
+  { t: 'torus', R: 0.30, r: 0.022, pos: [0, 0.18, 0], mat: 'bronze' },
+  { t: 'cyl', r: 0.10, h: 0.10, round: 0.03, pos: [0, 0.66, 0], mat: 'bronze' },
+  { t: 'torus', R: 0.14, r: 0.04, pos: [0, 0.90, 0], rot: [90, 0, 0], k: 0.04, mat: 'bronze' },
+]});
+\`\`\`
+
+Objeto comprido e plano: modelado ao longo de x, de frente para a câmera; \`roll\` leva para a diagonal do inventário.
+\`\`\`js
+// SILHUETA: chave longa (~1.9): argola grande numa ponta, haste fina, palheta com dentes na outra.
+// PEÇAS: argola, haste, 2 colares, palheta recortada (extrude).
+// CÂMERA: roll 32 para a diagonal clássica; ferro com ferrugem.
+ICONES.push({ id: 'chave_de_ferro', yaw: -20, pitch: 28, roll: 32, shapes: [
+  { t: 'torus', R: 0.30, r: 0.075, pos: [-0.80, 0, 0], rot: [90, 0, 0], mat: 'ferro' },
+  { t: 'cyl', r: 0.075, h: 0.64, pos: [0.22, 0, 0], rot: [0, 0, 90], mat: 'ferro' },
+  { t: 'torus', R: 0.10, r: 0.035, pos: [-0.38, 0, 0], rot: [0, 0, 90], mat: 'ferro' },
+  { t: 'torus', R: 0.10, r: 0.035, pos: [0.30, 0, 0], rot: [0, 0, 90], mat: 'ferro' },
+  { t: 'extrude', h: 0.055, round: 0.015, mat: 'ferro', poly: [[0.50, -0.07], [0.86, -0.07], [0.86, -0.36], [0.76, -0.36], [0.76, -0.25], [0.68, -0.25], [0.68, -0.36], [0.58, -0.36], [0.58, -0.20], [0.50, -0.20]] },
+]});
+\`\`\`
+
+Vários materiais: líquido dentro do vidro, gargalo vazio, rolha, rótulo (cilindro um pouco maior que o corpo) e escrita do rótulo em linhas finas.
+\`\`\`js
+// SILHUETA: frasco de gargalo curto (0.92 de diâmetro, 1.7 de altura) com rolha e rótulo largo.
+// PEÇAS: líquido, gargalo de vidro, rolha, rótulo, 2 linhas de escrita.
+// CÂMERA: padrão em pé, levemente mais baixa (pitch 20) para ver o rótulo.
+ICONES.push({ id: 'frasco_de_tonico', yaw: -25, pitch: 20, shapes: [
+  { t: 'lathe', mat: 'liquido_vermelho', prof: [[0, -0.8], [0.40, -0.8], [0.46, -0.72], [0.46, 0.10], [0.42, 0.28], [0.26, 0.44], [0.21, 0.5], [0, 0.5]] },
+  { t: 'lathe', mat: 'vidro', prof: [[0.21, 0.46], [0.17, 0.62], [0.17, 0.82], [0.22, 0.86], [0.22, 0.92], [0, 0.92], [0, 0.46]] },
+  { t: 'cyl', r: 0.14, h: 0.11, pos: [0, 0.95, 0], round: 0.02, noise: 0.012, freq: 8, mat: 'madeira' },
+  { t: 'cyl', r: 0.468, h: 0.25, pos: [0, -0.28, 0], mat: 'papel' },
+  { t: 'box', s: [0.20, 0.025, 0.006], pos: [-0.05, -0.20, 0.47], rot: [0, -8, 0], mat: 'carvao' },
+  { t: 'box', s: [0.28, 0.02, 0.006], pos: [-0.12, -0.30, 0.46], rot: [0, -16, 0], mat: 'carvao' },
+]});
+\`\`\`
+
+Objeto plano com repetição em laço: deitado no plano XZ, visto de cima; as linhas de texto saem de um \`for\` dentro de \`shapes: () => {…}\`.
+\`\`\`js
+// SILHUETA: folha retangular fina (1.24 × 1.6) levemente torta.
+// PEÇAS: folha com ruído nas bordas, 9 linhas de escrita de larguras diferentes.
+// CÂMERA: pitch 58 (plano pede vista de cima), roll 10.
+ICONES.push({ id: 'bilhete_rasgado', yaw: -22, pitch: 58, roll: 10, shapes: () => {
+  const p = [{ t: 'box', s: [0.62, 0.012, 0.8], round: 0.006, noise: 0.012, freq: 3, mat: 'papel' }];
+  for (let i = 0; i < 9; i++) p.push({ t: 'box', s: [0.42 - (i % 3) * 0.05, 0.004, 0.012], pos: [-0.06, 0.014, -0.55 + i * 0.12], mat: 'carvao' });
+  return p;
+}});
+\`\`\`
+
+## Receitas curtas (repetições em laço)
+\`\`\`js
+// Corrente: elos de torus alternando a orientação.
+ICONES.push({ id: 'corrente_enferrujada', yaw: -20, pitch: 35, roll: 25, shapes: () => {
+  const e = [];
+  for (let i = 0; i < 6; i++) e.push({ t: 'torus', R: 0.13, r: 0.034, pos: [-0.55 + i * 0.22, 0, 0], rot: i % 2 ? [90, 0, 0] : [0, 0, 0], mat: 'ferro' });
+  return e;
+}});
+
+// Terço / colar: contas ao longo de um círculo, com contas maiores a cada 10, mais pingente.
+ICONES.push({ id: 'terco_de_contas', yaw: -15, pitch: 15, shapes: () => {
+  const c = [];
+  for (let i = 0; i < 52; i++) {
+    const a = (i / 52) * Math.PI * 2, grande = i % 10 === 0;
+    c.push({ t: 'sphere', r: grande ? 0.075 : 0.05, pos: [Math.cos(a) * 0.62, Math.sin(a) * 0.62 + 0.2, 0], mat: 'madeira_escura', noise: 0.004, freq: 20 });
+  }
+  for (let i = 0; i < 4; i++) c.push({ t: 'sphere', r: 0.05, pos: [0, -0.46 - i * 0.12, 0], mat: 'madeira_escura' });
+  c.push({ t: 'box', s: [0.05, 0.22, 0.02], pos: [0, -1.05, 0], round: 0.01, mat: 'prata' });
+  c.push({ t: 'box', s: [0.14, 0.05, 0.02], pos: [0, -0.98, 0], round: 0.01, mat: 'prata' });
+  return c;
+}});
+
+// Livro: duas capas, lombada, bloco de páginas mais claro e fecho de metal.
+ICONES.push({ id: 'livro_de_couro', yaw: -30, pitch: 42, roll: 8, shapes: [
+  { t: 'box', s: [0.52, 0.03, 0.7], pos: [0, 0.16, 0], round: 0.012, noise: 0.008, freq: 5, mat: 'couro' },
+  { t: 'box', s: [0.52, 0.03, 0.7], pos: [0, -0.16, 0], round: 0.012, noise: 0.008, freq: 5, mat: 'couro' },
+  { t: 'box', s: [0.045, 0.19, 0.7], pos: [-0.5, 0, 0], round: 0.02, noise: 0.01, freq: 5, mat: 'couro' },
+  { t: 'box', s: [0.47, 0.13, 0.66], pos: [0.02, 0, 0], round: 0.006, mat: 'papel' },
+  { t: 'box', s: [0.05, 0.2, 0.09], pos: [0.52, 0, 0], round: 0.015, mat: 'latao' },
+]});
+\`\`\`
+
+# CHECKLIST (confira mentalmente cada item antes de responder)
+- [ ] Só o bloco \`\`\`html, com o esqueleto exato; nenhum texto fora dele; \`id\` igual ao recebido, na ordem da lista.
+- [ ] Rascunho de 3 linhas (SILHUETA, PEÇAS, CÂMERA) antes de cada item.
+- [ ] Todo \`mat\` existe na lista ou foi criado com \`MATS\` (exceto em \`op:'sub'\`).
+- [ ] \`box.s\`, \`cyl.h\`, \`cone.h\` conferidos como METADES.
+- [ ] Nenhuma peça flutua (argolas e alças encostam no corpo); a peça mais fina tem ≥ 0.03; nenhum vidro cobre o que deve aparecer.
+- [ ] A silhueta é reconhecível e a maior dimensão fica entre 1.5 e 2.
+- [ ] A câmera segue a tabela: planos com pitch ≥ 45; compridos com roll 30–45; detalhe principal visível.
+- [ ] Todo detalhe da descrição está na geometria e nada além dela foi inventado.
+- [ ] Entre 12 e 60 peças (nunca só 1–3).
+
+# ITENS A GERAR
+
+Formato: \`id | Nome | descrição\`
+
+{{ITENS}}`;
+
+const LOTE_MAX_ICONES = 10;   // itens por prompt (qualidade da IA cai em lotes grandes). Use 999 para desativar.
+let _loteIcones = [];
+
 function construirPromptImagens() {
   const ta = $('imagensPromptTA');
   if (!ta) return;
-  const itens = itensDinamicosSemImagem();
-  if (itens.length === 0) { ta.value = ''; return; }
+  const todos = itensDinamicosSemImagem();
+  if (todos.length === 0) { ta.value = ''; _loteIcones = []; return; }
 
+  const itens = todos.slice(0, LOTE_MAX_ICONES);
+  _loteIcones = itens.map(i => i.id);
+  const limpa = (t) => String(t == null ? '' : t).replace(/\s+/g, ' ').replace(/\|/g, '/').trim();
   const linhas = itens.map(i => {
-    const desc = i.description ? ` — ${i.description}` : '';
-    return `- ${i.id}: ${i.content}${desc}`;
+    const desc = limpa(i.description);
+    return `${i.id} | ${limpa(i.content) || i.id}${desc ? ' | ' + desc : ''}`;
   }).join('\n');
 
-  ta.value = `Você é o gerador procedural de ícones do jogo "Centelha".
-
-TAREFA: gerar UM ÚNICO ARQUIVO HTML autocontido que desenhe cada item abaixo como ícone de inventário do Resident Evil clássico (PS1) — a MESMA técnica que produziu o "Gold Key" (que funcionou perfeitamente).
-
-ITENS (${itens.length}):
-${linhas}
-
-## TÉCNICA OBRIGATÓRIA (não simplifique, não substitua)
-
-Cada item é desenhado em DUAS ETAPAS:
-
-### ETAPA 1 — HEIGHTMAP (canvas separado em tons de cinza)
-- Crie um canvas offscreen 128x128, fundo preto (0,0,0).
-- Desenhe o objeto em tons de cinza: branco (255) = superfície alta, cinza = média, preto = baixa/vazia.
-- Use gradientes lineares/radiais para dar volume (ex: haste cilíndrica = gradiente horizontal do escuro ao claro ao escuro).
-- Use transparência (alpha=0) para o que NÃO é objeto — isso vira máscara.
-
-### ETAPA 2 — SHADING POR PIXEL (canvas final)
-Para cada pixel não-transparente do heightmap:
-1. Amostre os 4 vizinhos (esq/dir/cima/baixo) no heightmap.
-2. Calcule a normal: nx = (hL - hR)/255; ny = (hU - hD)/255; nz = 0.45. Normalize.
-3. Vetor de luz lateral dura: L = (cos(315°), sin(315°), 0.75), normalizado.
-4. Difusa: diff = max(0, N·L).
-5. Especular Blinn-Phong: H = normalize(L + V(0,0,1)); spec = pow(max(0, N·H), 18).
-6. Oclusão ambiente: ao = 0.4 + 0.6 * (height/255).
-7. intensity = (diff * 0.75 + spec * 0.6 + scratch * 0.4) * ao.
-8. Mapeie "intensity" para uma PALETA DE 3 FAIXAS (sombra / meio-tom / highlight) com cores críveis do material.
-9. Aplique Bayer 4x4 dithering + quantização 15-bit (passo 8 por canal).
-10. Pinte o pixel no canvas final.
-
-### PÓS-PROCESSAMENTO FINAL (no canvas 128x128)
-- Vinheta radial escura nas bordas (rgba(0,0,0,0.45) na ponta).
-- Grão estocástico leve (±8 por canal).
-- Blur de 1 passada muito sutil (não use ctx.filter, simule).
-
-## ESTRUTURA DO HTML
-
-- Página com um card por item.
-- Cada card: um canvas 128x128 (id="c_<item_id>") + legenda com o id.
-- Botão "📋 Copiar JSON" no topo e no rodapé.
-- Ao clicar, copia EXATAMENTE este JSON (sem markdown, sem cercas):
-  {"imagens":[{"id":"<id>","image":"<dataURL PNG 128x128>"}, ...]}
-- NÃO gere thumbnailImage. O console faz o downscale 64x64 sozinho.
-
-## REGRAS DURAS
-
-- UMA imagem por item (128x128). NÃO gere 64x64.
-- NÃO use desenho vetorial chapado (fillRect/arc/ellipse + gradiente simples). Isso produz clipart ruim.
-- NÃO omita o heightmap. Sem heightmap o resultado não tem iluminação.
-- NÃO economize código. Cada item merece 60-120 linhas de desenho + shading.
-- NÃO use imagens externas, CDN ou bibliotecas.
-- Capriche: sombras de contato, reflexos especulares reais, micro-texturas, ranhuras.
-
-## SAÍDA
-
-- Devolva APENAS o código HTML completo.
-- Sem markdown, sem explicação, sem cercas de código.`;
+  ta.value = PROMPT_ICONES_TPL.replace('{{ITENS}}', () => linhas);
+  if (todos.length > itens.length) {
+    toast(`Prompt com ${itens.length} de ${todos.length} itens. Depois de enviar, clique em Reconstruir para o próximo lote.`, 'info', 6000);
+  }
 }
-  
+
 function reconstruirPromptImagens() {
   if (!_lastDados) return;
   construirPromptImagens();
@@ -4989,9 +5851,35 @@ function downscaleTo64(dataURL128) {
     img.src = dataURL128;
   });
 }
-  async function extrairImagensDoHTML() {
-  const html = $('imagensHtmlTA').value.trim();
-  if (!html || html.length < 200) { toast('Cole o HTML completo.', 'warn'); return; }
+/* ---------- extração (HTML gerado pela IA + motor de ícones) ---------- */
+function motorIconesCodigo() {
+  const el = document.getElementById('motorIconesSrc');
+  return el ? el.textContent : '';
+}
+
+// Remove cercas markdown e embute o motor no lugar de <script src="motor_icones.js">
+function prepararHtmlComMotor(html) {
+  let h = String(html || '').trim();
+  const fence = h.match(/```(?:html)?\s*\n([\s\S]*?)```/i);
+  if (fence && /<(script|html|body|canvas)/i.test(fence[1])) h = fence[1].trim();
+
+  const motor = motorIconesCodigo();
+  if (!motor) return h;
+  if (/MOTOR_ICONES_VERSAO/.test(h)) return h;                       // motor já embutido pela IA
+  const tag = '<scr' + 'ipt>\n' + motor + '\n</scr' + 'ipt>';
+  const re = /<script\b[^>]*\bsrc\s*=\s*["']?[^"'\s>]*motor_icones\.js[^"'\s>]*["']?[^>]*>\s*<\/script\s*>/i;
+  if (re.test(h)) return h.replace(re, () => tag);
+  if (/ICONES\s*\.\s*push|\bICONES\s*=/.test(h)) {                  // usou ICONES mas esqueceu a tag do motor
+    const i = h.search(/<script\b/i);
+    return i >= 0 ? h.slice(0, i) + tag + '\n' + h.slice(i) : tag + '\n' + h;
+  }
+  return h;                                                           // formato antigo (canvas próprio): intocado
+}
+
+async function extrairImagensDoHTML() {
+  const bruto = $('imagensHtmlTA').value.trim();
+  if (!bruto || bruto.length < 200) { toast('Cole o HTML completo.', 'warn'); return; }
+  const html = prepararHtmlComMotor(bruto);
 
   setProgressoImagens('rodando HTML...');
   const iframe = document.createElement('iframe');
@@ -5006,35 +5894,58 @@ function downscaleTo64(dataURL128) {
       iframe.srcdoc = html;
     });
 
-    // espera o render interno terminar
-    await new Promise(r => setTimeout(r, 1800));
-
     const win = iframe.contentWindow;
     const doc = iframe.contentDocument;
-    let lista = [];
+    const usaMotor = typeof win.renderIcones === 'function';
 
-    // 1) tenta variável generatedImages (padrão dos HTMLs do Gemini)
-    if (win.generatedImages && typeof win.generatedImages === 'object') {
-      for (const [id, url] of Object.entries(win.generatedImages)) {
-        if (typeof url === 'string' && url.startsWith('data:image/png')) {
-          lista.push({ id, image: url });
-        }
+    if (usaMotor) {
+      // espera o motor terminar (body[data-pronto]) — ícones 3D levam de ~0,5 a 2 s cada
+      const t0 = Date.now();
+      while (!(doc.body && doc.body.getAttribute('data-pronto')) && Date.now() - t0 < 180000) {
+        const n = doc.querySelectorAll('canvas').length;
+        setProgressoImagens(`renderizando... ${n} ícone(s) (${Math.round((Date.now() - t0) / 1000)}s)`);
+        await new Promise(r => setTimeout(r, 400));
       }
+      if (!(doc.body && doc.body.getAttribute('data-pronto'))) throw new Error('o motor não terminou em 180s');
+    } else {
+      await new Promise(r => setTimeout(r, 1800));   // formato antigo: espera fixa
     }
 
-    // 2) fallback: lê os canvases direto
+    const erros = (win.iconErrors && typeof win.iconErrors === 'object') ? win.iconErrors : {};
+    const avisos = (win.iconWarnings && typeof win.iconWarnings === 'object') ? win.iconWarnings : {};
+    let lista = [];
+    const vistos = new Set();
+    const add = (id, url) => {
+      if (!id || vistos.has(id) || erros[id]) return;
+      if (typeof url === 'string' && url.startsWith('data:image/png') && url.length > 200) {
+        vistos.add(id); lista.push({ id, image: url });
+      }
+    };
+
+    // 1) motor novo: renderedImages  2) padrão antigo: generatedImages  3) canvases
+    for (const src of [win.renderedImages, win.generatedImages]) {
+      if (src && typeof src === 'object') for (const [id, url] of Object.entries(src)) add(id, url);
+    }
     if (lista.length === 0) {
       for (const c of doc.querySelectorAll('canvas')) {
         const id = (c.id || '').replace(/^c_/, '');
-        if (!id) continue;
-        try {
-          const url = c.toDataURL('image/png');
-          if (url && url.length > 200) lista.push({ id, image: url });
-        } catch (_) {}
+        try { add(id, c.toDataURL('image/png')); } catch (_) {}
       }
     }
 
-    if (lista.length === 0) { toast('Nenhuma imagem encontrada no HTML.', 'err'); return; }
+    // só aceita ids esperados (itens pendentes + lote do prompt) — evita subir lixo com id errado
+    const esperados = new Set([...itensDinamicosSemImagem().map(i => i.id), ..._loteIcones]);
+    const extras = [];
+    if (esperados.size > 0) {
+      lista = lista.filter(it => { if (esperados.has(it.id)) return true; extras.push(it.id); return false; });
+    }
+
+    const falhas = Object.keys(erros);
+    const faltando = _loteIcones.filter(id => !vistos.has(id) || !lista.some(x => x.id === id));
+    Object.entries(avisos).forEach(([id, w]) => { if (w && (!Array.isArray(w) || w.length)) console.warn('[ícone] aviso', id, w); });
+    falhas.forEach(id => console.error('[ícone] erro', id, erros[id]));
+
+    if (lista.length === 0) { toast('Nenhuma imagem utilizável no HTML.' + (falhas.length ? ' Com erro: ' + falhas.join(', ') : ''), 'err', 6000); setProgressoImagens(''); return; }
 
     _imagensGeradas = [];
     for (const it of lista) {
@@ -5056,8 +5967,13 @@ function downscaleTo64(dataURL128) {
       `;
       preview.appendChild(card);
     }
-    setProgressoImagens(`${_imagensGeradas.length} item(ns) prontos`);
-    toast(`${_imagensGeradas.length} imagem(ns) extraídas.`, 'ok');
+
+    const notas = [];
+    if (falhas.length) notas.push('com erro: ' + falhas.join(', '));
+    if (faltando.length) notas.push('ausentes: ' + faltando.join(', '));
+    if (extras.length) notas.push('id desconhecido (ignorado): ' + extras.join(', '));
+    setProgressoImagens(`${_imagensGeradas.length} item(ns) prontos` + (notas.length ? ' — ' + notas.join(' · ') : ''));
+    toast(`${_imagensGeradas.length} imagem(ns) extraídas.` + (notas.length ? ' Atenção: ' + notas.join(' · ') : ''), notas.length ? 'warn' : 'ok', notas.length ? 7000 : 3200);
   } catch (e) {
     toast('Falha: ' + e.message, 'err');
     setProgressoImagens('');
@@ -5065,7 +5981,7 @@ function downscaleTo64(dataURL128) {
     try { iframe.remove(); } catch (_) {}
   }
 }
-  
+
 function limparImagens() {
   if (!confirm('Limpar preview e JSON colado?')) return;
   $('imagensJsonTA').value = '';
