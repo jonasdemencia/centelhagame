@@ -3425,11 +3425,16 @@ async function importarParaFirestore(dados, uid, logFn) {
     };
   }
 
+    const itensPorDilema = new Set();
+  for (const cena of cenas) for (const d of (cena.dilemas || [])) for (const r of (d.ramificacoes || []))
+    if (r.adiciona_item) itensPorDilema.add(r.adiciona_item);
+
   if (dados.itens_adicionados) {
     for (const [salaId, ids] of Object.entries(dados.itens_adicionados)) {
       if (!mapaMundo[salaId]) { logFn(`⚠️ itens_adicionados: sala ${salaId} não existe.`, 'warn'); continue; }
       if (!Array.isArray(mapaMundo[salaId].itens)) mapaMundo[salaId].itens = [];
       for (const id of ids) {
+        if (itensPorDilema.has(id)) { logFn(`↩️ "${id}" ignorado em itens_adicionados — entregue por dilema.`, 'warn'); continue; }
         if (!mapaMundo[salaId].itens.includes(id)) mapaMundo[salaId].itens.push(id);
       }
       logFn(`📦 Sala ${salaId}: itens plantados → ${ids.join(', ')}`, 'info');
