@@ -1776,7 +1776,7 @@ const DEFAULT_BODIES = {
     '',
     'ÂNCORA LÉXICA E ESTRUTURA DE DILEMAS:',
     '- texto_evento (3–4 frases) descreve a cena e no máximo, indica UMA ação que leva ao dilema-pai (ex: "Se desejar, você pode examinar a pena"). PROIBIDO usar "ou" no texto_evento para listar alternativas — as demais escolhas entram só nas ramificações do pai.',
-    '- dilemas contém 1 ou 2 objetos. Cada objeto é pai com ramificacoes de 2 a 3, ou resolução direta sem ramificacoes. O pai com ramificações termina enunciando em prosa as opções, para o jogador saber o que digitar.',
+    '- dilemas contém 1 ou 2 objetos. Cada objeto é pai com ramificacoes de 2 a 3, ou resolução direta sem ramificacoes. O pai com ramificações termina enunciando em prosa as opções, para o jogador saber o que digitar — a quantidade de opções narradas DEVE ser exatamente igual à quantidade de ramificações. NUNCA narre uma opção sem emitir a ramificação correspondente.',
     '',
     'TOM DO ENCONTRO — escolha um:',
     '- MISTÉRIO: descreva o NPC, mecanismo ou fenômeno com foco na estranheza e no enigmático. Não deve ser monstruoso ou abertamente hostil — seu comportamento é ritualístico, indiferente ou mecânico, e seu perigo não está em ataques físicos diretos.',
@@ -3239,6 +3239,13 @@ function validarCenas(cenas, plano, salaInicio, salaFim) {
         if (dilema.dano !== 0) erros.push(`${dp}: dilema-pai com ramificações deve ter dano = 0 (tem ${dilema.dano}).`);
         const frasesPai = (dilema.resultado_texto || '').replace(/<[^>]+>/g, '').split(/[.!?]+/).filter(s => s.trim().length > 0);
         if (frasesPai.length < 2 || frasesPai.length > 4) avisos.push(`${dp}: resultado_texto do pai deve ter 2-3 frases (tem ${frasesPai.length}).`);
+              const m = (dilema.resultado_texto || '').match(/voc[êe]s? pode[m]?\s+(.+?)\.?\s*$/i);
+      if (m) {
+        const prometidas = m[1].split(/\s*(?:,| ou )\s*/i).filter(s => s.trim().length > 2);
+        if (prometidas.length !== ram.length) {
+          erros.push(`${dp}: ponte promete ${prometidas.length} opção(ões) ("${prometidas.join(' / ')}") mas ramificacoes tem ${ram.length}.`);
+        }
+      }
       }
     }
     if (!hasHighDamage) erros.push(`${prefixo}: nenhuma ramificação ou consequência tem dano Alto (>=8) - obrigatório.`);
