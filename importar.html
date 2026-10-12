@@ -1798,8 +1798,8 @@ const DEFAULT_BODIES = {
     '  · Todo id usado em "adiciona_item" DEVE estar declarado em "itens_novos". Nunca referencie um id que não exista lá.',
     '  · requer_item (string|null): id do item exigido — a ramificação só executa se o jogador o tiver (use quando a ação exige o item em mãos).',
     '  · remove_item (string|null): id do item removido do inventário (a ação consome o item).',
-    '- condicao_estado: nome do estado global exigido (string) ou null. Se preenchido, a ramificação só executa se o estado já estiver ativo (criado por cena ou puzzle de zona anterior). Use quando a ação depende de uma descoberta anterior.',
-    '- mensagem_condicao_falha: texto mostrado quando condicao_estado não está ativo (string) ou null. Se omitido, o motor usa uma mensagem genérica.',
+    '- condicao_estado: nome do estado global exigido (string) ou null. Se preenchido, a ramificação só executa se o estado já estiver ativo (criado por cena ou puzzle de zona anterior). Use quando a ação depende de uma descoberta anterior. Cada entrada de estados_pendentes no cabeçalho traz "gesto" — o ato concreto que o jogador não praticou e que criaria a pendência.',
+    '- mensagem_condicao_falha: texto mostrado quando condicao_estado não está ativo (string) ou null. Nomeie o GESTO concreto da pendência herdada, não o estado abstrato — nunca "algo falta". Ex: "Você não tocou a sineta de bronze rachada daquela sala. A pedra aguarda um som que nunca veio."',
     '- Efeito persiste independente do custo: dano 0 pode conceder item, dano alto pode não conceder nada — exceto ao abrir contêiner trancado (armário, cofre, baú, gaveta selada), que nomeia o conteúdo via adiciona_item ou define_estado.',
     '- Pelo menos uma ramificação por zona deve definir um estado OU adicionar um item consumido por puzzle da mesma zona. Todo define_estado precisa ter usos_possiveis ou interacoes_ambiente correspondente na zona (condicao_estado = nome do estado); todo adiciona_item precisa ter usos_possiveis correspondente (item_id = id do item).',
     '- OBRIGATÓRIO: adicione a "itens_novos" apenas os ids referenciados em "adiciona_item" das cenas ou de itens_adicionados. Nunca declare item que não seja retirado do lugar por uma ramificação. Formato {id: {id, content, description}}, descrição neutra (apenas aparência física, sem sugerir uso ou função).',
@@ -2013,6 +2013,7 @@ const DEFAULT_BODIES = {
 
     'REGRAS DURAS:',
     '- NUNCA descarte item ou flag. Pendências não somem — se não cabem nesta zona, ficam mais velhas.',
+    '- Cada pendência herdada traz "gesto": o ato concreto que o jogador NÃO praticou (ex: "tocar a sineta de bronze rachada"). Em mensagem_falha/condicao_falha, nomeie esse gesto — nunca o id da flag, nunca "algo falta".',
     '- NUNCA force encaixe incoerente. Se o item é um machado de guerra e a zona é um cartório, o machado vira peso de porta, arma ritual, objeto de leilão — a adaptação é sempre possível.',
     '- O TEMA DA ZONA SE CURVA ÀS PENDÊNCIAS VENCIDAS, não o contrário. Se a fila tem uma pena dourada vencida, uma das salas se torna um santuário, um cartório angelical, um leilão de relíquias — o tema se adapta.',
     '- Consumir item = usos_possiveis com item_id igual ao id e remove_item: true. Consumir flag = usos_possiveis OU interacoes_ambiente com condicao_estado igual ao nome da flag.',
@@ -2105,8 +2106,10 @@ const DEFAULT_BODIES = {
     '        {',
     '          "frase_gatilho": "[ação inicial literal idêntica à sugerida no texto]",',
     '          "resposta": "Você [ação concluída], revelando a próxima camada do obstáculo. Você nota que pode [próxima ação].",',
-    '          "define_estado": "nome_do_estado_preparado"',
-    '        }',
+    '          "define_estado": "nome_do_estado_preparado",',
+'          "condicao_estado": "nome_da_pendencia_herdada_ou_null",',
+'          "mensagem_falha": "Só se condicao_estado ≠ null: nomeia o gesto que criaria a pendência."',
+'        }'
     '      ],',
     '      "usos_possiveis": [',
     '        {',
@@ -2115,7 +2118,7 @@ const DEFAULT_BODIES = {
     '          "resultado_texto": "Descreva o que mudou no ambiente e nomeie a lógica (por que funcionou). Enuncie a próxima ação que a mudança tornou visível.",',
     '          "define_estado": "proximo_estado",',
     '          "remove_item": true,',
-    '          "mensagem_falha": "Você tenta usar o item, mas [motivo lógico da falha antes da preparação]."',
+    '          "mensagem_falha": "Se a falha for por item errado: motivo lógico. Se for por condicao_estado ausente: nomeia o GESTO concreto que criaria a pendência herdada (nunca o id da flag, nunca algo genérico)."',
     '        },',
     '        {',
     '          "item_id": "id_do_item_B",',
@@ -2761,11 +2764,12 @@ function coletarItensDeCena(mapaMundo, n) {
     const zonaCriacao = info.zona_criacao ?? 1;
     const idade = Math.max(0, zonaAtual - zonaCriacao);
     out.push({
-      id: itemId,
-      zona_criacao: zonaCriacao,
-      idade,
-      sala_origem: info.sala_origem ?? null
-    });
+  id: itemId,
+  zona_criacao: zonaCriacao,
+  idade,
+  sala_origem: info.sala_origem ?? null,
+  gesto: info.gesto || null
+});
   }
   out.sort((a, b) => b.idade - a.idade);
   return out;
@@ -2780,7 +2784,7 @@ function coletarEstadosPendentes(dados, zonaAtual) {
     // (linha "if (info.ativa !== true) continue;" foi removida)
     const zonaCriacao = info.zona_criacao ?? 1;
     const idade = Math.max(0, zonaAtual - zonaCriacao);
-    out.push({ id: flag, zona_criacao: zonaCriacao, idade });
+    out.push({ id: flag, zona_criacao: zonaCriacao, idade, gesto: info.gesto || null });
   }
   out.sort((a, b) => b.idade - a.idade);
   return out;
@@ -3519,9 +3523,9 @@ async function importarParaFirestore(dados, uid, logFn) {
       });
 
       for (const ram of ramificacoes) {
-        if (ram.define_estado) flagsParaRegistrar.push(ram.define_estado);
-        if (ram.adiciona_item) itensCenaParaRegistrar.push({ id: ram.adiciona_item, sala_origem: salaIdNum });
-      }
+  if (ram.define_estado) flagsParaRegistrar.push({ id: ram.define_estado, gesto: ram.opcao_texto });
+  if (ram.adiciona_item) itensCenaParaRegistrar.push({ id: ram.adiciona_item, sala_origem: salaIdNum, gesto: ram.opcao_texto });
+}
     }
     logFn(`🎭 "${titulo}" → Sala ${salaId} | texto_evento injetado, ${dilemas.length} dilema(s) processado(s)`, 'ok');
   }
@@ -3609,27 +3613,29 @@ async function importarParaFirestore(dados, uid, logFn) {
   if (flagsParaRegistrar.length > 0) {
     if (!dadosAtuais.playerFlagsMeta) dadosAtuais.playerFlagsMeta = {};
     for (const flag of flagsParaRegistrar) {
-      if (!dadosAtuais.playerFlagsMeta[flag]) {
-        dadosAtuais.playerFlagsMeta[flag] = {
-          zona_criacao: _promptZona,
-          consumida: false,
-          ativa: false
-        };
-      }
-    }
+  if (!dadosAtuais.playerFlagsMeta[flag.id]) {
+    dadosAtuais.playerFlagsMeta[flag.id] = {
+      zona_criacao: _promptZona,
+      consumida: false,
+      ativa: false,
+      gesto: flag.gesto || null
+    };
+  }
+}
   }
 
   if (itensCenaParaRegistrar.length > 0) {
     if (!dadosAtuais.itensDeCenaMeta) dadosAtuais.itensDeCenaMeta = {};
-    for (const { id, sala_origem } of itensCenaParaRegistrar) {
-      if (!dadosAtuais.itensDeCenaMeta[id]) {
-        dadosAtuais.itensDeCenaMeta[id] = {
-          zona_criacao: _promptZona,
-          consumida: false,
-          sala_origem
-        };
-      }
-    }
+    for (const { id, sala_origem, gesto } of itensCenaParaRegistrar) {
+  if (!dadosAtuais.itensDeCenaMeta[id]) {
+    dadosAtuais.itensDeCenaMeta[id] = {
+      zona_criacao: _promptZona,
+      consumida: false,
+      sala_origem,
+      gesto: gesto || null
+    };
+  }
+}
   }
 
   for (const [id, salaNova] of Object.entries(mapaMundo)) {
