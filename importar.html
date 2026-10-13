@@ -1918,7 +1918,7 @@ const DEFAULT_BODIES = {
     '',
     'TIPOS (escolha um por perigo)',
     '- "interceptor": emboscada NO TRAJETO de uma saída que já existe na sala. O opcao_texto deve ser idêntico, palavra por palavra, ao acao de uma das saidas daquela sala no plano. Nunca intercepte uma ação de "voltar"/retorno.',
-    '- "nova_opcao": uma ação de EXAME que surge na sala (não navega para lugar nenhum). O objeto/elemento examinado DEVE já estar descrito literalmente no texto_logico daquela sala — nunca invente um item novo que não esteja no texto. Se a sala não tiver nenhum elemento aproveitável para exame, prefira "interceptor" nessa sala.',
+    '- "nova_opcao": uma ação de EXAME que surge na sala (não navega para lugar nenhum). A opcao_texto cita o objeto com as PALAVRAS EXATAS do texto_logico daquela sala — sem paráfrase, sem sinônimo, sem material ou adjetivo inventado. Texto diz "mesa de trabalho", opção é "Examinar a mesa de trabalho" — nunca "Examinar o balcão de nogueira". Se nenhum objeto do texto servir, use "interceptor".',
     '',
 'INTERCEPTOR — três campos extras obrigatórios:',
 '· "elemento_fisico_curto": 2–4 palavras com artigo, objeto físico JÁ presente no texto_logico que denuncia o perigo (ex: "o corrimão", "a água parada"). Adjacente ao trajeto — nunca o mesmo objeto do opcao_texto. Só gera a frase de exame; o objeto continua integrado à prosa normalmente.',
