@@ -1794,7 +1794,7 @@ const DEFAULT_BODIES = {
     '- Proibições: opções sem destino_id usando verbos de locomoção (sair, subir, atravessar); resultado_texto do pai descrevendo ação que o jogador não executou na opcao_texto; dilemas que se resolvam com pura força física.',
     '- Efeito persistente opcional por ramificação, além do custo:',
     '  · define_estado (string|null): nome do estado global ativado; gravado no doc do jogador, visível em qualquer sala da zona.',
-    '  · adiciona_item (string|null): id do item que o resultado_texto encontra na sala — se menciona um objeto achado, este campo o nomeia; sem menção, null.',
+    '  · adiciona_item (string|null): o item NUNCA é o alvo do dilema — é o que uma ramificação produz ao resolver outra coisa (pessoa, mecanismo, fenômeno). As ramificações falam sobre esse outro objeto; o item cai como efeito. Se as opções giram em torno do próprio item (pegar/deixar/quebrar), não é dilema — é loot, e vai em itens_adicionados.',
     '  · Todo id usado em "adiciona_item" DEVE estar declarado em "itens_novos". Nunca referencie um id que não exista lá.',
     '  · requer_item (string|null): id do item exigido — a ramificação só executa se o jogador o tiver (use quando a ação exige o item em mãos).',
     '  · remove_item (string|null): id do item removido do inventário (a ação consome o item).',
