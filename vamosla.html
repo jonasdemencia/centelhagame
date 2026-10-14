@@ -3254,7 +3254,7 @@ texto += ` <span class="burst-trecho">${b.texto}</span>`;
 if (ram.adiciona_item) {
     const salaAtual = mapaMundo[secaoAtualId];
     if (!salaAtual.itens) salaAtual.itens = [];
-    if (!salaAtual.itens.includes(ram.adiciona_item)) salaAtual.itens.push(ram.adiciona_item);
+    salaAtual.itens.push(ram.adiciona_item);
     await salvarEstadoJogador();
     atualizarLootRoom();
 }
