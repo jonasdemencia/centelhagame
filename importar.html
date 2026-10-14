@@ -1737,7 +1737,7 @@ const MINI_IDS = {
 };
 
 const DEFAULT_BODIES = {
-  topologia: [
+ topologia: [
     'Você é o gerador de conteúdo do jogo textual de sobrevivência e mistério "Centelha". Gere um único JSON com plano, salas e cenas (dilemas) para uma zona de 10 salas, delimitada pelo intervalo de [SALA_INICIAL] a [SALA_FINAL].',
     '',
     'REGRAS DE TOPOLOGIA (PLANO)',
@@ -1776,7 +1776,8 @@ const DEFAULT_BODIES = {
     '',
     'ÂNCORA LÉXICA E ESTRUTURA DE DILEMAS:',
     '- texto_evento (3–4 frases) descreve a cena e no máximo, indica UMA ação que leva ao dilema-pai (ex: "Se desejar, você pode examinar a pena"). PROIBIDO usar "ou" no texto_evento para listar alternativas — as demais escolhas entram só nas ramificações do pai.',
-    '- dilemas contém 1 ou 2 objetos. Cada objeto é pai com ramificacoes de 2 a 3, ou resolução direta sem ramificacoes. O pai com ramificações termina enunciando em prosa as opções, para o jogador saber o que digitar.',
+    '- dilemas contém 1 ou 2 objetos. Cada objeto é pai com ramificacoes de 2 a 3, ou resolução direta sem ramificacoes.',
+    '- Pai com ramificações: o resultado_texto enuncia as opções em prosa E o campo "opcoes_enunciadas" lista as mesmas opções LITERALMENTE — idênticas caractere a caractere aos "opcao_texto" das ramificações, na mesma ordem. Faltar ou divergir = lote rejeitado.',
     '',
     'TOM DO ENCONTRO — escolha um:',
     '- MISTÉRIO: descreva o NPC, mecanismo ou fenômeno com foco na estranheza e no enigmático. Não deve ser monstruoso ou abertamente hostil — seu comportamento é ritualístico, indiferente ou mecânico, e seu perigo não está em ataques físicos diretos.',
@@ -1845,6 +1846,7 @@ const DEFAULT_BODIES = {
 '        {',
 '          "opcao_texto": "Verbo Objeto",',
 '          "resultado_texto": "...",',
+'          "opcoes_enunciadas": ["Opção 1", "Opção 2", "Opção 3"],',
 '          "dano": 0,',
 '          "destino_id": null,',
 '          "ramificacoes": [',
@@ -1860,6 +1862,7 @@ const DEFAULT_BODIES = {
     '- cenas contém apenas as 2–3 salas escolhidas; as demais não têm entrada. dilemas é sempre um array, mesmo com um único objeto (o pai).',
     '- Cada ramificação tem destino_id preenchido (apontando para avanço) ou null. dano inteiro entre 0 e 15.',
     '- opcao_texto: ações de 2 a 4 palavras, com verbo forte + objeto/alvo, obrigatoriamente ancoradas nas palavras exatas do texto lido.',
+    '- "opcoes_enunciadas" só existe quando há ramificações: lista literal das opcao_texto das ramificações, na mesma ordem.',
     '',
  'EXEMPLO DE CENA MORAL/EXISTENCIAL VÁLIDA',
 '{',
@@ -1870,6 +1873,7 @@ const DEFAULT_BODIES = {
 '    {',
 '      "opcao_texto": "Questionar a mulher",',
 '      "resultado_texto": "Ela sorri, um gesto que não chega aos olhos, e diz que já respondeu essa pergunta para outros três antes de você — e nenhum saiu vivo. A mão da mulher continua estendida. Você pode entregar o cartão, recusar ajuda ou exigir uma prova.",',
+'      "opcoes_enunciadas": ["Entregar o cartão", "Recusar ajuda", "Exigir prova"],',
 '      "dano": 0,',
 '      "destino_id": null,',
 '      "ramificacoes": [',
@@ -3257,6 +3261,18 @@ function validarCenas(cenas, plano, salaInicio, salaFim) {
         if (dilema.dano !== 0) erros.push(`${dp}: dilema-pai com ramificações deve ter dano = 0 (tem ${dilema.dano}).`);
         const frasesPai = (dilema.resultado_texto || '').replace(/<[^>]+>/g, '').split(/[.!?]+/).filter(s => s.trim().length > 0);
         if (frasesPai.length < 2 || frasesPai.length > 4) avisos.push(`${dp}: resultado_texto do pai deve ter 2-3 frases (tem ${frasesPai.length}).`);
+
+        const esperadas = ram.map(r => (r.opcao_texto || '').trim()).filter(Boolean);
+        const enunc = Array.isArray(dilema.opcoes_enunciadas)
+          ? dilema.opcoes_enunciadas.map(s => String(s || '').trim()) : null;
+        if (!enunc) {
+          erros.push(`${dp}: falta "opcoes_enunciadas" — array espelhando as opcao_texto das ramificações.`);
+        } else {
+          const faltando = esperadas.filter(e => !enunc.includes(e));
+          const extras   = enunc.filter(e => !esperadas.includes(e));
+          if (faltando.length) erros.push(`${dp}: opcoes_enunciadas não cobre: ${faltando.join(' / ')}`);
+          if (extras.length)   erros.push(`${dp}: opcoes_enunciadas tem item sem ramificação: ${extras.join(' / ')}`);
+        }
       }
     }
     if (!hasHighDamage) erros.push(`${prefixo}: nenhuma ramificação ou consequência tem dano Alto (>=8) - obrigatório.`);
@@ -3269,7 +3285,6 @@ function validarCenas(cenas, plano, salaInicio, salaFim) {
   }
   return { erros, avisos };
 }
-
 /* ============================================================
    IMPORTAÇÃO — utilitários
    ============================================================ */
