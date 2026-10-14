@@ -171,7 +171,7 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
 .aventura-field textarea{min-height:160px;max-height:400px;tab-size:2}
 .aventura-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px}
 
-/* ============ PROMPTS CARDd ============ */
+/* ============ PROMPTS CARD ============ */
 .prompts-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
   margin-bottom:20px;overflow:hidden}
 .prompts-header{display:flex;justify-content:space-between;align-items:center;
@@ -208,7 +208,7 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
 .prompts-mini-summary .mini-dim{color:var(--text-dimmer)}
 
 .prompts-panel{max-height:0;overflow:hidden;transition:max-height .4s ease}
-.prompts-card.open .prompts-panel{max-height:6000px}
+.prompts-card.open .prompts-panel{max-height:12000px}
 .prompts-card.open .prompts-mini-grid{display:none}
 .prompts-card.open .chevron{transform:rotate(90deg)}
 .prompts-body{padding:16px 24px 22px;display:flex;flex-direction:column;gap:18px;border-top:1px solid var(--border)}
@@ -271,6 +271,8 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
   font-size:10px;letter-spacing:.5px;font-weight:500;text-transform:uppercase}
 .badge-empty{background:var(--surface-3);color:var(--text-dimmer);border:1px solid var(--border-2)}
 .badge-zona{background:var(--gold-dim);color:var(--gold);border:1px solid rgba(217,164,65,.35)}
+.badge-topologia{background:var(--gold-dim);color:var(--gold);border:1px solid rgba(217,164,65,.35)}
+.badge-cenas{background:rgba(200,120,80,.10);color:#e0a080;border:1px solid rgba(200,120,80,.35)}
 .badge-perigos{background:var(--red-dim);color:#ff7a70;border:1px solid rgba(229,57,53,.35)}
 .badge-puzzles{background:var(--blue-dim);color:var(--blue);border:1px solid rgba(90,143,191,.35)}
 .badge-monstros{background:rgba(200,120,80,.10);color:#e0a080;border:1px solid rgba(200,120,80,.35)}
@@ -402,7 +404,7 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
 .validator-empty{padding:20px;text-align:center;color:var(--text-dimmer);font-size:11.5px}
 .validator-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
 
-/* ============ PREENCHER POPOVEeR ============ */
+/* ============ PREENCHER POPOVER ============ */
 .preencher-popover{position:fixed;z-index:3000;width:min(620px,calc(100vw - 32px));
   background:var(--surface);border:1px solid var(--border-2);border-radius:var(--radius-lg);
   box-shadow:0 20px 60px rgba(0,0,0,.75);overflow:hidden;font-size:12px}
@@ -586,7 +588,7 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
     </div>
   </section>
 
-  <!-- ===================== PROMPTSs ===================== -->
+  <!-- ===================== PROMPTS ===================== -->
   <section class="card prompts-card" id="promptsCard">
     <div class="prompts-header" onclick="togglePrompts()" role="button" tabindex="0"
          onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();togglePrompts();}">
@@ -594,7 +596,7 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
         <span class="icon">📝</span>
         <div>
           <div>PROMPTS</div>
-          <div class="prompts-subtitle">Troca de zona manual ([−] / [+]) · 🔄 recarrega dados do Firestore</div>
+          <div class="prompts-subtitle">Topologia e Cenas separadas · Troca de zona manual ([−] / [+]) · 🔄 recarrega dados do Firestore</div>
         </div>
       </div>
       <div class="prompts-header-actions">
@@ -613,13 +615,24 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
     <!-- Estado FECHADO: mini-cards -->
     <div class="prompts-mini-grid" id="promptsMiniGrid">
       <div class="prompts-mini">
-        <div class="prompts-mini-title">🎭 Topologia + Cenas</div>
+        <div class="prompts-mini-title">🏗️ Topologia</div>
         <div class="prompts-mini-actions">
           <button class="btn btn-ghost btn-sm" onclick="copiarPrompt('topologia')">
             <span class="btn-icon">📋</span> Copiar
           </button>
         </div>
         <div class="prompts-mini-summary" id="miniTopologia">
+          <span class="mini-dim">aguardando login</span>
+        </div>
+      </div>
+      <div class="prompts-mini">
+        <div class="prompts-mini-title">🎭 Cenas</div>
+        <div class="prompts-mini-actions">
+          <button class="btn btn-ghost btn-sm" onclick="copiarPrompt('cenas')">
+            <span class="btn-icon">📋</span> Copiar
+          </button>
+        </div>
+        <div class="prompts-mini-summary" id="miniCenas">
           <span class="mini-dim">aguardando login</span>
         </div>
       </div>
@@ -661,12 +674,12 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
     <!-- Estado ABERTO: blocos com textarea -->
     <div class="prompts-panel" id="promptsPanel">
       <div class="prompts-body">
-        <!-- Topologia + Cenas -->
+        <!-- Topologia -->
         <div class="prompt-block">
           <div class="prompt-block-header">
-            <span class="prompt-block-title">🎭 Topologia + Cenas</span>
-                        <div class="prompt-block-actions">
-              <span class="prompt-etapa">Etapa 1 de 4</span>
+            <span class="prompt-block-title">🏗️ Topologia</span>
+            <div class="prompt-block-actions">
+              <span class="prompt-etapa">Etapa 1 de 5</span>
               <button class="btn btn-ghost btn-sm" onclick="copiarPrompt('topologia')">
                 <span class="btn-icon">📋</span> Copiar
               </button>
@@ -682,16 +695,37 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
           </div>
         </div>
 
+        <!-- Cenas -->
+        <div class="prompt-block">
+          <div class="prompt-block-header">
+            <span class="prompt-block-title">🎭 Cenas</span>
+            <div class="prompt-block-actions">
+              <span class="prompt-etapa">Etapa 2 de 5</span>
+              <button class="btn btn-ghost btn-sm" onclick="copiarPrompt('cenas')">
+                <span class="btn-icon">📋</span> Copiar
+              </button>
+              <button class="btn btn-ghost btn-sm" onclick="restaurarPromptPadrao('cenas')" title="Volta ao prompt original">
+                <span class="btn-icon">↺</span> Restaurar
+              </button>
+            </div>
+          </div>
+          <textarea class="prompt-textarea" id="prompt_cenas" spellcheck="false"></textarea>
+          <div class="prompt-footer">
+            <span class="icon">▸</span>
+            <span id="statusCenas">aguardando login</span>
+          </div>
+        </div>
+
         <!-- Perigos -->
         <div class="prompt-block">
           <div class="prompt-block-header">
             <span class="prompt-block-title">☠️ Perigos</span>
             <div class="prompt-block-actions">
-              <span class="prompt-etapa">Etapa 2 de 4</span>
+              <span class="prompt-etapa">Etapa 3 de 5</span>
               <button class="btn btn-ghost btn-sm" onclick="copiarPrompt('perigos')">
                 <span class="btn-icon">📋</span> Copiar
               </button>
-                <button class="btn btn-ghost btn-sm" onclick="restaurarPromptPadrao('perigos')" title="Volta ao prompt original">
+              <button class="btn btn-ghost btn-sm" onclick="restaurarPromptPadrao('perigos')" title="Volta ao prompt original">
                 <span class="btn-icon">↺</span> Restaurar
               </button>
             </div>
@@ -708,11 +742,11 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
           <div class="prompt-block-header">
             <span class="prompt-block-title">🧩 Puzzles</span>
             <div class="prompt-block-actions">
-              <span class="prompt-etapa">Etapa 3 de 4</span>
+              <span class="prompt-etapa">Etapa 4 de 5</span>
               <button class="btn btn-ghost btn-sm" onclick="copiarPrompt('puzzles')">
                 <span class="btn-icon">📋</span> Copiar
               </button>
-                <button class="btn btn-ghost btn-sm" onclick="restaurarPromptPadrao('perigos')" title="Volta ao prompt original">
+              <button class="btn btn-ghost btn-sm" onclick="restaurarPromptPadrao('puzzles')" title="Volta ao prompt original">
                 <span class="btn-icon">↺</span> Restaurar
               </button>
             </div>
@@ -729,7 +763,7 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
           <div class="prompt-block-header">
             <span class="prompt-block-title">🐺 Monstros</span>
             <div class="prompt-block-actions">
-              <span class="prompt-etapa">Etapa 4 de 4</span>
+              <span class="prompt-etapa">Etapa 5 de 5</span>
               <button class="btn btn-ghost btn-sm" onclick="copiarPrompt('monstros')">
                 <span class="btn-icon">📋</span> Copiar
               </button>
@@ -772,7 +806,7 @@ main{max-width:1000px;margin:0 auto;padding:28px 24px}
         <div class="editor">
           <pre class="editor-highlight" id="editorHighlight" aria-hidden="true"></pre>
           <textarea class="editor-input" id="jsonInput" spellcheck="false"
-            placeholder='Cole aqui o JSON da zona (plano + salas + cenas) OU {"perigos": [...]} OU {"puzzles": {...}} OU {"monstros": [...]}'></textarea>
+            placeholder='Cole aqui o JSON da topologia (plano + salas) OU o JSON de cenas OU {"perigos": [...]} OU {"puzzles": {...}} OU {"monstros": [...]}'></textarea>
         </div>
       </div>
 
@@ -951,7 +985,6 @@ const mix = (a, b, t) => a + (b - a) * t;
 const sstep = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
 const norm3 = v => { const l = sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]) || 1; return [v[0] / l, v[1] / l, v[2] / l]; };
 
-/* ---------- ruído determinístico ---------- */
 function hash3(x, y, z) {
   let h = Math.imul(x, 374761393) ^ Math.imul(y, 668265263) ^ Math.imul(z, 1274126177);
   h = Math.imul(h ^ (h >>> 13), 1274126177);
@@ -970,7 +1003,6 @@ function vnoise(x, y, z) {
 const bnoise = (x, y, z) => 0.65 * vnoise(x, y, z) + 0.35 * vnoise(x * 2.1, y * 2.1, z * 2.1);
 const fbm = (x, y, z) => (0.5 * vnoise(x, y, z) + 0.25 * vnoise(x * 2.07, y * 2.07, z * 2.07) + 0.125 * vnoise(x * 4.13, y * 4.13, z * 4.13)) / 0.875;
 
-/* ---------- formas (espaço local, y para cima); cada uma devolve f(x,y,z) com esfera envolvente f.bc/f.br ---------- */
 const BND = (f, c, r) => { f.bc = c; f.br = r; return f; };
 function polyFn(P, skipAxis) {
   const n = P.length;
@@ -1070,7 +1102,6 @@ const PRIM = {
   },
 };
 
-/* ---------- materiais ---------- */
 const MATS = {
   ferro:     { c: [.30, .30, .33], spec: .9, sh: 38, met: .80, bump: .30, grime: .55, rust: .30 },
   aco:       { c: [.60, .62, .66], spec: 1.0, sh: 70, met: .90, bump: .10, grime: .20 },
@@ -1118,7 +1149,6 @@ function matId(name) {
   return i;
 }
 
-/* ---------- cena ---------- */
 let TX = 0, TY = 0, TZ = 0, CM = 0, CW = 0;
 function compileShape(sh) {
   const mk = PRIM[sh && sh.t];
@@ -1191,7 +1221,7 @@ function makeScene(shapes0, warn) {
   };
   sdf.loc = (i, x, y, z) => S[i].loc(x, y, z);
   sdf.extent = S.reduce((a, c) => max(a, c.ext), 0.01);
-  sdf.bounds = (f, sc) => {          // faixa de profundidade possível ao longo do raio (t = 6 + dot(P, f)), no mundo já escalado
+  sdf.bounds = (f, sc) => {
     let lo = 6 - RB, hi = 6 + RB, blo = 1e9, bhi = -1e9, ok = true;
     for (let i = 0; i < n; i++) {
       if (BR[i] === Infinity) { ok = false; break; }
@@ -1203,7 +1233,6 @@ function makeScene(shapes0, warn) {
   return sdf;
 }
 
-/* ---------- luz (espaço da tela: x direita, y cima, z para o observador) ---------- */
 const KEY = norm3([-0.58, 0.64, 0.50]), KEYC = [1.0, 0.91, 0.76];
 const FILL = norm3([0.85, -0.05, 0.50]), FILLC = [0.26, 0.33, 0.46];
 const RIMC = [0.24, 0.30, 0.42];
@@ -1220,19 +1249,19 @@ function envMap(rx, ry, rz) {
 
 function renderItem(item, warn) {
   let list = item && item.shapes;
-  if (typeof list === 'function') list = list();            // shapes pode ser uma função que devolve a lista (isola variáveis e erros de laço)
+  if (typeof list === 'function') list = list();
   if (Array.isArray(list)) list = list.flat(4).filter(Boolean);
   if (!Array.isArray(list) || !list.length) throw new Error('item sem a lista "shapes"');
   MATLIST = [MATS.ferro];
   const raw = makeScene(list, warn), E = raw.extent;
-  const SC = (E > 2.0 || E < 0.8) ? 1.6 / E : 1;        // normaliza itens modelados em escala muito grande ou muito pequena
+  const SC = (E > 2.0 || E < 0.8) ? 1.6 / E : 1;
   let scene = raw;
   if (SC !== 1) { scene = (x, y, z) => SC * raw(x / SC, y / SC, z / SC); scene.loc = (i, x, y, z) => raw.loc(i, x / SC, y / SC, z / SC); }
   const num = (v, d) => (Number.isFinite(v) ? v : d);
   const yaw = num(item.yaw, -30) * PI / 180, pitch = num(item.pitch, 32) * PI / 180;
   const cp = cos(pitch), sp = sin(pitch), f = [-cp * sin(yaw), -sp, -cp * cos(yaw)];
   const r0 = norm3([-f[2], 0, f[0]]), u0 = [r0[1] * f[2] - r0[2] * f[1], r0[2] * f[0] - r0[0] * f[2], r0[0] * f[1] - r0[1] * f[0]];
-  const rl = num(item.roll, 0) * PI / 180, crl = cos(rl), srl = sin(rl);          // roll > 0 gira a imagem no sentido anti-horário
+  const rl = num(item.roll, 0) * PI / 180, crl = cos(rl), srl = sin(rl);
   const r = [crl * r0[0] - srl * u0[0], crl * r0[1] - srl * u0[1], crl * r0[2] - srl * u0[2]], u = [srl * r0[0] + crl * u0[0], srl * r0[1] + crl * u0[1], srl * r0[2] + crl * u0[2]];
   const bz = [-f[0], -f[1], -f[2]];
   const lw = v => [r[0] * v[0] + u[0] * v[1] + bz[0] * v[2], r[1] * v[0] + u[1] * v[1] + bz[1] * v[2], r[2] * v[0] + u[2] * v[1] + bz[2] * v[2]];
@@ -1252,7 +1281,6 @@ function renderItem(item, warn) {
   }
   const ray = (sx, sy) => [-f[0] * 6 + r[0] * sx + u[0] * sy, -f[1] * 6 + r[1] * sx + u[1] * sy, -f[2] * 6 + r[2] * sx + u[2] * sy];
 
-  /* enquadramento automático (dois passes) */
   const G = 72;
   function sweep(cx, cy, half) {
     let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
@@ -1300,13 +1328,12 @@ function renderItem(item, warn) {
     let n = normalAt(px, py, pz);
     const ao = ambOcc(px, py, pz, n);
     const sh = softShadow(px + n[0] * 0.012, py + n[1] * 0.012, pz + n[2] * 0.012);
-    scene(px, py, pz);                      // fixa material e forma vencedora neste ponto
+    scene(px, py, pz);
     const mt = MATLIST[CM], win = CW;
     scene.loc(win, px, py, pz); const lx = TX, ly = TY, lz = TZ;
     const col = mt.c, met0 = mt.met || 0;
     let spec = mt.spec === undefined ? 0.2 : mt.spec, met = met0;
     let cr = col[0], cg = col[1], cb = col[2];
-    /* textura procedural */
     const nv0 = fbm(px * 2.3 + 3, py * 2.3, pz * 2.3 + 8) - 0.5, tone = 1 + 0.2 * nv0;
     cr *= tone; cg *= tone; cb *= tone;
     if (mt.grime) { const g = sstep(0.38, 0.8, fbm(px * 3.4 + 11, py * 3.4, pz * 3.4)); const k = 1 - mt.grime * g * 0.75; cr *= k; cg *= k; cb *= k; }
@@ -1320,14 +1347,12 @@ function renderItem(item, warn) {
       const k = 1 - mt.grain * 0.45 * (1 - w) * (0.6 + 0.4 * fbm(lx * 9, ly * 1.2, lz * 9));
       cr *= k; cg *= k; cb *= k;
     }
-    /* microrrelevo */
     if (mt.bump) {
       const e = 0.011, fr = 17, b0 = bnoise(px * fr, py * fr, pz * fr);
       const gx = bnoise((px + e) * fr, py * fr, pz * fr) - b0, gy = bnoise(px * fr, (py + e) * fr, pz * fr) - b0, gz = bnoise(px * fr, py * fr, (pz + e) * fr) - b0;
       const dg = gx * n[0] + gy * n[1] + gz * n[2], k = mt.bump * 2.4;
       n = norm3([n[0] - k * (gx - dg * n[0]), n[1] - k * (gy - dg * n[1]), n[2] - k * (gz - dg * n[2])]);
     }
-    /* normal no espaço da tela */
     const nx = n[0] * r[0] + n[1] * r[1] + n[2] * r[2], ny = n[0] * u[0] + n[1] * u[1] + n[2] * u[2], nz = -(n[0] * f[0] + n[1] * f[1] + n[2] * f[2]);
     const wrap = mt.wrap || 0.15;
     const dk = clamp((nx * KEY[0] + ny * KEY[1] + nz * KEY[2] + wrap) / (1 + wrap), 0, 1);
@@ -1337,14 +1362,12 @@ function renderItem(item, warn) {
     const lg = KEYC[1] * dk * sh * 1.05 + FILLC[1] * df * 0.8 * aoD + (0.052 + 0.080 * hemi) * aoD;
     const lb = KEYC[2] * dk * sh * 1.05 + FILLC[2] * df * 0.8 * aoD + (0.060 + 0.095 * hemi) * aoD;
     let R = cr * lr * kd, Gc = cg * lg * kd, B = cb * lb * kd;
-    /* especular + reflexo de ambiente */
     const nh = max(0, nx * HV[0] + ny * HV[1] + nz * HV[2]), shn = mt.sh || 16;
     const sp = pow(nh, shn) * spec * (0.35 + shn / 40) * sh * (0.4 + 0.6 * ao);
     const fres = 0.04 + 0.96 * pow(1 - nz, 5);
     const refl = envMap(2 * nz * nx, 2 * nz * ny, 2 * nz * nz - 1) * (met * (0.55 + 0.45 * fres) + (1 - met) * spec * 0.35 * fres) * (0.35 + 0.65 * ao);
     const tr = mix(1, cr, met), tg = mix(1, cg, met), tb = mix(1, cb, met);
     R += (KEYC[0] * sp + refl) * tr; Gc += (KEYC[1] * sp + refl) * tg; B += (KEYC[2] * sp + refl) * tb;
-    /* contraluz frio para separar do fundo preto */
     const rim = pow(1 - nz, 2.6) * clamp(0.45 + 0.55 * ny + 0.25 * nx, 0, 1) * (0.35 + 0.65 * ao);
     R += RIMC[0] * rim * 0.9; Gc += RIMC[1] * rim * 0.9; B += RIMC[2] * rim * 0.9;
     if (mt.emis) { R += mt.emis[0]; Gc += mt.emis[1]; B += mt.emis[2]; }
@@ -1352,7 +1375,6 @@ function renderItem(item, warn) {
     return out;
   }
 
-  /* varredura: 1 amostra por pixel; 2x2 apenas nas bordas */
   const T = new Float32Array(N * N).fill(-1), MM = new Int16Array(N * N), accR = new Float32Array(N * N), accG = new Float32Array(N * N), accB = new Float32Array(N * N);
   const sxOf = x => (x - N / 2) * scale + offx, syOf = y => -(y - N / 2) * scale + offy;
   function sample(px, py, wgt, p, t0) {
@@ -1383,13 +1405,11 @@ function renderItem(item, warn) {
     for (let b = 0; b < 2; b++) for (let a = 0; a < 2; a++) sample(x + 0.25 + a * 0.5, y + 0.25 + b * 0.5, 0.25, p);
   }
 
-  /* exposição automática parcial: puxa itens muito escuros (e muito claros) para uma faixa legível */
   const lums = [];
   for (let p = 0; p < N * N; p++) { const l = 0.299 * accR[p] + 0.587 * accG[p] + 0.114 * accB[p]; if (l > 0) lums.push(l); }
   lums.sort((a, b) => a - b);
   const L90 = lums.length ? lums[Math.floor(lums.length * 0.90)] : 0.5;
   const GAIN = clamp(pow(0.60 / Math.max(L90, 0.05), 0.65), 0.85, 1.7);
-  /* acabamento PS1: grão, tom, dither 4x4 do hardware e 15 bits */
   const px = new Uint8ClampedArray(N * N * 4);
   for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
     const p = y * N + x;
@@ -1410,7 +1430,6 @@ function renderItem(item, warn) {
   return px;
 }
 
-/* ---------- saída: um <canvas id="<id do item>"> 128x128 por item ---------- */
 window.ICONES = window.ICONES || [];
 window.MATS = MATS;
 window.renderedImages = {};
@@ -1728,9 +1747,10 @@ function setupAventura() {
 /* ============================================================
    PROMPTS — corpos padrão
    ============================================================ */
-const PROMPT_KEYS = ['topologia', 'perigos', 'puzzles', 'monstros'];
+const PROMPT_KEYS = ['topologia', 'cenas', 'perigos', 'puzzles', 'monstros'];
 const MINI_IDS = {
   topologia: 'miniTopologia',
+  cenas: 'miniCenas',
   perigos: 'miniPerigos',
   puzzles: 'miniPuzzles',
   monstros: 'miniMonstros'
@@ -1738,7 +1758,9 @@ const MINI_IDS = {
 
 const DEFAULT_BODIES = {
  topologia: [
-    'Você é o gerador de conteúdo do jogo textual de sobrevivência e mistério "Centelha". Gere um único JSON com plano, salas e cenas (dilemas) para uma zona de 10 salas, delimitada pelo intervalo de [SALA_INICIAL] a [SALA_FINAL].',
+    'Você é o gerador de topologia do jogo textual de sobrevivência e mistério "Centelha". Gere um único JSON com plano e salas para uma zona de 10 salas, delimitada pelo intervalo de [SALA_INICIAL] a [SALA_FINAL].',
+    '',
+    'IMPORTANTE: você gera APENAS a topologia (plano + salas + itens de chão). As cenas e dilemas são gerados em um prompt separado por outro arquiteto — NÃO inclua o campo "cenas" na sua resposta.',
     '',
     'REGRAS DE TOPOLOGIA (PLANO)',
     '- Sala [SALA_INICIAL] = entrada; sala [SALA_FINAL] = fronteira (com "para_proxima_zona": true).',
@@ -1756,62 +1778,21 @@ const DEFAULT_BODIES = {
     'Ponto de entrada invisível (regra transversal — falha crítica se violada):',
     '- Toda sala ancorada com "Ao avançar para este local" NUNCA revela o ponto de entrada: proibido "a porta pela qual entrou", "por onde veio", "atrás de você", "de volta" ou equivalentes.',
     '- PROIBIDO como primeira frase: "Você se encontra", "Você está", "Você nota"; também proibido repetir na primeira frase palavras da ação de chegada (entry-point leak).',
-    '- SAÍDAS NEUTRAS: nenhuma saída é marcada como a de chegada nem como a de destino — toda porta/escada é descrita como objeto neutro, sem indicar origem nem destino (o motor pode ter trazido o jogador por qualquer uma).',
+    '- SAÍDAS NEUTRAS: nenhuma saída é marcada como a de chegada nem como a de destino — toda porta/escada é descrita como objeto neutro, sem indicar origem nem destino.',
     '',
     'Errado: "No fundo, a porta de carvalho pela qual entrou permanece visível."',
     'Certo: "Uma porta de carvalho e uma escadaria de mármore dividem as paredes opostas."',
     '',
     'Fórmula do texto_logico (estilo Livingstone/Jackson — fundido em prosa única, nunca como lista):',
-    '1) Identidade do espaço: a primeira frase nomeia o tipo do recinto (biblioteca, cozinha, oficina, dormitório) e o ancora com forma, tamanho ou proporção (ex: uma biblioteca vasta e circular, um corredor estreito de teto alto, um refeitório hexagonal).',
-    '2) 2 a 3 objetos físicos de cenário (mobília, maquinário, destroços, pertences etc.) fundidos com 1 dado sensorial ancorado a um desses objetos — proibido "lista de compras" (ex: "Há uma mesa. O ar cheira a mofo. Há duas portas."); entrelace os requisitos, com o dado sensorial emanando do objeto.',
-    '3) Âncoras visuais das saídas distribuídas pela estrutura neutra do ambiente: a opção inteira (verbo + núcleo, sem citar destino, sem adjetivo decorativo) DEVE estar visivelmente descrita no texto da sala atual — nunca crie uma opção sem âncora visual.',
-    '4) O momento: um dado concreto sobre o estado atual do mundo ou do corpo — visto, ouvido ou sentido agora — que o jogador ainda não sabia e que muda como ele lê o que vem depois.',
-
-    
-    '',
-    'REGRAS PARA CENAS E DILEMAS (ARQUITETO DE CENAS)',
-    'Sua função é criar cenas memoráveis e dilemas perigosos — com tensão real, perigos implacáveis (físicos ou psicológicos), escolhas difíceis e consequências assimétricas. Contudo, o tom deve ser sutil, misterioso e atmosférico: evite terror explícito e sustos baratos. A ameaça deve ser velada, ambígua e gradual — o desconforto vem do estranhamento, das implicações morais e da erosão silenciosa da certeza.',
-    '',
-    'Selecione aleatoriamente 2-3 salas para receber uma cena. As demais não têm cena.',
-    '',
-    'ÂNCORA LÉXICA E ESTRUTURA DE DILEMAS:',
-    '- texto_evento (3–4 frases) descreve a cena e no máximo, indica UMA ação que leva ao dilema-pai (ex: "Se desejar, você pode examinar a pena"). PROIBIDO usar "ou" no texto_evento para listar alternativas — as demais escolhas entram só nas ramificações do pai.',
-    '- dilemas contém 1 ou 2 objetos. Cada objeto é pai com ramificacoes de 2 a 3, ou resolução direta sem ramificacoes. O pai com ramificações termina com "Você pode A, B ou C." — A, B, C são as opcao_texto das ramificações, na ordem do array, em minúscula, e nada além delas (nenhuma opção só em prosa). Escreva as ramificações antes dessa frase.',
-    '- CENA NUNCA ENTREGA ITEM. Cena só consome (requer_item, remove_item) ou ativa estado (define_estado). Para plantar item solto no chão de uma sala, use "itens_adicionados" (id da sala → [ids]); cada item exige uma entrada correspondente em "descricoes_itens_ativos" — uma frase visual ancorada a um móvel já descrito no texto_logico, anexada ao texto da sala apenas enquanto o item estiver no chão.',
-    '',
-    'TOM DO ENCONTRO — escolha um:',
-    '- MISTÉRIO: descreva o NPC, mecanismo ou fenômeno com foco na estranheza e no enigmático. Não deve ser monstruoso ou abertamente hostil — seu comportamento é ritualístico, indiferente ou mecânico, e seu perigo não está em ataques físicos diretos.',
-    '- MORAL/EXISTENCIAL: não precisa haver hostilidade direta — pode ser uma descoberta ou escolha custosa que implica o jogador num dilema. A tensão vem de uma verdade impessoal ou algo misterioso no mundo. PROIBIDO coincidências biográficas imediatas — nada de "sua caligrafia", "sua data", "seu nome", "alguém igual a você".',
-    '',
-    'REGRAS DO CAMPO destino_id (VIOLAÇÃO = FALHA CRÍTICA):',
-    '- Ramificações com destino_id apontam para saídas de AVANÇO da sala (número maior) — nunca para trás. Podem convergir para a mesma saída, dividir-se entre duas, ou ficar todas em null.',
-    '- destino_id: null libera o avanço normal — a cena coexiste com a passagem. destino_id preenchido bloqueia aquela saída até a cena resolver.',
-    '- Ao preencher destino_id numa ramificação, o motor BLOQUEIA a locomoção comum que levava àquele destino até o jogador passar pelo dilema — o dilema vira a única via de avanço para aquele destino específico.',
-    '- Pai com ramificações: ponte de 2–3 frases, sem encerrar o dilema, sem destino_id. Resolução direta: encerra o dilema e tem destino_id.',
-    '',
-    'CUSTOS E EFEITOS DAS RAMIFICAÇÕES:',
-    '- Custo (dano > 0) é de um único tipo por ramificação — nunca misture: (a) físico: 1 frase concreta e específica sobre o efeito no corpo; (b) moral/existencial: 1 frase concreta e específica sobre o efeito na mente, nos afetos ou na alma. Em ambos, PROIBIDO escrever "perde X de energia" — descreva o efeito real. Sem custo, dano = 0.',
-    '- Custos assimétricos são encorajados: ramificação A = dano 0; B = dano 5; C = dano 12 — todas com destino_id preenchido (mesmo destino ou destinos diferentes). O jogador não pode avaliar só pelo dano. Dano 0 é permitido e significa ausência de custo imediato, não ausência de consequência.',
-    '- Proibições: opções sem destino_id usando verbos de locomoção (sair, subir, atravessar); resultado_texto do pai descrevendo ação que o jogador não executou na opcao_texto; dilemas que se resolvam com pura força física.',
-    '- Efeito persistente opcional por ramificação, além do custo (cena NUNCA entrega item — só ativa estado ou consome):',
-    '  · define_estado (string|null): nome do estado global ativado; gravado no doc do jogador, visível em qualquer sala da zona.',
-    '  · requer_item (string|null): id do item exigido — a ramificação só executa se o jogador o tiver (use quando a ação exige o item em mãos).',
-    '  · remove_item (string|null): id do item removido do inventário (a ação consome o item).',
-    '- condicao_estado: nome do estado global exigido (string) ou null. Se preenchido, a ramificação só executa se o estado já estiver ativo (criado por cena ou puzzle de zona anterior). Use quando a ação depende de uma descoberta anterior. Cada entrada de estados_pendentes no cabeçalho traz "gesto" — o ato concreto que o jogador não praticou e que criaria a pendência.',
-    '- mensagem_condicao_falha: texto mostrado quando condicao_estado não está ativo (string) ou null. Nomeie o GESTO concreto da pendência herdada, não o estado abstrato — nunca "algo falta". Ex: "Você não tocou a sineta de bronze rachada daquela sala. A pedra aguarda um som que nunca veio."',
-    '- Custo e efeito não se correlacionam: uma ramificação com dano 0 pode definir um estado importante; uma com dano alto pode não definir nada. A escolha nunca deve ser guiada só pelo dano.',
-    '- Pelo menos uma ramificação por zona deve definir um estado consumido por puzzle da mesma zona. Todo define_estado precisa ter usos_possiveis ou interacoes_ambiente correspondente (condicao_estado = nome do estado).',
+    '1) Identidade do espaço: a primeira frase nomeia o tipo do recinto (biblioteca, cozinha, oficina, dormitório) e o ancora com forma, tamanho ou proporção.',
+    '2) 2 a 3 objetos físicos de cenário (mobília, maquinário, destroços, pertences etc.) fundidos com 1 dado sensorial ancorado a um desses objetos — proibido "lista de compras".',
+    '3) Âncoras visuais das saídas distribuídas pela estrutura neutra do ambiente: a opção inteira (verbo + núcleo, sem citar destino) DEVE estar visivelmente descrita no texto da sala atual — nunca crie uma opção sem âncora visual.',
+    '4) O momento: um dado concreto sobre o estado atual do mundo ou do corpo — visto, ouvido ou sentido agora — que o jogador ainda não sabia.',
     '',
     'ITENS PLANTADOS NO CHÃO (itens_adicionados):',
-    '- Para deixar um ou mais itens soltos numa sala (clicáveis, sem cena), registre o id da sala em "itens_adicionados" e cada id em "itens_novos".',
-    '- Cada item plantado exige uma frase em "descricoes_itens_ativos": uma única frase visual, ancorada a um móvel/objeto-portador JÁ existente no texto_logico. Ela é anexada ao texto da sala apenas enquanto o item estiver no chão.',
-    '- Use com moderação: no máximo 1 a 2 itens plantados por zona. Não descreva o item no texto_logico — a descrição vive em "descricoes_itens_ativos".',
-    '',
-    'PENDÊNCIAS HERDADAS (do input):',
-    '- O cabeçalho pode incluir itens_legado_pendentes e estados_pendentes com idade em zonas.',
-    '- FRESCO (0–1 zona): uso opcional. MADURO (2–3): uso preferencial. VENCIDO (4+): prioridade máxima.',
-    '- Cenas podem consumir pendências herdadas via requer_item (item) e condicao_estado (estado) nas ramificações. Prefira MADURO/VENCIDO quando couber na narrativa.',
-    '- NUNCA crie estado novo se uma pendência herdada equivalente puder ocupar o mesmo papel.',
+    '- Para deixar itens soltos numa sala (clicáveis, sem cena), registre o id da sala em "itens_adicionados" e cada id em "itens_novos".',
+    '- Cada item plantado exige uma frase em "descricoes_itens_ativos": uma única frase visual, ancorada a um móvel/objeto-portador JÁ existente no texto_logico.',
+    '- Use com moderação: no máximo 1 a 2 itens plantados por zona.',
     '',
     'CONTRATO DE SAÍDA — ESTRUTURA EXATA DO JSON',
 '{',
@@ -1819,21 +1800,21 @@ const DEFAULT_BODIES = {
 '    "[SALA_INICIAL]": {',
 '      "local_fisico": "Nome da sala inicial",',
 '      "saidas": [',
-'        {"destino": [SALA_INICIAL + 1], "acao": "Verbo + objeto físico DESTA sala — nunca o nome da sala-destino (ex: Subir a escada de madeira)"},',
-'        {"destino": [SALA_INICIAL + 2], "acao": "Mesma regra: verbo + objeto físico local"}',
+'        {"destino": [SALA_INICIAL + 1], "acao": "Verbo + objeto físico DESTA sala"},',
+'        {"destino": [SALA_INICIAL + 2], "acao": "Mesma regra"}',
 '      ]',
 '    },',
 '    "[SALA_FINAL]": {',
 '      "local_fisico": "Nome da fronteira",',
 '      "saidas": [',
-'        {"destino": [SALA_ANTERIOR], "acao": "Ação de retorno à sala precedente"},',
+'        {"destino": [SALA_ANTERIOR], "acao": "Ação de retorno"},',
 '        {"destino": [SALA_FINAL + 1], "acao": "Ação para a próxima zona"}',
 '      ],',
 '      "para_proxima_zona": true',
 '    }',
 '  },',
 '  "salas": {',
-'    "[SALA_INICIAL]": { "texto_logico": "Descrição direta do ambiente (sem âncora)." },',
+'    "[SALA_INICIAL]": { "texto_logico": "Descrição direta do ambiente." },',
 '    "[SALA_FINAL]": { "texto_logico": "Ao avançar para este local, você [...]." }',
 '  },',
 '  "itens_novos": {',
@@ -1843,34 +1824,94 @@ const DEFAULT_BODIES = {
 '    "7": ["id_do_item"]',
 '  },',
 '  "descricoes_itens_ativos": {',
-'    "7": { "id_do_item": "Uma única frase visual, ancorada a um móvel/objeto-portador JÁ existente no texto_logico. Esta frase será anexada automaticamente ao texto da sala APENAS enquanto o item estiver no chão. NÃO repita nenhum substantivo de cima." }',
-'  },',
-'  "cenas": [',
-'    {',
-'      "sala_id": [UM ID DE SALA INTERMEDIÁRIA QUALQUER],',
-'      "titulo": "Título da cena",',
-'      "texto_evento": "Evento situacional com as palavras-chave das ações já plantadas no texto (3–4 frases).",',
-'      "dilemas": [',
-'        {',
-'          "opcao_texto": "Verbo Objeto",',
-'          "ramificacoes": [',
-'            {"opcao_texto": "...", "resultado_texto": "...", "dano": 0, "destino_id": null},',
-'            {"opcao_texto": "...", "resultado_texto": "...", "dano": 14, "destino_id": null}',
-'          ],',
-'          "resultado_texto": "...",',
-'          "dano": 0,',
-'          "destino_id": null',
-'        }',
-'      ]',
-'    }',
-'  ]',
+'    "7": { "id_do_item": "Uma única frase visual, ancorada a um móvel/objeto-portador JÁ existente no texto_logico." }',
+'  }',
 '}',
     'Validação do contrato:',
-    '- cenas contém apenas as 2–3 salas escolhidas; as demais não têm entrada. dilemas é sempre um array, mesmo com um único objeto (o pai).',
-    '- Cada ramificação tem destino_id preenchido (apontando para avanço) ou null. dano inteiro entre 0 e 15.',
-    '- opcao_texto: ações de 2 a 4 palavras, com verbo forte + objeto/alvo, obrigatoriamente ancoradas nas palavras exatas do texto lido.',
-    '- Nenhuma ramificação tem adiciona_item: cena só consome (requer_item, remove_item) ou ativa estado (define_estado).',
-    '- OBRIGATÓRIO: todo id em "itens_adicionados" tem entrada correspondente em "itens_novos" e em "descricoes_itens_ativos". Nunca declare item que não seja plantado no chão por "itens_adicionados".',
+    '- Entregue as 10 salas entre SALA_INICIAL e SALA_FINAL, todas com entrada em "plano" e em "salas".',
+    '- Cada sala em "plano" tem "saidas" (1–3 para intermediárias; o HUB obrigatoriamente com 3 saídas de avanço).',
+    '- OBRIGATÓRIO: todo id em "itens_adicionados" tem entrada correspondente em "itens_novos" e em "descricoes_itens_ativos".',
+    '- NÃO inclua o campo "cenas" na resposta — este prompt gera apenas a topologia.',
+    '',
+    'IMPORTANTE',
+    '- Entregue APENAS o JSON, sem texto adicional, sem erros de sintaxe.',
+    '- Ações de ida e volta simétricas (ex: "Subir" ↔ "Descer").',
+    '- Crie o JSON contendo rigorosamente as 10 salas compreendidas entre a SALA_INICIAL e SALA_FINAL.'
+  ].join('\n'),
+
+  cenas: [
+    'Você é o Arquiteto de Cenas do jogo textual de sobrevivência e mistério "Centelha". Gere um único JSON com cenas e dilemas para uma zona de 10 salas JÁ EXISTENTE (a topologia — plano + texto_logico das salas — foi gerada em um prompt separado e você a recebe no chat). Delimitação: [SALA_INICIAL] a [SALA_FINAL].',
+    '',
+    'Sua função é criar cenas memoráveis e dilemas perigosos — com tensão real, perigos implacáveis (físicos ou psicológicos), escolhas difíceis e consequências assimétricas. Contudo, o tom deve ser sutil, misterioso e atmosférico: evite terror explícito e sustos baratos. A ameaça deve ser velada, ambígua e gradual — o desconforto vem do estranhamento, das implicações morais e da erosão silenciosa da certeza.',
+    '',
+    'Selecione aleatoriamente 2-3 salas para receber uma cena. As demais não têm cena. NUNCA escolha a sala [SALA_INICIAL] nem a [SALA_FINAL].',
+    '',
+    'ÂNCORA LÉXICA E ESTRUTURA DE DILEMAS:',
+    '- texto_evento (3–4 frases) descreve a cena e no máximo, indica UMA ação que leva ao dilema-pai (ex: "Se desejar, você pode examinar a pena"). PROIBIDO usar "ou" no texto_evento para listar alternativas — as demais escolhas entram só nas ramificações do pai.',
+    '- dilemas contém 1 ou 2 objetos. Cada objeto é pai com ramificacoes de 2 a 3, ou resolução direta sem ramificacoes. O pai com ramificações termina com "Você pode A, B ou C." — A, B, C são as opcao_texto das ramificações, na ordem do array, em minúscula, e nada além delas. Escreva as ramificações antes dessa frase.',
+    '- CENA NUNCA ENTREGA ITEM. Cena só consome (requer_item, remove_item) ou ativa estado (define_estado).',
+    '',
+    'TOM DO ENCONTRO — escolha um:',
+    '- MISTÉRIO: descreva o NPC, mecanismo ou fenômeno com foco na estranheza e no enigmático. Não deve ser monstruoso ou abertamente hostil — seu comportamento é ritualístico, indiferente ou mecânico, e seu perigo não está em ataques físicos diretos.',
+    '- MORAL/EXISTENCIAL: não precisa haver hostilidade direta — pode ser uma descoberta ou escolha custosa que implica o jogador num dilema. A tensão vem de uma verdade impessoal ou algo misterioso no mundo. PROIBIDO coincidências biográficas imediatas — nada de "sua caligrafia", "sua data", "seu nome".',
+    '',
+    'REGRAS DO CAMPO destino_id (VIOLAÇÃO = FALHA CRÍTICA):',
+    '- Ramificações com destino_id apontam para saídas de AVANÇO da sala (número maior) — nunca para trás. Podem convergir para a mesma saída, dividir-se entre duas, ou ficar todas em null.',
+    '- destino_id DEVE corresponder a uma saída EXISTENTE da sala no plano da topologia recebida no chat.',
+    '- destino_id: null libera o avanço normal. destino_id preenchido bloqueia aquela saída até a cena resolver.',
+    '- Ao preencher destino_id numa ramificação, o motor BLOQUEIA a locomoção comum que levava àquele destino até o jogador passar pelo dilema.',
+    '- Pai com ramificações: ponte de 2–3 frases, sem encerrar o dilema, sem destino_id. Resolução direta: encerra o dilema e tem destino_id.',
+    '',
+    'CUSTOS E EFEITOS DAS RAMIFICAÇÕES:',
+    '- Custo (dano > 0) é de um único tipo por ramificação — nunca misture: (a) físico: 1 frase concreta sobre o efeito no corpo; (b) moral/existencial: 1 frase concreta sobre o efeito na mente, nos afetos ou na alma. PROIBIDO escrever "perde X de energia" — descreva o efeito real. Sem custo, dano = 0.',
+    '- Custos assimétricos são encorajados: ramificação A = dano 0; B = dano 5; C = dano 12 — todas com destino_id preenchido. Dano 0 é permitido e significa ausência de custo imediato.',
+    '- Proibições: opções sem destino_id usando verbos de locomoção; resultado_texto do pai descrevendo ação que o jogador não executou na opcao_texto; dilemas que se resolvam com pura força física.',
+    '- Efeito persistente opcional por ramificação, além do custo (cena NUNCA entrega item):',
+    '  · define_estado (string|null): nome do estado global ativado.',
+    '  · requer_item (string|null): id do item exigido — a ramificação só executa se o jogador o tiver.',
+    '  · remove_item (string|null): id do item removido do inventário.',
+    '- condicao_estado: nome do estado global exigido (string) ou null. Cada entrada de estados_pendentes no cabeçalho traz "gesto" — o ato concreto que o jogador não praticou.',
+    '- mensagem_condicao_falha: texto mostrado quando condicao_estado não está ativo (string) ou null. Nomeie o GESTO concreto da pendência herdada, não o estado abstrato — nunca "algo falta".',
+    '- Custo e efeito não se correlacionam.',
+    '- Pelo menos uma ramificação por zona deve definir um estado consumido por puzzle da mesma zona.',
+    '',
+    'PENDÊNCIAS HERDADAS (do input):',
+    '- O cabeçalho pode incluir itens_legado_pendentes e estados_pendentes com idade em zonas.',
+    '- FRESCO (0–1 zona): uso opcional. MADURO (2–3): uso preferencial. VENCIDO (4+): prioridade máxima.',
+    '- Cenas podem consumir pendências herdadas via requer_item (item) e condicao_estado (estado) nas ramificações.',
+    '- NUNCA crie estado novo se uma pendência herdada equivalente puder ocupar o mesmo papel.',
+    '',
+    'CONTRATO DE SAÍDA — ESTRUTURA EXATA DO JSON',
+    '{',
+    '  "cenas": [',
+    '    {',
+    '      "sala_id": [UM ID DE SALA INTERMEDIÁRIA DA ZONA ATUAL],',
+    '      "titulo": "Título da cena",',
+    '      "texto_evento": "Evento situacional com as palavras-chave das ações já plantadas no texto (3–4 frases).",',
+    '      "dilemas": [',
+    '        {',
+    '          "opcao_texto": "Verbo Objeto",',
+    '          "ramificacoes": [',
+    '            {"opcao_texto": "...", "resultado_texto": "...", "dano": 0, "destino_id": null},',
+    '            {"opcao_texto": "...", "resultado_texto": "...", "dano": 14, "destino_id": null}',
+    '          ],',
+    '          "resultado_texto": "...",',
+    '          "dano": 0,',
+    '          "destino_id": null',
+    '        }',
+    '      ]',
+    '    }',
+    '  ]',
+    '}',
+    '',
+    'Validação do contrato:',
+    '- "cenas" contém apenas as 2–3 salas escolhidas.',
+    '- NUNCA escolha a sala [SALA_INICIAL] nem a [SALA_FINAL].',
+    '- dilemas é sempre um array, mesmo com um único objeto (o pai).',
+    '- Cada ramificação tem destino_id preenchido (apontando para uma saída de AVANÇO existente da sala, conforme a topologia recebida) ou null. dano inteiro entre 0 e 15.',
+    '- opcao_texto: ações de 2 a 4 palavras, com verbo forte + objeto/alvo, obrigatoriamente ancoradas nas palavras exatas do texto_logico da sala escolhida.',
+    '- Nenhuma ramificação tem adiciona_item: cena só consome ou ativa estado.',
+    '- NÃO inclua os campos "plano", "salas", "itens_novos", "itens_adicionados" nem "descricoes_itens_ativos" — este prompt gera apenas as cenas.',
     '',
  'EXEMPLO DE CENA MORAL/EXISTENCIAL VÁLIDA',
 '{',
@@ -1909,9 +1950,8 @@ const DEFAULT_BODIES = {
 '',
     'IMPORTANTE',
     '- Entregue APENAS o JSON, sem texto adicional, sem erros de sintaxe.',
-    '- Ações de ida e volta simétricas (ex: "Subir" ↔ "Descer").',
-    '- texto_logico e texto_evento são complementares, sem repetir informação física.',
-    '- Crie o JSON contendo rigorosamente as 10 salas compreendidas entre a SALA_INICIAL e SALA_FINAL.'
+    '- texto_evento é complementar ao texto_logico das salas, sem repetir informação física.',
+    '- Use os IDs de sala EXATOS da topologia recebida no chat.'
   ].join('\n'),
   
   perigos: [
@@ -1936,9 +1976,9 @@ const DEFAULT_BODIES = {
     '- "nova_opcao": uma ação de EXAME que surge na sala (não navega para lugar nenhum). A opcao_texto cita o objeto com as PALAVRAS EXATAS do texto_logico daquela sala — sem paráfrase, sem sinônimo, sem material ou adjetivo inventado. Texto diz "mesa de trabalho", opção é "Examinar a mesa de trabalho" — nunca "Examinar o balcão de nogueira". Se nenhum objeto do texto servir, use "interceptor".',
     '',
 'INTERCEPTOR — três campos extras obrigatórios:',
-'· "elemento_fisico_curto": 2–4 palavras com artigo, objeto físico JÁ presente no texto_logico que denuncia o perigo (ex: "o corrimão", "a água parada"). Adjacente ao trajeto — nunca o mesmo objeto do opcao_texto. Só gera a frase de exame; o objeto continua integrado à prosa normalmente.',
-'· "revelacao": 1 frase vista ao examinar esse objeto. Revela algo concreto e observável sobre o perigo (uma marca, um som, um cheiro, um detalhe físico) — SEM prescrever solução, SEM nomear a ação segura (ex: "Os arranhões são irregulares, feitos por unhas. Como se o corpo soubesse onde a lâmina ia passar.").',
-'· "sucesso_texto": 1–2 frases descrevendo o MESMO perigo de resultado_texto se manifestando e sendo evitado. Funciona tanto para quem examinou (antecipação) quanto para quem não examinou (acaso) — sem verbo de percepção ("você percebe", "você nota"), sem citar exame, atributo ou sorte.',
+'· "elemento_fisico_curto": 2–4 palavras com artigo, objeto físico JÁ presente no texto_logico que denuncia o perigo (ex: "o corrimão", "a água parada"). Adjacente ao trajeto — nunca o mesmo objeto do opcao_texto.',
+'· "revelacao": 1 frase vista ao examinar esse objeto. Revela algo concreto e observável sobre o perigo — SEM prescrever solução, SEM nomear a ação segura.',
+'· "sucesso_texto": 1–2 frases descrevendo o MESMO perigo de resultado_texto se manifestando e sendo evitado. Sem verbo de percepção, sem citar exame, atributo ou sorte.',
 '',
 'Para "nova_opcao", estes três campos são omitidos.',
     '',
@@ -1959,7 +1999,7 @@ const DEFAULT_BODIES = {
     '',
     'REGRAS DE ESCRITA',
     '- resultado_texto: 2–3 frases, mostradas SÓ quando o perigo é disparado. Escreva a consequência concretamente — nunca "você perde X de energia" (isso é calculado à parte a partir do dano).',
-    '- PROIBIDO clichês de lore: bilhetes, diários, cartas, sussurros nas paredes, sombras que falam. A ameaça é física/arquitetônica/corporal, não um dispositivo narrativo batido.',
+    '- PROIBIDO clichês de lore: bilhetes, diários, cartas, sussurros nas paredes, sombras que falam. A ameaça é física/arquitetônica/corporal.',
     '- tipo_resultado: "perigo" (consequência é primariamente física) ou "revelacao" (consequência é primariamente informação/lore sobre o lugar).',
     '- Sem ramificações: cada perigo é um evento único, dispara ou não dispara — não é uma escolha bifurcada como as cenas.',
     '',
@@ -2019,7 +2059,7 @@ const DEFAULT_BODIES = {
     '- NUNCA descarte item ou flag. Pendências não somem — se não cabem nesta zona, ficam mais velhas.',
     '- Cada pendência herdada traz "gesto": o ato concreto que o jogador NÃO praticou (ex: "tocar a sineta de bronze rachada"). Em mensagem_falha/condicao_falha, nomeie esse gesto — nunca o id da flag, nunca "algo falta".',
     '- NUNCA force encaixe incoerente. Se o item é um machado de guerra e a zona é um cartório, o machado vira peso de porta, arma ritual, objeto de leilão — a adaptação é sempre possível.',
-    '- O TEMA DA ZONA SE CURVA ÀS PENDÊNCIAS VENCIDAS, não o contrário. Se a fila tem uma pena dourada vencida, uma das salas se torna um santuário, um cartório angelical, um leilão de relíquias — o tema se adapta.',
+    '- O TEMA DA ZONA SE CURVA ÀS PENDÊNCIAS VENCIDAS, não o contrário.',
     '- Consumir item = usos_possiveis com item_id igual ao id e remove_item: true. Consumir flag = usos_possiveis OU interacoes_ambiente com condicao_estado igual ao nome da flag.',
     '- Se a pendência não for consumida nesta zona, NÃO a inclua em itens_legado_consumidos nem em estados_pendentes_consumidos.',
     '- Consumo em lote (dois itens num mesmo uso) NÃO é permitido por enquanto — um usos_possiveis por pendência.',
@@ -2028,7 +2068,7 @@ const DEFAULT_BODIES = {
     '1. Nunca recebem puzzle: a sala [SALA_INICIAL] (entrada), e qualquer sala que já tenha cena ou perigo (pelo sala_id nos arrays cenas/perigos).',
     '2. Das salas restantes (intermediárias e vazias), escolha aleatoriamente de 1 a 3 salas para receber um puzzle (use todas se houver menos de 3 disponíveis). Se um puzzle tiver destino, a sala escolhida precisa atender a regra 4 — senão, escolha outra sala ou use recompensa sem destino (adiciona_item ou define_estado).',
     '3. Uma sala jamais terá mais de um puzzle.',
-    '4. SEQUESTRO DE ROTA: se algum usos_possiveis tiver destino, a sala DEVE ter exatamente UMA saída de avanço (saída com destino > sala_id). Esse destino é o mesmo da saída original. No texto_modificado, substitua a âncora visual dessa saída (porta/escada/corredor) pela descrição do obstáculo. Registre o destino em saidas_sequestradas.',
+    '4. SEQUESTRO DE ROTA: se algum usos_possiveis tiver destino, a sala DEVE ter exatamente UMA saída de avanço (saída com destino > sala_id). Esse destino é o mesmo da saída original. No texto_modificado, substitua a âncora visual dessa saída pela descrição do obstáculo. Registre o destino em saidas_sequestradas.',
     '---',
     'DERIVAÇÃO ORGÂNICA (REGRA ABSOLUTA)',
     'Terminantemente PROIBIDO criar puzzles genéricos de "chave e fechadura", "cartão de acesso", "alavancas simples" ou "solventes".',
@@ -2079,7 +2119,7 @@ const DEFAULT_BODIES = {
     '  },',
     '  "descricoes_itens_ativos": {',
     '    "[ID_SALA_ONDE_FICA_O_ITEM]": {',
-    '      "[id_do_item_criado]": "Uma única frase visual, ancorada a um móvel/objeto-portador JÁ existente no texto_logico. Esta frase será anexada automaticamente ao texto da sala APENAS enquanto o item estiver no chão. NÃO repita nenhum substantivo de cima."',
+    '      "[id_do_item_criado]": "Uma única frase visual, ancorada a um móvel/objeto-portador JÁ existente no texto_logico."',
     '    }',
     '  },',
     '  "itens_adicionados": {',
@@ -2311,19 +2351,8 @@ function carregarCorpoPersistido(key) {
   return DEFAULT_BODIES[key] || '';
 }
 
-function salvarCorpoPersistido(key, corpo) {
-  // persistência removida — corpo sempre vem de DEFAULT_BODIES
-}
-
-function extrairCorpo(texto) {
-  if (!texto) return '';
-  const idx = texto.indexOf('\n\n');
-  if (idx < 0) return texto;
-  return texto.slice(idx + 2);
-}
-
 /* ============================================================
-   FIX 4 + FIX 6 — Cota calculada e ordenação por idade
+   Cota calculada e ordenação por idade
    ============================================================ */
 function calcularCota(ctx) {
   const itensLegado = ctx.itens_legado_pendentes || [];
@@ -2357,11 +2386,22 @@ function calcularCota(ctx) {
 function construirCabecalho(key, n, ctx) {
   const start = (n - 1) * SALAS_POR_ZONA + 1;
   const end = n * SALAS_POR_ZONA;
-  const linhas = [
-    'CONFIGURAÇÕES DA ZONA',
-    `SALA_INICIAL = ${start}`,
-    `SALA_FINAL   = ${end}`
-  ];
+  const linhas = [];
+
+  // Aviso de bloqueio para cenas sem topologia (5A)
+  if (key === 'cenas') {
+    const mapa = mapaMundoGlobal();
+    let presentes = 0;
+    for (let i = start; i <= end; i++) if (mapa[String(i)]) presentes++;
+    if (presentes < SALAS_POR_ZONA) {
+      linhas.push(`⚠️ ATENÇÃO: A topologia desta zona ainda não foi importada (${presentes}/${SALAS_POR_ZONA} salas). Importe-a primeiro — sem o texto_logico das salas o LLM não consegue encaixar as cenas.`);
+      linhas.push('');
+    }
+  }
+
+  linhas.push('CONFIGURAÇÕES DA ZONA');
+  linhas.push(`SALA_INICIAL = ${start}`);
+  linhas.push(`SALA_FINAL   = ${end}`);
   const tema = getTemaZona(n);
   if (tema) linhas.push(`TEMA         = ${tema}`);
   if (_aventura.tom) linhas.push(`TOM          = ${_aventura.tom}`);
@@ -2394,7 +2434,7 @@ function construirCabecalho(key, n, ctx) {
     linhas.push(`estados_pendentes: ${JSON.stringify(estadosOrd)}`);
     const cota = calcularCota(ctx);
     if (cota) linhas.push(`COTA_OBRIGATÓRIA: ${cota}`);
-  } else if (key === 'topologia') {
+  } else if (key === 'topologia' || key === 'cenas') {
     const itens = [...(ctx.itens_legado_pendentes || [])].sort((a, b) => (b.idade ?? 0) - (a.idade ?? 0));
     if (itens.length > 0) {
       linhas.push(`itens_legado_pendentes: ${JSON.stringify(itens)}`);
@@ -2420,7 +2460,6 @@ function construirCabecalho(key, n, ctx) {
     }
   }
 
-  // NOVO — lista negra de itens já existentes
   const todosItens = Object.keys(_lastDados?.itens_novos || {});
   if (todosItens.length > 0) {
     linhas.push(`itens_já_existentes (NÃO recriar): ${JSON.stringify(todosItens)}`);
@@ -2437,7 +2476,7 @@ function construirResumo(key, n, ctx) {
   linhas.push(`SALA_INICIAL = ${start}`);
   linhas.push(`SALA_FINAL   = ${end}`);
 
-    if (key === 'topologia') {
+    if (key === 'topologia' || key === 'cenas') {
     const itens = [...(ctx.itens_legado_pendentes || [])].sort((a, b) => (b.idade ?? 0) - (a.idade ?? 0));
     if (itens.length > 0) {
       const items = itens.map(i =>
@@ -2546,20 +2585,12 @@ function coletarSalasOcupadas(mapaMundo, n) {
 
 /* ============================================================
    TRANCAS — portas trancadas cuja chave vem de uma zona posterior.
-   A tranca vive na própria saída: op.tranca = { item, pendente? }.
-   Sem prompt novo: o plano sai do mapa; o arquiteto de monstros só
-   recebe uma linha no cabeçalho (CHAVE_OBRIGATORIA).
-   Por zona (sorteio com semente do mapa): nada / porta ADIADA (chave só
-   em zona futura) / porta DENTRO da zona / ENTREGA da chave de uma porta
-   adiada (≥2 zonas atrás; cada zona de espera aumenta a chance): a porta
-   passa a abrir para a zona n+1 e a saída da zona n é selada.
    ============================================================ */
 const RE_PORTA = /\b(porta|portão|portao|grade|alçapão|alcapao|cancela|comporta|escotilha)\b/i;
 const MSG_SELADA = 'A passagem não cede. O caminho deve ser outro.';
 const zonaDaSala = s => Math.ceil(Number(s) / SALAS_POR_ZONA);
 const ehPassagem = o => !!(o && o.destino && !o.arquiteto && !o.dilema && !o.interceptor_arquiteto);
 
-// salas alcançáveis de t só "para frente" dentro da zona (segue saídas sequestradas por puzzle)
 function ramo(mapa, t, fim) {
   const v = new Set([t]), f = [t];
   while (f.length) {
@@ -2570,7 +2601,6 @@ function ramo(mapa, t, fim) {
   return v;
 }
 
-// sala sem nada que a tranca possa prender ou que dependa de outra coisa
 function seguro(sala) {
   return !!sala && !sala.cena_aplicada && !sala.burst && !sala.bloqueio && !sala.puzzle_status
     && !(sala.itens || []).length && !(sala.usos_possiveis || []).length
@@ -2579,7 +2609,6 @@ function seguro(sala) {
     && !(sala.opcoes || []).some(o => o.arquiteto || o.dilema || o.interceptor_arquiteto);
 }
 
-// a saída da zona só pode reabrir por ela mesma (nada de puzzle/dilema levando adiante)
 function fronteiraLimpa(sala, fim) {
   if (!sala || Object.keys(sala.saidas_sequestradas || {}).length) return false;
   const adiante = x => x && x.destino > fim;
@@ -2602,7 +2631,6 @@ function candidatasTranca(mapa, n) {
     if (!ehPassagem(op) || t <= s || t > fim || t === ini) continue;
     const r = ramo(mapa, t, fim);
     if (r.has(fim) || [...r].some(x => !seguro(mapa[String(x)]))) continue;
-    // acesso único: nenhuma sala fora do ramo (além desta saída) leva a ele
     let unico = true;
     for (let x = ini; x <= fim && unico; x++) {
       if (r.has(x)) continue;
@@ -2615,7 +2643,6 @@ function candidatasTranca(mapa, n) {
   return out;
 }
 
-// sorteio com semente tirada do texto da própria zona: varia entre aventuras, mas cabeçalho e importação (mesmo mapa) sorteiam igual
 function rngZona(mapa, n) {
   let h = 2166136261;
   for (let i = (n - 1) * SALAS_POR_ZONA + 1; i <= n * SALAS_POR_ZONA; i++) {
@@ -2625,16 +2652,15 @@ function rngZona(mapa, n) {
   return () => { h = (h + 0x6D2B79F5) | 0; let t = Math.imul(h ^ (h >>> 15), 1 | h); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
 }
 
-// plano da zona n — ciclo, frequência e sala sorteados (semente estável: recalcular dá o mesmo plano)
 function planoTranca(mapa, n) {
   const ini = (n - 1) * SALAS_POR_ZONA + 1, fim = n * SALAS_POR_ZONA;
   for (let i = ini; i <= fim; i++) if (!mapa[String(i)]) return null;
-  for (let i = ini; i <= fim; i++) if ((mapa[String(i)].opcoes || []).some(o => o.tranca)) return null; // já aplicado
+  for (let i = ini; i <= fim; i++) if ((mapa[String(i)].opcoes || []).some(o => o.tranca)) return null;
   const rnd = rngZona(mapa, n), pick = a => a[Math.floor(rnd() * a.length)];
   const pends = trancasPendentes(mapa);
   const maduras = pends.filter(p => zonaDaSala(p.sala) <= n - 2);
   if (maduras.length && n < TOTAL_ZONAS && fronteiraLimpa(mapa[String(fim)], fim)) {
-    const idade = n - zonaDaSala(maduras[0].sala); // quanto mais velha a pendência, mais provável (≥4 zonas: certo)
+    const idade = n - zonaDaSala(maduras[0].sala);
     if (rnd() < Math.min(1, 0.4 + 0.2 * (idade - 2))) return { modo: 'entrega', ...pick(maduras) };
   }
   const r = rnd();
@@ -2646,7 +2672,6 @@ function planoTranca(mapa, n) {
   return { modo, sala: c.sala, op: c.op, id: `chave_s${c.sala}`, ramo: c.ramo };
 }
 
-// aplica o plano no mapa em memória e registra os caminhos alterados no updatePayload
 function aplicarTranca(mapa, plano, n, pay) {
   const fim = n * SALAS_POR_ZONA, toca = id => { pay[`mapaMundo.${id}.opcoes`] = mapa[String(id)].opcoes; };
   if (plano.modo !== 'entrega') {
@@ -2659,7 +2684,7 @@ function aplicarTranca(mapa, plano, n, pay) {
   toca(plano.sala);
   for (const o of mapa[String(fim)].opcoes) if (ehPassagem(o) && o.destino === fim + 1) { o.destino = null; o.tranca = { item: '', msg: MSG_SELADA }; }
   toca(fim);
-  const ent = mapa[String(fim + 1)]; // zona seguinte já importada? ganha o caminho de volta
+  const ent = mapa[String(fim + 1)];
   if (ent && ligarVolta(ent, plano.sala)) toca(fim + 1);
 }
 
@@ -2690,10 +2715,9 @@ function coletarSalasElegiveisMonstros(mapaMundo, n) {
     elegiveis.push(i);
   }
   const plano = planoTranca(mapaMundo, n);
-  return plano?.modo === 'adiada' ? elegiveis.filter(i => !plano.ramo.has(i)) : elegiveis; // ramo da porta adiada será órfão
+  return plano?.modo === 'adiada' ? elegiveis.filter(i => !plano.ramo.has(i)) : elegiveis;
 }
 
-// FIX 6 — agora devolve idade calculada
 function coletarItensLegado(dados, zonaAtual) {
   const obj = (dados && dados.itens_legado) || {};
   return Object.values(obj)
@@ -2744,7 +2768,7 @@ function coletarItensDeCena(mapaMundo, n) {
   return out;
 }
 
-  function coletarItensDeCenaPendentes(dados, zonaAtual) {
+function coletarItensDeCenaPendentes(dados, zonaAtual) {
   const meta = dados.itensDeCenaMeta || {};
   const out = [];
   for (const [itemId, info] of Object.entries(meta)) {
@@ -2752,24 +2776,22 @@ function coletarItensDeCena(mapaMundo, n) {
     const zonaCriacao = info.zona_criacao ?? 1;
     const idade = Math.max(0, zonaAtual - zonaCriacao);
     out.push({
-  id: itemId,
-  zona_criacao: zonaCriacao,
-  idade,
-  sala_origem: info.sala_origem ?? null,
-  gesto: info.gesto || null
-});
+      id: itemId,
+      zona_criacao: zonaCriacao,
+      idade,
+      sala_origem: info.sala_origem ?? null,
+      gesto: info.gesto || null
+    });
   }
   out.sort((a, b) => b.idade - a.idade);
   return out;
 }
 
-// FIX 6 — unificado e ordenado por idade DESC
 function coletarEstadosPendentes(dados, zonaAtual) {
   const meta = dados.playerFlagsMeta || {};
   const out = [];
   for (const [flag, info] of Object.entries(meta)) {
     if (!info || info.consumida === true) continue;
-    // (linha "if (info.ativa !== true) continue;" foi removida)
     const zonaCriacao = info.zona_criacao ?? 1;
     const idade = Math.max(0, zonaAtual - zonaCriacao);
     out.push({ id: flag, zona_criacao: zonaCriacao, idade, gesto: info.gesto || null });
@@ -2832,12 +2854,26 @@ function atualizarStatusPromptsZona(n) {
   const { salasOk, cenas, perigos, start, end } = analisarZona(mapaMundo, n);
 
   const elTop = $('statusTopologia');
+  const elCen = $('statusCenas');
   const elPer = $('statusPerigos');
   const elPuz = $('statusPuzzles');
   const elMons = $('statusMonstros');
 
   if (elTop) {
-    elTop.innerHTML = `<span class="ok">✅ pronta · zona ${n} (salas ${start}–${end})</span>`;
+    if (salasOk === SALAS_POR_ZONA) {
+      elTop.innerHTML = `<span class="ok">✅ pronta · zona ${n} (salas ${start}–${end})</span>`;
+    } else {
+      elTop.innerHTML = `<span class="warn">⏳ ${salasOk}/${SALAS_POR_ZONA} salas importadas</span>`;
+    }
+  }
+  if (elCen) {
+    if (salasOk < SALAS_POR_ZONA) {
+      elCen.innerHTML = `<span class="warn">🔒 bloqueada · importe a topologia primeiro (${salasOk}/${SALAS_POR_ZONA})</span>`;
+    } else if (cenas === 0) {
+      elCen.innerHTML = `<span class="warn">⏳ aguardando cenas da zona ${n}</span>`;
+    } else {
+      elCen.innerHTML = `<span class="ok">✅ pronta · ${cenas} cena(s) aplicada(s)</span>`;
+    }
   }
   if (elPer) {
     if (salasOk === SALAS_POR_ZONA) {
@@ -2874,7 +2910,7 @@ function atualizarStatusPromptsZona(n) {
 
 function setStatusPromptsNoLogin() {
   const msg = `<span class="warn">⏳ aguardando login</span>`;
-  for (const elId of ['statusTopologia', 'statusPerigos', 'statusPuzzles', 'statusMonstros']) {
+  for (const elId of ['statusTopologia', 'statusCenas', 'statusPerigos', 'statusPuzzles', 'statusMonstros']) {
     const el = $(elId);
     if (el) el.innerHTML = msg;
   }
@@ -2937,7 +2973,7 @@ function copiarPrompt(key) {
     .catch(e => toast('Erro ao copiar: ' + e.message, 'err'));
 }
 
-  function restaurarPromptPadrao(key) {
+function restaurarPromptPadrao(key) {
   aplicarPrompts();
   toast(`Prompt "${key}" restaurado ao padrão.`, 'ok');
 }
@@ -3286,7 +3322,6 @@ const CAMPOS_PRESERVADOS_DA_SALA = [
   'saidas_sequestradas'
 ];
 
-
 function preservarCamposRuntime(salaNova, salaExistente) {
   if (!salaExistente) return salaNova;
   for (const campo of CAMPOS_PRESERVADOS_DA_SALA) {
@@ -3301,28 +3336,25 @@ function preservarCamposRuntime(salaNova, salaExistente) {
   return salaNova;
 }
 
-/* ============================================================
-   FIX 1 — recalcular consumida a partir do mapaMundo
-   ============================================================ */
 function recalcularConsumidas(mapaMundo, playerFlagsMeta, itensDeCenaMeta, itensLegado) {
   const estadosConsumidos = new Set();
   const itensConsumidos = new Set();
 
   for (const sala of Object.values(mapaMundo || {})) {
     for (const uso of (sala.usos_possiveis || [])) {
-  if (uso && uso.condicao_estado) estadosConsumidos.add(uso.condicao_estado);
-  if (uso && uso.item_id) itensConsumidos.add(uso.item_id);
-}
+      if (uso && uso.condicao_estado) estadosConsumidos.add(uso.condicao_estado);
+      if (uso && uso.item_id) itensConsumidos.add(uso.item_id);
+    }
     for (const inter of (sala.interacoes_ambiente || [])) {
       if (inter && inter.condicao_estado) estadosConsumidos.add(inter.condicao_estado);
     }
-        for (const op of (sala.opcoes || [])) {
+    for (const op of (sala.opcoes || [])) {
       if (!op.ramificacoes) continue;
       for (const ram of op.ramificacoes) {
-  if (ram && ram.remove_item) itensConsumidos.add(ram.remove_item);
-  if (ram && ram.requer_item) itensConsumidos.add(ram.requer_item);   // ← NOVO
-  if (ram && ram.condicao_estado) estadosConsumidos.add(ram.condicao_estado);
-}
+        if (ram && ram.remove_item) itensConsumidos.add(ram.remove_item);
+        if (ram && ram.requer_item) itensConsumidos.add(ram.requer_item);
+        if (ram && ram.condicao_estado) estadosConsumidos.add(ram.condicao_estado);
+      }
     }
   }
 
@@ -3349,9 +3381,7 @@ function recalcularConsumidas(mapaMundo, playerFlagsMeta, itensDeCenaMeta, itens
     itens_legado: novoLegado
   };
 }
-/* ============================================================
-   FIX 2 — validarOrfaos como gate (retorna lista e respeita intencionais)
-   ============================================================ */
+
 function validarOrfaos(mapaMundo, opts) {
   const {
     playerFlagsMeta = {},
@@ -3420,8 +3450,253 @@ function validarOrfaos(mapaMundo, opts) {
 
   return orfaos;
 }
+
 /* ============================================================
-   IMPORTAÇÃO — zona completa
+   IMPORTAÇÃO — apenas topologia (plano + salas, sem cenas)
+   ============================================================ */
+async function importarTopologia(dados, uid, logFn) {
+  const plano = dados.plano || {};
+  const salas = dados.salas || {};
+  const mapaMundo = {};
+  for (const [id, sala] of Object.entries(salas)) {
+    const planoItem = plano[id];
+    if (!planoItem) continue;
+    const opcoes = (planoItem.saidas || []).map(s => ({
+      texto: s.acao || s.texto || 'Avançar',
+      destino: s.destino
+    }));
+    mapaMundo[id] = {
+      nome: planoItem.local_fisico || `Sala ${id}`,
+      texto_logico: sala.texto_logico || '',
+      opcoes: opcoes
+    };
+  }
+
+  if (dados.itens_adicionados) {
+    for (const [salaId, ids] of Object.entries(dados.itens_adicionados)) {
+      if (!mapaMundo[salaId]) { logFn(`⚠️ itens_adicionados: sala ${salaId} não existe.`, 'warn'); continue; }
+      if (!Array.isArray(mapaMundo[salaId].itens)) mapaMundo[salaId].itens = [];
+      for (const id of ids) {
+        if (!mapaMundo[salaId].itens.includes(id)) mapaMundo[salaId].itens.push(id);
+      }
+      logFn(`📦 Sala ${salaId}: itens plantados → ${ids.join(', ')}`, 'info');
+    }
+  }
+
+  if (Object.keys(mapaMundo).length === 0) {
+    throw new Error('Nenhuma sala válida foi montada (faltam "plano" e/ou "salas"). NADA foi salvo.');
+  }
+
+  const docRef = db.collection('players').doc(uid);
+  const docSnap = await docRef.get();
+  const dadosAtuais = docSnap.data() || {};
+  const mapaMundoAtual = dadosAtuais.mapaMundo || {};
+  const updatePayload = {};
+
+  for (const [id, salaNova] of Object.entries(mapaMundo)) {
+    const salaExistente = mapaMundoAtual[id];
+    preservarCamposRuntime(salaNova, salaExistente);
+    updatePayload[`mapaMundo.${id}`] = salaNova;
+    if (salaExistente) {
+      const campos = CAMPOS_PRESERVADOS_DA_SALA.filter(c => salaExistente[c] !== undefined);
+      if (campos.length > 0) logFn(`🔄 Sala ${id}: preservados do Firestore → ${campos.join(', ')}`, 'info');
+    }
+  }
+
+  for (const [id, sala] of Object.entries(mapaMundo)) {
+    if (id === '1' || (Number(id) - 1) % SALAS_POR_ZONA !== 0) continue;
+    const origem = Object.entries(mapaMundoAtual).find(([, o]) => (o.opcoes || []).some(x => x.destino === Number(id)));
+    if (origem && ligarVolta(sala, Number(origem[0]))) {
+      updatePayload[`mapaMundo.${id}`] = sala;
+      logFn(`↩️ Sala ${id}: caminho de volta → sala ${origem[0]}`, 'info');
+    }
+  }
+
+  if (mapaMundo["1"] && !dadosAtuais.zonaAtual) {
+    updatePayload["zonaAtual"] = 1;
+    updatePayload["secaoAtualId"] = "1";
+  }
+
+  if (dados.itens_novos && Object.keys(dados.itens_novos).length > 0) {
+    const atuais = dadosAtuais.itens_novos || {};
+    const normalizados = {};
+    for (const [id, def] of Object.entries(dados.itens_novos)) {
+      normalizados[id] = {
+        ...def,
+        image: def.image || ITEM_DINAMICO_IMAGE,
+        thumbnailImage: def.thumbnailImage || ITEM_DINAMICO_THUMB
+      };
+    }
+    updatePayload['itens_novos'] = { ...atuais, ...normalizados };
+    logFn(`🧩 ${Object.keys(dados.itens_novos).length} item(ns) novos registrados.`, 'ok');
+  }
+
+  const legadoBase = { ...(dadosAtuais.itens_legado || {}) };
+  const itensPlantados = new Set();
+  for (const arr of Object.values(dados.itens_adicionados || {})) {
+    for (const id of arr) itensPlantados.add(id);
+  }
+  if (dados.itens_novos) {
+    for (const id of Object.keys(dados.itens_novos)) {
+      if (!itensPlantados.has(id)) {
+        logFn(`⚠️ Item "${id}" declarado em itens_novos mas não plantado em nenhuma sala — ignorado.`, 'warn');
+        continue;
+      }
+      if (!legadoBase[id]) {
+        legadoBase[id] = { id, sala_plantio: null, zona_criacao: _promptZona };
+        logFn(`🎁 Item novo → registrado como legado em espera: ${id}`, 'info');
+      }
+    }
+  }
+  updatePayload['itens_legado'] = legadoBase;
+
+  await docRef.update(updatePayload);
+  return { mapaMundo };
+}
+
+/* ============================================================
+   IMPORTAÇÃO — apenas cenas (aplicadas sobre topologia existente)
+   ============================================================ */
+async function importarCenas(dados, uid, logFn, zonaAtual) {
+  const cenas = Array.isArray(dados.cenas) ? dados.cenas : [];
+  if (cenas.length === 0) throw new Error('Array "cenas" vazio.');
+
+  const docRef = db.collection('players').doc(uid);
+  const docSnap = await docRef.get();
+  if (!docSnap.exists) throw new Error('Nenhum documento do jogador. Importe a topologia primeiro.');
+  const dadosAtuais = docSnap.data() || {};
+  const mapaMundoAtual = dadosAtuais.mapaMundo || {};
+
+  const start = (zonaAtual - 1) * SALAS_POR_ZONA + 1;
+  const end = zonaAtual * SALAS_POR_ZONA;
+  let salasPresentes = 0;
+  for (let i = start; i <= end; i++) if (mapaMundoAtual[String(i)]) salasPresentes++;
+  if (salasPresentes < SALAS_POR_ZONA) {
+    throw new Error(`Importe a topologia da zona ${zonaAtual} primeiro (${salasPresentes}/${SALAS_POR_ZONA} salas presentes). Nada foi salvo.`);
+  }
+
+  const mapaTrabalho = JSON.parse(JSON.stringify(mapaMundoAtual));
+  const salasTocadas = new Set();
+  const flagsParaRegistrar = [];
+  const itensCenaParaRegistrar = [];
+
+  for (const cena of cenas) {
+    const salaId = String(cena.sala_id);
+    const sala = mapaTrabalho[salaId];
+    if (!sala) { logFn(`⚠️ Cena para sala ${salaId} ignorada: sala não existe no mapa atual.`, 'warn'); continue; }
+    salasTocadas.add(salaId);
+    const titulo = (cena.titulo || 'Evento Inesperado').trim();
+    const textoEvento = expurgarViciosIA((cena.texto_evento || '').trim());
+    if (!textoEvento) { logFn(`⚠️ Cena "${titulo}" (sala ${salaId}) sem texto_evento — ignorada.`, 'warn'); continue; }
+    let textoBase = expurgarViciosIA((sala.texto_logico || '').trim());
+    sala.texto_logico = `${textoBase.replace(/[.\s]+$/, '')}. ${textoEvento}`;
+    sala.cena_titulo = titulo;
+    sala.cena_aplicada = true;
+    if (!sala.opcoes) sala.opcoes = [];
+    const salaIdNum = parseInt(salaId);
+    const destinosValidos = new Set(
+      (sala.opcoes || []).filter(o => o.destino && !o.arquiteto && o.destino > salaIdNum).map(o => String(o.destino))
+    );
+    const dilemas = Array.isArray(cena.dilemas) ? cena.dilemas : [];
+    for (const dilema of dilemas) {
+      const opcaoTexto = (dilema.opcao_texto || 'Observar com cautela').trim();
+      const narrativaBruta = expurgarViciosIA((dilema.resultado_texto || '').trim());
+      if (!narrativaBruta) continue;
+      const dano = typeof dilema.dano === 'number' ? Math.min(20, Math.max(0, Math.round(dilema.dano))) : 0;
+      const resultadoTexto = dano > 0
+        ? `${narrativaBruta.replace(/[.\s]+$/, '')}. Você perde ${dano} de energia.`
+        : narrativaBruta;
+      const destinoRaw = dilema.destino_id ? String(dilema.destino_id) : null;
+      const destinoValidado = (destinoRaw && destinosValidos.has(destinoRaw)) ? parseInt(destinoRaw) : null;
+      const ramsRaw = Array.isArray(dilema.ramificacoes) ? dilema.ramificacoes : [];
+      const ramificacoes = ramsRaw
+        .filter(r => r.opcao_texto && r.resultado_texto)
+        .map(r => {
+          const rDano = typeof r.dano === 'number' ? Math.min(20, Math.max(0, Math.round(r.dano))) : 0;
+          const rDestinoRaw = r.destino_id ? String(r.destino_id) : null;
+          const rDestino = (rDestinoRaw && destinosValidos.has(rDestinoRaw)) ? parseInt(rDestinoRaw) : null;
+          const rNarrativaLimpa = expurgarViciosIA((r.resultado_texto || '').trim());
+          return {
+            opcao_texto: r.opcao_texto.trim(),
+            resultado_texto: rDano > 0
+              ? `${rNarrativaLimpa.replace(/[.\s]+$/, '')}. Você perde ${rDano} de energia.`
+              : rNarrativaLimpa,
+            dano: rDano,
+            destino: rDestino,
+            define_estado: r.define_estado || null,
+            adiciona_item: r.adiciona_item || null,
+            remove_item: r.remove_item || null,
+            requer_item: r.requer_item || null,
+            condicao_estado: r.condicao_estado || null,
+            mensagem_condicao_falha: r.mensagem_condicao_falha || null
+          };
+        });
+      sala.opcoes.push({
+        texto: opcaoTexto,
+        arquiteto: true,
+        dilema: true,
+        resultado_texto: resultadoTexto,
+        dano,
+        destino: destinoValidado,
+        disparado: false,
+        ramificacoes: ramificacoes.length > 0 ? ramificacoes : null
+      });
+
+      for (const ram of ramificacoes) {
+        if (ram.define_estado) flagsParaRegistrar.push({ id: ram.define_estado, gesto: ram.opcao_texto });
+        if (ram.adiciona_item) itensCenaParaRegistrar.push({ id: ram.adiciona_item, sala_origem: salaIdNum, gesto: ram.opcao_texto });
+      }
+    }
+    logFn(`🎭 "${titulo}" → Sala ${salaId} | texto_evento injetado, ${dilemas.length} dilema(s) processado(s)`, 'ok');
+  }
+
+  if (salasTocadas.size === 0) throw new Error('Nenhuma cena válida foi aplicada. NADA foi salvo.');
+
+  const metaFlags = { ...(dadosAtuais.playerFlagsMeta || {}) };
+  for (const flag of flagsParaRegistrar) {
+    if (!metaFlags[flag.id]) {
+      metaFlags[flag.id] = {
+        zona_criacao: _promptZona,
+        consumida: false,
+        ativa: false,
+        gesto: flag.gesto || null
+      };
+    }
+  }
+  const metaItens = { ...(dadosAtuais.itensDeCenaMeta || {}) };
+  for (const { id, sala_origem, gesto } of itensCenaParaRegistrar) {
+    if (!metaItens[id]) {
+      metaItens[id] = {
+        zona_criacao: _promptZona,
+        consumida: false,
+        sala_origem,
+        gesto: gesto || null
+      };
+    }
+  }
+
+  const recalc = recalcularConsumidas(
+    mapaTrabalho,
+    metaFlags,
+    metaItens,
+    dadosAtuais.itens_legado || {}
+  );
+
+  const updatePayload = {};
+  for (const salaId of salasTocadas) {
+    updatePayload[`mapaMundo.${salaId}`] = mapaTrabalho[salaId];
+    logFn(`🔄 Sala ${salaId}: cena aplicada.`, 'info');
+  }
+  updatePayload['playerFlagsMeta'] = recalc.playerFlagsMeta;
+  updatePayload['itensDeCenaMeta'] = recalc.itensDeCenaMeta;
+  updatePayload['itens_legado'] = recalc.itens_legado;
+
+  await docRef.update(updatePayload);
+  return { salas: [...salasTocadas] };
+}
+
+/* ============================================================
+   IMPORTAÇÃO — zona completa (legacy: topologia + cenas juntas)
    ============================================================ */
 async function importarParaFirestore(dados, uid, logFn) {
   const plano = dados.plano || {};
@@ -3442,7 +3717,7 @@ async function importarParaFirestore(dados, uid, logFn) {
     };
   }
 
-    const itensPorDilema = new Set();
+  const itensPorDilema = new Set();
   for (const cena of cenas) for (const d of (cena.dilemas || [])) for (const r of (d.ramificacoes || []))
     if (r.adiciona_item) itensPorDilema.add(r.adiciona_item);
 
@@ -3496,7 +3771,7 @@ async function importarParaFirestore(dados, uid, logFn) {
           const rDestinoRaw = r.destino_id ? String(r.destino_id) : null;
           const rDestino = (rDestinoRaw && destinosValidos.has(rDestinoRaw)) ? parseInt(rDestinoRaw) : null;
           const rNarrativaLimpa = expurgarViciosIA((r.resultado_texto || '').trim());
-                    return {
+          return {
             opcao_texto: r.opcao_texto.trim(),
             resultado_texto: rDano > 0
               ? `${rNarrativaLimpa.replace(/[.\s]+$/, '')}. Você perde ${rDano} de energia.`
@@ -3523,9 +3798,9 @@ async function importarParaFirestore(dados, uid, logFn) {
       });
 
       for (const ram of ramificacoes) {
-  if (ram.define_estado) flagsParaRegistrar.push({ id: ram.define_estado, gesto: ram.opcao_texto });
-  if (ram.adiciona_item) itensCenaParaRegistrar.push({ id: ram.adiciona_item, sala_origem: salaIdNum, gesto: ram.opcao_texto });
-}
+        if (ram.define_estado) flagsParaRegistrar.push({ id: ram.define_estado, gesto: ram.opcao_texto });
+        if (ram.adiciona_item) itensCenaParaRegistrar.push({ id: ram.adiciona_item, sala_origem: salaIdNum, gesto: ram.opcao_texto });
+      }
     }
     logFn(`🎭 "${titulo}" → Sala ${salaId} | texto_evento injetado, ${dilemas.length} dilema(s) processado(s)`, 'ok');
   }
@@ -3546,19 +3821,19 @@ async function importarParaFirestore(dados, uid, logFn) {
     const tipoResultado = perigo.tipo_resultado || 'neutro';
     if (!sala.opcoes) sala.opcoes = [];
     if (perigo.tipo === 'nova_opcao') {
-  const itemRecompensa = perigo.adiciona_item || null;
-  if (itemRecompensa && !DROPS_PERMITIDOS_LISTA.includes(itemRecompensa)) {
-    throw new Error(`Perigo na sala ${salaId}: "adiciona_item" fora de DROPS_PERMITIDOS ("${itemRecompensa}"). Nada foi salvo.`);
-  }
-  const novaOpcao = {
-    texto: perigo.opcao_texto || 'Examinar anomalia',
-    arquiteto: true, resultado_texto: resultadoTexto, dano,
-    tipo_resultado: tipoResultado, disparado: false
-  };
-  if (itemRecompensa) novaOpcao.adiciona_item = itemRecompensa;
-  sala.opcoes.push(novaOpcao);
-  logFn(`☠️ Nova opção "${perigo.opcao_texto}" (dano ${dano})${itemRecompensa ? ' · recompensa: ' + itemRecompensa : ''} → Sala ${salaId}`, 'ok');
-} else if (perigo.tipo === 'interceptor') {
+      const itemRecompensa = perigo.adiciona_item || null;
+      if (itemRecompensa && !DROPS_PERMITIDOS_LISTA.includes(itemRecompensa)) {
+        throw new Error(`Perigo na sala ${salaId}: "adiciona_item" fora de DROPS_PERMITIDOS ("${itemRecompensa}"). Nada foi salvo.`);
+      }
+      const novaOpcao = {
+        texto: perigo.opcao_texto || 'Examinar anomalia',
+        arquiteto: true, resultado_texto: resultadoTexto, dano,
+        tipo_resultado: tipoResultado, disparado: false
+      };
+      if (itemRecompensa) novaOpcao.adiciona_item = itemRecompensa;
+      sala.opcoes.push(novaOpcao);
+      logFn(`☠️ Nova opção "${perigo.opcao_texto}" (dano ${dano})${itemRecompensa ? ' · recompensa: ' + itemRecompensa : ''} → Sala ${salaId}`, 'ok');
+    } else if (perigo.tipo === 'interceptor') {
       let estadoObservado = null;
       if (perigo.revelacao && perigo.elemento_fisico_curto) {
         const salaIdNum = parseInt(salaId);
@@ -3568,17 +3843,17 @@ async function importarParaFirestore(dados, uid, logFn) {
         if (!sala.interacoes_ambiente) sala.interacoes_ambiente = [];
         const jaExiste = sala.interacoes_ambiente.some(i => i.define_estado === estadoObservado);
         if (!jaExiste) {
-         sala.interacoes_ambiente.push({
-  frase_gatilho: `examinar ${perigo.elemento_fisico_curto}`,
-  resposta: perigo.revelacao,
-  define_estado: estadoObservado,
-  origem: 'perigo_interceptor'
-});
+          sala.interacoes_ambiente.push({
+            frase_gatilho: `examinar ${perigo.elemento_fisico_curto}`,
+            resposta: perigo.revelacao,
+            define_estado: estadoObservado,
+            origem: 'perigo_interceptor'
+          });
         }
       }
       const opcaoAlvo = sala.opcoes.find(o => o.texto === perigo.opcao_texto && o.destino && !o.arquiteto);
       if (opcaoAlvo) {
-                const interceptorData = {
+        const interceptorData = {
           resultado_texto: resultadoTexto,
           dano,
           tipo_resultado: tipoResultado,
@@ -3613,29 +3888,29 @@ async function importarParaFirestore(dados, uid, logFn) {
   if (flagsParaRegistrar.length > 0) {
     if (!dadosAtuais.playerFlagsMeta) dadosAtuais.playerFlagsMeta = {};
     for (const flag of flagsParaRegistrar) {
-  if (!dadosAtuais.playerFlagsMeta[flag.id]) {
-    dadosAtuais.playerFlagsMeta[flag.id] = {
-      zona_criacao: _promptZona,
-      consumida: false,
-      ativa: false,
-      gesto: flag.gesto || null
-    };
-  }
-}
+      if (!dadosAtuais.playerFlagsMeta[flag.id]) {
+        dadosAtuais.playerFlagsMeta[flag.id] = {
+          zona_criacao: _promptZona,
+          consumida: false,
+          ativa: false,
+          gesto: flag.gesto || null
+        };
+      }
+    }
   }
 
   if (itensCenaParaRegistrar.length > 0) {
     if (!dadosAtuais.itensDeCenaMeta) dadosAtuais.itensDeCenaMeta = {};
     for (const { id, sala_origem, gesto } of itensCenaParaRegistrar) {
-  if (!dadosAtuais.itensDeCenaMeta[id]) {
-    dadosAtuais.itensDeCenaMeta[id] = {
-      zona_criacao: _promptZona,
-      consumida: false,
-      sala_origem,
-      gesto: gesto || null
-    };
-  }
-}
+      if (!dadosAtuais.itensDeCenaMeta[id]) {
+        dadosAtuais.itensDeCenaMeta[id] = {
+          zona_criacao: _promptZona,
+          consumida: false,
+          sala_origem,
+          gesto: gesto || null
+        };
+      }
+    }
   }
 
   for (const [id, salaNova] of Object.entries(mapaMundo)) {
@@ -3648,7 +3923,6 @@ async function importarParaFirestore(dados, uid, logFn) {
     }
   }
 
-  // Entrada de zona (11, 21, ...): sem caminho de volta a zona seria um beco; liga à sala que leva até ela
   for (const [id, sala] of Object.entries(mapaMundo)) {
     if (id === '1' || (Number(id) - 1) % SALAS_POR_ZONA !== 0) continue;
     const origem = Object.entries(mapaMundoAtual).find(([, o]) => (o.opcoes || []).some(x => x.destino === Number(id)));
@@ -3660,50 +3934,46 @@ async function importarParaFirestore(dados, uid, logFn) {
     updatePayload["secaoAtualId"] = "1";
   }
 
- if (dados.itens_novos && Object.keys(dados.itens_novos).length > 0) {
+  if (dados.itens_novos && Object.keys(dados.itens_novos).length > 0) {
     const atuais = dadosAtuais.itens_novos || {};
     const normalizados = {};
     for (const [id, def] of Object.entries(dados.itens_novos)) {
-        normalizados[id] = {
-            ...def,
-            image: def.image || ITEM_DINAMICO_IMAGE,
-            thumbnailImage: def.thumbnailImage || ITEM_DINAMICO_THUMB
-        };
+      normalizados[id] = {
+        ...def,
+        image: def.image || ITEM_DINAMICO_IMAGE,
+        thumbnailImage: def.thumbnailImage || ITEM_DINAMICO_THUMB
+      };
     }
     updatePayload['itens_novos'] = { ...atuais, ...normalizados };
-        logFn(`🧩 ${Object.keys(dados.itens_novos).length} item(ns) novos registrados.`, 'ok');
-}
+    logFn(`🧩 ${Object.keys(dados.itens_novos).length} item(ns) novos registrados.`, 'ok');
+  }
 
-// NOVO — todo item novo entra automaticamente na fila de legado
-const legadoBase = { ...(dadosAtuais.itens_legado || {}) };
-
-// Coletar ids efetivamente plantados nesta zona
-const itensPlantados = new Set();
-for (const arr of Object.values(dados.itens_adicionados || {})) {
-  for (const id of arr) itensPlantados.add(id);
-}
-for (const cena of (dados.cenas || [])) {
-  for (const d of (cena.dilemas || [])) {
-    for (const r of (d.ramificacoes || [])) {
-      if (r.adiciona_item) itensPlantados.add(r.adiciona_item);
+  const legadoBase = { ...(dadosAtuais.itens_legado || {}) };
+  const itensPlantados = new Set();
+  for (const arr of Object.values(dados.itens_adicionados || {})) {
+    for (const id of arr) itensPlantados.add(id);
+  }
+  for (const cena of (dados.cenas || [])) {
+    for (const d of (cena.dilemas || [])) {
+      for (const r of (d.ramificacoes || [])) {
+        if (r.adiciona_item) itensPlantados.add(r.adiciona_item);
+      }
     }
   }
-}
-
-if (dados.itens_novos) {
-  for (const id of Object.keys(dados.itens_novos)) {
-    if (!itensPlantados.has(id)) {
-      logFn(`⚠️ Item "${id}" declarado em itens_novos mas não plantado em nenhuma sala — ignorado.`, 'warn');
-      continue;
-    }
-    if (!legadoBase[id]) {
-      legadoBase[id] = { id, sala_plantio: null, zona_criacao: _promptZona };
-      logFn(`🎁 Item novo → registrado como legado em espera: ${id}`, 'info');
+  if (dados.itens_novos) {
+    for (const id of Object.keys(dados.itens_novos)) {
+      if (!itensPlantados.has(id)) {
+        logFn(`⚠️ Item "${id}" declarado em itens_novos mas não plantado em nenhuma sala — ignorado.`, 'warn');
+        continue;
+      }
+      if (!legadoBase[id]) {
+        legadoBase[id] = { id, sala_plantio: null, zona_criacao: _promptZona };
+        logFn(`🎁 Item novo → registrado como legado em espera: ${id}`, 'info');
+      }
     }
   }
-}
 
-    const mapaMerge = { ...mapaMundoAtual, ...mapaMundo };
+  const mapaMerge = { ...mapaMundoAtual, ...mapaMundo };
   const recalc = recalcularConsumidas(
     mapaMerge,
     dadosAtuais.playerFlagsMeta || {},
@@ -3717,7 +3987,7 @@ if (dados.itens_novos) {
   await docRef.update(updatePayload);
   return { mapaMundo };
 }
-  
+
 /* ============================================================
    IMPORTAÇÃO — apenas perigos
    ============================================================ */
@@ -3725,27 +3995,26 @@ async function importarPerigosNoMapaAtual(perigos, uid, logFn, dados) {
   const docRef = db.collection('players').doc(uid);
   const docSnap = await docRef.get();
   if (!docSnap.exists) throw new Error('Nenhum documento do jogador encontrado. Importe a zona primeiro.');
-   const dadosAtuais = docSnap.data() || {};
+  const dadosAtuais = docSnap.data() || {};
   const mapaMundoAtual = dadosAtuais.mapaMundo || {};
   const mapaTrabalho = JSON.parse(JSON.stringify(mapaMundoAtual));
   const salasTocadas = new Set();
 
-  // Validação de lote (rejeita tudo se qualquer adiciona_item for inválido)
- const itensNovosPerigo = dados.itens_novos || {};
-const errosLote = [];
-for (const p of perigos) {
-  if (p && p.tipo === 'nova_opcao' && p.adiciona_item) {
-    const ok = DROPS_PERMITIDOS_LISTA.includes(p.adiciona_item) || itensNovosPerigo[p.adiciona_item];
-    if (!ok) errosLote.push(`sala ${p.sala_id}: "adiciona_item" "${p.adiciona_item}" fora de DROPS_PERMITIDOS e não está em itens_novos`);
+  const itensNovosPerigo = dados.itens_novos || {};
+  const errosLote = [];
+  for (const p of perigos) {
+    if (p && p.tipo === 'nova_opcao' && p.adiciona_item) {
+      const ok = DROPS_PERMITIDOS_LISTA.includes(p.adiciona_item) || itensNovosPerigo[p.adiciona_item];
+      if (!ok) errosLote.push(`sala ${p.sala_id}: "adiciona_item" "${p.adiciona_item}" fora de DROPS_PERMITIDOS e não está em itens_novos`);
+    }
   }
-}
   if (errosLote.length > 0) {
     const plantados = new Set();
-for (const p of perigos) if (p.tipo === 'nova_opcao' && p.adiciona_item) plantados.add(p.adiciona_item);
-const orfaos = Object.keys(itensNovosPerigo).filter(id => !plantados.has(id));
-if (orfaos.length > 0) {
-  throw new Error(`itens_novos órfãos no lote de perigos: ${orfaos.join(', ')}. Todo item declarado deve estar em adiciona_item de alguma nova_opcao.`);
-}
+    for (const p of perigos) if (p.tipo === 'nova_opcao' && p.adiciona_item) plantados.add(p.adiciona_item);
+    const orfaos = Object.keys(itensNovosPerigo).filter(id => !plantados.has(id));
+    if (orfaos.length > 0) {
+      throw new Error(`itens_novos órfãos no lote de perigos: ${orfaos.join(', ')}. Todo item declarado deve estar em adiciona_item de alguma nova_opcao.`);
+    }
     for (const e of errosLote) logFn(`❌ ${e}`, 'err');
     throw new Error(`Lote rejeitado — ${errosLote.length} inconsistência(s). Nada foi salvo.`);
   }
@@ -3769,7 +4038,7 @@ if (orfaos.length > 0) {
       : narrativaBruta;
     const tipoResultado = perigo.tipo_resultado || 'neutro';
     if (!salaModificada.opcoes) salaModificada.opcoes = [];
-        if (perigo.tipo === 'nova_opcao') {
+    if (perigo.tipo === 'nova_opcao') {
       const novaOpcao = {
         texto: perigo.opcao_texto || 'Examinar anomalia',
         arquiteto: true, resultado_texto: resultadoTexto, dano,
@@ -3791,16 +4060,16 @@ if (orfaos.length > 0) {
         const jaExiste = salaModificada.interacoes_ambiente.some(i => i.define_estado === estadoObservado);
         if (!jaExiste) {
           salaModificada.interacoes_ambiente.push({
-  frase_gatilho: `examinar ${perigo.elemento_fisico_curto}`,
-  resposta: perigo.revelacao,
-  define_estado: estadoObservado,
-  origem: 'perigo_interceptor'
-});
+            frase_gatilho: `examinar ${perigo.elemento_fisico_curto}`,
+            resposta: perigo.revelacao,
+            define_estado: estadoObservado,
+            origem: 'perigo_interceptor'
+          });
         }
       }
       const alvo = salaModificada.opcoes.find(o => o.texto === perigo.opcao_texto && o.destino && !o.arquiteto);
       if (alvo) {
-                const interceptorData = {
+        const interceptorData = {
           resultado_texto: resultadoTexto,
           dano,
           tipo_resultado: tipoResultado,
@@ -3827,23 +4096,23 @@ if (orfaos.length > 0) {
   }
   if (Object.keys(updatePayload).length === 0) throw new Error('Nenhuma sala válida para atualizar perigos.');
   if (Object.keys(itensNovosPerigo).length > 0) {
-  const atuais = dadosAtuais.itens_novos || {};
-  const normalizados = {};
-  for (const [id, def] of Object.entries(itensNovosPerigo)) {
-    normalizados[id] = {
-      ...def,
-      image: def.image || ITEM_DINAMICO_IMAGE,
-      thumbnailImage: def.thumbnailImage || ITEM_DINAMICO_THUMB
-    };
-  }
-  updatePayload['itens_novos'] = { ...atuais, ...normalizados };
+    const atuais = dadosAtuais.itens_novos || {};
+    const normalizados = {};
+    for (const [id, def] of Object.entries(itensNovosPerigo)) {
+      normalizados[id] = {
+        ...def,
+        image: def.image || ITEM_DINAMICO_IMAGE,
+        thumbnailImage: def.thumbnailImage || ITEM_DINAMICO_THUMB
+      };
+    }
+    updatePayload['itens_novos'] = { ...atuais, ...normalizados };
 
-  const legado = { ...(dadosAtuais.itens_legado || {}) };
-  for (const id of Object.keys(itensNovosPerigo)) {
-    if (!legado[id]) legado[id] = { id, sala_plantio: null, zona_criacao: _promptZona };
+    const legado = { ...(dadosAtuais.itens_legado || {}) };
+    for (const id of Object.keys(itensNovosPerigo)) {
+      if (!legado[id]) legado[id] = { id, sala_plantio: null, zona_criacao: _promptZona };
+    }
+    updatePayload['itens_legado'] = legado;
   }
-  updatePayload['itens_legado'] = legado;
-}
   await docRef.update(updatePayload);
   return { atualizadas: [...salasTocadas] };
 }
@@ -3916,7 +4185,7 @@ async function importarPuzzles(dadosPuzzle, uid, logFn, zonaAtual) {
     }
     updatePayload['itens_novos'] = itensNovosAtuais;
     logFn(`🧩 ${Object.keys(dadosPuzzle.itens_novos).length} novo(s) item(ns) adicionado(s).`, 'ok');
-}
+  }
 
   if (dadosPuzzle.textos_modificados) {
     for (const [salaId, novoTexto] of Object.entries(dadosPuzzle.textos_modificados)) {
@@ -3947,12 +4216,11 @@ async function importarPuzzles(dadosPuzzle, uid, logFn, zonaAtual) {
     }
   }
 
-    if (dadosPuzzle.saidas_sequestradas) {
+  if (dadosPuzzle.saidas_sequestradas) {
     for (const [salaId, destinoId] of Object.entries(dadosPuzzle.saidas_sequestradas)) {
       const sala = obterSala(salaId);
       if (!sala) { logFn(`⚠️ Sala ${salaId} não encontrada para sequestrar rota.`, 'warn'); continue; }
       if (!Array.isArray(sala.opcoes)) continue;
-      // [PATCH] guarda o texto da opção sequestrada antes de removê-la
       if (!sala.saidas_sequestradas) sala.saidas_sequestradas = {};
       const opRemovida = sala.opcoes.find(o => o.destino === destinoId && !o.arquiteto);
       if (opRemovida) {
@@ -3976,7 +4244,7 @@ async function importarPuzzles(dadosPuzzle, uid, logFn, zonaAtual) {
         if (!sala.interacoes_ambiente) sala.interacoes_ambiente = [];
         sala.interacoes_ambiente = sala.interacoes_ambiente.concat(puzzleData.interacoes_ambiente);
       }
-            if (puzzleData.usos_possiveis?.length) {
+      if (puzzleData.usos_possiveis?.length) {
         if (!sala.usos_possiveis) sala.usos_possiveis = [];
         sala.usos_possiveis = sala.usos_possiveis.concat(puzzleData.usos_possiveis);
       }
@@ -3984,7 +4252,6 @@ async function importarPuzzles(dadosPuzzle, uid, logFn, zonaAtual) {
     }
   }
 
-  // [VALIDAÇÃO] Item consumido (remove_item: true) só pode aparecer UMA vez na zona inteira.
   {
     const start = (zonaAtual - 1) * SALAS_POR_ZONA + 1;
     const end = zonaAtual * SALAS_POR_ZONA;
@@ -4005,9 +4272,6 @@ async function importarPuzzles(dadosPuzzle, uid, logFn, zonaAtual) {
     }
   }
 
-     // Auto-registrar como legado qualquer item plantado por puzzle que sobreviveu à zona.
-     // Auto-registrar como legado qualquer item plantado por puzzle que sobreviveu à zona.
-  // Não depende do LLM declarar em itens_legado.
   {
     const itensConsumidos = new Set();
     for (const sala of Object.values(mapaTrabalho)) {
@@ -4036,8 +4300,7 @@ async function importarPuzzles(dadosPuzzle, uid, logFn, zonaAtual) {
       updatePayload['itens_legado'] = itensLegadoAtuais;
     }
   }
-  
-        // Preparar meta com estados novos ANTES de recalcular
+
   const metaParaRecalcular = { ...(dadosAtuais.playerFlagsMeta || {}) };
   for (const sala of Object.values(mapaTrabalho)) {
     for (const uso of (sala.usos_possiveis || [])) {
@@ -4054,7 +4317,6 @@ async function importarPuzzles(dadosPuzzle, uid, logFn, zonaAtual) {
 
   for (const salaId of salasTocadas) updatePayload[`mapaMundo.${salaId}`] = mapaTrabalho[salaId];
 
-    // Recalcular consumidas a partir do mapaTrabalho final (fonte de verdade)
   const recalc = recalcularConsumidas(
     mapaTrabalho,
     metaParaRecalcular,
@@ -4065,7 +4327,6 @@ async function importarPuzzles(dadosPuzzle, uid, logFn, zonaAtual) {
   updatePayload['itensDeCenaMeta'] = recalc.itensDeCenaMeta;
   updatePayload['itens_legado'] = recalc.itens_legado;
 
-  // GATE DE ÓRFÃOS POR IDADE — agora sim, no fim do pipeline da zona
   const orfaosIntencionais = Array.isArray(dadosPuzzle.orfao_intencional) ? dadosPuzzle.orfao_intencional : [];
   const orfaos = validarOrfaos(mapaTrabalho, {
     playerFlagsMeta: recalc.playerFlagsMeta,
@@ -4113,9 +4374,8 @@ async function importarMonstros(dadosMonstros, uid, logFn, zonaAtual) {
   if (lista.length === 0) throw new Error('Array "monstros" vazio.');
 
   const elegiveis = new Set(coletarSalasElegiveisMonstros(mapaMundoAtual, zonaAtual));
-  const plano = planoTranca(mapaMundoAtual, zonaAtual); // porta trancada desta zona (ou null)
+  const plano = planoTranca(mapaMundoAtual, zonaAtual);
 
-  // Validação — rejeita o lote inteiro se algo estiver fora
   const erros = [];
   const salasUsadas = new Set();
   for (const m of lista) {
@@ -4142,27 +4402,27 @@ async function importarMonstros(dadosMonstros, uid, logFn, zonaAtual) {
     }
     salasUsadas.add(m.sala_id);
   }
-const itensSala = Array.isArray(dadosMonstros.itens_sala) ? dadosMonstros.itens_sala : [];
-if (itensSala.length > 2) {
-  erros.push(`itens_sala: máximo 2 entradas (recebido ${itensSala.length})`);
-}
-for (const entrada of itensSala) {
-  if (!entrada || typeof entrada !== 'object') { erros.push('itens_sala: entrada inválida'); continue; }
-  if (typeof entrada.sala !== 'number' || !elegiveis.has(entrada.sala)) {
-    erros.push(`itens_sala: sala ${entrada.sala} não está em SALAS_ELEGIVEIS`); continue;
+  const itensSala = Array.isArray(dadosMonstros.itens_sala) ? dadosMonstros.itens_sala : [];
+  if (itensSala.length > 2) {
+    erros.push(`itens_sala: máximo 2 entradas (recebido ${itensSala.length})`);
   }
-  if (!mapaMundoAtual[String(entrada.sala)]) {
-    erros.push(`itens_sala: sala ${entrada.sala} não existe no Firestore`); continue;
+  for (const entrada of itensSala) {
+    if (!entrada || typeof entrada !== 'object') { erros.push('itens_sala: entrada inválida'); continue; }
+    if (typeof entrada.sala !== 'number' || !elegiveis.has(entrada.sala)) {
+      erros.push(`itens_sala: sala ${entrada.sala} não está em SALAS_ELEGIVEIS`); continue;
+    }
+    if (!mapaMundoAtual[String(entrada.sala)]) {
+      erros.push(`itens_sala: sala ${entrada.sala} não existe no Firestore`); continue;
+    }
+    const itensExistentes = Array.isArray(mapaMundoAtual[String(entrada.sala)]?.itens) ? mapaMundoAtual[String(entrada.sala)].itens.length : 0;
+    if (itensExistentes > 0) {
+      erros.push(`itens_sala: sala ${entrada.sala} já possui ${itensExistentes} item(ns) de outro arquiteto`);
+      continue;
+    }
+    if (!entrada.item || (!DROPS_PERMITIDOS_LISTA.includes(entrada.item) && !itensNovosMonstro[entrada.item])) {
+      erros.push(`itens_sala: item "${entrada.item}" fora de DROPS_PERMITIDOS e ausente de itens_novos`);
+    }
   }
-  const itensExistentes = Array.isArray(mapaMundoAtual[String(entrada.sala)]?.itens) ? mapaMundoAtual[String(entrada.sala)].itens.length : 0;
-  if (itensExistentes > 0) {
-    erros.push(`itens_sala: sala ${entrada.sala} já possui ${itensExistentes} item(ns) de outro arquiteto`);
-    continue;
-  }
-  if (!entrada.item || (!DROPS_PERMITIDOS_LISTA.includes(entrada.item) && !itensNovosMonstro[entrada.item])) {
-  erros.push(`itens_sala: item "${entrada.item}" fora de DROPS_PERMITIDOS e ausente de itens_novos`);
-}
-}
   if (plano && plano.modo !== 'adiada') {
     const e = itensSala.find(x => x?.item === plano.id);
     if (!e || !itensNovosMonstro[plano.id]) erros.push(`CHAVE_OBRIGATORIA "${plano.id}": deve estar em itens_novos E plantada em itens_sala`);
@@ -4174,14 +4434,13 @@ for (const entrada of itensSala) {
     throw new Error(`Lote rejeitado — ${erros.length} inconsistência(s). Nada foi salvo.`);
   }
 
-const plantados = new Set();
+  const plantados = new Set();
   for (const e of itensSala) if (e?.item) plantados.add(e.item);
   const orfaos = Object.keys(itensNovosMonstro).filter(id => !plantados.has(id));
   if (orfaos.length > 0) {
     throw new Error(`itens_novos órfãos: ${orfaos.join(', ')}. Todo item declarado deve estar em itens_sala.`);
   }
-  
-  // Aplicação
+
   const updatePayload = {};
   for (const m of lista) {
     const salaId = String(m.sala_id);
@@ -4210,19 +4469,19 @@ const plantados = new Set();
     logFn(`🐺 ${m.nome} → sala ${m.sala_id} · tier ${m.tier} · ${energiaRolada} energia`, 'ok');
   }
 
-    if (itensSala.length > 0) {
-  const porSala = {};
-  for (const entrada of itensSala) {
-    const sid = String(entrada.sala);
-    (porSala[sid] = porSala[sid] || []).push(entrada.item);
+  if (itensSala.length > 0) {
+    const porSala = {};
+    for (const entrada of itensSala) {
+      const sid = String(entrada.sala);
+      (porSala[sid] = porSala[sid] || []).push(entrada.item);
+    }
+    for (const [salaId, itens] of Object.entries(porSala)) {
+      const existentes = Array.isArray(mapaMundoAtual[salaId]?.itens) ? mapaMundoAtual[salaId].itens : [];
+      const merged = [...new Set([...existentes, ...itens])];
+      updatePayload[`mapaMundo.${salaId}.itens`] = merged;
+      logFn(`📦 ${itens.length} item(ns) → sala ${salaId}: ${itens.join(', ')}`, 'ok');
+    }
   }
-  for (const [salaId, itens] of Object.entries(porSala)) {
-    const existentes = Array.isArray(mapaMundoAtual[salaId]?.itens) ? mapaMundoAtual[salaId].itens : [];
-    const merged = [...new Set([...existentes, ...itens])];
-    updatePayload[`mapaMundo.${salaId}.itens`] = merged;
-    logFn(`📦 ${itens.length} item(ns) → sala ${salaId}: ${itens.join(', ')}`, 'ok');
-  }
-}
 
   if (plano) {
     aplicarTranca(mapaMundoAtual, plano, zonaAtual, updatePayload);
@@ -4259,12 +4518,24 @@ const plantados = new Set();
 function detectarTipo(dados) {
   if (!dados || typeof dados !== 'object') return null;
   if (Array.isArray(dados.monstros)) return 'monstros';
-  const temZona = !!(dados.plano || dados.salas || dados.cenas);
+
+  const temPlano = !!dados.plano;
+  const temSalas = !!dados.salas;
+  const temCenas = Array.isArray(dados.cenas) && dados.cenas.length > 0;
+
+  // Cenas puras: só o array cenas (referenciando salas já importadas)
+  if (temCenas && !temPlano && !temSalas) return 'cenas';
+
+  // Topologia pura: plano+salas sem cenas
+  if (temPlano && temSalas && !temCenas) return 'topologia';
+
+  // Legacy: zona completa (plano+salas+cenas juntas)
+  if (temPlano || temSalas) return 'zona';
+
   const temPerigos = Array.isArray(dados.perigos);
   const temPuzzles = !temPerigos && !!(dados.saidas_sequestradas || dados.itens_novos ||
     dados.textos_modificados || dados.itens_adicionados ||
     dados.descricoes_itens_ativos || dados.puzzles);
-  if (temZona) return 'zona';
   if (temPuzzles) return 'puzzles';
   if (temPerigos) return 'perigos';
   return null;
@@ -4310,7 +4581,14 @@ function atualizarBadge(inputEl, badgeEl) {
     badgeEl.textContent = 'não reconhecido';
     return null;
   }
-  const labels = { zona: 'zona completa', perigos: 'perigos', puzzles: 'puzzles', monstros: 'monstros' };
+  const labels = {
+    topologia: 'topologia',
+    cenas: 'cenas',
+    zona: 'zona completa',
+    perigos: 'perigos',
+    puzzles: 'puzzles',
+    monstros: 'monstros'
+  };
   badgeEl.className = `badge badge-${tipo}`;
   const c = contarDados(dados);
   const chips = [];
@@ -4330,9 +4608,18 @@ function atualizarBadgeEPreview() {
   const info = atualizarBadge($('jsonInput'), $('mainBadge'));
   const preview = $('preview');
   if (!info) { preview.hidden = true; return; }
-  const labels = { zona: 'zona completa', perigos: 'perigos', puzzles: 'puzzles', monstros: 'monstros' };
+  const labels = {
+    topologia: 'topologia',
+    cenas: 'cenas',
+    zona: 'zona completa',
+    perigos: 'perigos',
+    puzzles: 'puzzles',
+    monstros: 'monstros'
+  };
   let acao = '';
-  if (info.tipo === 'zona') acao = 'Substitui o mapaMundo com as salas do JSON (preservando campos de runtime como puzzles, estados e itens).';
+  if (info.tipo === 'topologia') acao = 'Grava plano + salas (texto_logico) no mapaMundo, preservando campos de runtime das salas já existentes. As cenas vêm depois, no prompt separado.';
+  else if (info.tipo === 'cenas') acao = 'Aplica apenas as cenas (dilemas) sobre a topologia já importada. Exige 10/10 salas da zona atual.';
+  else if (info.tipo === 'zona') acao = 'Grava zona completa (topologia + cenas juntas, modo legado).';
   else if (info.tipo === 'perigos') acao = 'Apenas atualiza perigos no mapaMundo existente do Firestore.';
   else if (info.tipo === 'puzzles') acao = 'Aplica puzzles, itens e modificações em salas já existentes.';
   else if (info.tipo === 'monstros') acao = 'Aplica monstros nas salas elegíveis (sem cena e sem puzzle). Salas inelegíveis rejeitam o lote inteiro.';
@@ -4384,20 +4671,16 @@ async function importarJSON() {
     dados.perigos = (dados.perigos || []).concat(dp.perigos);
   }
 
-  const temZona = !!(dados.plano || dados.salas || dados.cenas);
-  const temPerigos = Array.isArray(dados.perigos) && dados.perigos.length > 0;
-  const temPuzzles = !!(dados.saidas_sequestradas || dados.itens_novos || dados.textos_modificados ||
-    dados.itens_adicionados || dados.descricoes_itens_ativos || dados.puzzles);
-  const temMonstros = Array.isArray(dados.monstros) && dados.monstros.length > 0;
-  if (!temZona && !temPerigos && !temPuzzles && !temMonstros) { toast('O JSON não contém zona, perigos, puzzles nem monstros.', 'warn'); return; }
+  const tipo = detectarTipo(dados);
+  if (!tipo) { toast('O JSON não foi reconhecido como topologia, cenas, perigos, puzzles ou monstros.', 'warn'); return; }
 
   const user = firebase.auth().currentUser;
   if (!user) { toast('Nenhum usuário logado. Faça login no jogo primeiro.', 'err'); return; }
 
   const startTime = performance.now();
   const logs = [];
-  const logFn = (msg, tipo = 'info') => {
-    logs.push({ msg, type: tipo });
+  const logFn = (msg, t = 'info') => {
+    logs.push({ msg, type: t });
     renderImportResult({ loading: true, logs });
   };
 
@@ -4407,9 +4690,24 @@ async function importarJSON() {
 
   try {
     logFn(`👤 Usuário: ${user.uid}`, 'info');
+    logFn(`🎯 Tipo detectado: ${tipo}`, 'info');
     let chips = [];
-    if (temZona) {
-      logFn('⏳ Importando zona completa...', 'info');
+    if (tipo === 'topologia') {
+      logFn('⏳ Importando topologia (plano + salas)...', 'info');
+      const r = await importarTopologia(dados, user.uid, logFn);
+      const c = contarDados(dados);
+      chips = [`${Object.keys(r.mapaMundo).length} salas`];
+      if (c.itens_novos) chips.push(`${c.itens_novos} itens novos`);
+      logFn('✅ Topologia importada com sucesso!', 'ok');
+    } else if (tipo === 'cenas') {
+      logFn('🎭 Importando cenas sobre a topologia existente...', 'info');
+      const r = await importarCenas(dados, user.uid, logFn, _promptZona);
+      const c = contarDados(dados);
+      chips = [`${r.salas.length} sala(s) com cena`];
+      if (c.dilemas) chips.push(`${c.dilemas} dilemas`);
+      logFn('✅ Cenas importadas com sucesso!', 'ok');
+    } else if (tipo === 'zona') {
+      logFn('⏳ Importando zona completa (modo legado)...', 'info');
       const r = await importarParaFirestore(dados, user.uid, logFn);
       const c = contarDados(dados);
       chips = [`${Object.keys(r.mapaMundo).length} salas`];
@@ -4417,17 +4715,17 @@ async function importarJSON() {
       if (c.dilemas) chips.push(`${c.dilemas} dilemas`);
       if (c.perigos) chips.push(`${c.perigos} perigos`);
       logFn('✅ Zona importada com sucesso!', 'ok');
-    } else if (temMonstros) {
+    } else if (tipo === 'monstros') {
       logFn('🐺 Importando monstros...', 'info');
       const r = await importarMonstros(dados, user.uid, logFn, _promptZona);
       chips = [`${r.salas.length} sala(s) com monstro`];
       logFn('✅ Monstros importados com sucesso!', 'ok');
-    } else if (temPuzzles && !temPerigos) {
+    } else if (tipo === 'puzzles') {
       logFn('🧩 Importando puzzles...', 'info');
       const r = await importarPuzzles(dados, user.uid, logFn, _promptZona);
       chips = [`${r.atualizadas.length} salas modificadas`];
       logFn('✅ Puzzles importados com sucesso!', 'ok');
-    } else if (temPerigos) {
+    } else if (tipo === 'perigos') {
       logFn('⏳ Atualizando apenas perigos...', 'info');
       const r = await importarPerigosNoMapaAtual(dados.perigos, user.uid, logFn, dados);
       chips = [`${r.atualizadas.length} salas atualizadas`];
@@ -4490,7 +4788,7 @@ function copiarLog() {
 }
 
 /* ============================================================
-   VALIDADOR — accordion + ações
+   VALIDADOR
    ============================================================ */
 function toggleValidator() {
   $('validatorCard').classList.toggle('open');
@@ -4501,7 +4799,7 @@ function toggleImporter() {
   card.classList.toggle('open');
   $('importerToggle').setAttribute('aria-expanded', card.classList.contains('open'));
 }
-  
+
 function copiarDoImportador() {
   const main = $('jsonInput').value;
   if (!main.trim()) { toast('O importador está vazio.', 'warn'); return; }
@@ -4621,13 +4919,18 @@ function rodarValidacao() {
     }
   }
 
-  html += `<h3>Cenas e Dilemas</h3>`;
-  const validacaoCenas = validarCenas(cenas, plano, salaInicio, salaFim);
-  if (validacaoCenas.erros.length === 0 && validacaoCenas.avisos.length === 0) {
-    html += `<div class="vrow ok"><strong>✅</strong><span class="detail">Cenas e dilemas aprovados.</span></div>`;
+  if (cenas.length > 0) {
+    html += `<h3>Cenas e Dilemas</h3>`;
+    const validacaoCenas = validarCenas(cenas, plano, salaInicio, salaFim);
+    if (validacaoCenas.erros.length === 0 && validacaoCenas.avisos.length === 0) {
+      html += `<div class="vrow ok"><strong>✅</strong><span class="detail">Cenas e dilemas aprovados.</span></div>`;
+    } else {
+      for (const err of validacaoCenas.erros) html += `<div class="vrow err"><strong>❌</strong><span class="detail">${escapeHTML(err)}</span></div>`;
+      for (const aviso of validacaoCenas.avisos) html += `<div class="vrow warn"><strong>⚠️</strong><span class="detail">${escapeHTML(aviso)}</span></div>`;
+    }
+    var _validacaoCenas = validacaoCenas;
   } else {
-    for (const err of validacaoCenas.erros) html += `<div class="vrow err"><strong>❌</strong><span class="detail">${escapeHTML(err)}</span></div>`;
-    for (const aviso of validacaoCenas.avisos) html += `<div class="vrow warn"><strong>⚠️</strong><span class="detail">${escapeHTML(aviso)}</span></div>`;
+    var _validacaoCenas = { erros: [], avisos: [] };
   }
 
   const resultadoCorrecao = aplicarCorrecoesCenas(dadosCorrigidos);
@@ -4640,7 +4943,7 @@ function rodarValidacao() {
 
   const houveCorrecaoTotal = houveCorrecaoAncoragem || resultadoCorrecao.modificado;
   const errosTopoFatais = errosTopo.length > 0;
-  const bloqueiaEnvio = validacaoCenas.erros.length > 0 || errosTopoFatais;
+  const bloqueiaEnvio = _validacaoCenas.erros.length > 0 || errosTopoFatais;
 
   html += `<div class="validator-actions">`;
   if (houveCorrecaoTotal) {
@@ -4657,8 +4960,8 @@ function rodarValidacao() {
 
   resultDiv.innerHTML = html;
 
-  const totalErrosCenas = validacaoCenas.erros.length;
-  const totalAvisosCenas = validacaoCenas.avisos.length;
+  const totalErrosCenas = _validacaoCenas.erros.length;
+  const totalAvisosCenas = _validacaoCenas.avisos.length;
   const totalProblemas = errosTopo.length + salasComErro + totalErrosCenas;
 
   statsDiv.hidden = false;
@@ -4742,14 +5045,10 @@ function setupDrops() {
       let rotulo = 'principal';
       try {
         const parsed = JSON.parse(texto);
-        const temZona = parsed && (parsed.plano || parsed.salas || parsed.cenas);
-        const soPerigos = parsed && Array.isArray(parsed.perigos) && !temZona;
-        const soPuzzles = parsed && (parsed.itens_novos || parsed.textos_modificados ||
-          parsed.itens_adicionados || parsed.descricoes_itens_ativos || parsed.puzzles) && !temZona && !soPerigos;
+        const tipo = detectarTipo(parsed);
+        const soPerigos = tipo === 'perigos';
         if (soPerigos && $('jsonInput').value.trim()) { destino = 'perigosInput'; rotulo = 'perigos'; }
-        else if (soPerigos) { destino = 'jsonInput'; rotulo = 'perigos'; }
-        else if (soPuzzles) { destino = 'jsonInput'; rotulo = 'puzzles'; }
-        else if (temZona) { destino = 'jsonInput'; rotulo = 'zona'; }
+        else if (tipo) { destino = 'jsonInput'; rotulo = tipo; }
       } catch (_) {}
       $(destino).value = texto;
       if (destino === 'jsonInput') {
@@ -4803,7 +5102,7 @@ function agendarAutoValidate() {
 }
 
 /* ============================================================
-   MIRROR — análise do mapaMundo
+   MIRROR
    ============================================================ */
 function salaEstaVazia(sala) {
   if (!sala) return false;
@@ -4858,7 +5157,7 @@ function analisarMapaMundo(mapaMundo, itens_novos) {
       result.cenasSalas.push(id);
     }
 
-        const interacoes = Array.isArray(sala.interacoes_ambiente) ? sala.interacoes_ambiente : [];
+    const interacoes = Array.isArray(sala.interacoes_ambiente) ? sala.interacoes_ambiente : [];
     const interacoesReais = interacoes.filter(i => !interacaoEhDePerigo(i));
     const estadosDePerigo = new Set(interacoes.filter(interacaoEhDePerigo).map(i => i.define_estado));
     const estadosReais = sala.estados ? Object.keys(sala.estados).filter(k => !estadosDePerigo.has(k)) : [];
@@ -4927,16 +5226,14 @@ function analisarMapaMundo(mapaMundo, itens_novos) {
   return result;
 }
 
-
-  function interacaoEhDePerigo(i) {
+function interacaoEhDePerigo(i) {
   if (!i) return false;
   if (i.origem === 'perigo_interceptor') return true;
-  // fallback p/ dados já importados sem a flag
   return typeof i.define_estado === 'string' && /^sala_\d+_observado$/.test(i.define_estado);
 }
-  
+
 /* ============================================================
-   MIRROR — escopo (zona selecionada)
+   MIRROR — escopo
    ============================================================ */
 let _zonaSelecionada = null;
 let _ultimaAnalise = null;
@@ -4973,9 +5270,6 @@ function renderMirrorScope() {
   el.hidden = false;
 }
 
-/* ============================================================
-   MIRROR — render
-   ============================================================ */
 function truncarListaSalas(arr, max = 12) {
   if (!arr || arr.length === 0) return 'nenhuma';
   const ordenado = [...arr].sort((a, b) => a - b);
@@ -5469,7 +5763,7 @@ function fecharBannerAlvo() {
 }
 
 /* ============================================================
-   ETAPA 5 — IMAGENS DOS ITENS DINÂMICOS
+   IMAGENS DOS ITENS DINÂMICOS
    ============================================================ */
 const IMAGENS_CARD_KEY = 'centelha.console.imagensAberto';
 const GITHUB_CFG_KEY = 'centelha.imagens.github';
@@ -5490,14 +5784,10 @@ function restaurarEstadoImagens() {
   if (localStorage.getItem(IMAGENS_CARD_KEY) === '1') $('imagensCard').classList.add('open');
 }
 
-/* ---------- coleta de itens sem imagem ---------- */
 function itensDinamicosSemImagem() {
   const dados = _lastDados || {};
   const itensNovos = dados.itens_novos || {};
   const out = [];
-
-  // Um item só é dinâmico se TEM entrada em itens_novos E usa o placeholder.
-  // Sem fallback para sala.itens — itens regulares nunca entram.
   for (const [id, def] of Object.entries(itensNovos)) {
     if (!def) continue;
     if (def.image && def.image !== ITEM_DINAMICO_IMAGE) continue;
@@ -5521,9 +5811,6 @@ function atualizarSubtitleImagens() {
     : `${itens.length} item(ns) dinâmico(s) sem imagem`;
 }
 
-/* ---------- prompt ---------- */
-/* Prompt do gerador de ícones 3D (Resident Evil PS1). Fonte única — para atualizar, troque este texto.
-   {{ITENS}} é substituído pela lista de itens. */
 const PROMPT_ICONES_TPL = `Você é um artista 3D técnico especializado nos ícones de inventário pré-renderizados dos Resident Evil clássicos (PS1: item box e tela de inventário).
 
 # OBJETIVO
@@ -5761,7 +6048,7 @@ Formato: \`id | Nome | descrição\`
 
 {{ITENS}}`;
 
-const LOTE_MAX_ICONES = 10;   // itens por prompt (qualidade da IA cai em lotes grandes). Use 999 para desativar.
+const LOTE_MAX_ICONES = 10;
 let _loteIcones = [];
 
 function construirPromptImagens() {
@@ -5798,7 +6085,6 @@ function copiarPromptImagens() {
     .catch(e => toast('Erro: ' + e.message, 'err'));
 }
 
-/* ---------- preview ---------- */
 function setProgressoImagens(txt) {
   const el = $('imagensProgresso');
   if (el) el.textContent = txt || '';
@@ -5815,7 +6101,6 @@ async function gerarPreviewImagens() {
   const lista = Array.isArray(dados.imagens) ? dados.imagens : [];
   if (lista.length === 0) { toast('Nenhuma imagem em "imagens".', 'warn'); return; }
 
-  // Aceita tanto {image} só (uma versão) quanto {image, thumbnailImage}
   _imagensGeradas = [];
   for (const it of lista) {
     if (!it || !it.id || !it.image) continue;
@@ -5853,17 +6138,16 @@ function downscaleTo64(dataURL128) {
       ctx.drawImage(img, 0, 0, 64, 64);
       resolve(c.toDataURL('image/png'));
     };
-    img.onerror = () => resolve(dataURL128); // fallback
+    img.onerror = () => resolve(dataURL128);
     img.src = dataURL128;
   });
 }
-/* ---------- extração (HTML gerado pela IA + motor de ícones) ---------- */
+
 function motorIconesCodigo() {
   const el = document.getElementById('motorIconesSrc');
   return el ? el.textContent : '';
 }
 
-// Remove cercas markdown e embute o motor no lugar de <script src="motor_icones.js">
 function prepararHtmlComMotor(html) {
   let h = String(html || '').trim();
   const fence = h.match(/```(?:html)?\s*\n([\s\S]*?)```/i);
@@ -5871,15 +6155,15 @@ function prepararHtmlComMotor(html) {
 
   const motor = motorIconesCodigo();
   if (!motor) return h;
-  if (/MOTOR_ICONES_VERSAO/.test(h)) return h;                       // motor já embutido pela IA
+  if (/MOTOR_ICONES_VERSAO/.test(h)) return h;
   const tag = '<scr' + 'ipt>\n' + motor + '\n</scr' + 'ipt>';
   const re = /<script\b[^>]*\bsrc\s*=\s*["']?[^"'\s>]*motor_icones\.js[^"'\s>]*["']?[^>]*>\s*<\/script\s*>/i;
   if (re.test(h)) return h.replace(re, () => tag);
-  if (/ICONES\s*\.\s*push|\bICONES\s*=/.test(h)) {                  // usou ICONES mas esqueceu a tag do motor
+  if (/ICONES\s*\.\s*push|\bICONES\s*=/.test(h)) {
     const i = h.search(/<script\b/i);
     return i >= 0 ? h.slice(0, i) + tag + '\n' + h.slice(i) : tag + '\n' + h;
   }
-  return h;                                                           // formato antigo (canvas próprio): intocado
+  return h;
 }
 
 async function extrairImagensDoHTML() {
@@ -5905,7 +6189,6 @@ async function extrairImagensDoHTML() {
     const usaMotor = typeof win.renderIcones === 'function';
 
     if (usaMotor) {
-      // espera o motor terminar (body[data-pronto]) — ícones 3D levam de ~0,5 a 2 s cada
       const t0 = Date.now();
       while (!(doc.body && doc.body.getAttribute('data-pronto')) && Date.now() - t0 < 180000) {
         const n = doc.querySelectorAll('canvas').length;
@@ -5914,7 +6197,7 @@ async function extrairImagensDoHTML() {
       }
       if (!(doc.body && doc.body.getAttribute('data-pronto'))) throw new Error('o motor não terminou em 180s');
     } else {
-      await new Promise(r => setTimeout(r, 1800));   // formato antigo: espera fixa
+      await new Promise(r => setTimeout(r, 1800));
     }
 
     const erros = (win.iconErrors && typeof win.iconErrors === 'object') ? win.iconErrors : {};
@@ -5928,7 +6211,6 @@ async function extrairImagensDoHTML() {
       }
     };
 
-    // 1) motor novo: renderedImages  2) padrão antigo: generatedImages  3) canvases
     for (const src of [win.renderedImages, win.generatedImages]) {
       if (src && typeof src === 'object') for (const [id, url] of Object.entries(src)) add(id, url);
     }
@@ -5939,7 +6221,6 @@ async function extrairImagensDoHTML() {
       }
     }
 
-    // só aceita ids esperados (itens pendentes + lote do prompt) — evita subir lixo com id errado
     const esperados = new Set([...itensDinamicosSemImagem().map(i => i.id), ..._loteIcones]);
     const extras = [];
     if (esperados.size > 0) {
@@ -5997,7 +6278,6 @@ function limparImagens() {
   toast('Preview limpo.', 'info');
 }
 
-/* ---------- ZIP ---------- */
 async function baixarZipImagens() {
   if (_imagensGeradas.length === 0) { toast('Nada para baixar.', 'warn'); return; }
   if (!IMAGENS_ZIP_ENABLED) { toast('JSZip não carregou. Recarregue a página.', 'err'); return; }
@@ -6018,7 +6298,6 @@ async function baixarZipImagens() {
   toast('ZIP baixado.', 'ok');
 }
 
-/* ---------- GitHub ---------- */
 function configurarGitHub() {
   const atual = JSON.parse(localStorage.getItem(GITHUB_CFG_KEY) || '{}');
   const token = prompt('GitHub Personal Access Token (escopo "repo" ou "public_repo"):', atual.token || '');
@@ -6109,7 +6388,6 @@ async function enviarImagensGitHub() {
   atualizarSubtitleImagens();
 }
 
-/* ---------- bootstrap do card ---------- */
 function initImagens() {
   restaurarEstadoImagens();
   atualizarSubtitleImagens();
@@ -6243,8 +6521,8 @@ firebase.auth().onAuthStateChanged(user => {
    ============================================================ */
 console.log('%c⚡ Centelha · Console de Zonas', 'color:#d9a441;font-weight:bold;font-size:14px');
 console.log('📋 Validadores ativos: topologia, ancoragem, entry-point leak, densidade e dilemas.');
-console.log('📝 Prompts: zona controlada manualmente por [−]/[+] · 🔄 recarrega dados do Firestore.');
-console.log('📥 Importadores: zona completa, perigos (isolado), puzzles (Shadowgate), monstros (burst).');
+console.log('📝 Prompts: 5 etapas separadas (Topologia → Cenas → Perigos → Puzzles → Monstros).');
+console.log('📥 Importadores: topologia, cenas, zona completa (legado), perigos, puzzles, monstros.');
 console.log('🎨 Etapa 5: imagens procedurais (128x128 exame + 64x64 chest) para itens dinâmicos.');
 console.log('📊 Espelho: leitura read-only com drill-down por zona e preenchimento de vazias.');
 console.log('🗺️ Aventura: TOM + LORE + 30 temas por zona injetados no cabeçalho dos prompts.');
