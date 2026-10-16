@@ -1795,7 +1795,7 @@ const DEFAULT_BODIES = {
     '- Proibições: opções sem destino_id usando verbos de locomoção (sair, subir, atravessar); resultado_texto do pai descrevendo ação que o jogador não executou na opcao_texto; dilemas que se resolvam com pura força física.',
     '- Efeito persistente opcional por ramificação, além do custo:',
     '  · define_estado (string|null): nome do estado global ativado; gravado no doc do jogador, visível em qualquer sala da zona.',
-    '  · adiciona_item (string|null): id do item que o resultado_texto encontra na sala — se menciona um objeto achado, este campo o nomeia; sem menção, null.',
+    '  · adiciona_item (string|null): id do item achado na sala; sem menção, null. A opcao_texto descreve ação no ambiente (forçar, virar, romper), nunca o item. Um id vive em UM canal por zona: chão (itens_adicionados) ou ramificação, nunca os dois.',
     '  · Todo id usado em "adiciona_item" DEVE estar declarado em "itens_novos". Nunca referencie um id que não exista lá.',
     '  · requer_item (string|null): id do item exigido — a ramificação só executa se o jogador o tiver (use quando a ação exige o item em mãos).',
     '  · remove_item (string|null): id do item removido do inventário (a ação consome o item).',
@@ -3285,6 +3285,64 @@ function validarCenas(cenas, plano, salaInicio, salaFim) {
   }
   return { erros, avisos };
 }
+
+  function validarItensDeDilema(dados) {
+  const erros = [];
+  if (!dados || typeof dados !== 'object') return erros;
+
+  const chao = {};          // id -> [salaId, ...]
+  const concedidos = {};    // id -> [{sala, opcao}, ...]
+
+  for (const [salaId, arr] of Object.entries(dados.itens_adicionados || {})) {
+    if (!Array.isArray(arr)) continue;
+    for (const id of arr) {
+      if (!id) continue;
+      (chao[id] = chao[id] || []).push(salaId);
+    }
+  }
+  for (const cena of (dados.cenas || [])) {
+    for (const d of (cena.dilemas || [])) {
+      for (const r of (d.ramificacoes || [])) {
+        if (r.adiciona_item) {
+          (concedidos[r.adiciona_item] = concedidos[r.adiciona_item] || [])
+            .push({ sala: cena.sala_id, opcao: String(r.opcao_texto || '') });
+        }
+      }
+    }
+  }
+  for (const p of (dados.perigos || [])) {
+    if (p && p.tipo === 'nova_opcao' && p.adiciona_item) {
+      (concedidos[p.adiciona_item] = concedidos[p.adiciona_item] || [])
+        .push({ sala: p.sala_id, opcao: String(p.opcao_texto || '') });
+    }
+  }
+
+  // 1. Mesmo id nos dois canais
+  for (const id of Object.keys(concedidos)) {
+    if (chao[id]) erros.push(`"${id}": está no chão (sala ${chao[id].join(', ')}) e também é concedido por ramificação (sala ${concedidos[id].map(c => c.sala).join(', ')}).`);
+  }
+
+  // 2. Mesmo id no chão de duas salas
+  for (const id of Object.keys(chao)) {
+    if (chao[id].length > 1) erros.push(`"${id}": plantado no chão de duas salas (${chao[id].join(', ')}).`);
+  }
+
+  // 3. Nome do item aparecendo na opção que o concede
+  const itens_novos = dados.itens_novos || {};
+  for (const id of Object.keys(concedidos)) {
+    const nome = String((itens_novos[id] || {}).content || '').toLowerCase().trim();
+    if (!nome) continue;
+    const palavras = nome.split(' ').filter(p => p.length > 4);
+    for (const oc of concedidos[id]) {
+      const op = oc.opcao.toLowerCase();
+      if (palavras.some(p => op.includes(p))) {
+        erros.push(`sala ${oc.sala}: a opção "${oc.opcao}" cita o item concedido ("${itens_novos[id].content}"). O item não pode ser o tema da escolha.`);
+      }
+    }
+  }
+
+  return erros;
+}
 /* ============================================================
    IMPORTAÇÃO — utilitários
    ============================================================ */
@@ -4639,6 +4697,14 @@ function rodarValidacao() {
     for (const aviso of validacaoCenas.avisos) html += `<div class="vrow warn"><strong>⚠️</strong><span class="detail">${escapeHTML(aviso)}</span></div>`;
   }
 
+  html += `<h3>Itens e Dilemas</h3>`;
+  const errosItens = validarItensDeDilema(dados);
+  if (errosItens.length === 0) {
+    html += `<div class="vrow ok"><strong>✅</strong><span class="detail">Item nunca é tema; sem duplicidade de canais.</span></div>`;
+  } else {
+    for (const e of errosItens) html += `<div class="vrow err"><strong>❌</strong><span class="detail">${escapeHTML(e)}</span></div>`;
+  }
+
   const resultadoCorrecao = aplicarCorrecoesCenas(dadosCorrigidos);
   if (resultadoCorrecao.logs.length > 0) {
     html += `<h3>Correções automáticas</h3>`;
@@ -4649,7 +4715,7 @@ function rodarValidacao() {
 
   const houveCorrecaoTotal = houveCorrecaoAncoragem || resultadoCorrecao.modificado;
   const errosTopoFatais = errosTopo.length > 0;
-  const bloqueiaEnvio = validacaoCenas.erros.length > 0 || errosTopoFatais;
+  const bloqueiaEnvio = validacaoCenas.erros.length > 0 || errosTopoFatais || errosItens.length > 0;
 
   html += `<div class="validator-actions">`;
   if (houveCorrecaoTotal) {
@@ -4668,7 +4734,8 @@ function rodarValidacao() {
 
   const totalErrosCenas = validacaoCenas.erros.length;
   const totalAvisosCenas = validacaoCenas.avisos.length;
-  const totalProblemas = errosTopo.length + salasComErro + totalErrosCenas;
+  const totalErrosItens = errosItens.length;
+  const totalProblemas = errosTopo.length + salasComErro + totalErrosCenas + totalErrosItens;
 
   statsDiv.hidden = false;
   statsDiv.innerHTML = `
@@ -4677,6 +4744,7 @@ function rodarValidacao() {
     <span class="vstat ${salasComErro === 0 ? 'ok' : 'err'}">${salasComErro === 0 ? '✅' : '❌'} salas com erro: ${salasComErro}</span>
     <span class="vstat ${totalErrosDensidade === 0 ? 'ok' : 'err'}">${totalErrosDensidade === 0 ? '✅' : '❌'} densidade: ${totalErrosDensidade}</span>
     <span class="vstat ${totalErrosCenas === 0 ? 'ok' : 'err'}">${totalErrosCenas === 0 ? '✅' : '❌'} cenas: ${totalErrosCenas}</span>
+    <span class="vstat ${totalErrosItens === 0 ? 'ok' : 'err'}">${totalErrosItens === 0 ? '✅' : '❌'} itens: ${totalErrosItens}</span>
     <span class="vstat ${totalAvisosCenas === 0 ? 'ok' : 'warn'}">${totalAvisosCenas === 0 ? '✅' : '⚠️'} avisos: ${totalAvisosCenas}</span>
     ${salasCorrigidas > 0 ? `<span class="vstat warn">🔧 ${salasCorrigidas} corrigida(s)</span>` : ''}
   `;
@@ -4685,6 +4753,7 @@ function rodarValidacao() {
   if (errosTopo.length > 0) badges.push(`<span class="mini err">❌ topo ${errosTopo.length}</span>`);
   if (salasComErro > 0) badges.push(`<span class="mini err">❌ salas ${salasComErro}</span>`);
   if (totalErrosCenas > 0) badges.push(`<span class="mini err">❌ cenas ${totalErrosCenas}</span>`);
+  if (totalErrosItens > 0) badges.push(`<span class="mini err">❌ itens ${totalErrosItens}</span>`);
   if (totalAvisosCenas > 0) badges.push(`<span class="mini warn">⚠️ ${totalAvisosCenas}</span>`);
   if (badges.length === 0) badges.push(`<span class="mini ok">✅ ok</span>`);
   badgesDiv.innerHTML = badges.join('');
