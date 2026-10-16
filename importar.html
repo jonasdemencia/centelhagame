@@ -1795,8 +1795,8 @@ const DEFAULT_BODIES = {
     '- Proibições: opções sem destino_id usando verbos de locomoção (sair, subir, atravessar); resultado_texto do pai descrevendo ação que o jogador não executou na opcao_texto; dilemas que se resolvam com pura força física.',
     '- Efeito persistente opcional por ramificação, além do custo:',
     '  · define_estado (string|null): nome do estado global ativado; gravado no doc do jogador, visível em qualquer sala da zona.',
-    '  · adiciona_item (string|null): id do item que aparece como CONSEQUÊNCIA da ação — nunca como tema. A escolha é sobre o mundo (forçar, virar, romper, erguer); o item é resíduo, citado só no resultado_texto. PROIBIDO nomear o item na opcao_texto. Um id, UM canal por zona: chão (sala sem cena) OU ramificação.',    '  · Todo id usado em "adiciona_item" DEVE estar declarado em "itens_novos". Nunca referencie um id que não exista lá.',
-    '  · requer_item (string|null): id do item exigido — a ramificação só executa se o jogador o tiver (use quando a ação exige o item em mãos).',
+'  · adiciona_item (string|null): item como CONSEQUÊNCIA direta — o resultado_texto NOMEIA o item e diz de onde veio, coerente com a ação e o objeto descritos. Nunca tema, nunca na opcao_texto, nunca "magicamente". Um id, UMA origem: um chão (sala sem cena) OU uma ramificação.',
+   '  · requer_item (string|null): id do item exigido — a ramificação só executa se o jogador o tiver (use quando a ação exige o item em mãos).',
     '  · remove_item (string|null): id do item removido do inventário (a ação consome o item).',
     '- condicao_estado: nome do estado global exigido (string) ou null. Se preenchido, a ramificação só executa se o estado já estiver ativo (criado por cena ou puzzle de zona anterior). Use quando a ação depende de uma descoberta anterior.',
     '- mensagem_condicao_falha: texto mostrado quando condicao_estado não está ativo (string) ou null. Se omitido, o motor usa uma mensagem genérica.',
@@ -3345,6 +3345,28 @@ function validarCenas(cenas, plano, salaInicio, salaFim) {
       const op = oc.opcao.toLowerCase();
       if (palavras.some(p => op.includes(p))) {
         erros.push(`sala ${oc.sala}: a opção "${oc.opcao}" cita o item concedido ("${itens_novos[id].content}"). O item não pode ser o tema da escolha.`);
+      }
+    }
+  }
+    
+  // 4. Mesmo id concedido por mais de uma ramificação
+  for (const id of Object.keys(concedidos)) {
+    if (concedidos[id].length > 1) {
+      const locais = concedidos[id].map(c => `sala ${c.sala}`).join(', ');
+      erros.push(`"${id}": concedido em ${concedidos[id].length} ramificações (${locais}). Um item, uma origem.`);
+    }
+  }
+
+  // 5. Item concedido mas não nomeado no resultado_texto
+  for (const id of Object.keys(concedidos)) {
+    const nome = String((itens_novos[id] || {}).content || '').toLowerCase().trim();
+    if (!nome) continue;
+    const palavras = nome.split(' ').filter(p => p.length > 4);
+    if (palavras.length === 0) continue;
+    for (const oc of concedidos[id]) {
+      const txt = (oc.resultado || '').toLowerCase();
+      if (!palavras.some(p => txt.includes(p))) {
+        erros.push(`sala ${oc.sala}: "${oc.opcao}" concede "${itens_novos[id].content}" mas não o nomeia no resultado_texto.`);
       }
     }
   }
