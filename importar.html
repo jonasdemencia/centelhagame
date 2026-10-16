@@ -1795,8 +1795,7 @@ const DEFAULT_BODIES = {
     '- Proibições: opções sem destino_id usando verbos de locomoção (sair, subir, atravessar); resultado_texto do pai descrevendo ação que o jogador não executou na opcao_texto; dilemas que se resolvam com pura força física.',
     '- Efeito persistente opcional por ramificação, além do custo:',
     '  · define_estado (string|null): nome do estado global ativado; gravado no doc do jogador, visível em qualquer sala da zona.',
-    '  · adiciona_item (string|null): id do item que aparece como CONSEQUÊNCIA da ação — nunca como tema. A escolha é sobre o mundo (forçar, virar, romper, erguer); o item é resíduo, citado só no resultado_texto. PROIBIDO nomear o item na opcao_texto. Um id, UM canal por zona: chão OU ramificação.',
-    '  · Todo id usado em "adiciona_item" DEVE estar declarado em "itens_novos". Nunca referencie um id que não exista lá.',
+    '  · adiciona_item (string|null): id do item que aparece como CONSEQUÊNCIA da ação — nunca como tema. A escolha é sobre o mundo (forçar, virar, romper, erguer); o item é resíduo, citado só no resultado_texto. PROIBIDO nomear o item na opcao_texto. Um id, UM canal por zona: chão (sala sem cena) OU ramificação.',    '  · Todo id usado em "adiciona_item" DEVE estar declarado em "itens_novos". Nunca referencie um id que não exista lá.',
     '  · requer_item (string|null): id do item exigido — a ramificação só executa se o jogador o tiver (use quando a ação exige o item em mãos).',
     '  · remove_item (string|null): id do item removido do inventário (a ação consome o item).',
     '- condicao_estado: nome do estado global exigido (string) ou null. Se preenchido, a ramificação só executa se o estado já estiver ativo (criado por cena ou puzzle de zona anterior). Use quando a ação depende de uma descoberta anterior.',
@@ -1834,9 +1833,8 @@ const DEFAULT_BODIES = {
 '  "itens_novos": {',
 '    "id_do_item": { "id": "id_do_item", "content": "Nome", "description": "Descrição" }',
 '  },',
-'  "itens_adicionados": {',
-'    "7": ["id_do_item"]',
-'  },',
+'  "itens_adicionados": { "7": ["id_do_item"] },   // SÓ em salas SEM cena',
+
 '  "cenas": [',
 '    {',
 '      "sala_id": [UM ID DE SALA INTERMEDIÁRIA QUALQUER],',
@@ -3326,7 +3324,17 @@ function validarCenas(cenas, plano, salaInicio, salaFim) {
   for (const id of Object.keys(chao)) {
     if (chao[id].length > 1) erros.push(`"${id}": plantado no chão de duas salas (${chao[id].join(', ')}).`);
   }
+    
 
+  // 2b. Chão em sala que tem cena
+  const salasComCena = new Set((dados.cenas || []).map(c => String(c.sala_id)));
+  for (const id of Object.keys(chao)) {
+    for (const s of chao[id]) {
+      if (salasComCena.has(String(s))) {
+        erros.push(`"${id}": plantado no chão da sala ${s}, que tem cena. Item de chão só em sala sem cena.`);
+      }
+    }
+  }
   // 3. Nome do item aparecendo na opção que o concede
   const itens_novos = dados.itens_novos || {};
   for (const id of Object.keys(concedidos)) {
