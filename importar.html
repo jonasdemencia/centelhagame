@@ -1802,7 +1802,7 @@ const DEFAULT_BODIES = {
     '- mensagem_condicao_falha: texto mostrado quando condicao_estado não está ativo (string) ou null. Se omitido, o motor usa uma mensagem genérica.',
     '- Efeito persiste independente do custo: dano 0 pode conceder item, dano alto pode não conceder nada — exceto ao abrir contêiner trancado (armário, cofre, baú, gaveta selada), que nomeia o conteúdo via adiciona_item ou define_estado.',
     '- Pelo menos uma ramificação por zona deve definir um estado. Todo define_estado precisa ter usos_possiveis ou interacoes_ambiente correspondente na zona (condicao_estado = nome do estado).',
-    '- Nunca declare item que não seja retirado do lugar por uma ramificação ou por itens_adicionados.',
+    '- OBRIGATÓRIO: TODO id usado em "adiciona_item" ou em "itens_adicionados" DEVE estar declarado em "itens_novos" com {id, content, description}. Nenhum id solto.',
     '',
     'PENDÊNCIAS HERDADAS (do input):',
     '- O cabeçalho pode incluir itens_legado_pendentes e estados_pendentes com idade em zonas.',
